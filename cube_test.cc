@@ -14,7 +14,16 @@ int main() {
 	// the origin
 //	v.init(-1,1,-1,1,-1,1);
 //	v.plane(-1,-1,-1,3);
-	v.init_octahedron(1);
+	v.init_test();
+	v.relcheck();
+	
+	ofstream file;
+	file.open("intest",ofstream::out|ofstream::trunc);
+	v.dumpgnuplot(file,0.0,0.0,0.0);
+	file.close();
+	
+	v.edgeprint(true);
+	v.plane(0,0,-1,0);
 	v.relcheck();
 //	v.plane(0.75,0,0,0.75*0.75);
 //	v.relcheck();
@@ -34,7 +43,6 @@ int main() {
 	}*/
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	ofstream file;
 	file.open("test",ofstream::out|ofstream::trunc);
 	v.dumpgnuplot(file,0.0,0.0,0.0);
 	file.close();

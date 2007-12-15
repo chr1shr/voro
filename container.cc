@@ -10,13 +10,13 @@
 #define OVERFLOW_CHECKING
 
 // This constant sets the maximum number of vertices for a single Voronoi cell
-const int maxvertices=400;
-const int maxvertexorder=20;
-const int initial3vertices=256;
-const int initialnvertices=16;
-const int maxdubiouscases=64;
-const double tolerance=1e-8;
-const double tolerance2=2e-8;
+const int maxvertices=1000;
+const int maxvertexorder=40;
+const int initial3vertices=1024;
+const int initialnvertices=256;
+const int maxdubiouscases=640;
+const double tolerance=1e-4;
+const double tolerance2=2e-4;
 
 #include "container.hh"
 
@@ -337,10 +337,16 @@ inline int loop::mydiv(int a,int b) {
 
 // Constructs a Voronoi cell and sets up the initial memory
 voronoicell::voronoicell() : sure(pts) {
-	mem[0]=initial3vertices;
-	mep[0]=new int[initial3vertices*7];
-	mec[0]=0;
-	for(int i=1;i<maxvertexorder-3;i++) {
+	int i;
+	for(i=0;i<3;i++) {
+		mem[i]=initialnvertices;
+		mep[i]=new int[initialnvertices*(2*i+1)];
+		mec[i]=0;
+	}
+	mem[3]=initial3vertices;
+	mep[3]=new int[initial3vertices*7];
+	mec[3]=0;
+	for(i=4;i<maxvertexorder;i++) {
 		mem[i]=initialnvertices;
 		mep[i]=new int[initialnvertices*(2*i+1)];
 		mec[i]=0;
@@ -369,7 +375,8 @@ void voronoicell::addmemory(int i) {
 
 // Initializes a Voronoi cell as a rectangular box with the given dimensions
 inline void voronoicell::init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
-	mec[0]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
+	for(int i=0;i<maxvertexorder;i++) mec[i]=0;
+	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
 	pts[3]=xmax;pts[4]=ymin;pts[5]=zmin;
 	pts[6]=xmin;pts[7]=ymax;pts[8]=zmin;
@@ -378,7 +385,7 @@ inline void voronoicell::init(double xmin,double xmax,double ymin,double ymax,do
 	pts[15]=xmax;pts[16]=ymin;pts[17]=zmax;
 	pts[18]=xmin;pts[19]=ymax;pts[20]=zmax;
 	pts[21]=xmax;pts[22]=ymax;pts[23]=zmax;
-	int *q=mep[0];
+	int *q=mep[3];
 	q[0]=1;q[1]=4;q[2]=2;q[3]=2;q[4]=1;q[5]=0;q[6]=0;
 	q[7]=3;q[8]=5;q[9]=0;q[10]=2;q[11]=1;q[12]=0;q[13]=1;
 	q[14]=0;q[15]=6;q[16]=3;q[17]=2;q[18]=1;q[19]=0;q[20]=2;
@@ -390,19 +397,19 @@ inline void voronoicell::init(double xmin,double xmax,double ymin,double ymax,do
 	ed[0]=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
 	ed[4]=q+28;ed[5]=q+35;ed[6]=q+42;ed[7]=q+49;
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
-	for(int i=1;i<maxvertexorder-3;i++) mec[i]=0;
 };
 
 // Initializes a Voroni cell as a regular octahedron
 inline void voronoicell::init_octahedron(double l) {
-	mec[0]=0;mec[1]=p=6;l*=2;
+	for(int i=0;i<maxvertexorder;i++) mec[i]=0;
+	mec[4]=p=6;l*=2;
 	pts[0]=-l;pts[1]=0;pts[2]=0;
 	pts[3]=l;pts[4]=0;pts[5]=0;
 	pts[6]=0;pts[7]=-l;pts[8]=0;
 	pts[9]=0;pts[10]=l;pts[11]=0;
 	pts[12]=0;pts[13]=0;pts[14]=-l;
 	pts[15]=0;pts[16]=0;pts[17]=l;
-	int *q=mep[1];
+	int *q=mep[4];
 	q[0]=2;q[1]=5;q[2]=3;q[3]=4;q[4]=0;q[5]=0;q[6]=0;q[7]=0;q[8]=0;
 	q[9]=2;q[10]=4;q[11]=3;q[12]=5;q[13]=2;q[14]=2;q[15]=2;q[16]=2;q[17]=1;
 	q[18]=0;q[19]=4;q[20]=1;q[21]=5;q[22]=0;q[23]=3;q[24]=0;q[25]=1;q[26]=2;
@@ -411,13 +418,101 @@ inline void voronoicell::init_octahedron(double l) {
 	q[45]=0;q[46]=2;q[47]=1;q[48]=3;q[49]=1;q[50]=3;q[51]=3;q[52]=1;q[53]=5;
 	ed[0]=q;ed[1]=q+9;ed[2]=q+18;ed[3]=q+27;ed[4]=q+36;ed[5]=q+45;
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
-	for(int i=2;i<maxvertexorder-3;i++) mec[i]=0;
 };
+
+inline void voronoicell::init_test() {
+	for(int i=0;i<maxvertexorder;i++) mec[i]=0;p=0;
+
+	/*
+	add_vertex(1,-2,-1,5,1,3);
+	add_vertex(0,-1,1,2,0,5);
+	add_vertex(0,1,0,4,6,3,1);
+	add_vertex(1,2,-1,0,2,6);
+	add_vertex(-1,2,-1,6,2,5);
+	add_vertex(-1,-2,-1,1,0,4);
+	add_vertex(0,3,0,3,2,4);*/
+
+	/*add_vertex(-2,2,-1,1,4,3);
+	add_vertex(2,2,-1,2,5,0);
+	add_vertex(2,-2,-1,3,6,1);
+	add_vertex(-2,-2,-1,0,7,2);
+	add_vertex(-1,1,0,5,7,0);
+	add_vertex(1,1,1,6,4,1);
+	add_vertex(1,-1,1,5,2,7);
+	add_vertex(-1,-1,1,6,3,4);*/
+
+/*	add_vertex(1,-2,-1,4,3,1);
+	add_vertex(-1,-2,-1,5,4,0,2);
+	add_vertex(-1,2,-1,3,6,1);
+	add_vertex(1,2,-1,0,5,6,2);
+	add_vertex(0,-1,1,0,1,5);
+	add_vertex(0,0,0,6,3,4,1);
+	add_vertex(0,1,1,3,5,2);*/
+
+/*	add_vertex(-1,-1,-1,1,3,4);
+	add_vertex(1,-1,-1,5,2,0);
+	add_vertex(1,1,-1,3,1,6);
+	add_vertex(-1,1,-1,7,0,2);
+	add_vertex(-1,-1,1,8,5,0,7);
+	add_vertex(1,-1,1,8,6,1,4);
+	add_vertex(1,1,1,8,7,2,5);
+	add_vertex(-1,1,1,8,4,3,6);
+	add_vertex(0,0,2,6,5,4,7);*/
+
+/*	add_vertex(1,-3,-1,1,6,5);
+	add_vertex(-1,-3,-1,2,6,0);
+	add_vertex(-3,0,-1,3,8,7,1);
+	add_vertex(-1,3,-1,4,9,2);
+	add_vertex(1,3,-1,5,9,3);
+	add_vertex(3,0,-1,0,7,8,4);
+	add_vertex(0,-2,1,0,1,7);
+	add_vertex(0,-1,0,5,6,2,8);
+	add_vertex(0,1,0,5,7,2,9);
+	add_vertex(0,2,1,4,8,3);*/
+
+	add_vertex(-1,-3,-1,12,8,1,7);
+	add_vertex(1,-3,-1,0,8,12,2);
+	add_vertex(3,-1,-1,1,13,9,3);
+	add_vertex(3,1,-1,2,9,13,4);
+	add_vertex(1,3,-1,3,14,10,5);
+	add_vertex(-1,3,-1,4,10,14,6);
+	add_vertex(-3,1,-1,5,15,11,7);
+	add_vertex(-3,-1,-1,6,11,15,0);
+	add_vertex(0,-2,1,12,1,0);
+	add_vertex(2,0,1,13,3,2);
+	add_vertex(0,2,1,5,4,14);
+	add_vertex(-2,0,1,6,15,7);
+	add_vertex(0,-1,0.5,16,1,8,0);
+	add_vertex(1,0,0.5,16,3,9,2);
+	add_vertex(0,1,0.5,16,5,10,4);
+	add_vertex(-1,0,0.5,16,7,11,6);
+	add_vertex(0,0,0,14,13,12,15);
+
+	relconstruct();
+}
+
+void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c) {
+	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
+	int *q=mep[3]+7*mec[3]++;ed[p]=q;
+	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
+}
+
+void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d) {
+	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
+	int *q=mep[4]+9*mec[4]++;ed[p]=q;
+	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
+}
+
+void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d,int e) {
+	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
+	int *q=mep[5]+11*mec[5]++;ed[p]=q;
+	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
+}
 
 // Checks that the relational table of the Voronoi cell is accurate, and prints
 // out any errors
 inline void voronoicell::relcheck() {
-	int i,j,ij=0;
+	int i,j;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			if (ed[ed[i][j]][ed[i][nu[i]+j]]!=i) cout << "Relational error at point " << i << ", edge " << j << "." << endl;
@@ -425,18 +520,34 @@ inline void voronoicell::relcheck() {
 	}
 };
 
+// Constructs the relational table if the edges have been specified
+inline void voronoicell::relconstruct() {
+	int i,j,k,l;
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		l=0;
+		while(ed[k][l]!=i) {
+			l++;
+			if (l==nu[k]) throw overflow("Relation table construction failed");
+		}
+		ed[i][nu[i]+j]=l;
+	}
+};
+
 // Cuts the Voronoi cell by a particle whose center is at a separation of
 // (x,y,z) from the cell center. The value of rsq should be initially set to
 // x*x+y*y+z*z.
 inline bool voronoicell::plane(double x,double y,double z,double rsq) {
-	int i,j,up=0,lp=0,tp,cp,qp,rp,stack;
-	int us,ls,ts,qs,uw,lw,tw;
-	double u,l,t,r,q;
+	cout << x << y << z << endl;
+	int i,j,k,up=0,lp=0,tp,cp,qp,rp,stack=0,stack2=0;
+	int us,ls,ts,qs,iqs,cs,uw,qw,lw,tw;
+	int *edp,*emp;
+	double u,l,t,r,q;bool start_isolated=false,complicatedsetup=false,newdoubleedge=false,doubleedge=false;
 	cout << "Start" << endl;
 	edgeprint(true);cout << endl;
 	sure.init(x,y,z,rsq);
 	uw=sure.test(up,u);l=u;
-	static int ds[3*maxvertices];
+	static int ds[maxvertices],ds2[maxvertices];
 	if(uw==1) {
 		do {
 			u=l;up=lp;uw=lw;
@@ -458,16 +569,21 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			pts[3*p+1]=(pts[3*lp+1]*u-pts[3*up+1]*l)*r;
 			pts[3*p+2]=(pts[3*lp+2]*u-pts[3*up+2]*l)*r;
 			nu[p]=3;
-			if (mec[0]==mem[0]) addmemory(0);
-			ed[p]=mep[0]+7*mec[0]++;
+			if (mec[3]==mem[3]) addmemory(1);
+			ed[p]=mep[3]+7*mec[3]++;
 			ed[p][6]=p;
 			ed[up][us]=-1;
 			ed[lp][ls]=p;
-			ed[lp][nu[lp]+ls]=0;
-			ed[p][0]=lp;
+			ed[lp][nu[lp]+ls]=1;
+			ed[p][1]=lp;
+			ed[p][nu[p]+1]=ls;
+			cs=2;
+			qs=vor_up(us,up);
+			qp=up;q=u;
 		} else {
 			// lp is in the plane, up is inside
-			throw overflow("Not supported yet");
+			up=lp;
+			complicatedsetup=true;
 		}
 	} else if (uw==-1) {
 		do {
@@ -489,24 +605,155 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			pts[3*p+1]=(pts[3*lp+1]*u-pts[3*up+1]*l)*r;
 			pts[3*p+2]=(pts[3*lp+2]*u-pts[3*up+2]*l)*r;
 			nu[p]=3;
-			if (mec[0]==mem[0]) addmemory(0);
-			ed[p]=mep[0]+7*mec[0]++;
+			if (mec[3]==mem[3]) addmemory(1);
+			ed[p]=mep[3]+7*mec[3]++;
 			ed[p][6]=p;
 			ed[up][us]=-1;
 			ed[lp][ls]=p;
-			ed[lp][nu[lp]+ls]=0;
-			ed[p][0]=lp;
+			ed[lp][nu[lp]+ls]=1;
+			ed[p][1]=lp;
+			ed[p][nu[p]+1]=ls;
+			cs=2;
+			qs=vor_up(us,up);
+			qp=up;q=u;
 		} else {
-			throw overflow("Not supported yet");
-			// up is in the plane, lp is outside
+			complicatedsetup=true;
 		}
 	} else {
-		// The point is in the cutting plane and that's all we know
-		// Scan connections
-		// A points inside, B points outside, C on boundary
-		// C==2, B==0, then bail out with false
-		// Put all As on delete stack
-		throw overflow("Not supported yet");
+		complicatedsetup=true;
+	}
+	if (complicatedsetup) {
+		pts[3*p]=pts[3*up];
+		pts[3*p+1]=pts[3*up+1];
+		pts[3*p+2]=pts[3*up+2];
+		i=0;
+		lp=ed[up][0];
+		lw=sure.test(lp,l);
+		if(lw!=-1) {
+			rp=lw;
+			cout << "case 1\n";
+			do {
+				i++;
+				if (i==nu[up]) return false;  // Marginal vertex with all neighbors inside/marginal
+				lp=ed[up][i];
+				lw=sure.test(lp,l);
+			} while (lw!=-1);
+			j=i+1;
+			while(j<nu[up]) {
+				lp=ed[up][j];
+				lw=sure.test(lp,l);
+				cout << "spec " << j << " " << lw << " " << lp << endl;
+				if (lw!=-1) break;
+				j++;
+			}
+			if(j==nu[up]&&i==1&&rp==0) {
+				start_isolated=true;
+				nu[p]=nu[up];
+				k=0;
+			} else {
+				nu[p]=j-i+2;
+				k=1;
+			}
+			cout << k << " " << i << " " << j << " " << nu[p] << endl;
+			if (mec[nu[p]]==mem[nu[p]]) addmemory(rp);
+			ed[p]=mep[nu[p]]+(2*nu[p]+1)*mec[nu[p]]++;
+			ed[p][2*nu[p]]=p;
+			us=vor_down(i,up);
+			cout << us << " " << qs << " " << i << endl;
+			while(i<j) {
+				qp=ed[up][i];
+				qs=ed[up][nu[up]+i];
+				ed[p][k]=qp;
+				ed[p][nu[p]+k]=qs;
+				ed[qp][qs]=p;
+				ed[qp][nu[qp]+qs]=k;
+				ed[up][i]=-1;
+				i++;k++;
+				cout << i << " " << k << " <-> " << endl;
+				cout << us << " " << qs << " " << i << endl;
+			}
+			qs=i==nu[up]?0:i;
+			cs=k;
+			if (k!=nu[p]-1) throw overflow("Doesn't add up");
+			ds2[stack2++]=up;
+
+			qp=up;q=u;
+			i=ed[up][us];
+			us=ed[up][nu[up]+us];
+			up=i;
+			uw=sure.test(up,u);
+			if(uw==0) ed[up][2*nu[up]]=-1;
+			ed[qp][2*nu[qp]]=-p;
+		} else {
+			cout << "case 2\n";
+			i=nu[up]-1;
+			lp=ed[up][i];
+			lw=sure.test(lp,l);
+			cout << lp << " " << lw << " st\n";
+			while(lw==-1) {
+				i--;
+				if (i==0) return true; // Marginal vertex with all neighbors outside
+				lp=ed[up][i];
+				lw=sure.test(lp,l);
+			cout << lp << " " << lw << " st\n";
+			}
+			j=1;
+			qp=ed[up][j];
+			qw=sure.test(qp,q);
+			while(qw==-1) {
+				j++;
+				qp=ed[up][j];
+				qw=sure.test(qp,l);
+			}
+			cout << i << " " << j << endl;
+			if (i==j&&qw==0) {
+				cout << "yo!";
+				start_isolated=true;
+				nu[p]=nu[up];
+				k=0;
+			} else {
+				nu[p]=nu[up]-i+j+1;
+				k=1;
+			}
+			cout << k << " " << nu[p] << endl;
+			if (mec[nu[p]]==mem[nu[p]]) addmemory(l);
+			ed[p]=mep[nu[p]]+(2*nu[p]+1)*mec[nu[p]]++;
+			ed[p][2*nu[p]]=p;
+			us=i++;
+			while(i<nu[up]) {
+				qp=ed[up][i];
+				qs=ed[up][nu[up]+i];
+				ed[p][k]=qp;
+				ed[p][nu[p]+k]=qs;
+				ed[qp][qs]=p;
+				ed[qp][nu[qp]+qs]=k;
+				ed[up][i]=-1;
+				i++;k++;
+			}
+			i=0;
+			while(i<j) {
+				qp=ed[up][i];
+				qs=ed[up][nu[up]+i];
+				ed[p][k]=qp;
+				ed[p][nu[p]+k]=qs;
+				ed[qp][qs]=p;
+				ed[qp][nu[qp]+qs]=k;
+				ed[up][i]=-1;
+				i++;k++;
+			}
+			qs=j;
+			cs=k;
+			if (k!=nu[p]-1) throw overflow("Doesn't add up");
+			ds2[stack2++]=up;
+
+			qp=up;q=u;
+			i=ed[up][us];
+			us=ed[up][nu[up]+us];
+			up=i;
+			uw=sure.test(up,u);
+			if(uw==0) ed[up][2*nu[up]]=-1;
+			ed[qp][2*nu[qp]]=-p;
+		}
 	}
 	// What do we want by this point?
 	// Set up first point in facet
@@ -516,61 +763,195 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 	// Know enough stuff to join back the end
 	edgeprint(true);
 	cout << "smd" << endl;
-	cp=p;
-	rp=p;
-	ed[p][nu[p]]=ls;
-	qp=up;q=u;qs=vor_up(us,qp);p++;
+	cp=p;rp=p;p++;
 	edgeprint(true);
+	cout << qp << " " << up << " " << qs << " " << us << endl;
 	while(qp!=up||qs!=us) {
 		cout << "st" << qp << " " << up << " " << qs << " " << us << endl;
 		lp=ed[qp][qs];
 		lw=sure.test(lp,l);
 		if (lw==1) {
-			qs=vor_up(ed[qp][nu[qp]+qs],qp);qp=lp;q=l;ds[stack++]=qp;
+			cout << "regadd\n";
+			qs=vor_up(ed[qp][nu[qp]+qs],lp);qp=lp;q=l;ds[stack++]=qp;
 		} else if (lw==-1) {
 			r=1/(q-l);
 			pts[3*p]=(pts[3*lp]*q-pts[3*qp]*l)*r;
 			pts[3*p+1]=(pts[3*lp+1]*q-pts[3*qp+1]*l)*r;
 			pts[3*p+2]=(pts[3*lp+2]*q-pts[3*qp+2]*l)*r;
 			nu[p]=3;
-			if (mec[0]==mem[0]) addmemory(0);
-			ed[p]=mep[0]+7*mec[0]++;
+			if (mec[3]==mem[3]) addmemory(1);
+			ed[p]=mep[3]+7*mec[3]++;
 			ed[p][6]=p;
 			ls=ed[qp][qs+nu[qp]];
 			ed[lp][ls]=p;
-			ed[lp][nu[lp]+ls]=0;
-			ed[p][0]=lp;
-			ed[p][2]=cp;
-			ed[p][nu[p]]=ls;
-			ed[p][nu[p]+2]=1;
-			ed[cp][1]=p;
-			ed[cp][nu[cp]+1]=2;
+			ed[lp][nu[lp]+ls]=1;
+			ed[p][1]=lp;
+			ed[p][0]=cp;
+			ed[p][nu[p]+1]=ls;
+			ed[p][nu[p]]=cs;
+			ed[cp][cs]=p;
+			ed[cp][nu[cp]+cs]=0;
 			ed[qp][qs]=-1;
 			qs=vor_up(qs,qp);
 			cp=p++;
+			cs=2;
+			cout << "reg ";
 		} else {
-			throw overflow("Not supported yet");
-		}
-		cout << "en" << qp << " " << up << " " << qs << " " << us << endl;
+			k=doubleedge?0:1;
+			qs=ed[qp][nu[qp]+qs];
+			qp=lp;iqs=qs;
+			do {
+				k++;
+				qs=vor_up(qs,qp);
+				lp=ed[qp][qs];
+				cout << " * " << qp << " " << qs << " " << lp << " " << k << endl;
+				lw=sure.test(lp,l);
+			} while (lw==-1);
+			j=-ed[qp][2*nu[qp]];
+			if(j>0) {
+				if (j!=1) {
+					k+=nu[j];
+					if(lw==0) {
+								cout << "ma it\n";
+						i=-ed[lp][2*nu[lp]];
+						if(i>1) {
+								cout << "mad it\n";
+							if(ed[i][nu[i]-1]==j) {
+								// Then we need to do one less edge
+								newdoubleedge=true;
+								k-=1;
+								cout << "made it\n";
+							} else newdoubleedge=false;
+						} else {
+							cout << "hola\n";
+							if (i==1&&j==rp) {
+							       k-=1;
+							       cout << "made special case\n";
+						       	       newdoubleedge=true;
+							} else newdoubleedge=false;
+						}
+					} else newdoubleedge=false;
+				} else {
+					cout << "blowup\n";
+					newdoubleedge=false;
+					j=0;
+				}
+			} else newdoubleedge=false;
+
+			if (mec[k]==mem[k]) addmemory(i);
+			if(j>0) {
+				cout << "memjiggle\n";
+				edp=mep[k]+(2*k+1)*mec[k]++;
+				i=0;
+				while(i<nu[j]) {
+					edp[i]=ed[j][i];
+					edp[k+i]=ed[j][nu[j]+i];
+					i++;
+				}
+				edp[2*k]=j;
+				mec[nu[j]]--;
+				emp=mep[nu[j]]+(2*nu[j]+1)*mec[nu[j]];
+				if(emp!=ed[j]) {
+					for(lw=0;lw<=2*nu[j];lw++) ed[j][lw]=emp[lw];
+					ed[emp[2*nu[j]]]=ed[j];
+				}
+				ed[j]=edp;
+			} else {
+				ed[p]=mep[k]+(2*k+1)*mec[k]++;
+				ed[p][2*k]=p;
+				ds2[stack2++]=qp;
+				pts[3*p]=pts[3*qp];
+				pts[3*p+1]=pts[3*qp+1];
+				pts[3*p+2]=pts[3*qp+2];
+				ed[qp][2*nu[qp]]=-p;
+				j=p++;
+				i=0;
+			}
+			nu[j]=k;
+
+			if (!doubleedge) {
+				ed[j][i]=cp;
+				ed[j][nu[j]+i]=cs;
+				ed[cp][cs]=j;
+				ed[cp][nu[cp]+cs]=i;
+				i++;
+			}
+
+			qs=iqs;
+			while(i<(newdoubleedge?k:k-1)) {
+				qs=vor_up(qs,qp);
+				lp=ed[qp][qs];ls=ed[qp][nu[qp]+qs];
+				ed[j][i]=lp;
+				ed[j][nu[j]+i]=ls;
+				ed[lp][ls]=j;
+				ed[lp][nu[lp]+ls]=i;
+				ed[qp][qs]=-1;
+				i++;
+			}
+			qs=vor_up(qs,qp);
+			cs=i;
+			cp=j;
+			doubleedge=newdoubleedge;
+			cout << "marg ";
+		} 
+		cout << "en " << qp << " " << up << " " << qs << " " << us << endl;
+		edgeprint(true);
+		cout << endl;
 	}
-	ed[cp][1]=rp;
-	ed[rp][2]=cp;
-	ed[cp][nu[cp]+1]=2;
-	ed[rp][nu[rp]+2]=1;
+	if (!start_isolated) {
+		ed[cp][cs]=rp;
+		ed[rp][0]=cp;
+		ed[cp][nu[cp]+cs]=0;
+		ed[rp][nu[rp]+0]=cs;
+	}
 
 	cout << "Planed" << endl;
 	edgeprint(true);
-	
+
 	// Delete points
 	// First remove any duplicates
 	i=0;
 	while(i<stack) {
+		cout << i << " ds " << ds[i] << endl;
 		j=ds[i];
 		if(ed[j][nu[j]]!=-1) {
 			ed[j][nu[j]]=-1;
 			i++;
 		} else ds[i]=ds[--stack];
 	}
+	edgeprint(true);
+	// Add in the degenerate ones, and reset their back pointers
+	for(i=0;i<stack2;i++) {
+		cout << "ds2 " << i << " " << ds2[i] << endl;
+		j=ds2[i];
+		ed[j][2*nu[j]]=j;
+		if(ed[j][nu[j]]!=-1) {
+			ed[j][nu[j]]=-1;
+			ds[stack++]=j;
+		}
+	}
+
+	if (mec[2]>0) {
+		throw overflow("Order 2 vertex formed");
+	}
+	// Collapse any order 2 vertices that aren't already
+	// marked for deletion.
+	// If they end up joining to themselves, return false
+/*	while(mec[0]>0) {
+		i=--mec[0];
+		if(mep[0][5*i+2]!=-1) {
+			ds[stack++]=mep[0][5*i+4];
+			lp=mep[0][5*i];up=mep[0][5*i+1];
+			if (up==lp) return false;
+			ls=mep[0][5*i+2];us=mep[0][5*i+3];
+			ed[lp][ls]=up;
+			ed[up][us]=lp;
+			ed[lp][nu[lp]+ls]=us;
+			ed[up][nu[up]+us]=ls;
+			mep[0][5*i]=mep[0][5*i+1]=-1;
+		}
+	}*/
+	edgeprint(true);
 
 	// Scan connections and add in extras
 	for(i=0;i<stack;i++) {
@@ -585,16 +966,21 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			}
 		}
 	}
+
+	edgeprint(true);
+
 	// Delete them from the array structure
 	while(stack>0) {
 		while(ed[--p][nu[p]]==-1) {
+			cout << "chop top\n";
 			j=nu[p];
-			mec[j-3]--;
-			for(i=0;i<=2*j;i++) ed[p][i]=(mep[j-3]+(2*j+1)*mec[j-3])[i];
+			mec[j]--;
+			for(i=0;i<=2*j;i++) ed[p][i]=(mep[j]+(2*j+1)*mec[j])[i];
 			ed[ed[p][2*j]]=ed[p];
 		}
 		qp=ds[--stack];
 		if (qp<p) {
+			cout << qp << " <-- " << p << endl;
 			// Vertex management
 			pts[3*qp]=pts[3*p];
 			pts[3*qp+1]=pts[3*p+1];
@@ -602,8 +988,9 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 
 			// Memory management
 			j=nu[qp];
-			mec[j-3]--;
-			for(i=0;i<=2*j;i++) ed[qp][i]=(mep[j-3]+(2*j+1)*mec[j-3])[i];
+			mec[j]--;
+			for(i=0;i<=2*j;i++) ed[qp][i]=(mep[j]+(2*j+1)*mec[j])[i];
+			cout << ed[qp][2*j] << " moved\n";
 			ed[ed[qp][2*j]]=ed[qp];
 
 			// Edge management
@@ -736,7 +1123,7 @@ inline int suretest::test(int n,double &ans) {
 	} else if(ans<-tolerance2) {
 		return -1;
 	} else {
-		cout << "dubious\n";
+		cout << n << " is dubious\n";
 		for(int i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
 		sn[sc++]=n;
 		sn[sc++]=ans>tolerance?1:(ans<-tolerance?-1:0);
@@ -755,6 +1142,8 @@ void voronoicell::edgeprint(bool extend) {
 			cout << "   " << ed[i][j];
 			cout << " " << pts[3*i] << " " << pts[3*i+1] << " " << pts[3*i+2];
 		}
+		cout << " " << ed[i];
+		if (ed[i]>=mep[nu[i]]+mec[nu[i]]*(2*nu[i]+1)) cout << " crazzzy";
 		cout << endl;
 	}
 };

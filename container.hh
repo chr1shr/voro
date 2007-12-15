@@ -106,9 +106,9 @@ class suretest {
 // relcheck checks that the relational table is valid.
 class voronoicell {
 	public:
-		int mem[maxvertexorder-3];
-		int *mep[maxvertexorder-3];
-		int mec[maxvertexorder-3];
+		int mem[maxvertexorder];
+		int *mep[maxvertexorder];
+		int mec[maxvertexorder];
 		int *ed[maxvertices];
 		int nu[maxvertices];
 		int p;
@@ -117,11 +117,16 @@ class voronoicell {
 		voronoicell();
 		inline void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
 		inline void init_octahedron(double l);
+		inline void init_test();
+		inline void add_vertex(double x,double y,double z,int a,int b,int c);
+		inline void add_vertex(double x,double y,double z,int a,int b,int c,int d);
+		inline void add_vertex(double x,double y,double z,int a,int b,int c,int d,int e);
 		inline bool plane(double x,double y,double z,double rs);
 		inline bool plane(double x,double y,double z);
 		inline void dumppov(ofstream &of,double x,double y,double z);
 		inline void dumpgnuplot(ofstream &of,double x,double y,double z);
 		inline void relcheck();
+		inline void relconstruct();
 		inline double volume();
 		inline double maxradsq();
 		inline void edgeprint(bool extend);
