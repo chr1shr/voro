@@ -87,6 +87,7 @@ class loop {
 class suretest {
 	public:
 		double *p;
+		suretest();
 		inline void init(double x,double y,double z,double rsq);
 		inline int test(int n,double &ans);
 	private:
@@ -122,18 +123,21 @@ class voronoicell {
 		inline void add_vertex(double x,double y,double z,int a,int b,int c);
 		inline void add_vertex(double x,double y,double z,int a,int b,int c,int d);
 		inline void add_vertex(double x,double y,double z,int a,int b,int c,int d,int e);
-		inline bool plane(double x,double y,double z,double rs);
+		bool plane(double x,double y,double z,double rs);
 		inline bool plane(double x,double y,double z);
 		inline void dumppov(ofstream &of,double x,double y,double z);
 		inline void dumpgnuplot(ofstream &of,double x,double y,double z);
 		inline void relcheck();
+		inline void duplicatecheck();
 		inline void relconstruct();
 		inline double volume();
 		inline double maxradsq();
-		inline void edgeprint(bool extend);
+		inline void edgeprint();
 		inline bool collapseorder1();
 		inline bool collapseorder2();
+		inline bool perturb(double r);
 	private:
+		int stack2;
 		void addmemory(int i);
 		void addmemory_vertices();
 		void addmemory_vorder();

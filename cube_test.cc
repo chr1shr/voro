@@ -29,21 +29,23 @@ int main() {
 	
 	// Cut the cell by 250 random planes which are all a distance 1 away
 	// from the origin, to make an approximation to a sphere
-	for(int i=0;i<50000;i++) {
-		if (i%1000==0) cout << i << endl;
+	for(int i=0;i<1000000;i++) {
+		if (i%100000==0) cout << i << " " << v.p << endl;
 		x=double(2*rand()-1)/RAND_MAX;
 		y=double(2*rand()-1)/RAND_MAX;
 		z=double(2*rand()-1)/RAND_MAX;
 		rsq=x*x+y*y+z*z;
 		if(rsq>0.01&&rsq<1) {
-			r=1.7/sqrt(rsq);x*=r;y*=r;z*=r;
-			v.plane(x,y,z,1.8*1.8);
-			v.relcheck();
+			r=1/sqrt(rsq);x*=r;y*=r;z*=r;
+			v.plane(x,y,z,1);
+			//v.relcheck();
+			//v.duplicatecheck();
 		}
+	//	v.perturb(0.0001);
 	}
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	file.open("test",ofstream::out|ofstream::trunc);
-	v.dumpgnuplot(file,0.0,0.0,0.0);
+	file.open("test.pov",ofstream::out|ofstream::trunc);
+	v.dumppov(file,0.0,0.0,0.0);
 	file.close();
 }
