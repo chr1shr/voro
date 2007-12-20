@@ -86,12 +86,13 @@ class loop {
 // value changing
 class suretest {
 	public:
-		suretest(double *pts) : p(pts) {};
+		double *p;
 		inline void init(double x,double y,double z,double rsq);
 		inline int test(int n,double &ans);
 	private:
-		int sc,sn[2*maxdubiouscases];
-		double px,py,pz,prsq,*p;
+		int currentdubious;
+		int sc,*sn;
+		double px,py,pz,prsq;
 };
 
 // This class encapsulates all the routines for storing and calculating a
@@ -106,18 +107,18 @@ class suretest {
 // relcheck checks that the relational table is valid.
 class voronoicell {
 	public:
-		int mem[maxvertexorder];
-		int *mep[maxvertexorder];
-		int mec[maxvertexorder];
-		int *ed[maxvertices];
-		int nu[maxvertices];
+		int *mem,**mep,*mec,**ed,*nu,*ds,*ds2;
+		int currentvertices,currentvertexorder;
+		int currentdeletesize,currentdeletesize2;
+		double *pts;
 		int p;
-		double pts[3*maxvertices];
 		suretest sure;
 		voronoicell();
 		inline void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
 		inline void init_octahedron(double l);
 		inline void init_test();
+		inline void add_vertex(double x,double y,double z,int a);
+		inline void add_vertex(double x,double y,double z,int a,int b);
 		inline void add_vertex(double x,double y,double z,int a,int b,int c);
 		inline void add_vertex(double x,double y,double z,int a,int b,int c,int d);
 		inline void add_vertex(double x,double y,double z,int a,int b,int c,int d,int e);
@@ -130,10 +131,18 @@ class voronoicell {
 		inline double volume();
 		inline double maxradsq();
 		inline void edgeprint(bool extend);
+		inline bool collapseorder1();
+		inline bool collapseorder2();
 	private:
 		void addmemory(int i);
+		void addmemory_vertices();
+		void addmemory_vorder();
+		void addmemory_ds();
+		void addmemory_ds2();
+
 		inline int vor_up(int a,int p);
 		inline int vor_down(int a,int p);
+		inline bool delete_connection(int j,int k);
 };
 
 #endif

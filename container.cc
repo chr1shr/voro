@@ -10,13 +10,23 @@
 #define OVERFLOW_CHECKING
 
 // This constant sets the maximum number of vertices for a single Voronoi cell
-const int maxvertices=1000;
-const int maxvertexorder=40;
-const int initial3vertices=1024;
-const int initialnvertices=256;
-const int maxdubiouscases=640;
-const double tolerance=1e-4;
-const double tolerance2=2e-4;
+const int initvertices=2560;
+const int initvertexorder=640;
+const int init3vertices=2560;
+const int initnvertices=80;
+const int initdubious=2560;
+const int initdeletesize=2560;
+const int initdeletesize2=2560;
+
+const int maxvertices=1048576;
+const int maxvertexorder=2048;
+const int maxnvertices=1048576;
+const int maxdubious=1048576;
+const int maxdeletesize=1048576;
+const int maxdeletesize2=1048576;
+
+const double tolerance=1e-7;
+const double tolerance2=2e-7;// was -4
 
 #include "container.hh"
 
@@ -336,46 +346,110 @@ inline int loop::mydiv(int a,int b) {
 }
 
 // Constructs a Voronoi cell and sets up the initial memory
-voronoicell::voronoicell() : sure(pts) {
+voronoicell::voronoicell() :
+	currentvertices(initvertices), currentvertexorder(initvertexorder),
+	currentdeletesize(initdeletesize), currentdeletesize2(initdeletesize2) {
 	int i;
+	ds=new int[currentdeletesize];
+	ds2=new int[currentdeletesize2];
+	mem=new int[currentvertexorder];
+	mec=new int[currentvertexorder];
+	mep=new int*[currentvertexorder];
+	ed=new int*[currentvertices];
+	nu=new int[currentvertices];
+	pts=new double[3*currentvertices];
+	sure.p=pts;
 	for(i=0;i<3;i++) {
-		mem[i]=initialnvertices;
-		mep[i]=new int[initialnvertices*(2*i+1)];
+		mem[i]=initnvertices;
+		mep[i]=new int[initnvertices*(2*i+1)];
 		mec[i]=0;
 	}
-	mem[3]=initial3vertices;
-	mep[3]=new int[initial3vertices*7];
+	mem[3]=init3vertices;
+	mep[3]=new int[init3vertices*7];
 	mec[3]=0;
-	for(i=4;i<maxvertexorder;i++) {
-		mem[i]=initialnvertices;
-		mep[i]=new int[initialnvertices*(2*i+1)];
+	for(i=4;i<currentvertexorder;i++) {
+		mem[i]=initnvertices;
+		mep[i]=new int[initnvertices*(2*i+1)];
 		mec[i]=0;
 	}
 }
 
 // Increases the memory storage for a particular vertex order
 void voronoicell::addmemory(int i) {
+	int s=2*i+1;
 	cout << "Extramem " << i << endl;
 	if(mem[i]==0) {
-		mep[i]=new int[initialnvertices*(2*i+1)];
-		mem[i]=initialnvertices;
+		mep[i]=new int[initnvertices*s];
+		mem[i]=initnvertices;
 	} else {
-		int j=0,k;int *l;
+		int j,k,*l;
 		mem[i]*=2;
-		l=new int[mem[i]];
-		while(j<(2*i+1)*mec[i]) {
-			for(k=0;k<2*i;k++) l[j++]=mep[i][j];
-			ed[mep[i][j]]=l+j;
-			l[j++]=mep[i][j];
+		l=new int[s*mem[i]];
+		j=0;
+		while(j<s*mec[i]) {
+			ed[mep[i][j+2*i]]=l+j;
+			for(k=0;k<=2*i;k++) {
+				l[j]=mep[i][j];
+				j++;
+			}
 		}
 		delete mep[i];
 		mep[i]=l;
 	}
 }
 
+void voronoicell::addmemory_vertices() {
+	int i=2*currentvertices,j,**ped,*pnu;
+	cout << "Vertex memory scaled up to " << i << endl;
+	double *ppts;
+	ped=new int*[i];
+	for(j=0;j<currentvertices;j++) ped[j]=ed[j];
+	delete ed;ed=ped;
+	pnu=new int[i];
+	for(j=0;j<currentvertices;j++) pnu[j]=nu[j];
+	delete nu;nu=pnu;
+	ppts=new double[3*i];
+	for(j=0;j<3*currentvertices;j++) ppts[j]=pts[j];
+	delete pts;sure.p=pts=ppts;
+	currentvertices=i;
+}
+
+void voronoicell::addmemory_vorder() {
+	int i=2*currentvertexorder,j,*pmem,**pmep,*pmec;
+	cout << "Vertex order memory scaled up to " << i << endl;
+	pmem=new int[i];
+	for(j=0;j<currentvertexorder;j++) pmem[j]=mem[j];while(j<i) pmem[j++]=0;
+	delete mem;mem=pmem;
+	pmep=new int*[i];
+	for(j=0;j<currentvertexorder;j++) pmep[j]=mep[j];
+	delete mep;mep=pmep;
+	pmec=new int[i];
+	for(j=0;j<currentvertexorder;j++) pmec[j]=mec[j];while(j<i) pmec[j++]=0;
+	delete mec;mec=pmec;
+	currentvertexorder=i;
+}
+
+void voronoicell::addmemory_ds() {
+	int i=2*currentdeletesize,j,*pds;
+	cout << "Delete stack 1 memory scaled up to " << i << endl;
+	pds=new int[i];
+	for(j=0;j<currentdeletesize;j++) pds[j]=ds[j];
+	delete ds;ds=pds;
+	currentdeletesize=i;
+}
+
+void voronoicell::addmemory_ds2() {
+	int i=2*currentdeletesize2,j,*pds2;
+	cout << "Delete stack 2 memory scaled up to " << i << endl;
+	pds2=new int[i];
+	for(j=0;j<currentdeletesize2;j++) pds2[j]=ds2[j];
+	delete ds2;ds2=pds2;
+	currentdeletesize2=i;
+}
+
 // Initializes a Voronoi cell as a rectangular box with the given dimensions
 inline void voronoicell::init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
-	for(int i=0;i<maxvertexorder;i++) mec[i]=0;
+	for(int i=0;i<initvertexorder;i++) mec[i]=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
 	pts[3]=xmax;pts[4]=ymin;pts[5]=zmin;
@@ -401,7 +475,7 @@ inline void voronoicell::init(double xmin,double xmax,double ymin,double ymax,do
 
 // Initializes a Voroni cell as a regular octahedron
 inline void voronoicell::init_octahedron(double l) {
-	for(int i=0;i<maxvertexorder;i++) mec[i]=0;
+	for(int i=0;i<initvertexorder;i++) mec[i]=0;
 	mec[4]=p=6;l*=2;
 	pts[0]=-l;pts[1]=0;pts[2]=0;
 	pts[3]=l;pts[4]=0;pts[5]=0;
@@ -421,7 +495,7 @@ inline void voronoicell::init_octahedron(double l) {
 };
 
 inline void voronoicell::init_test() {
-	for(int i=0;i<maxvertexorder;i++) mec[i]=0;p=0;
+	for(int i=0;i<initvertexorder;i++) mec[i]=0;p=0;
 
 	/*
 	add_vertex(1,-2,-1,5,1,3);
@@ -497,7 +571,7 @@ inline void voronoicell::init_test() {
 	add_vertex(1,2,1,3,5,7);
 	add_vertex(-1,2,1,2,6,5);*/
 
-	add_vertex(3,-2,-1,1,3,2);
+/*	add_vertex(3,-2,-1,1,3,2);
 	add_vertex(-3,-2,-1,2,4,0);
 	add_vertex(0,4,-1,0,5,1);
 	add_vertex(1.5,-1,0,6,0,7);
@@ -506,25 +580,52 @@ inline void voronoicell::init_test() {
 	add_vertex(0.75,0.5,0,5,3,9);
 	add_vertex(0,-1,0,9,3,4);
 	add_vertex(-0.75,0.5,0,5,9,4);
-	add_vertex(0,0,1,6,7,8);
+	add_vertex(0,0,1,6,7,8);*/
+
+	add_vertex(0,0,0,2,1,3);
+	add_vertex(1,0,1,0,2,3);
+	add_vertex(1,1,0,1,0,3);
+	add_vertex(2,0,0,0,1,2,4,6);
+	add_vertex(3,1,0,5,8,6,3);
+	add_vertex(3,2,0,4);
+	add_vertex(4,0,0,8,7,3,4);
+	add_vertex(5,0,0,6);
+	add_vertex(4,1,0,4,6);
 
 	relconstruct();
 }
 
+void voronoicell::add_vertex(double x,double y,double z,int a) {
+	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
+	if (mem[1]=mec[1]) addmemory(1);
+	int *q=mep[1]+3*mec[1]++;ed[p]=q;
+	q[0]=a;q[2]=p++;
+}
+
+void voronoicell::add_vertex(double x,double y,double z,int a,int b) {
+	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
+	if (mem[2]=mec[2]) addmemory(2);
+	int *q=mep[2]+5*mec[2]++;ed[p]=q;
+	q[0]=a;q[1]=b;q[4]=p++;
+}
+
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
+	if (mem[3]=mec[3]) addmemory(3);
 	int *q=mep[3]+7*mec[3]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
 }
 
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
+	if (mem[4]=mec[4]) addmemory(4);
 	int *q=mep[4]+9*mec[4]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
 }
 
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
+	if (mem[5]=mec[5]) addmemory(5);
 	int *q=mep[5]+11*mec[5]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
 }
@@ -558,86 +659,97 @@ inline void voronoicell::relconstruct() {
 // (x,y,z) from the cell center. The value of rsq should be initially set to
 // x*x+y*y+z*z.
 inline bool voronoicell::plane(double x,double y,double z,double rsq) {
-	int i,j,k,up=6,lp=6,tp,cp,qp,rp,stack=0,stack2=0;
-	int us,ls,ts,qs,iqs,cs,uw,qw,lw,tw;
+	int count=0,i,j,k,up=6,lp=6,tp,cp,qp,rp,stack=0,stack2=0;
+	int us,ls,qs,iqs,cs,uw,qw,lw,tw;
 	int *edp,*emp;
 	double u,l,t,r,q;bool complicatedsetup=false,newdoubleedge=false,doubleedge=false;
 	sure.init(x,y,z,rsq);
 	uw=sure.test(up,u);l=u;
-	static int ds[maxvertices],ds2[maxvertices];
-	if(uw==1) {
-		do {
-			u=l;up=lp;uw=lw;
-			for(i=0;i<nu[up];i++) {
-				tp=ed[up][i];
-				tw=sure.test(tp,t);
-				if(t<l) {l=t;lw=tw;lp=tp;us=i;}
+	try {
+		if(uw==1) {
+			do {
+				if (++count>=p) throw true;
+				u=l;up=lp;uw=lw;
+					for(i=0;i<nu[up];i++) {
+					tp=ed[up][i];
+					tw=sure.test(tp,t);
+					if(t<l) {l=t;lw=tw;lp=tp;us=i;}
+				}
+				if (lp==up) return false;  // Cell no longer exists
+			} while (lw==1);
+			ls=ed[up][nu[up]+us];
+			if (lw==-1) {
+				complicatedsetup=false;
+			} else {
+				// lp is in the plane, up is inside
+				up=lp;
+				complicatedsetup=true;
 			}
-			if (lp==up) return false;  // Cell no longer exists
-		} while (lw==1);
-		ls=ed[up][nu[up]+us];
-		if (lw==-1) {
-			// lp is outside, up is inside
-			// Proceed regular iteration by making new point
-			ds[stack++]=up;
-			r=1/(u-l);
-			pts[3*p]=(pts[3*lp]*u-pts[3*up]*l)*r;
-			pts[3*p+1]=(pts[3*lp+1]*u-pts[3*up+1]*l)*r;
-			pts[3*p+2]=(pts[3*lp+2]*u-pts[3*up+2]*l)*r;
-			nu[p]=3;
-			if (mec[3]==mem[3]) addmemory(1);
-			ed[p]=mep[3]+7*mec[3]++;
-			ed[p][6]=p;
-			ed[up][us]=-1;
-			ed[lp][ls]=p;
-			ed[lp][nu[lp]+ls]=1;
-			ed[p][1]=lp;
-			ed[p][nu[p]+1]=ls;
-			cs=2;
-			qs=vor_up(us,up);
-			qp=up;q=u;
-		} else {
-			// lp is in the plane, up is inside
-			up=lp;
-			complicatedsetup=true;
-		}
-	} else if (uw==-1) {
-		do {
-			l=u;lp=up;lw=uw;
-			for(i=0;i<nu[lp];i++) {
-				tp=ed[lp][i];
-				tw=sure.test(tp,t);
-				if(t>u) {u=t;uw=tw;up=tp;ls=i;}
-			}
-			if (up==lp) return true;  // Cell isn't intersected at all
-		} while (uw==-1);
-		us=ed[lp][nu[lp]+ls];
-		if (uw==1) {
-			// lp is outside, up is inside
-			// Proceed regular iteration
-			ds[stack++]=up;
-			r=1/(u-l);
-			pts[3*p]=(pts[3*lp]*u-pts[3*up]*l)*r;
-			pts[3*p+1]=(pts[3*lp+1]*u-pts[3*up+1]*l)*r;
-			pts[3*p+2]=(pts[3*lp+2]*u-pts[3*up+2]*l)*r;
-			nu[p]=3;
-			if (mec[3]==mem[3]) addmemory(1);
-			ed[p]=mep[3]+7*mec[3]++;
-			ed[p][6]=p;
-			ed[up][us]=-1;
-			ed[lp][ls]=p;
-			ed[lp][nu[lp]+ls]=1;
-			ed[p][1]=lp;
-			ed[p][nu[p]+1]=ls;
-			cs=2;
-			qs=vor_up(us,up);
-			qp=up;q=u;
+		} else if (uw==-1) {
+			do {
+				if (++count>=p) throw true;
+				l=u;lp=up;lw=uw;
+				for(i=0;i<nu[lp];i++) {
+					tp=ed[lp][i];
+					tw=sure.test(tp,t);
+					if(t>u) {u=t;uw=tw;up=tp;ls=i;}
+				}
+				if (up==lp) return true;  // Cell isn't intersected at all
+			} while (uw==-1);
+			us=ed[lp][nu[lp]+ls];
+			complicatedsetup=(uw!=1);
 		} else {
 			complicatedsetup=true;
 		}
-	} else {
-		complicatedsetup=true;
 	}
+	catch(bool except) {
+		cout << "Bailed out of convex calculation\n";
+		for(qp=0;qp<p;qp++) {
+			qw=sure.test(qp,q);
+			if (qw==1) {
+				for(i=0;i<nu[qp];i++) {
+					lp=ed[qp][i];
+					if(lp<qp) {
+						lw=sure.test(lp,u);
+						if (lw!=1) break;
+					}
+				}
+				if(lw!=1) {
+					up=qp;
+					if(lw==0) {
+						complicatedsetup=true;
+					} else {
+						complicatedsetup=false;
+						u=q;
+					}
+					break;
+				}
+			} else if (qw==-1) {
+				for(i=0;i<nu[qp];i++) {
+					up=ed[qp][i];
+					if(up<qp) {
+						uw=sure.test(up,u);
+						if (uw!=-1) break;
+					}
+				}
+				if(uw!=-1) {
+					lp=qp;
+					if(uw==0) {
+						complicatedsetup=true;
+					} else {
+						complicatedsetup=false;
+						u=q;
+					}
+					break;
+				}
+			} else {
+				up=qp;
+				complicatedsetup=true;
+				break;
+			}
+		}
+	}
+	if(p==currentvertices) addmemory_vertices();
 	if (complicatedsetup) {
 		pts[3*p]=pts[3*up];
 		pts[3*p+1]=pts[3*up+1];
@@ -669,7 +781,8 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 				nu[p]=j-i+2;
 			}
 			k=1;
-			if (mec[nu[p]]==mem[nu[p]]) addmemory(rp);
+			if (nu[p]==currentvertexorder) addmemory_vorder();
+			if (mec[nu[p]]==mem[nu[p]]) addmemory(nu[p]);
 			ed[p]=mep[nu[p]]+(2*nu[p]+1)*mec[nu[p]]++;
 			ed[p][2*nu[p]]=p;
 			us=vor_down(i,up);
@@ -686,6 +799,7 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			qs=i==nu[up]?0:i;
 			cs=k;
 		//	if (k!=nu[p]-1) throw overflow("Doesn't add up");
+			if (stack2==currentdeletesize2) addmemory_ds2();
 			ds2[stack2++]=up;
 
 			qp=up;q=u;
@@ -721,7 +835,8 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 				nu[p]=nu[up]-i+j+1;
 			}
 			k=1;
-			if (mec[nu[p]]==mem[nu[p]]) addmemory(l);
+			if(nu[p]==currentvertexorder) addmemory_vorder();
+			if (mec[nu[p]]==mem[nu[p]]) addmemory(nu[p]);
 			ed[p]=mep[nu[p]]+(2*nu[p]+1)*mec[nu[p]]++;
 			ed[p][2*nu[p]]=p;
 			us=i++;
@@ -749,6 +864,7 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			qs=j;
 			cs=k;
 		//	if (k!=nu[p]-1) throw overflow("Doesn't add up");
+			if (stack2==currentdeletesize2) addmemory_ds2();
 			ds2[stack2++]=up;
 
 			qp=up;q=u;
@@ -759,7 +875,27 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			if(uw==0) ed[up][2*nu[up]]=-1;
 			ed[qp][2*nu[qp]]=-p;
 		}
+	} else {
+		if (stack==currentdeletesize) addmemory_ds();
+		ds[stack++]=up;
+		r=1/(u-l);
+		pts[3*p]=(pts[3*lp]*u-pts[3*up]*l)*r;
+		pts[3*p+1]=(pts[3*lp+1]*u-pts[3*up+1]*l)*r;
+		pts[3*p+2]=(pts[3*lp+2]*u-pts[3*up+2]*l)*r;
+		nu[p]=3;
+		if (mec[3]==mem[3]) addmemory(3);
+		ed[p]=mep[3]+7*mec[3]++;
+		ed[p][6]=p;
+		ed[up][us]=-1;
+		ed[lp][ls]=p;
+		ed[lp][nu[lp]+ls]=1;
+		ed[p][1]=lp;
+		ed[p][nu[p]+1]=ls;
+		cs=2;
+		qs=vor_up(us,up);
+		qp=up;q=u;
 	}
+
 	// What do we want by this point?
 	// Set up first point in facet
 	// Either create it, or modify existing vertex
@@ -767,20 +903,20 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 	// Know whether that direction is inside, or boundary
 	// Know enough stuff to join back the end
 	cp=p;rp=p;p++;
-	cout << "start" << endl;
-	edgeprint(true);
 	while(qp!=up||qs!=us) {
 		lp=ed[qp][qs];
 		lw=sure.test(lp,l);
 		if (lw==1) {
+			if (stack==currentdeletesize) addmemory_ds();
 			qs=vor_up(ed[qp][nu[qp]+qs],lp);qp=lp;q=l;ds[stack++]=qp;
 		} else if (lw==-1) {
+			if(p==currentvertices) addmemory_vertices();
 			r=1/(q-l);
 			pts[3*p]=(pts[3*lp]*q-pts[3*qp]*l)*r;
 			pts[3*p+1]=(pts[3*lp+1]*q-pts[3*qp+1]*l)*r;
 			pts[3*p+2]=(pts[3*lp+2]*q-pts[3*qp+2]*l)*r;
 			nu[p]=3;
-			if (mec[3]==mem[3]) addmemory(1);
+			if (mec[3]==mem[3]) addmemory(3);
 			ed[p]=mep[3]+7*mec[3]++;
 			ed[p][6]=p;
 			ls=ed[qp][qs+nu[qp]];
@@ -797,6 +933,7 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			cp=p++;
 			cs=2;
 		} else {
+			if(p==currentvertices) addmemory_vertices();
 			k=doubleedge?0:1;
 			qs=ed[qp][nu[qp]+qs];
 			qp=lp;iqs=qs;
@@ -830,8 +967,9 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 					j=0;
 				}
 			} else newdoubleedge=false;
-
-			if (mec[k]==mem[k]) addmemory(i);
+			
+			if(k==currentvertexorder) addmemory_vorder();
+			if (mec[k]==mem[k]) addmemory(k);
 			if(j>0) {
 				edp=mep[k]+(2*k+1)*mec[k]++;
 				i=0;
@@ -851,6 +989,7 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			} else {
 				ed[p]=mep[k]+(2*k+1)*mec[k]++;
 				ed[p][2*k]=p;
+				if (stack2==currentdeletesize2) addmemory_ds2();
 				ds2[stack2++]=qp;
 				pts[3*p]=pts[3*qp];
 				pts[3*p+1]=pts[3*qp+1];
@@ -910,6 +1049,7 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 		ed[j][2*nu[j]]=j;
 		if(ed[j][nu[j]]!=-1) {
 			ed[j][nu[j]]=-1;
+			if (stack==currentdeletesize) addmemory_ds();
 			ds[stack++]=j;
 		}
 	}
@@ -921,6 +1061,7 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 			qp=ed[cp][j];
 			if(qp!=-1) {
 				if (ed[qp][nu[qp]]!=-1) {
+					if (stack==currentdeletesize) addmemory_ds();
 					ds[stack++]=qp;
 					ed[qp][nu[qp]]=-1;
 				}
@@ -959,46 +1100,96 @@ inline bool voronoicell::plane(double x,double y,double z,double rsq) {
 	}
 
 	// Check for any vertices with zero or one connection
-	if (mec[0]>0||mec[1]>0) throw overflow("Low order vertex formed");
+	if (mec[0]>0) throw overflow("Zero order vertex formed");
 	
-	// Collapse any order 2 vertices that aren't already
-	// marked for deletion.
-	// If they end up joining to themselves, return false
-	while(mec[2]>0) {
-		i=--mec[2];
-		if(mep[2][5*i+2]!=-1) {
-			lp=mep[2][5*i];up=mep[2][5*i+1];
-			if (up==lp) {
-				if(nu[up]<4) return false;
-				j=nu[up]-2;
-				edp=mep[j]+(2*j+1)*mec[j]++;
-			} else {
-				ls=mep[2][5*i+2];us=mep[2][5*i+3];
-				ed[lp][ls]=up;
-				ed[up][us]=lp;
-				ed[lp][nu[lp]+ls]=us;
-				ed[up][nu[up]+us]=ls;
-				for(j=lp+1;j<nu[lp];j++) {
-					if(ed[lp][j]==up) {
-						if(nu[lp]<2) return false;
-						edp=
-					}
-				}
-				if (j==nu[lp]) {
-					for(j=0;j<lp;j++) {
-						if(ed[lp][j]=up) {
+	return collapseorder2();
+}
 
-						}
-					}
-				}
-			}
-		}
-		while(mec[1]>0) {
-
+// Collapse any order one vertices
+inline bool voronoicell::collapseorder1() {
+	int i,j,k;
+	while(mec[1]>0) {
+		cout << "Order one collapse" << endl;
+		i=--mec[1];
+		j=mep[1][3*i];k=mep[1][3*i+1];
+		i=mep[1][3*i+2];
+		delete_connection(j,k);
+		--p;
+		if(p!=i) {
+			pts[3*i]=pts[3*p];
+			pts[3*i+1]=pts[3*p+1];
+			pts[3*i+2]=pts[3*p+2];
+			for(k=0;k<nu[p];k++) ed[ed[p][k]][ed[p][nu[p]+k]]=i;
+			ed[i]=ed[p];
+			nu[i]=nu[p];
+			ed[i][2*nu[i]]=i;
 		}
 	}
 	return true;
 }
+
+inline bool voronoicell::collapseorder2() {
+	if(!collapseorder1()) return false;
+	int a,b,i,j,k,l;
+	while(mec[2]>0) {
+		cout << "Order two collapse" << endl;
+		i=--mec[2];
+		j=mep[2][5*i];k=mep[2][5*i+1];
+		if (j==k) return false;
+		for(l=0;l<nu[j];l++) {
+			if(ed[j][l]==k) break;
+		}
+		a=mep[2][5*i+2];b=mep[2][5*i+3];i=mep[2][5*i+4];
+		if(l==nu[j]) {
+			ed[j][a]=k;
+			ed[k][b]=j;
+			ed[j][nu[j]+a]=b;
+			ed[k][nu[k]+b]=a;
+		} else {
+			if (!delete_connection(j,a)) return false;
+			if (!delete_connection(k,b)) return false;
+		}
+		--p;
+		if(p!=i) {
+			pts[3*i]=pts[3*p];
+			pts[3*i+1]=pts[3*p+1];
+			pts[3*i+2]=pts[3*p+2];
+			for(k=0;k<nu[p];k++) ed[ed[p][k]][ed[p][nu[p]+k]]=i;
+			ed[i]=ed[p];
+			nu[i]=nu[p];
+			ed[i][2*nu[i]]=i;
+		}
+		if(!collapseorder1()) return false;
+	}
+	return true;
+}
+
+inline bool voronoicell::delete_connection(int j,int k) {
+	int i=nu[j]-1,l,*edp,*edd,m;
+	if(i<1) return false;
+	if(mec[i]==mem[i]) addmemory(i);
+	edp=mep[i]+(2*i+1)*mec[i]++;
+	edp[2*i]=j;
+	for(l=0;l<k;l++) {
+		edp[l]=ed[j][l];
+		edp[l+i]=ed[j][l+nu[j]];
+	}
+	while(l<i) {
+		m=ed[j][l+1];
+		edp[l]=m;
+		k=ed[j][l+nu[j]+1];
+		edp[l+i]=k;
+		ed[m][nu[m]+k]--;
+		l++;
+	}
+	edd=mep[nu[j]]+(2*nu[j]+1)*--mec[nu[j]];
+	for(l=0;l<=2*nu[j];l++) ed[j][l]=edd[l];
+	ed[edd[2*nu[j]]]=edd;
+	ed[j]=edp;
+	nu[j]=i;
+	return true;
+}
+
 
 // Cuts a Voronoi cell using the influence of a particle at (x,y,z), first
 // calculating the modulus squared of this vector before passing it to the
@@ -1094,6 +1285,8 @@ inline void voronoicell::dumpgnuplot(ofstream &of,double x,double y,double z) {
 // Sets up the suretest class with a particular test plane, and removes
 // any special cases from the table
 inline void suretest::init(double x,double y,double z,double rsq) {
+	currentdubious=initdubious;
+	sn=new int[2*currentdubious];
 	sc=0;px=x;py=y;pz=z;prsq=rsq;
 };
 
@@ -1116,8 +1309,15 @@ inline int suretest::test(int n,double &ans) {
 	} else if(ans<-tolerance2) {
 		return -1;
 	} else {
-		cout << n << " is dubious\n";
-		for(int i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
+		int i;
+		for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
+		if (sc==2*currentdubious) {
+			i=2*currentdubious;
+			cout << "Dubious cases buffer scaled up to " << i << endl;
+			int *psn=new int[2*i];
+			for(int j=0;j<2*currentdubious;j++) psn[j]=sn[j];
+			delete sn;sn=psn;
+		}
 		sn[sc++]=n;
 		sn[sc++]=ans>tolerance?1:(ans<-tolerance?-1:0);
 		return sn[sc-1];
