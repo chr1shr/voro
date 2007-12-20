@@ -513,11 +513,12 @@ inline void voronoicell::init_octahedron(double l) {
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
 };
 
+// Initializes an arbitrary test object using the add_vertex() and
+// relconstruct() routines
 inline void voronoicell::init_test() {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;p=0;
 
-	/*
-	add_vertex(1,-2,-1,5,1,3);
+	/*add_vertex(1,-2,-1,5,1,3);
 	add_vertex(0,-1,1,2,0,5);
 	add_vertex(0,1,0,4,6,3,1);
 	add_vertex(1,2,-1,0,2,6);
@@ -534,7 +535,7 @@ inline void voronoicell::init_test() {
 	add_vertex(1,-1,1,5,2,7);
 	add_vertex(-1,-1,1,6,3,4);*/
 
-/*	add_vertex(1,-2,-1,4,3,1);
+	/*add_vertex(1,-2,-1,4,3,1);
 	add_vertex(-1,-2,-1,5,4,0,2);
 	add_vertex(-1,2,-1,3,6,1);
 	add_vertex(1,2,-1,0,5,6,2);
@@ -542,7 +543,7 @@ inline void voronoicell::init_test() {
 	add_vertex(0,0,0,6,3,4,1);
 	add_vertex(0,1,1,3,5,2);*/
 
-/*	add_vertex(-1,-1,-1,1,3,4);
+	/*add_vertex(-1,-1,-1,1,3,4);
 	add_vertex(1,-1,-1,5,2,0);
 	add_vertex(1,1,-1,3,1,6);
 	add_vertex(-1,1,-1,7,0,2);
@@ -552,7 +553,7 @@ inline void voronoicell::init_test() {
 	add_vertex(-1,1,1,8,4,3,6);
 	add_vertex(0,0,2,6,5,4,7);*/
 
-/*	add_vertex(1,-3,-1,1,6,5);
+	/*add_vertex(1,-3,-1,1,6,5);
 	add_vertex(-1,-3,-1,2,6,0);
 	add_vertex(-3,0,-1,3,8,7,1);
 	add_vertex(-1,3,-1,4,9,2);
@@ -563,7 +564,7 @@ inline void voronoicell::init_test() {
 	add_vertex(0,1,0,5,7,2,9);
 	add_vertex(0,2,1,4,8,3);*/
 
-/*	add_vertex(-1,-3,-1,12,8,1,7);
+	/*add_vertex(-1,-3,-1,12,8,1,7);
 	add_vertex(1,-3,-1,0,8,12,2);
 	add_vertex(3,-1,-1,1,13,9,3);
 	add_vertex(3,1,-1,2,9,13,4);
@@ -581,7 +582,7 @@ inline void voronoicell::init_test() {
 	add_vertex(-1,0,0.5,16,7,11,6);
 	add_vertex(0,0,0,14,13,12,15);*/
 
-/*	add_vertex(2,-3,-1,1,4,3);
+	/*add_vertex(2,-3,-1,1,4,3);
 	add_vertex(-2,-3,-1,2,4,0);
 	add_vertex(-2,3,-1,3,7,1);
 	add_vertex(2,3,-1,0,6,2);
@@ -590,7 +591,7 @@ inline void voronoicell::init_test() {
 	add_vertex(1,2,1,3,5,7);
 	add_vertex(-1,2,1,2,6,5);*/
 
-/*	add_vertex(3,-2,-1,1,3,2);
+	/*add_vertex(3,-2,-1,1,3,2);
 	add_vertex(-3,-2,-1,2,4,0);
 	add_vertex(0,4,-1,0,5,1);
 	add_vertex(1.5,-1,0,6,0,7);
@@ -614,6 +615,7 @@ inline void voronoicell::init_test() {
 	relconstruct();
 }
 
+// Adds an order 1 vertex to the memory structure, and specifies its edge
 void voronoicell::add_vertex(double x,double y,double z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
 	if (mem[1]=mec[1]) addmemory(1);
@@ -621,6 +623,7 @@ void voronoicell::add_vertex(double x,double y,double z,int a) {
 	q[0]=a;q[2]=p++;
 }
 
+// Adds an order 2 vertex to the memory structure, and specifies its edges
 void voronoicell::add_vertex(double x,double y,double z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
 	if (mem[2]=mec[2]) addmemory(2);
@@ -628,6 +631,7 @@ void voronoicell::add_vertex(double x,double y,double z,int a,int b) {
 	q[0]=a;q[1]=b;q[4]=p++;
 }
 
+// Adds an order 3 vertex to the memory structure, and specifies its edges
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
 	if (mem[3]=mec[3]) addmemory(3);
@@ -635,6 +639,7 @@ void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c) {
 	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
 }
 
+// Adds an order 4 vertex to the memory structure, and specifies its edges
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
 	if (mem[4]=mec[4]) addmemory(4);
@@ -642,6 +647,7 @@ void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d)
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
 }
 
+// Adds an order 5 vertex to the memory structure, and specifies its edges
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
 	if (mem[5]=mec[5]) addmemory(5);
@@ -650,7 +656,8 @@ void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d,
 }
 
 // Checks that the relational table of the Voronoi cell is accurate, and prints
-// out any errors
+// out any errors. This algorithm is O(p), so running it every time the plane
+// routine is called will result in a significant slowdown.
 inline void voronoicell::relcheck() {
 	int i,j;
 	for(i=0;i<p;i++) {
@@ -660,6 +667,11 @@ inline void voronoicell::relcheck() {
 	}
 };
 
+// This routine checks for any two vertices that are connected by more than one
+// edge. The plane algorithm is designed so that this should not happen, so any
+// occurrences are most likely errors. Note that the routine is O(p), so
+// running it every time the plane routine is called will result in a significant
+// slowdown. 
 inline void voronoicell::duplicatecheck() {
 	int i,j,k;
 	for(i=0;i<p;i++) {
@@ -709,48 +721,85 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 	}
 	lp=up;l=u;
 
+	// Starting from an initial guess, we now move from vertex to vertex,
+	// to try and find an edge which intersects the cutting plane,
+	// or a vertex which is on the plane
 	try {
 		if(uw==1) {
-			// The test point is within the cutting plane.
+			// The test point is within the cutting space
 			do {
+				// If we have been around this loop more times
+				// than there are points, there's a floating
+				// point problem, so we'll bail out 
 				if (++count>=p) throw true;
+				
+				// Test all the neighbors of the current point
+				// and find the one which is closest to the
+				// plane
 				u=l;up=lp;uw=lw;
-					for(i=0;i<nu[up];i++) {
+				for(i=0;i<nu[up];i++) {
 					tp=ed[up][i];
 					tw=sure.test(tp,t);
 					if(t<l) {l=t;lw=tw;lp=tp;us=i;}
 				}
+
+				// If we couldn't find a point and the object
+				// is convex, then the whole cell must be
+				// within the cutting space, so there's nothing
+				// left
 				if (lp==up) {
-					cerr << "Failed to find intersection" << endl;return false;  // Cell no longer exists
+					cerr << "Failed to find intersection" << endl;
+					return false;
 				}
 			} while (lw==1);
 			ls=ed[up][nu[up]+us];
-			if (lw==-1) {
-				complicatedsetup=false;
-			} else {
-				// lp is in the plane, up is inside
+
+			// If the last point in the iteration is within the
+			// plane, we need to do the complicated setup
+			// routine. Otherwise, we use the regular iteration.
+			if (lw==0) {
 				up=lp;
 				complicatedsetup=true;
-			}
+			} else complicatedsetup=false;
 		} else if (uw==-1) {
+			// The test point is outside of the cutting space
 			do {
+				// If we have been around this loop more times
+				// than there are points, there's a floating
+				// point problem, so we'll bail out 
 				if (++count>=p) throw true;
+				
+				// Test all the neighbors of the current point
+				// and find the one which is closest to the
+				// plane
 				l=u;lp=up;lw=uw;
 				for(i=0;i<nu[lp];i++) {
 					tp=ed[lp][i];
 					tw=sure.test(tp,t);
 					if(t>u) {u=t;uw=tw;up=tp;ls=i;}
 				}
-				if (up==lp) return true;  // Cell isn't intersected at all
+
+				// If we couldn't find a point and the object
+				// is convex, then the whole cell must be
+				// outside the cutting space, so it's not
+				// intersected at all 
+				if (up==lp) return true;
 			} while (uw==-1);
 			us=ed[lp][nu[lp]+ls];
 			complicatedsetup=(uw!=1);
 		} else {
+			// Our original test point was on the plane, so we
+			// automatically head for the complicated setup
+			// routine
 			complicatedsetup=true;
 		}
 	}
 	catch(bool except) {
-		//cerr << "Bailed out of convex calculation\n";
+		// This routine is a fall-back, in case floating point errors
+		// cause the usual search routine to fail. In the fall-back
+		// routine, we just test every edge to find one straddling
+		// the plane.
+		cerr << "Bailed out of convex calculation\n";
 		for(qp=0;qp<p;qp++) {
 			qw=sure.test(qp,q);
 			if (qw==1) {
@@ -799,46 +848,76 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 		}
 		if(qp==p) return qw==-1?true:false;
 	}
+
+	// We're about to add the first point of the new facet. In either
+	// routine, we have to add a point, so first check there's space for
+	// it.
 	if(p==currentvertices) addmemory_vertices();
+
 	if (complicatedsetup) {
-		//cout << "compstart " << up << endl;
+		// The search algorithm found a point which is on the cutting
+		// plane. We leave that point in place, and create a new one at
+		// the same location.
 		pts[3*p]=pts[3*up];
 		pts[3*p+1]=pts[3*up+1];
 		pts[3*p+2]=pts[3*up+2];
+		
+		// Search for a collection of edges of the test vertex which
+		// are outside of the cutting space. Begin by testing the
+		// zeroth edge. 
 		i=0;
 		lp=ed[up][0];
 		lw=sure.test(lp,l);
 		if(lw!=-1) {
-			//cout << "case1\n";
+			// The first edge is either inside the cutting space,
+			// or lies within the cutting plane. Test the edges
+			// sequentially until we find one that is outside.
 			rp=lw;
 			do {
 				i++;
-				if (i==nu[up]) {
-					//cerr << "Marginal vertex" << endl;
-					return false;  // Marginal vertex with all neighbors inside/marginal
-				}
+				// If we reached the last edge with no luck
+				// then all of the vertices are inside
+				// or on the plane, so the cell is completely
+				// deleted
+				if (i==nu[up]) return false;
 				lp=ed[up][i];
 				lw=sure.test(lp,l);
 			} while (lw!=-1);
 			j=i+1;
+
+			// We found an edge outside the cutting space. Keep
+			// moving through these edges until we find one that's
+			// inside or on the plane.
 			while(j<nu[up]) {
 				lp=ed[up][j];
 				lw=sure.test(lp,l);
 				if (lw!=-1) break;
 				j++;
 			}
+
+			// Compute the number of edges for the new vertex. In
+			// general it will be the number of outside edges
+			// found, plus two. But we need to recognize the
+			// special case when all but one edge is outside, and
+			// the remaining one is on the plane. For that case we
+			// have to reduce the edge count by one to prevent
+			// doubling up.
 			if(j==nu[up]&&i==1&&rp==0) {
 				nu[p]=nu[up];
 				doubleedge=true;
-				//cout << "isolated start\n";
-			} else {
-				nu[p]=j-i+2;
-			}
+			} else nu[p]=j-i+2;
 			k=1;
+
+			// Add memory for the new vertex if needed, and
+			// initialize
 			while (nu[p]>currentvertexorder) addmemory_vorder();
 			if (mec[nu[p]]==mem[nu[p]]) addmemory(nu[p]);
 			ed[p]=mep[nu[p]]+(2*nu[p]+1)*mec[nu[p]]++;
 			ed[p][2*nu[p]]=p;
+
+			// Copy the edges of the original vertex into the new
+			// one. Delete the edges of the original vertex, and
+			// update the relational table.
 			us=vor_down(i,up);
 			while(i<j) {
 				qp=ed[up][i];
@@ -852,10 +931,14 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 			}
 			qs=i==nu[up]?0:i;
 			cs=k;
-		//	if (k!=nu[p]-1) throw overflow("Doesn't add up");
+
+			// Add this point to the auxiliary delete stack
 			if (stack2==currentdeletesize2) addmemory_ds2();
 			ds2[stack2++]=up;
 
+			// Look at the edges on either side of the group that
+			// Set up the direction to move in to create the facet,
+			// and also set the final edge to by 
 			qp=up;q=u;
 			i=ed[up][us];
 			us=ed[up][nu[up]+us];
@@ -930,12 +1013,19 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 			ed[qp][2*nu[qp]]=-p;
 		}
 	} else {
+		// The search algorithm found an intersected edge between the
+		// points lp and up. Create a new vertex between them which
+		// lies on the cutting plane. Since u and l differ by at least
+		// the tolerance, this division should never screw up.
 		if (stack==currentdeletesize) addmemory_ds();
 		ds[stack++]=up;
 		r=1/(u-l);
 		pts[3*p]=(pts[3*lp]*u-pts[3*up]*l)*r;
 		pts[3*p+1]=(pts[3*lp+1]*u-pts[3*up+1]*l)*r;
 		pts[3*p+2]=(pts[3*lp+2]*u-pts[3*up+2]*l)*r;
+
+		// This point will always have three edges.
+		// Connect one of them to lp.
 		nu[p]=3;
 		if (mec[3]==mem[3]) addmemory(3);
 		ed[p]=mep[3]+7*mec[3]++;
@@ -946,25 +1036,34 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 		ed[p][1]=lp;
 		ed[p][nu[p]+1]=ls;
 		cs=2;
+
+		// Set the direction to move in
 		qs=vor_up(us,up);
 		qp=up;q=u;
 	}
 
-	// What do we want by this point?
-	// Set up first point in facet
-	// Either create it, or modify existing vertex
-	// Have a direction to move in
-	// Know whether that direction is inside, or boundary
-	// Know enough stuff to join back the end
+	// When the code reaches here, we have initialized the first point, and
+	// we have a direction for moving it to construct the rest of the facet
 	cp=p;rp=p;p++;
 	while(qp!=up||qs!=us) {
+
+		// We're currently tracing round an intersected facet. Keep moving
+		// around it until we find a point or edge which intersects the plane 
 		lp=ed[qp][qs];
 		lw=sure.test(lp,l);
-		//cout << qp << " " << qs << " " << up << " " << us << " " << lp << " " << lw << endl;
+		
 		if (lw==1) {
+			// The point is still in the cutting space. Just add it
+			// to the delete stack and keep moving.
 			if (stack==currentdeletesize) addmemory_ds();
 			qs=vor_up(ed[qp][nu[qp]+qs],lp);qp=lp;q=l;ds[stack++]=qp;
+		
 		} else if (lw==-1) {
+			// The point is outside of the cutting space, so we've
+			// found an intersected edge. Introduce a regular point
+			// at the point of intersection. Connect it to the
+			// point we just tested. Also connect it to the previous
+			// new point in the facet we're constructing.
 			if(p==currentvertices) addmemory_vertices();
 			r=1/(q-l);
 			pts[3*p]=(pts[3*lp]*q-pts[3*qp]*l)*r;
@@ -988,53 +1087,85 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 			cp=p++;
 			cs=2;
 		} else {
+			// We've found a point which is on the cutting plane.
+			// We're going to introduce a new point right here, but
+			// first we need to figure out the number of edges it
+			// has.
 			if(p==currentvertices) addmemory_vertices();
+			
+			// If the previous vertex detected a double edge, our
+			// new vertex will have one less edge.
 			k=doubleedge?0:1;
 			qs=ed[qp][nu[qp]+qs];
 			qp=lp;iqs=qs;
-			//cout << "This is marginal vertex " << qp << endl;
+
+			// Start testing the edges of the current point until
+			// we find one which isn't outside the cutting space
 			do {
 				k++;
 				qs=vor_up(qs,qp);
 				lp=ed[qp][qs];
 				lw=sure.test(lp,l);
-				//cout << "(" << qs << "," << lp << "," << lw << ") ";
 			} while (lw==-1);
-			//cout << endl;
+			
+			// Now we need to find out whether this marginal vertex
+			// we are on has been visited before, because if that's
+			// the case, we need to add vertices to the existing
+			// new vertex, rather than creating a fresh one. We also
+			// need to figure out whether we're in a case where we
+			// might be creating a duplicate edge.
 			j=-ed[qp][2*nu[qp]];
 	 		if(qp==up&&qs==us) {
-				//cout << "It's a final one\n";
+				// If we're heading into the final part of the
+				// new facet, then we never worry about the
+				// duplicate edge calculation.
 				newdoubleedge=false;
 				if(j>0) k+=nu[j];
 			} else {
 				if (j>0) {
-					//cout << "Vertex visited before\n";
+					// This vertex was visited before, so
+					// count those vertices to the ones we
+					// already have.
 					k+=nu[j];
-					//cout << "lw is " << lw << endl;
+					
+					// The only time when we might make a
+					// duplicate edge is if the point we're
+					// going to move to next is also a
+					// marginal point, so test for that
+					// first.
 					if(lw==0) {
-						//cout << "Last edge is to a marginal point\n";
+						// Now see whether this
+						// marginal point has been
+						// visited before.
 						i=-ed[lp][2*nu[lp]];
+						
 						if(i>0) {
-							//cout << "That marginal point already visited; it's new vertex " << i << endl;
+							// Now see if the last edge of that other
+							// marginal point actually ends up here.
 							if(ed[i][nu[i]-1]==j) {
-								//cout << "There are " << nu[i] << "edges at " << i << " and the last edge is " << ed[i][nu[i]-1] << endl;
-								// Then we need to do one less edge
 								newdoubleedge=true;
 								k-=1;
 							} else newdoubleedge=false;
 						} else {
+							// That marginal point hasn't been visited
+							// before, so we probably don't have to worry
+							// about duplicate edges, except in the
+							// case when that's the way into the end
+							// of the facet, because that way always creates
+							// an edge.
 							if (j==rp&&lp==up&&ed[qp][nu[qp]+qs]==us) {
-								//cout << "Going out along final edge\n";
 								newdoubleedge=true;
 								k-=1;
 							} else newdoubleedge=false;
 						}
 					} else newdoubleedge=false;
 				} else {
+					// The vertex hasn't been visited before,
+					// but let's now see if it's marginal.
+					
 					if(lw==0) {
 						i=-ed[lp][2*nu[lp]];
 						if(i==cp) {
-							//cout << "small branch case\n";
 							newdoubleedge=true;
 							k-=1;
 						} else newdoubleedge=false;
@@ -1042,11 +1173,14 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 				}
 			}
 			
+			// k now holds the number of edges of the new vertex
+			// we are forming. Add memory for it if it doesn't exist
+			// already.
 			while(k>currentvertexorder) addmemory_vorder();
 			if (mec[k]==mem[k]) addmemory(k);
-			//cout << doubleedge << newdoubleedge << "de ";
+			
+			
 			if(j>0) {
-				//cout << "add" << j << " " << nu[j] << " " << k << endl;
 				if(nu[j]!=k) {
 					edp=mep[k]+(2*k+1)*mec[k]++;
 					i=0;
@@ -1065,7 +1199,6 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 					ed[j]=edp;
 				} else i=nu[j];
 			} else {
-				//cout << "create" << p << " " << k << endl;
 				ed[p]=mep[k]+(2*k+1)*mec[k]++;
 				ed[p][2*k]=p;
 				if (stack2==currentdeletesize2) addmemory_ds2();
