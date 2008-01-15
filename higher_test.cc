@@ -38,7 +38,7 @@ int main() {
 	}
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	file.open("test.pov",ofstream::out|ofstream::trunc);
-	v.dumppov(file,0.0,0.0,0.0);
+	file.open("test",ofstream::out|ofstream::trunc);
+	v.dumpgnuplot(file,0.0,0.0,0.0);
 	file.close();
 }
