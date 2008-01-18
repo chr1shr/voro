@@ -922,7 +922,7 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 
 			// Add memory for the new vertex if needed, and
 			// initialize
-			while (nu[p]>currentvertexorder) addmemory_vorder();
+			while (nu[p]>=currentvertexorder) addmemory_vorder();
 			if (mec[nu[p]]==mem[nu[p]]) addmemory(nu[p]);
 			ed[p]=mep[nu[p]]+(2*nu[p]+1)*mec[nu[p]]++;
 			ed[p][2*nu[p]]=p;
@@ -989,7 +989,7 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 			// Add memory to store the vertex if it doesn't exist
 			// already
 			k=1;
-			while(nu[p]>currentvertexorder) addmemory_vorder();
+			while(nu[p]>=currentvertexorder) addmemory_vorder();
 			if (mec[nu[p]]==mem[nu[p]]) addmemory(nu[p]);
 
 			// Copy the edges of the original vertex into the new
@@ -1219,7 +1219,7 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 			// k now holds the number of edges of the new vertex
 			// we are forming. Add memory for it if it doesn't exist
 			// already.
-			while(k>currentvertexorder) addmemory_vorder();
+			while(k>=currentvertexorder) addmemory_vorder();
 			if (mec[k]==mem[k]) addmemory(k);
 			
 			// Now create a new vertex with order k, or augment
