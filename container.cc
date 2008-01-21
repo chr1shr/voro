@@ -24,9 +24,10 @@ const int maxnvertices=1048576;
 const int maxdubious=1048576;
 const int maxdeletesize=1048576;
 const int maxdeletesize2=1048576;
+const int maxparticlemem=1048576;
 
-const double tolerance=1e-7;
-const double tolerance2=2e-7;
+const double tolerance=1e-9;
+const double tolerance2=2e-9;
 
 #include "container.hh"
 
@@ -38,14 +39,16 @@ const double tolerance2=2e-7;
 container::container(double xa,double xb,double ya,double yb,double za,double zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
 	: ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
-	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),mem(memi),
+	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	xperiodic(xper), yperiodic(yper), zperiodic(zper) {
 	co=new int[nxyz];
 	for(int l=0;l<nxyz;l++) co[l]=0;
+	mem=new int[nxyz];
+	for(int l=0;l<nxyz;l++) mem[l]=memi;
 	id=new int*[nxyz];
-	for(int l=0;l<nxyz;l++) id[l]=new int[mem];
+	for(int l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new double*[nxyz];
-	for(int l=0;l<nxyz;l++) p[l]=new double[3*mem];
+	for(int l=0;l<nxyz;l++) p[l]=new double[3*memi];
 };
 
 // Dumps all the particle positions and identifies to a file
@@ -67,7 +70,7 @@ void container::put(int n,double x,double y,double z) {
 		if(i<nx&&j<ny&&k<nz) {
 			i+=nx*j+nxy*k;
 #ifdef OVERFLOW_CHECKING
-			if(co[i]==mem) throw overflow("Not enough space in the grid");
+			if(co[i]==mem[i]) addparticlemem(i);
 #endif
 			p[i][3*co[i]]=x;
 			p[i][3*co[i]+1]=y;
@@ -76,6 +79,22 @@ void container::put(int n,double x,double y,double z) {
 		}
 	}
 };
+
+// Increase memory for a particular region
+void container::addparticlemem(int i) {
+	cout << "memscaleup" << i << endl;
+	int *idp;double *pp;
+	int l,nmem=2*mem[i];
+	if (nmem>maxparticlemem) throw overflow("Absolute maximum memory allocation exceeded");
+	idp=new int[nmem];
+	for(l=0;l<co[i];l++) idp[l]=id[i][l];
+	pp=new double[3*nmem];
+	for(l=0;l<3*co[i];l++) pp[l]=p[i][l];
+	mem[i]=nmem;
+	delete id[i];id[i]=idp;
+	delete p[i];p[i]=pp;
+}
+
 
 // Import a list of particles from standard input
 void container::import() {
@@ -234,6 +253,48 @@ void container::vprintall() {
 	}
 };
 
+
+// Prints a list of all particle labels, positions, and Voronoi volumes to the
+// standard output
+void container::vprintall(char *filename) {
+	double x,y,z,x1,y1,z1,x2,y2,z2,lr,lrs,ur,urs,rs,qx,qy,qz;
+	voronoicell c;
+	loop l(this);
+	ofstream of;
+	of.open(filename,ofstream::out|ofstream::trunc);
+	int i,j,s,t;
+	for(s=0;s<nxyz;s++) {
+		for(i=0;i<co[s];i++) {
+			x=p[s][3*i];y=p[s][3*i+1];z=p[s][3*i+2];
+			if (xperiodic) x1=-(x2=0.5*(bx-ax));
+			else {x1=ax-x;x2=bx-x;}
+			if (yperiodic) y1=-(y2=0.5*(by-ay));
+			else {y1=ay-y;y2=by-y;}
+			if (zperiodic) z1=-(z2=0.5*(bz-az));
+			else {z1=az-z;z2=bz-z;}
+			c.init(x1,x2,y1,y2,z1,z2);
+			lr=lrs=0;
+			while(lrs<c.maxradsq()) {
+				ur=lr+0.5;urs=ur*ur;
+				t=l.init(x,y,z,ur,qx,qy,qz);
+				do {
+					for(j=0;j<co[t];j++) {
+						x1=p[t][3*j]+qx-x;
+						y1=p[t][3*j+1]+qy-y;
+						z1=p[t][3*j+2]+qz-z;
+						rs=x1*x1+y1*y1+z1*z1;
+						if ((j!=i||s!=t)&&lrs-tolerance<rs&&rs<urs+tolerance) c.plane(x1,y1,z1,rs);
+					}
+				} while ((t=l.inc(qx,qy,qz))!=-1);
+				lr=ur;lrs=urs;
+			}
+			of << id[s][i] << " " << x << " " << y << " " << z << " " << c.volume() << endl;
+		}
+	}
+	of.close();
+};
+
+
 // Creates a loop object, by pulling the necesssary constants about the container
 // geometry from a pointer to the current container class
 loop::loop(container *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
@@ -373,6 +434,18 @@ voronoicell::voronoicell() :
 		mec[i]=0;
 	}
 };
+
+voronoicell::~voronoicell() {
+	delete ds;
+	delete ds2;
+	for(int i=0;i<currentvertexorder;i++) if (mem[i]>0) delete mep[i];
+	delete mem;
+	delete mec;
+	delete mep;
+	delete ed;
+	delete nu;
+	delete pts;
+}
 
 // Increases the memory storage for a particular vertex order
 void voronoicell::addmemory(int i) {

@@ -43,12 +43,14 @@ class container {
 		void vdraw(char *filename,out_type ot);
 		void vcomputeall(double *bb);
 		void vprintall();
+		void vprintall(char *filename);
 	private:
+		void addparticlemem(int i);
 		const double ax,bx,ay,by,az,bz;
 		const double xsp,ysp,zsp;
-		const int nx,ny,nz,nxy,nxyz,mem;
+		const int nx,ny,nz,nxy,nxyz;
 		const bool xperiodic,yperiodic,zperiodic;
-		int *co;
+		int *co,*mem;
 		int **id;
 		double **p;
 		friend class loop;
@@ -115,6 +117,7 @@ class voronoicell {
 		int p;
 		suretest sure;
 		voronoicell();
+		~voronoicell();
 		inline void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
 		inline void init_octahedron(double l);
 		inline void init_test();

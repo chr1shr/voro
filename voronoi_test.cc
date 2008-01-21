@@ -17,7 +17,7 @@ const int n_x=3,n_y=3,n_z=3;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=50;
+const int particles=200;
 
 // This function returns a random double between 0 and 1;
 double rnd() {return double(rand())/RAND_MAX;}

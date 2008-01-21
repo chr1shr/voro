@@ -18,8 +18,9 @@ int main() {
 	
 	// Cut the cell by 100000 random planes which are all a distance 1 away
 	// from the origin, to make an approximation to a sphere
-	for(int i=0;i<100000;i++) {
-		if (i%10000==0) cout << i << " " << v.p << endl;
+	for(int i=0;i<10000;i++) {
+		cout << i << " " << v.volume() << endl;
+	//	if (i%10000==0) cout << i << " " << v.p << endl;
 		x=double(2*rand()-1)/RAND_MAX;
 		y=double(2*rand()-1)/RAND_MAX;
 		z=double(2*rand()-1)/RAND_MAX;
