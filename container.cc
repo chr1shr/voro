@@ -82,7 +82,6 @@ void container::put(int n,double x,double y,double z) {
 
 // Increase memory for a particular region
 void container::addparticlemem(int i) {
-	cout << "memscaleup" << i << endl;
 	int *idp;double *pp;
 	int l,nmem=2*mem[i];
 	if (nmem>maxparticlemem) throw overflow("Absolute maximum memory allocation exceeded");
@@ -691,7 +690,7 @@ inline void voronoicell::init_test() {
 // Adds an order 1 vertex to the memory structure, and specifies its edge
 void voronoicell::add_vertex(double x,double y,double z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
-	if (mem[1]=mec[1]) addmemory(1);
+	if (mem[1]==mec[1]) addmemory(1);
 	int *q=mep[1]+3*mec[1]++;ed[p]=q;
 	q[0]=a;q[2]=p++;
 };
@@ -699,7 +698,7 @@ void voronoicell::add_vertex(double x,double y,double z,int a) {
 // Adds an order 2 vertex to the memory structure, and specifies its edges
 void voronoicell::add_vertex(double x,double y,double z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
-	if (mem[2]=mec[2]) addmemory(2);
+	if (mem[2]==mec[2]) addmemory(2);
 	int *q=mep[2]+5*mec[2]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[4]=p++;
 };
@@ -707,7 +706,7 @@ void voronoicell::add_vertex(double x,double y,double z,int a,int b) {
 // Adds an order 3 vertex to the memory structure, and specifies its edges
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
-	if (mem[3]=mec[3]) addmemory(3);
+	if (mem[3]==mec[3]) addmemory(3);
 	int *q=mep[3]+7*mec[3]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
 };
@@ -715,7 +714,7 @@ void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c) {
 // Adds an order 4 vertex to the memory structure, and specifies its edges
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
-	if (mem[4]=mec[4]) addmemory(4);
+	if (mem[4]==mec[4]) addmemory(4);
 	int *q=mep[4]+9*mec[4]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
 };
@@ -723,7 +722,7 @@ void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d)
 // Adds an order 5 vertex to the memory structure, and specifies its edges
 void voronoicell::add_vertex(double x,double y,double z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
-	if (mem[5]=mec[5]) addmemory(5);
+	if (mem[5]==mec[5]) addmemory(5);
 	int *q=mep[5]+11*mec[5]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
 };
@@ -775,7 +774,7 @@ inline void voronoicell::relconstruct() {
 // x*x+y*y+z*z.
 bool voronoicell::plane(double x,double y,double z,double rsq) {
 	int count=0,i,j,k,up=0,lp=0,tp,cp,qp=1,rp,stack=0;stack2=0;
-	int us,ls,qs,iqs,cs,uw,qw,lw,tw;
+	int us=0,ls=0,qs,iqs,cs,uw,qw=0,lw,tw;
 	int *edp,*emp;
 	double u,l,t,r,q;bool complicatedsetup=false,newdoubleedge=false,doubleedge=false;
 
@@ -792,7 +791,7 @@ bool voronoicell::plane(double x,double y,double z,double rsq) {
 		if(r<t) {up=qp;u=q;t=r;uw=qw;}
 		tw+=qp++;
 	}
-	lp=up;l=u;
+	lp=up;lw=uw;l=u;
 
 	// Starting from an initial guess, we now move from vertex to vertex,
 	// to try and find an edge which intersects the cutting plane,
@@ -1667,7 +1666,7 @@ inline void voronoicell::dumpgnuplot(ofstream &of,double x,double y,double z) {
 };
 
 // Randomly perturbs the points in the Voronoi cell by an amount r
-inline bool voronoicell::perturb(double r) {
+inline void voronoicell::perturb(double r) {
 	for(int i=0;i<3*p;i++) {
 		pts[i]+=(2*double(rand())/RAND_MAX-1)*r;
 	}

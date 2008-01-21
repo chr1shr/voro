@@ -138,7 +138,7 @@ class voronoicell {
 		inline void edgeprint();
 		inline bool collapseorder1();
 		inline bool collapseorder2();
-		inline bool perturb(double r);
+		inline void perturb(double r);
 	private:
 		int stack2;
 		void addmemory(int i);

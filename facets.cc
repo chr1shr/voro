@@ -6,16 +6,11 @@
 
 #include "container.cc"
 
-// Set up constants for the container geometry
-const double x_min=-1,x_max=1;
-const double y_min=-1,y_max=1;
-const double z_min=-1,z_max=1;
-
 // Set up the number of blocks that the container is divided into
 const int n_x=3,n_y=3,n_z=3;
 
 // A guess for the memory allocation; should be bigger than 125/(diameter^3).
-const int memory=1;
+const int memory=256;
 
 // This message gets displayed if the command line arguments are incorrect
 void helpmessage() {
@@ -31,9 +26,9 @@ int main(int argc,char **argv) {
 		i=1;periodic=false;
 	} else if (argc==9) {
 		if (strcmp(argv[1],"-p")==0) {periodic=true;i=2;}
-		else {helpmessage();return 0;}
+		else {helpmessage();return 1;}
 	} else {
-		helpmessage();return 0;
+		helpmessage();return 1;
 	}
 
 	// Read in the dimensions of the test box, and estimate the number of
@@ -71,4 +66,5 @@ int main(int argc,char **argv) {
 	// format ready for plotting by gnuplot
 	sprintf(buffer,"%s.gnu",argv[i+6]);
 	con.vdraw(buffer,gnuplot);
+	return 0;
 }
