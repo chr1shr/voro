@@ -2,22 +2,19 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : October 19th 2007
+// Date     : January 21st 2007
 
-// If this is defined, then extra checks are built into the code to
-// notify the user of memory overflows in the container grid, and in
-// the Voronoi calculation
-#define OVERFLOW_CHECKING
+// These constants set the initial memory allocation for the Voronoi cell
+const int initvertices=256;
+const int initvertexorder=64;
+const int init3vertices=256;
+const int initnvertices=8;
+const int initdubious=256;
+const int initdeletesize=256;
+const int initdeletesize2=256;
 
-// This constant sets the maximum number of vertices for a single Voronoi cell
-const int initvertices=2560;
-const int initvertexorder=640;
-const int init3vertices=2560;
-const int initnvertices=80;
-const int initdubious=2560;
-const int initdeletesize=2560;
-const int initdeletesize2=2560;
-
+// If the initial memory is too small, the program dynamically allocates more.
+// However, if the limits below are reached, then the program bails out.
 const int maxvertices=1048576;
 const int maxvertexorder=2048;
 const int maxnvertices=1048576;
@@ -26,6 +23,8 @@ const int maxdeletesize=1048576;
 const int maxdeletesize2=1048576;
 const int maxparticlemem=1048576;
 
+// This sets the numerical tolerance. Below these values, the plane cutting
+// snaps to existing vertices rather than creating new ones.
 const double tolerance=1e-9;
 const double tolerance2=2e-9;
 
@@ -69,9 +68,7 @@ void container::put(int n,double x,double y,double z) {
 		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
 		if(i<nx&&j<ny&&k<nz) {
 			i+=nx*j+nxy*k;
-#ifdef OVERFLOW_CHECKING
 			if(co[i]==mem[i]) addparticlemem(i);
-#endif
 			p[i][3*co[i]]=x;
 			p[i][3*co[i]+1]=y;
 			p[i][3*co[i]+2]=z;

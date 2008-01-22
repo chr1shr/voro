@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : October 19th 2007
+// Date     : January 21st 2007
 
 #ifndef CONTAINER_HH
 #define CONTAINER_HH
@@ -13,14 +13,12 @@
 #include <cmath>
 using namespace std;
 
-#ifdef OVERFLOW_CHECKING
 struct overflow {
     const char *msg;
     overflow(const char *p) : msg(p) {
 	cerr << p << endl;
     }
 };
-#endif
 
 enum out_type{pov,gnuplot};
 
