@@ -40,14 +40,26 @@ container::container(double xa,double xb,double ya,double yb,double za,double zb
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	xperiodic(xper), yperiodic(yper), zperiodic(zper) {
+	int l;
 	co=new int[nxyz];
-	for(int l=0;l<nxyz;l++) co[l]=0;
+	for(l=0;l<nxyz;l++) co[l]=0;
 	mem=new int[nxyz];
-	for(int l=0;l<nxyz;l++) mem[l]=memi;
+	for(l=0;l<nxyz;l++) mem[l]=memi;
 	id=new int*[nxyz];
-	for(int l=0;l<nxyz;l++) id[l]=new int[memi];
+	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new double*[nxyz];
-	for(int l=0;l<nxyz;l++) p[l]=new double[3*memi];
+	for(l=0;l<nxyz;l++) p[l]=new double[3*memi];
+};
+
+// Container destructor - free memory
+container::~container() {
+	int l;
+	for(l=0;l<nxyz;l++) delete [] p[l];
+	for(l=0;l<nxyz;l++) delete [] id[l];
+	delete [] p;
+	delete [] id;
+	delete [] mem;
+	delete [] co;	
 };
 
 // Dumps all the particle positions and identifies to a file
@@ -87,8 +99,8 @@ void container::addparticlemem(int i) {
 	pp=new double[3*nmem];
 	for(l=0;l<3*co[i];l++) pp[l]=p[i][l];
 	mem[i]=nmem;
-	delete id[i];id[i]=idp;
-	delete p[i];p[i]=pp;
+	delete [] id[i];id[i]=idp;
+	delete [] p[i];p[i]=pp;
 }
 
 
@@ -432,15 +444,15 @@ voronoicell::voronoicell() :
 };
 
 voronoicell::~voronoicell() {
-	delete ds;
-	delete ds2;
-	for(int i=0;i<currentvertexorder;i++) if (mem[i]>0) delete mep[i];
-	delete mem;
-	delete mec;
-	delete mep;
-	delete ed;
-	delete nu;
-	delete pts;
+	delete [] ds;
+	delete [] ds2;
+	for(int i=0;i<currentvertexorder;i++) if (mem[i]>0) delete [] mep[i];
+	delete [] mem;
+	delete [] mec;
+	delete [] mep;
+	delete [] ed;
+	delete [] nu;
+	delete [] pts;
 }
 
 // Increases the memory storage for a particular vertex order
@@ -477,7 +489,7 @@ void voronoicell::addmemory(int i) {
 				j++;
 			}
 		}
-		delete mep[i];
+		delete [] mep[i];
 		mep[i]=l;
 	}
 };
@@ -489,13 +501,13 @@ void voronoicell::addmemory_vertices() {
 	double *ppts;
 	ped=new int*[i];
 	for(j=0;j<currentvertices;j++) ped[j]=ed[j];
-	delete ed;ed=ped;
+	delete [] ed;ed=ped;
 	pnu=new int[i];
 	for(j=0;j<currentvertices;j++) pnu[j]=nu[j];
-	delete nu;nu=pnu;
+	delete [] nu;nu=pnu;
 	ppts=new double[3*i];
 	for(j=0;j<3*currentvertices;j++) ppts[j]=pts[j];
-	delete pts;sure.p=pts=ppts;
+	delete [] pts;sure.p=pts=ppts;
 	currentvertices=i;
 };
 
@@ -505,13 +517,13 @@ void voronoicell::addmemory_vorder() {
 	cerr << "Vertex order memory scaled up to " << i << endl;
 	pmem=new int[i];
 	for(j=0;j<currentvertexorder;j++) pmem[j]=mem[j];while(j<i) pmem[j++]=0;
-	delete mem;mem=pmem;
+	delete [] mem;mem=pmem;
 	pmep=new int*[i];
 	for(j=0;j<currentvertexorder;j++) pmep[j]=mep[j];
-	delete mep;mep=pmep;
+	delete [] mep;mep=pmep;
 	pmec=new int[i];
 	for(j=0;j<currentvertexorder;j++) pmec[j]=mec[j];while(j<i) pmec[j++]=0;
-	delete mec;mec=pmec;
+	delete [] mec;mec=pmec;
 	currentvertexorder=i;
 };
 
@@ -521,7 +533,7 @@ void voronoicell::addmemory_ds() {
 	cerr << "Delete stack 1 memory scaled up to " << i << endl;
 	pds=new int[i];
 	for(j=0;j<currentdeletesize;j++) pds[j]=ds[j];
-	delete ds;ds=pds;
+	delete [] ds;ds=pds;
 	currentdeletesize=i;
 };
 
@@ -531,7 +543,7 @@ void voronoicell::addmemory_ds2() {
 	cerr << "Delete stack 2 memory scaled up to " << i << endl;
 	pds2=new int[i];
 	for(j=0;j<currentdeletesize2;j++) pds2[j]=ds2[j];
-	delete ds2;ds2=pds2;
+	delete [] ds2;ds2=pds2;
 	currentdeletesize2=i;
 };
 
@@ -1584,43 +1596,41 @@ inline int voronoicell::vor_down(int a,int p) {
 // Calculates the volume of a Voronoi cell
 inline double voronoicell::volume() {
 	const double fe=1/48.0;
-	// TODO - This memory allocation needs to be dynamic
-	static unsigned int b[maxvertices];double vol=0;
+	double vol=0;
 	int i,j,k,l,m,n;
 	double ux,uy,uz,vx,vy,vz,wx,wy,wz;
-	for(i=0;i<p;i++) b[i]=0;
 	for(i=1;i<p;i++) {
-
-		// TODO - this routine will fail if there are vertices
-		// whose order is bigger than the number of bits in an integer.
-		if (nu[i]>30) throw overflow("Volume routine doesn't support really high order vertices");
-		
 		ux=pts[0]-pts[3*i];
 		uy=pts[1]-pts[3*i+1];
 		uz=pts[2]-pts[3*i+2];
 		for(j=0;j<nu[i];j++) {
-			if ((b[i]&(1<<j))==0) {
-				b[i]|=1<<j;
-				k=ed[i][j];
+			k=ed[i][j];
+			if (k>=0) {
+				ed[i][j]=-1-k;
 				l=vor_up(ed[i][nu[i]+j],k);
 				vx=pts[3*k]-pts[0];
 				vy=pts[3*k+1]-pts[1];
 				vz=pts[3*k+2]-pts[2];
-				b[k]|=1<<l;
-				m=ed[k][l];
+				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
 					n=vor_up(ed[k][nu[k]+l],m);
 					wx=pts[3*m]-pts[0];
 					wy=pts[3*m+1]-pts[1];
 					wz=pts[3*m+2]-pts[2];
 					vol+=ux*vy*wz+uy*vz*wx+uz*vx*wy-uz*vy*wx-uy*vx*wz-ux*vz*wy;
-					b[m]|=1<<n;
 					k=m;l=n;vx=wx;vy=wy;vz=wz;
-					m=ed[k][l];
+					m=ed[k][l];ed[k][l]=-1-m;
 				}
 			}
 		}
 	}
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			if(ed[i][j]>=0) throw overflow("Volume routine didn't look everywhere");
+			ed[i][j]=-1-ed[i][j];
+		}
+	}
+
 	return vol*fe;
 };
 
@@ -1674,6 +1684,11 @@ suretest::suretest() : currentdubious(initdubious) {
 	sn=new int[2*currentdubious];
 };
 
+// Suretest destructor to free memory allocation
+suretest::~suretest() {
+	delete [] sn;
+};
+
 // Sets up the suretest class with a particular test plane, and removes
 // any special cases from the table
 inline void suretest::init(double x,double y,double z,double rsq) {
@@ -1695,7 +1710,7 @@ inline int suretest::test(int n,double &ans) {
 			cerr << "Dubious cases buffer scaled up to " << i << endl;
 			int *psn=new int[2*i];
 			for(int j=0;j<2*currentdubious;j++) psn[j]=sn[j];
-			delete sn;sn=psn;
+			delete [] sn;sn=psn;
 		}
 		sn[sc++]=n;
 		sn[sc++]=ans>tolerance?1:(ans<-tolerance?-1:0);

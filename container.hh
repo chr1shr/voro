@@ -32,6 +32,7 @@ class loop;
 class container {
 	public:
 		container(double xa,double xb,double ya,double yb,double za,double zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
+		~container();
 		void dump(char *filename);
 		void put(int n,double x,double y,double z);
 		void import();
@@ -88,6 +89,7 @@ class suretest {
 	public:
 		double *p;
 		suretest();
+		~suretest();
 		inline void init(double x,double y,double z,double rsq);
 		inline int test(int n,double &ans);
 	private:
