@@ -129,6 +129,7 @@ class voronoicell {
 		bool plane(double x,double y,double z,double rs);
 		inline bool plane(double x,double y,double z);
 		inline void dumppov(ofstream &of,double x,double y,double z);
+		void dumppovmesh(ofstream &of,double x,double y,double z);
 		inline void dumpgnuplot(ofstream &of,double x,double y,double z);
 		inline void relcheck();
 		inline void duplicatecheck();

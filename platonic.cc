@@ -11,7 +11,6 @@ const double Phi=0.5*(1+sqrt(5.0));
 const double phi=0.5*(1-sqrt(5.0));
 
 int main() {
-	double x,y,z,rsq,r;
 	voronoicell v;
 	ofstream file;
 

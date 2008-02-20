@@ -1672,6 +1672,39 @@ inline void voronoicell::dumpgnuplot(ofstream &of,double x,double y,double z) {
 	}
 };
 
+// Calculates the volume of a Voronoi cell
+void voronoicell::dumppovmesh(ofstream &of,double x,double y,double z) {
+	int i,j,k,l,m,n;
+	of << "mesh2 {" << endl << "vertex_vectors {" << endl << p << "," << endl;
+	for(i=0;i<p;i++) {
+		of << "<" << x+0.5*pts[3*i] << "," << y+0.5*pts[3*i+1] << "," << z+0.5*pts[3*i+2] << ">," << endl;
+	}
+	of << "}" << endl << "face_indices {" << endl << 2*(p-2) << "," << endl;
+	for(i=1;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				ed[i][j]=-1-k;
+				l=vor_up(ed[i][nu[i]+j],k);
+				m=ed[k][l];ed[k][l]=-1-m;
+				while(m!=i) {
+					n=vor_up(ed[k][nu[k]+l],m);
+					of << "<" << i << "," << k << "," << m << ">" << endl;
+					k=m;l=n;
+					m=ed[k][l];ed[k][l]=-1-m;
+				}
+			}
+		}
+	}
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			if(ed[i][j]>=0) throw overflow("Mesh routine didn't look everywhere");
+			ed[i][j]=-1-ed[i][j];
+		}
+	}
+	of << "}" << endl << "}" << endl;
+};
+
 // Randomly perturbs the points in the Voronoi cell by an amount r
 inline void voronoicell::perturb(double r) {
 	for(int i=0;i<3*p;i++) {
