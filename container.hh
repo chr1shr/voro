@@ -28,15 +28,21 @@ class container {
 		container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_point zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container();
 		void dump(char *filename);
-		void put(int n,f_point x,f_point y,f_point z);
 		void import();
 		void regioncount();
 		void clear();
 		void vdraw(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,out_type ot);
 		void vdraw(char *filename,out_type ot);
 		void vcomputeall(f_point *bb);
+		void vprintall(ostream of);
 		void vprintall();
 		void vprintall(char *filename);
+#ifdef FACETS_RADIUS
+		void put(int n,f_point x,f_point y,f_point z,f_point r);
+		f_point max_radius;
+#else
+		void put(int n,f_point x,f_point y,f_point z);
+#endif
 	private:
 		void addparticlemem(int i);
 		const f_point ax,bx,ay,by,az,bz;

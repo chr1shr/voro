@@ -25,7 +25,12 @@ container::container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_po
 	id=new int*[nxyz];
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new f_point*[nxyz];
+#ifdef FACETS_RADIUS
+	max_radius=0;
+	for(l=0;l<nxyz;l++) p[l]=new f_point[4*memi];
+#else
 	for(l=0;l<nxyz;l++) p[l]=new f_point[3*memi];
+#endif
 };
 
 // Container destructor - free memory
@@ -45,22 +50,34 @@ void container::dump(char *filename) {
 	ofstream file;
 	file.open(filename,ofstream::out|ofstream::trunc);
 	for(l=0;l<nxyz;l++) {
-		for (c=0;c<co[l];c++) file << id[l][c] << " " << p[l][3*c] << " " << p[l][3*c+1] << " " << p[l][3*c+2] << endl;
+		for (c=0;c<co[l];c++)
+#ifdef FACETS_RADIUS			
+			file << id[l][c] << " " << p[l][3*c] << " " << p[l][3*c+1] << " " << p[l][3*c+2] << endl;
+#else
+			file << id[l][c] << " " << p[l][4*c] << " " << p[l][4*c+1] << " " << p[l][4*c+2] << " " << p[l][4*c+3] << endl;
+#endif
 	}
 	file.close();
 };
 
 // Put a particle into the correct region of the container
+#ifdef FACETS_RADIUS
+void container::put(int n,f_point x,f_point y,f_point z,f_point r) {
+#else
 void container::put(int n,f_point x,f_point y,f_point z) {
+#endif
 	if(x>ax&&y>ay&&z>az) {
 		int i,j,k;
 		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
 		if(i<nx&&j<ny&&k<nz) {
 			i+=nx*j+nxy*k;
 			if(co[i]==mem[i]) addparticlemem(i);
-			p[i][3*co[i]]=x;
-			p[i][3*co[i]+1]=y;
-			p[i][3*co[i]+2]=z;
+#ifdef FACETS_RADIUS
+			p[i][4*co[i]]=x;p[i][4*co[i]+1]=y;p[i][4*co[i]+2]=z;p[i][4*co[i]+3]=r;
+			if (r>max_radius) max_radius=r;
+#else
+			p[i][3*co[i]]=x;p[i][3*co[i]+1]=y;p[i][3*co[i]+2]=z;
+#endif
 			id[i][co[i]++]=n;
 		}
 	}
@@ -73,8 +90,13 @@ void container::addparticlemem(int i) {
 	if (nmem>maxparticlemem) throw fatal_error("Absolute maximum memory allocation exceeded");
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
+#ifdef FACETS_RADIUS
+	pp=new f_point[4*nmem];
+	for(l=0;l<4*co[i];l++) pp[l]=p[i][l];
+#else
 	pp=new f_point[3*nmem];
 	for(l=0;l<3*co[i];l++) pp[l]=p[i][l];
+#endif
 	mem[i]=nmem;
 	delete [] id[i];id[i]=idp;
 	delete [] p[i];p[i]=pp;
@@ -83,10 +105,18 @@ void container::addparticlemem(int i) {
 // Import a list of particles from standard input
 void container::import() {
 	int n;f_point x,y,z;
+#ifdef FACETS_RADIUS
+	f_point r;
+	cin >> n >> x >> y >> z >> r;
+	while(!cin.eof()) {
+		put(n,x,y,z,r);
+		cin >> n >> x >> y >> z >> r;
+#else
 	cin >> n >> x >> y >> z;
 	while(!cin.eof()) {
 		put(n,x,y,z);
 		cin >> n >> x >> y >> z;
+#endif
 	}
 };
 
@@ -103,6 +133,9 @@ void container::regioncount() {
 // Clears a container of particles
 void container::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
+#ifdef FACETS_RADIUS
+	max_radius=0;
+#endif
 };
 
 // Computes the Voronoi cells for all particles within a box with corners
@@ -202,50 +235,10 @@ void container::vcomputeall(f_point *bb) {
 
 // Prints a list of all particle labels, positions, and Voronoi volumes to the
 // standard output
-void container::vprintall() {
+void container::vprintall(ostream of) {
 	f_point x,y,z,x1,y1,z1,x2,y2,z2,lr,lrs,ur,urs,rs,qx,qy,qz;
 	voronoicell c;
 	loop l(this);
-	int i,j,s,t;
-	for(s=0;s<nxyz;s++) {
-		for(i=0;i<co[s];i++) {
-			x=p[s][3*i];y=p[s][3*i+1];z=p[s][3*i+2];
-			if (xperiodic) x1=-(x2=0.5*(bx-ax));
-			else {x1=ax-x;x2=bx-x;}
-			if (yperiodic) y1=-(y2=0.5*(by-ay));
-			else {y1=ay-y;y2=by-y;}
-			if (zperiodic) z1=-(z2=0.5*(bz-az));
-			else {z1=az-z;z2=bz-z;}
-			c.init(x1,x2,y1,y2,z1,z2);
-			lr=lrs=0;
-			while(lrs<c.maxradsq()) {
-				ur=lr+0.5;urs=ur*ur;
-				t=l.init(x,y,z,ur,qx,qy,qz);
-				do {
-					for(j=0;j<co[t];j++) {
-						x1=p[t][3*j]+qx-x;
-						y1=p[t][3*j+1]+qy-y;
-						z1=p[t][3*j+2]+qz-z;
-						rs=x1*x1+y1*y1+z1*z1;
-						if ((j!=i||s!=t)&&lrs-tolerance<rs&&rs<urs+tolerance) c.plane(x1,y1,z1,rs);
-					}
-				} while ((t=l.inc(qx,qy,qz))!=-1);
-				lr=ur;lrs=urs;
-			}
-			cout << id[s][i] << " " << x << " " << y << " " << z << " " << c.volume() << endl;
-		}
-	}
-};
-
-
-// Prints a list of all particle labels, positions, and Voronoi volumes to the
-// standard output
-void container::vprintall(char *filename) {
-	f_point x,y,z,x1,y1,z1,x2,y2,z2,lr,lrs,ur,urs,rs,qx,qy,qz;
-	voronoicell c;
-	loop l(this);
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
 	int i,j,s,t;
 	for(s=0;s<nxyz;s++) {
 		for(i=0;i<co[s];i++) {
@@ -278,6 +271,18 @@ void container::vprintall(char *filename) {
 	of.close();
 };
 
+// An overloaded version of vprintall, which just prints to standard output
+void container::vprintall() {
+	vprintall(cout);
+};
+
+// An overloaded version of vprintall, which outputs the result to <filename>
+void container::vprintall(char* filename) {
+	ofstream of;
+	of.open(filename,ofstream::out|ofstream:trunc);
+	vprintall(of);
+	of.close();
+};
 
 // Creates a loop object, by pulling the necesssary constants about the container
 // geometry from a pointer to the current container class
