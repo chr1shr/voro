@@ -4,6 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : October 19th 2007
 
+#include "cell.cc"
 #include "container.cc"
 
 // Set up constants for the container geometry

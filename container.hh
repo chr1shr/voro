@@ -2,23 +2,17 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : January 21st 2007
+// Date     : February 27th 2008
 
-#ifndef CONTAINER_HH
-#define CONTAINER_HH
+#ifndef FACETS_CONTAINER_HH
+#define FACETS_CONTAINER_HH
 
+#include "constants.hh"
 #include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <cmath>
 using namespace std;
-
-struct overflow {
-    const char *msg;
-    overflow(const char *p) : msg(p) {
-	cerr << p << endl;
-    }
-};
 
 enum out_type{pov,gnuplot};
 
@@ -31,27 +25,27 @@ class loop;
 // particles from standard input, and carrying out Voronoi calculations.
 class container {
 	public:
-		container(double xa,double xb,double ya,double yb,double za,double zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
+		container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_point zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container();
 		void dump(char *filename);
-		void put(int n,double x,double y,double z);
+		void put(int n,f_point x,f_point y,f_point z);
 		void import();
 		void regioncount();
 		void clear();
-		void vdraw(char *filename,double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,out_type ot);
+		void vdraw(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,out_type ot);
 		void vdraw(char *filename,out_type ot);
-		void vcomputeall(double *bb);
+		void vcomputeall(f_point *bb);
 		void vprintall();
 		void vprintall(char *filename);
 	private:
 		void addparticlemem(int i);
-		const double ax,bx,ay,by,az,bz;
-		const double xsp,ysp,zsp;
+		const f_point ax,bx,ay,by,az,bz;
+		const f_point xsp,ysp,zsp;
 		const int nx,ny,nz,nxy,nxyz;
 		const bool xperiodic,yperiodic,zperiodic;
 		int *co,*mem;
 		int **id;
-		double **p;
+		f_point **p;
 		friend class loop;
 };
 
@@ -64,9 +58,9 @@ class container {
 class loop {
 	public:
 		loop(container *q);
-		inline int init(double vx,double vy,double vz,double r,double &px,double &py,double &pz);
-		inline int init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,double &px,double &py,double &pz);
-		inline int inc(double &px,double &py,double &pz);
+		inline int init(f_point vx,f_point vy,f_point vz,f_point r,f_point &px,f_point &py,f_point &pz);
+		inline int init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,f_point &px,f_point &py,f_point &pz);
+		inline int inc(f_point &px,f_point &py,f_point &pz);
 	private:
 		int i,j,k,ai,bi,aj,bj,ak,bk,s;
 		int ip,jp,kp,aip,ajp,akp,inc1,inc2;
@@ -74,83 +68,9 @@ class loop {
 		inline int mydiv(int a,int b);
 		template <class T>
 		inline int myint(T a);
-		double apx,apy,apz;
-		const double sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
+		f_point apx,apy,apz;
+		const f_point sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
 		const int nx,ny,nz,nxy,nxyz;
 		const bool xperiodic,yperiodic,zperiodic;
 };
-
-// Floating point comparisons are notoriously unreliable. This class contains
-// routines to carefully test the positions of vertices in the plane cutting
-// routine. If a dubious case is encountered, the result of the comparison
-// is stored in a table, so it can be accessed later, rather than risking its
-// value changing
-class suretest {
-	public:
-		double *p;
-		suretest();
-		~suretest();
-		inline void init(double x,double y,double z,double rsq);
-		inline int test(int n,double &ans);
-	private:
-		int currentdubious;
-		int sc,*sn;
-		double px,py,pz,prsq;
-};
-
-// This class encapsulates all the routines for storing and calculating a
-// single Voronoi cell. The cell can first be initialized by the init function
-// to be a rectangular box. The box can then be successively cut by planes
-// using the plane function.  Other routines exist for outputting the cell,
-// computing its volume, or finding the largest distance of a vertex from the
-// cell center.  The cell is described by three arrays: pts[] which holds the
-// vertex positions, ed[] which holds the table of edges, and rl[] which is a
-// relational table that determines how two vertices are connected to one
-// another. rl[] is redundant, but helps speed up the computation. The function
-// relcheck checks that the relational table is valid.
-class voronoicell {
-	public:
-		int *mem,**mep,*mec,**ed,*nu,*ds,*ds2;
-		int currentvertices,currentvertexorder;
-		int currentdeletesize,currentdeletesize2;
-		double *pts;
-		int p;
-		suretest sure;
-		voronoicell();
-		~voronoicell();
-		inline void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
-		inline void init_octahedron(double l);
-		inline void init_test();
-		inline void add_vertex(double x,double y,double z,int a);
-		inline void add_vertex(double x,double y,double z,int a,int b);
-		inline void add_vertex(double x,double y,double z,int a,int b,int c);
-		inline void add_vertex(double x,double y,double z,int a,int b,int c,int d);
-		inline void add_vertex(double x,double y,double z,int a,int b,int c,int d,int e);
-		bool plane(double x,double y,double z,double rs);
-		inline bool plane(double x,double y,double z);
-		inline void dumppov(ofstream &of,double x,double y,double z);
-		void dumppovmesh(ofstream &of,double x,double y,double z);
-		inline void dumpgnuplot(ofstream &of,double x,double y,double z);
-		inline void relcheck();
-		inline void duplicatecheck();
-		inline void relconstruct();
-		inline double volume();
-		inline double maxradsq();
-		inline void edgeprint();
-		inline bool collapseorder1();
-		inline bool collapseorder2();
-		inline void perturb(double r);
-	private:
-		int stack2;
-		void addmemory(int i);
-		void addmemory_vertices();
-		void addmemory_vorder();
-		void addmemory_ds();
-		void addmemory_ds2();
-
-		inline int vor_up(int a,int p);
-		inline int vor_down(int a,int p);
-		inline bool delete_connection(int j,int k);
-};
-
 #endif

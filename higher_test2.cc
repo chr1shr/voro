@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : October 19th 2007
 
-#include "container.cc"
+#include "cell.cc"
 
 const double pi=3.1415926535897932384626433832795;
 const int n=64;

@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : October 19th 2007
 
-#include "container.cc"
+#include "cell.cc"
 
 int main() {
 	double x,y,z,rsq,r;

@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : February 12th 2008
 
-#include "container.cc"
+#include "cell.cc"
 
 // Golden ratio constants
 const double Phi=0.5*(1+sqrt(5.0));

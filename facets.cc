@@ -4,6 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : January 21st 2007
 
+#include "cell.cc"
 #include "container.cc"
 
 // Set up the number of blocks that the container is divided into
