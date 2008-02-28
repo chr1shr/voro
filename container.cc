@@ -1702,7 +1702,7 @@ void voronoicell::dumppovmesh(ofstream &of,double x,double y,double z) {
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-	of << "}" << endl << "}" << endl;
+	of << "}" << endl << "inside_vector <0,0,1>" << endl << "}" << endl;
 };
 
 // Randomly perturbs the points in the Voronoi cell by an amount r

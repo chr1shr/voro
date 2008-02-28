@@ -7,7 +7,7 @@
 #include "container.cc"
 
 const double pi=3.1415926535897932384626433832795;
-const int n=128;
+const int n=64;
 const double theta=0.2;
 const double step=2*pi/n;
 
@@ -46,7 +46,11 @@ int main() {
 	}
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	file.open("test",ofstream::out|ofstream::trunc);
-	v.dumpgnuplot(file,0.0,0.0,0.0);
+	file.open("coolm.pov",ofstream::out|ofstream::trunc);
+	v.dumppovmesh(file,0.0,0.0,0.0);
+	file.close();
+	
+	file.open("coolp.pov",ofstream::out|ofstream::trunc);
+	v.dumppov(file,0.0,0.0,0.0);
 	file.close();
 }
