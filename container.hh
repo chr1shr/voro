@@ -14,8 +14,6 @@
 #include <cmath>
 using namespace std;
 
-enum out_type{pov,gnuplot};
-
 class loop;
 
 // The container class represents the whole simulation region. The container
@@ -31,12 +29,16 @@ class container {
 		void import();
 		void regioncount();
 		void clear();
-		void vdraw(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,out_type ot);
-		void vdraw(char *filename,out_type ot);
+		void vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
+		void vdraw_gnuplot(char *filename);
+		void vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
+		void vdraw_pov(char *filename);
 		void vcomputeall(f_point *bb);
-		void vprintall(ostream of);
-		void vprintall();
-		void vprintall(char *filename);
+		void vprintall(ostream &of);
+		inline void vprintall();
+		inline void vprintall(char *filename);
+		inline void compute_cell(voronoicell &c,int s,int i);
+		inline void compute_cell(voronoicell &c,int s,int i,f_point x,f_point y,f_point z);
 #ifdef FACETS_RADIUS
 		void put(int n,f_point x,f_point y,f_point z,f_point r);
 		f_point max_radius;

@@ -66,6 +66,6 @@ int main(int argc,char **argv) {
 	// Save the Voronoi network of all the particles to a text file in a
 	// format ready for plotting by gnuplot
 	sprintf(buffer,"%s.gnu",argv[i+6]);
-	con.vdraw(buffer,gnuplot);
+	con.vdraw_gnuplot(buffer);
 	return 0;
 }

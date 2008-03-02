@@ -139,17 +139,15 @@ void container::clear() {
 };
 
 // Computes the Voronoi cells for all particles within a box with corners
-// (xmin,ymin,zmin) and (xmax,ymax,zmax). The cell edges are then saved to a
-// file. The final argument sets the output format, which can be either "pov"
-// for the POV-Ray raytracer, or "gnuplot" for gnuplot. 
-void container::vdraw(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,out_type ot) {
-	f_point x,y,z,x1,y1,z1,x2,y2,z2,px,py,pz,qx,qy,qz,lr,lrs,ur,urs,rs;
-	loop l1(this),l2(this);
-	int i,j,s,t;
+// (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
+// that can be read by gnuplot
+void container::vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax) {
+	f_point x,y,z,px,py,pz;
+	loop l1(this);
+	int i,s;
 	voronoicell c;
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
-	if (ot==pov) of << "#declare voronoi=union{\n";
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(i=0;i<co[s];i++) {
@@ -157,77 +155,63 @@ void container::vdraw(char *filename,f_point xmin,f_point xmax,f_point ymin,f_po
 			y=p[s][3*i+1]+py;
 			z=p[s][3*i+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				if (xperiodic) x1=-(x2=0.5*(bx-ax));
-				else {x1=ax-x;x2=bx-x;}
-				if (yperiodic) y1=-(y2=0.5*(by-ay));
-				else {y1=ay-y;y2=by-y;}
-				if (zperiodic) z1=-(z2=0.5*(bz-az));
-				else {z1=az-z;z2=bz-z;}
-				c.init(x1,x2,y1,y2,z1,z2);
-				lr=lrs=0;
-				while(lrs<c.maxradsq()) {
-					ur=lr+0.5;urs=ur*ur;
-					t=l2.init(x,y,z,ur,qx,qy,qz);
-					do {
-						for(j=0;j<co[t];j++) {
-							x1=p[t][3*j]+qx-x;
-							y1=p[t][3*j+1]+qy-y;
-							z1=p[t][3*j+2]+qz-z;
-							rs=x1*x1+y1*y1+z1*z1;
-							if ((j!=i||s!=t)&&lrs-tolerance<rs&&rs<urs+tolerance) c.plane(x1,y1,z1,rs);
-						}
-					} while ((t=l2.inc(qx,qy,qz))!=-1);
-					lr=ur;lrs=urs;
-				}
-				switch(ot) {
-					case pov: c.dumppov(of,x,y,z);break;
-					case gnuplot: c.dumpgnuplot(of,x,y,z);
-				}
+				compute_cell(c,s,i,x,y,z);
+				c.dumpgnuplot(of,x,y,z);
 			}
 		}
 	} while ((s=l1.inc(px,py,pz))!=-1);
-	if (ot==pov) of << "}\n";
 	of.close();
 };
 
-// If only a filename and an output type are supplied to vdraw, then assume
-// that we are calculating the entire simulation region
-void container::vdraw(char *filename,out_type ot) {
-	vdraw(filename,ax,bx,ay,by,az,bz,ot);
+// If only a filename is supplied to vdraw_gnuplot, then assume that we are
+// calculating the entire simulation region
+void container::vdraw_gnuplot(char *filename) {
+	vdraw_gnuplot(filename,ax,bx,ay,by,az,bz);
 };
+
+// Computes the Voronoi cells for all particles within a box with corners
+// (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
+// that can be read by gnuplot
+void container::vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax) {
+	f_point x,y,z,px,py,pz;
+	loop l1(this);
+	int i,s;
+	voronoicell c;
+	ofstream of;
+	of.open(filename,ofstream::out|ofstream::trunc);
+	of << "#declare voronoi=union{\n";
+	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
+	do {
+		for(i=0;i<co[s];i++) {
+			x=p[s][3*i]+px;
+			y=p[s][3*i+1]+py;
+			z=p[s][3*i+2]+pz;
+			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
+				compute_cell(c,s,i,x,y,z);
+				c.dumppov(of,x,y,z);break;
+			}
+		}
+	} while ((s=l1.inc(px,py,pz))!=-1);
+	of << "}\n";
+	of.close();
+};
+
+// If only a filename is supplied to vdraw_pov, then assume that we are
+// calculating the entire simulation region
+void container::vdraw_pov(char *filename) {
+	vdraw_pov(filename,ax,bx,ay,by,az,bz);
+};
+
 
 // Computes the Voronoi volumes for all the particles, and stores the
 // results according to the particle label in the f_point array bb
 void container::vcomputeall(f_point *bb) {
-	f_point x,y,z,x1,y1,z1,x2,y2,z2,lr,lrs,ur,urs,rs,qx,qy,qz;
 	voronoicell c;
 	loop l(this);
-	int i,j,s,t;
+	int i,s;
 	for(s=0;s<nxyz;s++) {
 		for(i=0;i<co[s];i++) {
-			x=p[s][3*i];y=p[s][3*i+1];z=p[s][3*i+2];
-			if (xperiodic) x1=-(x2=0.5*(bx-ax));
-			else {x1=ax-x;x2=bx-x;}
-			if (yperiodic) y1=-(y2=0.5*(by-ay));
-			else {y1=ay-y;y2=by-y;}
-			if (zperiodic) z1=-(z2=0.5*(bz-az));
-			else {z1=az-z;z2=bz-z;}
-			c.init(x1,x2,y1,y2,z1,z2);
-			lr=lrs=0;
-			while(lrs<c.maxradsq()) {
-				ur=lr+0.5;urs=ur*ur;
-				t=l.init(x,y,z,ur,qx,qy,qz);
-				do {
-					for(j=0;j<co[t];j++) {
-						x1=p[t][3*j]+qx-x;
-						y1=p[t][3*j+1]+qy-y;
-						z1=p[t][3*j+2]+qz-z;
-						rs=x1*x1+y1*y1+z1*z1;
-						if ((j!=i||s!=t)&&lrs-tolerance<rs&&rs<urs+tolerance) c.plane(x1,y1,z1,rs);
-					}
-				} while ((t=l.inc(qx,qy,qz))!=-1);
-				lr=ur;lrs=urs;
-			}
+			compute_cell(c,s,i);
 			bb[id[s][i]]=c.volume();
 		}
 	}
@@ -235,54 +219,89 @@ void container::vcomputeall(f_point *bb) {
 
 // Prints a list of all particle labels, positions, and Voronoi volumes to the
 // standard output
-void container::vprintall(ostream of) {
-	f_point x,y,z,x1,y1,z1,x2,y2,z2,lr,lrs,ur,urs,rs,qx,qy,qz;
+void container::vprintall(ostream &of) {
+	f_point x,y,z;
 	voronoicell c;
 	loop l(this);
-	int i,j,s,t;
+	int i,s;
 	for(s=0;s<nxyz;s++) {
 		for(i=0;i<co[s];i++) {
-			x=p[s][3*i];y=p[s][3*i+1];z=p[s][3*i+2];
-			if (xperiodic) x1=-(x2=0.5*(bx-ax));
-			else {x1=ax-x;x2=bx-x;}
-			if (yperiodic) y1=-(y2=0.5*(by-ay));
-			else {y1=ay-y;y2=by-y;}
-			if (zperiodic) z1=-(z2=0.5*(bz-az));
-			else {z1=az-z;z2=bz-z;}
-			c.init(x1,x2,y1,y2,z1,z2);
-			lr=lrs=0;
-			while(lrs<c.maxradsq()) {
-				ur=lr+0.5;urs=ur*ur;
-				t=l.init(x,y,z,ur,qx,qy,qz);
-				do {
-					for(j=0;j<co[t];j++) {
-						x1=p[t][3*j]+qx-x;
-						y1=p[t][3*j+1]+qy-y;
-						z1=p[t][3*j+2]+qz-z;
-						rs=x1*x1+y1*y1+z1*z1;
-						if ((j!=i||s!=t)&&lrs-tolerance<rs&&rs<urs+tolerance) c.plane(x1,y1,z1,rs);
-					}
-				} while ((t=l.inc(qx,qy,qz))!=-1);
-				lr=ur;lrs=urs;
-			}
+			x=p[s][3*i];
+			y=p[s][3*i+1];
+			z=p[s][3*i+2];
+			compute_cell(c,s,i,x,y,z);
 			of << id[s][i] << " " << x << " " << y << " " << z << " " << c.volume() << endl;
 		}
 	}
-	of.close();
 };
 
 // An overloaded version of vprintall, which just prints to standard output
-void container::vprintall() {
+inline void container::vprintall() {
 	vprintall(cout);
 };
 
 // An overloaded version of vprintall, which outputs the result to <filename>
-void container::vprintall(char* filename) {
+inline void container::vprintall(char* filename) {
 	ofstream of;
-	of.open(filename,ofstream::out|ofstream:trunc);
+	of.open(filename,ofstream::out|ofstream::trunc);
 	vprintall(of);
 	of.close();
 };
+
+// Computes a single Voronoi cell in the container. This routine can be run by
+// the user, and it is also called multiple times by the functions vprintall,
+// vcomputeall and vdraw.
+inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point y,f_point z) {
+	f_point x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
+	int j,t;
+	loop l(this);
+#ifdef FACETS_RADIUS
+	f_point mul;
+#endif
+
+	// Initialize the voronoi cell to be the entire container. For
+	// non-periodic coordinates, this is set by the position of the walls.
+	// For periodic coordinates, the space is equally divided in either
+	// direction from the particle's initial position. That makes sense
+	// since those boundaries would be made by the neighboring periodic
+	// images of this particle. 
+	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
+	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
+	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
+	c.init(x1,x2,y1,y2,z1,z2);
+
+	// Now the cell is cut by testing neighboring particles in concentric
+	// shells. Once the test shell becomes twice as large as the Voronoi
+	// cell we can stop testing. TODO: this can sometimes be inefficient.
+	// For example, sometimes particles at the top of granular packings can
+	// extend upwards by a long way, and the shells grow very big. It would
+	// be better to use a box-by-box approach, but that's not
+	// straightforward.
+#ifdef FACETS_RADIUS
+	while(lrs*mul<c.maxradsq()) {
+#else
+	while(lrs<c.maxradsq()) {
+#endif
+		ur=lr+0.5;urs=ur*ur;
+		t=l.init(x,y,z,ur,qx,qy,qz);
+		do {
+			for(j=0;j<co[t];j++) {
+				x1=p[t][3*j]+qx-x;
+				y1=p[t][3*j+1]+qy-y;
+				z1=p[t][3*j+2]+qz-z;
+				rs=x1*x1+y1*y1+z1*z1;
+				if ((j!=i||s!=t)&&lrs-tolerance<rs&&rs<urs) c.plane(x1,y1,z1,rs);
+			}
+		} while ((t=l.inc(qx,qy,qz))!=-1);
+		lr=ur;lrs=urs;
+	}
+};
+
+// A overloaded version of compute_cell, that sets up the x, y, and z variables.
+inline void container::compute_cell(voronoicell &c,int s,int i) {
+	double x=p[s][3*i],y=p[s][3*i+1],z=p[s][3*i+2];
+	compute_cell(c,s,i,x,y,z);
+}
 
 // Creates a loop object, by pulling the necesssary constants about the container
 // geometry from a pointer to the current container class
