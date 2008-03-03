@@ -256,7 +256,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point
 	int j,t;
 	loop l(this);
 #ifdef FACETS_RADIUS
-	f_point mul;
+	f_point mul=1+(pt[4*i+3]*pt[4*i+3]-max_radius*max_radius)/(max_radius+pt[4*i+3]);
 #endif
 
 	// Initialize the voronoi cell to be the entire container. For
