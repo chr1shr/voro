@@ -26,13 +26,15 @@ class container {
 		container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_point zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container();
 		void dump(char *filename);
-		void import();
+		void import(istream &is);
+		inline void import();
+		inline void import(char *filename);
 		void regioncount();
 		void clear();
 		void vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
-		void vdraw_gnuplot(char *filename);
+		inline void vdraw_gnuplot(char *filename);
 		void vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
-		void vdraw_pov(char *filename);
+		inline void vdraw_pov(char *filename);
 		void vcomputeall(f_point *bb);
 		void vprintall(ostream &of);
 		inline void vprintall();

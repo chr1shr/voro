@@ -68,11 +68,9 @@ class voronoicell {
 		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c);
 		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d);
 		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d,int e);
-		bool plane(f_point x,f_point y,f_point z,f_point rs);
-		inline bool plane(f_point x,f_point y,f_point z);
-		inline void dumppov(ofstream &of,f_point x,f_point y,f_point z);
-		void dumppovmesh(ofstream &of,f_point x,f_point y,f_point z);
-		inline void dumpgnuplot(ofstream &of,f_point x,f_point y,f_point z);
+		inline void dumppov(ostream &of,f_point x,f_point y,f_point z);
+		void dumppovmesh(ostream &of,f_point x,f_point y,f_point z);
+		inline void dumpgnuplot(ostream &of,f_point x,f_point y,f_point z);
 		inline void relcheck();
 		inline void duplicatecheck();
 		inline void relconstruct();
@@ -82,6 +80,21 @@ class voronoicell {
 		inline bool collapseorder1();
 		inline bool collapseorder2();
 		inline void perturb(f_point r);
+		void facets(ostream &of);
+		inline void facets();
+		inline void facets(char *filename);
+		void facet_statistics(ostream &of);
+		inline void facet_statistics();
+		inline void facet_statistics(char *filename);
+#ifdef FACETS_NEIGHBOR
+		int **mne,**ne;
+		bool nplane(f_point x,f_point y,f_point z,f_point rs,int p_id);
+		inline bool nplane(f_point x,f_point y,f_point z,int p_id);
+		inline bool plane(f_point x,f_point y,f_point z,f_point rs);
+#else
+		bool plane(f_point x,f_point y,f_point z,f_point rs);
+#endif
+		inline bool plane(f_point x,f_point y,f_point z);
 	private:
 		int stack2;
 		void addmemory(int i);

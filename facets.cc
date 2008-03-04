@@ -19,7 +19,8 @@ void helpmessage() {
 }
 
 int main(int argc,char **argv) {
-	int i;bool periodic;char buffer[256];
+	int i,n;bool periodic;char buffer[256];
+	f_point x,y,z;
 	
 	// Check for the periodicity flag, and make sure there are the correct
 	// number of arguments
@@ -34,14 +35,13 @@ int main(int argc,char **argv) {
 
 	// Read in the dimensions of the test box, and estimate the number of
 	// boxes to divide the region up into
-	double xmin=atof(argv[i]),xmax=atof(argv[i+1]);
-	double ymin=atof(argv[i+2]),ymax=atof(argv[i+3]);
-	double zmin=atof(argv[i+4]),zmax=atof(argv[i+5]);
+	f_point xmin=atof(argv[i]),xmax=atof(argv[i+1]);
+	f_point ymin=atof(argv[i+2]),ymax=atof(argv[i+3]);
+	f_point zmin=atof(argv[i+4]),zmax=atof(argv[i+5]);
 
-	int nx,ny,nz;
-	nx=int((xmax-xmin)/5)+1;
-	ny=int((ymax-ymin)/5)+1;
-	nz=int((zmax-zmin)/5)+1;
+	int nx=int((xmax-xmin)*0.2)+1;
+	int ny=int((ymax-ymin)*0.2)+1;
+	int nz=int((zmax-zmin)*0.2)+1;
 
 	// Create a container according to the specifications above
 	container con(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,
@@ -49,15 +49,7 @@ int main(int argc,char **argv) {
 
 
 	// Import the particles
-	ifstream inp;
-	inp.open(argv[i+6],ifstream::in);
-	int n;double x,y,z;
-	inp >> n >> x >> y >> z;
-	while(!inp.eof()) {
-		con.put(n,x,y,z);
-		inp >> n >> x >> y >> z;
-	}
-	inp.close();
+	con.import(argv[i+6]);
 
 	// Print out a list of the particles, and their Voronoi volumes
 	sprintf(buffer,"%s.vol",argv[i+6]);

@@ -15,6 +15,7 @@ const int initnvertices=8;
 const int initdubious=256;
 const int initdeletesize=256;
 const int initdeletesize2=256;
+const int initfacetsize=32;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
@@ -28,11 +29,11 @@ const int maxparticlemem=1048576;
 
 // This sets the numerical tolerance. Below these values, the plane cutting
 // snaps to existing vertices rather than creating new ones.
-// typedef double f_point;
-// const f_point tolerance=1e-9;
-// const f_point tolerance2=2e-9;
-typedef float f_point;
-const f_point tolerance=1e-5;
-const f_point tolerance2=2e-5;
+typedef double f_point;
+const f_point tolerance=1e-10;
+const f_point tolerance2=2e-10;
+//typedef float f_point;
+//const f_point tolerance=1e-5;
+//const f_point tolerance2=2e-5;
 
 #endif

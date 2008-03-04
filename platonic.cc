@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : February 12th 2008
+// Date     : February 27th 2008
 
 #include "cell.cc"
 
@@ -28,9 +28,11 @@ int main() {
 	// Create a cube. Since this is the default shape
 	// we don't need to do any plane cutting 
 	v.init(-1,1,-1,1,-1,1);
+//	v.init_octahedron(1);
 	file.open("cube",ofstream::out|ofstream::trunc);
 	v.dumpgnuplot(file,0,0,0);
 	file.close();
+	v.facets();
 
 	// Create an octahedron
 	v.init(-2,2,-2,2,-2,2);

@@ -8,7 +8,7 @@
 
 const double pi=3.1415926535897932384626433832795;
 const int n=64;
-const double theta=0.2;
+const double theta=0.3;
 const double step=2*pi/n;
 
 int main() {
@@ -26,7 +26,7 @@ int main() {
 	file.close();
 	
 	// Plane cutting
-	for(int n=0;n<500;n++) {
+	for(int n=0;n<350;n++) {
 		x=double(2*rand()-1)/RAND_MAX;
 		y=double(2*rand()-1)/RAND_MAX;
 		z=double(2*rand()-1)/RAND_MAX;
@@ -35,16 +35,17 @@ int main() {
 			r=1/sqrt(rsq);x*=r;y*=r;z*=r;
 			rsq=sqrt(x*x+y*y);r=z/rsq;
 			for(phi=double(rand())/RAND_MAX*step;phi<2*pi;phi+=step)
-				v.plane(x*cos(theta)+sin(theta)*(-y*cos(phi)-x*r*sin(phi)),
-					y*cos(theta)+sin(theta)*(x*cos(phi)-y*r*sin(phi)),
+				v.plane(x*cos(theta)+sin(theta)*(-y*cos(phi)/rsq-x*r*sin(phi)),
+					y*cos(theta)+sin(theta)*(x*cos(phi)/rsq-y*r*sin(phi)),
 					z*cos(theta)+sin(theta)*rsq*sin(phi),1);
 //			(x,y,z);
-//			(-y,x,0);
+//			(-y/sqrt(x*x+y*y),x/sqrt(x*x+y*y),0);
 //			(-x*z/sqrt,-y*z/sqrt,sqrt(x*x+y*y))
 //			v.plane(x,y,z,1);
 		}
 	}
-
+	
+	v.dumpgnuplot(cout,0,0,0);
 	// Output the Voronoi cell to a file, in the gnuplot format
 	file.open("coolm.pov",ofstream::out|ofstream::trunc);
 	v.dumppovmesh(file,0.0,0.0,0.0);
