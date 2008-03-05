@@ -88,6 +88,7 @@ class voronoicell {
 		inline void facet_statistics(char *filename);
 #ifdef FACETS_NEIGHBOR
 		int **mne,**ne;
+		void label_facets();
 		bool nplane(f_point x,f_point y,f_point z,f_point rs,int p_id);
 		inline bool nplane(f_point x,f_point y,f_point z,int p_id);
 		inline bool plane(f_point x,f_point y,f_point z,f_point rs);
@@ -105,6 +106,10 @@ class voronoicell {
 
 		inline int vor_up(int a,int p);
 		inline int vor_down(int a,int p);
+#ifdef FACETS_NEIGHBOR
+		inline bool delete_connection(int j,int k,bool hand);
+#else
 		inline bool delete_connection(int j,int k);
+#endif
 };
 #endif

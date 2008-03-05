@@ -13,7 +13,7 @@ const double phi=0.5*(1-sqrt(5.0));
 int main() {
 	voronoicell v;
 	ofstream file;
-
+/*
 	// Create a tetrahedron
 	v.init(-2,2,-2,2,-2,2);
 	v.plane(1,1,1);
@@ -32,23 +32,25 @@ int main() {
 	file.open("cube",ofstream::out|ofstream::trunc);
 	v.dumpgnuplot(file,0,0,0);
 	file.close();
-	v.facets();
+	v.facets();*/
 
 	// Create an octahedron
 	v.init(-2,2,-2,2,-2,2);
-	v.plane(1,1,1);
-	v.plane(-1,1,1);
-	v.plane(1,-1,1);
-	v.plane(-1,-1,1);
-	v.plane(1,1,-1);
-	v.plane(-1,1,-1);
-	v.plane(1,-1,-1);
-	v.plane(-1,-1,-1);
+	v.nplane(1.8,1.8,1.8,1);
+/*	v.nplane(-1,1,1,2);
+	v.nplane(1,-1,1,3);
+	v.nplane(-1,-1,1,4);
+	v.nplane(1,1,-1,5);
+	v.nplane(-1,1,-1,6);
+	v.nplane(1,-1,-1,7);
+	v.nplane(-1,-1,-1,8);*/
 
 	file.open("octahedron",ofstream::out|ofstream::trunc);
 	v.dumpgnuplot(file,0,0,0);
 	file.close();
-
+	cout << endl;
+	v.facets();
+/*
 	// Create a dodecahedron
 	v.init(-2,2,-2,2,-2,2);
 	v.plane(0,Phi,1);
@@ -93,5 +95,5 @@ int main() {
 
 	file.open("icosahedron",ofstream::out|ofstream::trunc);
 	v.dumpgnuplot(file,0,0,0);
-	file.close();	
+	file.close();	*/
 }
