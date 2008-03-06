@@ -47,7 +47,6 @@ int main(int argc,char **argv) {
 	container con(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,
 			periodic,periodic,periodic,memory);
 
-
 	// Import the particles
 	con.import(argv[i+6]);
 

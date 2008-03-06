@@ -108,12 +108,12 @@ void container::import(istream &is) {
 #ifdef FACETS_RADIUS
 	f_point r;
 	is >> n >> x >> y >> z >> r;
-	while(!cin.eof()) {
+	while(!is.eof()) {
 		put(n,x,y,z,r);
 		is >> n >> x >> y >> z >> r;
 #else
 	is >> n >> x >> y >> z;
-	while(!cin.eof()) {
+	while(!is.eof()) {
 		put(n,x,y,z);
 		is >> n >> x >> y >> z;
 #endif
@@ -247,13 +247,19 @@ void container::vprintall(ostream &of) {
 		for(i=0;i<co[s];i++) {
 #ifdef FACETS_RADIUS
 			x=p[s][4*i];y=p[s][4*i+1];z=p[s][4*i+2];
-			compute_cell(c,s,i,x,y,z);
-			of << id[s][i] << " " << x << " " << y << " " << z << " " << p[s][4*i+3] << " " << c.volume() << endl;
 #else
 			x=p[s][3*i];y=p[s][3*i+1];z=p[s][3*i+2];
-			compute_cell(c,s,i,x,y,z);
-			of << id[s][i] << " " << x << " " << y << " " << z << " " << c.volume() << endl;
 #endif
+			compute_cell(c,s,i,x,y,z);
+			of << id[s][i] << " " << x << " " << y << " " << z;
+#ifdef FACETS_RADIUS
+			of << " " << p[s][4*i+3];
+#endif
+			of << " " << c.volume();
+#ifdef FACETS_NEIGHBOR
+			c.neighbors(of);			
+#endif
+			of << endl;
 		}
 	}
 };
@@ -320,13 +326,13 @@ inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point
 				if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
 #ifdef FACETS_RADIUS
 #ifdef FACETS_NEIGHBOR
-					c.nplane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3],id[s][i]);
+					c.nplane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3],id[t][j]);
 #else
 					c.plane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3]);
 #endif
 #else
 #ifdef FACETS_NEIGHBOR					
-					c.nplane(x1,y1,z1,rs,id[s][i]);
+					c.nplane(x1,y1,z1,rs,id[t][j]);
 #else
 					c.plane(x1,y1,z1,rs);
 #endif
@@ -457,4 +463,3 @@ inline int loop::mymod(int a,int b) {
 inline int loop::mydiv(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 };
-

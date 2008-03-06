@@ -80,38 +80,44 @@ void voronoicell::addmemory(int i) {
 		mem[i]=initnvertices;
 		cerr << "Order " << i << " vertex memory created " << endl;
 	} else {
-		int j,k,*l;
+		int j=0,k,*l;
 		mem[i]*=2;
 		if (mem[i]>maxnvertices) throw fatal_error("Point memory allocation exceeded absolute maximum");
 		cerr << "Order " << i << " vertex memory scaled up to " << mem[i] << endl;
 		l=new int[s*mem[i]];
-		j=0;
+#ifdef FACETS_NEIGHBOR
+		int *q,m=0;
+		q=new int[i*mem[i]];
+#endif
 		while(j<s*mec[i]) {
 			k=mep[i][j+2*i];
 			if(k>=0) {
 				ed[k]=l+j;
+#ifdef FACETS_NEIGHBOR
+				ne[k]=q+m;
+#endif
 			} else {
 				int m;
 				for(m=0;m<stack2;m++) {
 					if(ed[ds2[m]]==mep[i]+j) {
 						ed[ds2[m]]=l+j;
+#ifdef FACETS_NEIGHBOR
+						ne[ds2[m]]=q+m;
+#endif
 						break;
 					}
 				}
 				if(m==stack2) throw fatal_error("Couldn't relocate dangling pointer");
 				cerr << "Relocated dangling pointer" << endl;
 			}
-			for(k=0;k<=2*i;k++) {
-				l[j]=mep[i][j];
-				j++;
-			}
+			for(k=0;k<s;k++,j++) l[j]=mep[i][j];
+#ifdef FACETS_NEIGHBOR
+			for(k=0;k<i;k++,m++) q[m]=mne[i][m];
+#endif
 		}
 		delete [] mep[i];
 		mep[i]=l;
 #ifdef FACETS_NEIGHBOR
-		int *q;
-		q=new int[i*mem[i]];
-		for(j=0;j<i*mec[i];j++) q[j]=mne[i][j];
 		delete [] mne[i];
 		mne[i]=q;
 #endif
@@ -119,13 +125,18 @@ void voronoicell::addmemory(int i) {
 };
 
 void voronoicell::addmemory_vertices() {
-	int i=2*currentvertices,j,**ped,*pnu;
+	int i=2*currentvertices,j,**pp,*pnu;
 	if (i>maxvertices) throw fatal_error("Vertex memory allocation exceeded absolute maximum");
 	cerr << "Vertex memory scaled up to " << i << endl;
 	f_point *ppts;
-	ped=new int*[i];
-	for(j=0;j<currentvertices;j++) ped[j]=ed[j];
-	delete [] ed;ed=ped;
+	pp=new int*[i];
+	for(j=0;j<currentvertices;j++) pp[j]=ed[j];
+	delete [] ed;ed=pp;
+#ifdef FACETS_NEIGHBOR
+	pp=new int*[i];
+	for(j=0;j<currentvertices;j++) pp[j]=ne[j];
+	delete [] ne;ne=pp;
+#endif
 	pnu=new int[i];
 	for(j=0;j<currentvertices;j++) pnu[j]=nu[j];
 	delete [] nu;nu=pnu;
@@ -246,112 +257,182 @@ inline void voronoicell::init_octahedron(f_point l) {
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
 };
 
+
 // Initializes an arbitrary test object using the add_vertex() and
 // relconstruct() routines
-inline void voronoicell::init_test() {
+inline void voronoicell::init_test(int n) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;p=0;
-
-	/*add_vertex(1,-2,-1,5,1,3);
-	add_vertex(0,-1,1,2,0,5);
-	add_vertex(0,1,0,4,6,3,1);
-	add_vertex(1,2,-1,0,2,6);
-	add_vertex(-1,2,-1,6,2,5);
-	add_vertex(-1,-2,-1,1,0,4);
-	add_vertex(0,3,0,3,2,4);*/
-
-	/*add_vertex(-2,2,-1,1,4,3);
-	add_vertex(2,2,-1,2,5,0);
-	add_vertex(2,-2,-1,3,6,1);
-	add_vertex(-2,-2,-1,0,7,2);
-	add_vertex(-1,1,0,5,7,0);
-	add_vertex(1,1,1,6,4,1);
-	add_vertex(1,-1,1,5,2,7);
-	add_vertex(-1,-1,1,6,3,4);*/
-
-	/*add_vertex(1,-2,-1,4,3,1);
-	add_vertex(-1,-2,-1,5,4,0,2);
-	add_vertex(-1,2,-1,3,6,1);
-	add_vertex(1,2,-1,0,5,6,2);
-	add_vertex(0,-1,1,0,1,5);
-	add_vertex(0,0,0,6,3,4,1);
-	add_vertex(0,1,1,3,5,2);*/
-
-	/*add_vertex(-1,-1,-1,1,3,4);
-	add_vertex(1,-1,-1,5,2,0);
-	add_vertex(1,1,-1,3,1,6);
-	add_vertex(-1,1,-1,7,0,2);
-	add_vertex(-1,-1,1,8,5,0,7);
-	add_vertex(1,-1,1,8,6,1,4);
-	add_vertex(1,1,1,8,7,2,5);
-	add_vertex(-1,1,1,8,4,3,6);
-	add_vertex(0,0,2,6,5,4,7);*/
-
-	/*add_vertex(1,-3,-1,1,6,5);
-	add_vertex(-1,-3,-1,2,6,0);
-	add_vertex(-3,0,-1,3,8,7,1);
-	add_vertex(-1,3,-1,4,9,2);
-	add_vertex(1,3,-1,5,9,3);
-	add_vertex(3,0,-1,0,7,8,4);
-	add_vertex(0,-2,1,0,1,7);
-	add_vertex(0,-1,0,5,6,2,8);
-	add_vertex(0,1,0,5,7,2,9);
-	add_vertex(0,2,1,4,8,3);*/
-
-	/*add_vertex(-1,-3,-1,12,8,1,7);
-	add_vertex(1,-3,-1,0,8,12,2);
-	add_vertex(3,-1,-1,1,13,9,3);
-	add_vertex(3,1,-1,2,9,13,4);
-	add_vertex(1,3,-1,3,14,10,5);
-	add_vertex(-1,3,-1,4,10,14,6);
-	add_vertex(-3,1,-1,5,15,11,7);
-	add_vertex(-3,-1,-1,6,11,15,0);
-	add_vertex(0,-2,1,12,1,0);
-	add_vertex(2,0,1,13,3,2);
-	add_vertex(0,2,1,5,4,14);
-	add_vertex(-2,0,1,6,15,7);
-	add_vertex(0,-1,0.5,16,1,8,0);
-	add_vertex(1,0,0.5,16,3,9,2);
-	add_vertex(0,1,0.5,16,5,10,4);
-	add_vertex(-1,0,0.5,16,7,11,6);
-	add_vertex(0,0,0,14,13,12,15);*/
-
-	/*add_vertex(2,-3,-1,1,4,3);
-	add_vertex(-2,-3,-1,2,4,0);
-	add_vertex(-2,3,-1,3,7,1);
-	add_vertex(2,3,-1,0,6,2);
-	add_vertex(0,-2,0,1,5,0);
-	add_vertex(0,1,0,7,6,4);
-	add_vertex(1,2,1,3,5,7);
-	add_vertex(-1,2,1,2,6,5);*/
-
-	/*add_vertex(3,-2,-1,1,3,2);
-	add_vertex(-3,-2,-1,2,4,0);
-	add_vertex(0,4,-1,0,5,1);
-	add_vertex(1.5,-1,0,6,0,7);
-	add_vertex(-1.5,-1,0,8,7,1);
-	add_vertex(0,2,0,2,6,8);
-	add_vertex(0.75,0.5,0,5,3,9);
-	add_vertex(0,-1,0,9,3,4);
-	add_vertex(-0.75,0.5,0,5,9,4);
-	add_vertex(0,0,1,6,7,8);*/
-
-	add_vertex(0,0,0,2,1,3);
-	add_vertex(1,0,1,0,2,3);
-	add_vertex(1,1,0,1,0,3);
-	add_vertex(2,0,0,0,1,2,4,6);
-	add_vertex(3,1,0,5,8,6,3);
-	add_vertex(3,2,0,4);
-	add_vertex(4,0,0,8,7,3,4);
-	add_vertex(5,0,0,6);
-	add_vertex(4,1,0,4,6);
+	switch(n) {
+		case 0:
+			// A peaked object, with a high vertex 6, and a ridge
+			// at z=0 from vertex 1 to 2. This can be used to test
+			// the order 1 vertex collapse routine.
+			add_vertex(1,-2,-1,3,1,5);
+			add_vertex(0,-1,1,5,0,2);
+			add_vertex(0,1,0,1,3,6,4);
+			add_vertex(1,4,-1,4,6,2,0);
+			add_vertex(-1,4,-1,3,5,2,6);
+			add_vertex(-1,-2,-1,4,0,1);
+			add_vertex(0,3,0,4,2,3);
+			break;
+		case 1:
+			// A truncated pyramid shape, with vertex 4 in the z=0
+			// plane. This can be used to test order 4 vertex
+			// generation.
+			add_vertex(-2,2,-1,3,4,1);
+			add_vertex(2,2,-1,0,5,2);
+			add_vertex(2,-2,-1,1,6,3);
+			add_vertex(-2,-2,-1,2,7,0);
+			add_vertex(-1,1,0,0,7,5);
+			add_vertex(1,1,1,1,4,6);
+			add_vertex(1,-1,1,7,2,5);
+			add_vertex(-1,-1,1,4,3,6);
+			break;
+		case 2:
+			// An object with two peaks at vertices 4 and 6,
+			// connected with a trough at vertex 5. It can be used
+			// to test the part of the routine that deals with
+			// augmenting existing vertices.
+			add_vertex(1,-2,-1,1,3,4);
+			add_vertex(-1,-2,-1,2,0,4,5);
+			add_vertex(-1,2,-1,1,6,3);
+			add_vertex(1,2,-1,2,6,5,0);
+			add_vertex(0,-1,1,5,1,0);
+			add_vertex(0,0,0,1,4,3,6);
+			add_vertex(0,1,1,2,5,3);
+			break;
+		case 3:
+			// A box with a pyramid on top of it. This a good
+			// test object to make sure that the code can handle
+			// object with vertices of different orders.
+			add_vertex(-1,-1,-1,4,3,1);
+			add_vertex(1,-1,-1,0,2,5);
+			add_vertex(1,1,-1,6,1,3);
+			add_vertex(-1,1,-1,2,0,7);
+			add_vertex(-1,-1,1,7,0,5,8);
+			add_vertex(1,-1,1,4,1,6,8);
+			add_vertex(1,1,1,5,2,7,8);
+			add_vertex(-1,1,1,6,3,4,8);
+			add_vertex(0,0,2,7,4,5,6);
+			break;
+		case 4:
+			// A shape with two peaks (vertices 6 and 9) connected
+			// with a trough (vertices 7 and 8). It can be used as
+			// a basic test of the double edge skipping in the plane
+			// generation routine, whereby an edge is omitted if
+			// the routine is tracing along a part it has already
+			// been down.
+			add_vertex(1,-3,-1,5,6,1);
+			add_vertex(-1,-3,-1,0,6,2);
+			add_vertex(-3,0,-1,1,7,8,3);
+			add_vertex(-1,3,-1,2,9,4);
+			add_vertex(1,3,-1,3,9,5);
+			add_vertex(3,0,-1,4,8,7,0);
+			add_vertex(0,-2,1,7,1,0);
+			add_vertex(0,-1,0,8,2,6,5);
+			add_vertex(0,1,0,9,2,7,5);
+			add_vertex(0,2,1,3,8,4);
+			break;
+		case 5:
+			// An object with four peaks (vertices 8 to 11)
+			// connected by a trough (vertex 16). It can be used to
+			// the test multiple augmentation of edges of a
+			// particular vertex.
+			add_vertex(-1,-3,-1,7,1,8,12);
+			add_vertex(1,-3,-1,2,12,8,0);
+			add_vertex(3,-1,-1,3,9,13,1);
+			add_vertex(3,1,-1,4,13,9,2);
+			add_vertex(1,3,-1,5,10,14,3);
+			add_vertex(-1,3,-1,6,14,10,4);
+			add_vertex(-3,1,-1,7,11,15,5);
+			add_vertex(-3,-1,-1,0,15,11,6);
+			add_vertex(0,-2,1,0,1,12);
+			add_vertex(2,0,1,2,3,13);
+			add_vertex(0,2,1,14,4,5);
+			add_vertex(-2,0,1,7,15,6);
+			add_vertex(0,-1,0.5,0,8,1,16);
+			add_vertex(1,0,0.5,2,9,3,16);
+			add_vertex(0,1,0.5,4,10,5,16);
+			add_vertex(-1,0,0.5,6,11,7,16);
+			add_vertex(0,0,0,15,12,13,14);
+			break;
+		case 6:
+			// An object with four peaks (vertices 8 to 11)
+			// connected by a sequence of ridges. It can be used to
+			// the test multiple cases of double edge skipping
+			// on the same vertex.
+			add_vertex(-1,-3,-1,7,1,8,12);
+			add_vertex(1,-3,-1,2,12,8,0);
+			add_vertex(3,-1,-1,3,9,13,1);
+			add_vertex(3,1,-1,4,13,9,2);
+			add_vertex(1,3,-1,5,10,14,3);
+			add_vertex(-1,3,-1,6,14,10,4);
+			add_vertex(-3,1,-1,7,11,15,5);
+			add_vertex(-3,-1,-1,0,15,11,6);
+			add_vertex(0,-2,1,0,1,12);
+			add_vertex(2,0,1,2,3,13);
+			add_vertex(0,2,1,14,4,5);
+			add_vertex(-2,0,1,7,15,6);
+			add_vertex(0,-1,0,0,8,1,16);
+			add_vertex(1,0,0,2,9,3,16);
+			add_vertex(0,1,0,4,10,5,16);
+			add_vertex(-1,0,0,6,11,7,16);
+			add_vertex(0,0,0,15,12,13,14);
+			break;
+		case 7:
+			// A variation on the zeroth test shape, with a peak
+			// (vertices 7 and 8) connected to a ridge at z=0
+			// (vertices 4 and 5)
+			add_vertex(2,-3,-1,3,4,1);
+			add_vertex(-2,-3,-1,0,4,2);
+			add_vertex(-2,3,-1,1,7,3);
+			add_vertex(2,3,-1,2,6,0);
+			add_vertex(0,-2,0,0,5,1);
+			add_vertex(0,1,0,4,6,7);
+			add_vertex(1,2,1,7,5,3);
+			add_vertex(-1,2,1,5,6,2);
+			break;
+		case 8:
+			// A triangular object with a skewed peak, that can be used to
+			// test the order two vertex removal routine
+			add_vertex(3,-2,-1,2,3,1);
+			add_vertex(-3,-2,-1,0,4,2);
+			add_vertex(0,4,-1,1,5,0);
+			add_vertex(1.5,-1,0,7,0,6);
+			add_vertex(-1.5,-1,0,1,7,8);
+			add_vertex(0,2,0,8,6,2);
+			add_vertex(0.75,0.5,0,9,3,5);
+			add_vertex(0,-1,0,4,3,9);
+			add_vertex(-0.75,0.5,0,4,9,5);
+			add_vertex(0,0,1,8,7,6);
+			break;
+		case 9:
+			// This a tetrahedron with some low-order extraneous edges, and can
+			// be used to test the order 1 and order 2 removal routines
+			add_vertex(0,0,0,3,1,2);
+			add_vertex(1,0,1,3,2,0);
+			add_vertex(1,1,0,3,0,1);
+			add_vertex(2,0,0,6,4,2,1,0);
+			add_vertex(3,1,0,3,6,8,5);
+			add_vertex(3,2,0,4);
+			add_vertex(4,0,0,4,3,7,8);
+			add_vertex(5,0,0,6);
+			add_vertex(4,1,0,6,4);
+	}
 
 	relconstruct();
+#ifdef FACETS_NEIGHBOR
+	label_facets();
+#endif
 };
 
 // Adds an order 1 vertex to the memory structure, and specifies its edge
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
 	if (mem[1]==mec[1]) addmemory(1);
+#ifdef FACETS_NEIGHBOR
+	ne[p]=mne[1]+mec[1];
+#endif
 	int *q=mep[1]+3*mec[1]++;ed[p]=q;
 	q[0]=a;q[2]=p++;
 };
@@ -360,6 +441,9 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a) {
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
 	if (mem[2]==mec[2]) addmemory(2);
+#ifdef FACETS_NEIGHBOR
+	ne[p]=mne[2]+2*mec[2];
+#endif
 	int *q=mep[2]+5*mec[2]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[4]=p++;
 };
@@ -368,6 +452,9 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b) {
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
 	if (mem[3]==mec[3]) addmemory(3);
+#ifdef FACETS_NEIGHBOR
+	ne[p]=mne[3]+3*mec[3];
+#endif
 	int *q=mep[3]+7*mec[3]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
 };
@@ -376,6 +463,9 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c) {
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
 	if (mem[4]==mec[4]) addmemory(4);
+#ifdef FACETS_NEIGHBOR
+	ne[p]=mne[4]+4*mec[4];
+#endif
 	int *q=mep[4]+9*mec[4]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
 };
@@ -384,6 +474,9 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
 	if (mem[5]==mec[5]) addmemory(5);
+#ifdef FACETS_NEIGHBOR
+	ne[p]=mne[5]+5*mec[5];
+#endif
 	int *q=mep[5]+11*mec[5]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
 };
@@ -420,9 +513,6 @@ inline void voronoicell::duplicatecheck() {
 inline void voronoicell::relconstruct() {
 	int i,j,k,l;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
-#ifdef FACETS_NEIGHBOR
-		mne[i][j]=-1;
-#endif
 		k=ed[i][j];
 		l=0;
 		while(ed[k][l]!=i) {
@@ -611,7 +701,6 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 	if(p==currentvertices) addmemory_vertices();
 
 	if (complicatedsetup) {
-
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
 		// the same location.
@@ -878,7 +967,6 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 			if (mec[3]==mem[3]) addmemory(3);
 			ls=ed[qp][qs+nu[qp]];
 #ifdef FACETS_NEIGHBOR
-			cout << "here" << p << endl;
 			ne[p]=mne[3]+3*mec[3];
 			ne[p][0]=p_id;
 			ne[p][1]=ne[qp][qs];
@@ -1011,7 +1099,6 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 				// actually need any more edges, just skip this
 				// routine to avoid memory confusion
 				if(nu[j]!=k) {
-
 					// Allocate memory and copy the edges
 					// of the previous instance into it
 #ifdef FACETS_NEIGHBOR
@@ -1035,11 +1122,12 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 					edd=mep[nu[j]]+(2*nu[j]+1)*--mec[nu[j]];
 					if(edd!=ed[j]) {
 						for(lw=0;lw<=2*nu[j];lw++) ed[j][lw]=edd[lw];
-						ed[edd[2*nu[j]]]=ed[j];
 #ifdef FACETS_NEIGHBOR
 						ned=mne[nu[j]]+nu[j]*mec[nu[j]];
 						for(lw=0;lw<nu[j];lw++) ne[j][lw]=ned[lw];
+						ne[edd[2*nu[j]]]=ne[j];
 #endif
+						ed[edd[2*nu[j]]]=ed[j];
 					}
 #ifdef FACETS_NEIGHBOR
 					ne[j]=nep;
@@ -1096,11 +1184,11 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 				i++;
 			}
 			qs=vor_up(qs,qp);
-#ifdef FACETS_NEIGHBOR
-			if (newdoubleedge) ne[j][0]=ne[qp][qs];
-#endif
 			cs=i;
 			cp=j;
+#ifdef FACETS_NEIGHBOR
+			ne[j][newdoubleedge?0:cs]=ne[qp][qs];
+#endif
 
 			// Update the doubleedge flag, to pass it
 			// to the next instance of this routine
@@ -1113,8 +1201,6 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 	ed[rp][0]=cp;
 	ed[cp][nu[cp]+cs]=0;
 	ed[rp][nu[rp]+0]=cs;
-
-	edgeprint();
 
 	// Delete points: first, remove any duplicates
 	i=0;
@@ -1316,8 +1402,11 @@ inline bool voronoicell::delete_connection(int j,int k) {
 	if(mec[i]==mem[i]) addmemory(i);
 #ifdef FACETS_NEIGHBOR
 	nep=mne[i]+i*mec[i];
-	for(l=0;l<q ;l++) nep[l]=ne[j][l];
-	while(l<i) nep[l]=ne[j][l+1];
+	for(l=0;l<q;l++) nep[l]=ne[j][l];
+	while(l<i) {
+		nep[l]=ne[j][l+1];
+		l++;
+	}
 #endif
 	edp=mep[i]+(2*i+1)*mec[i]++;
 	edp[2*i]=j;
@@ -1339,6 +1428,7 @@ inline bool voronoicell::delete_connection(int j,int k) {
 #ifdef FACETS_NEIGHBOR
 	ned=mne[nu[j]]+nu[j]*mec[nu[j]];
 	for(l=0;l<nu[j];l++) ne[j][l]=ned[l];
+	ne[edd[2*nu[j]]]=ned;
 	ne[j]=nep;
 #endif
 	ed[edd[2*nu[j]]]=edd;
@@ -1443,6 +1533,19 @@ inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
 	}
 };
 
+// An overloaded version of the dumppov routine, that prints to <filename> 
+inline void voronoicell::dumppov(char *filename,f_point x,f_point y,f_point z) {
+	ofstream of;
+	of.open(filename,ofstream::out|ofstream::trunc);
+	dumppov(of,x,y,z);
+	of.close();
+};
+
+// An overloaded version of the dumppov routine, that prints to standard output
+inline void voronoicell::dumppov(f_point x,f_point y,f_point z) {
+	dumppov(cout,x,y,z);
+};
+
 // Outputs the edges of the Voronoi cell (in gnuplot format) to an open file
 // stream, displacing the cell by an amount (x,y,z)
 inline void voronoicell::dumpgnuplot(ostream &of,f_point x,f_point y,f_point z) {
@@ -1456,8 +1559,21 @@ inline void voronoicell::dumpgnuplot(ostream &of,f_point x,f_point y,f_point z) 
 	}
 };
 
+// An overloaded version of the dumpgnuplot routine, that prints to <filename> 
+inline void voronoicell::dumpgnuplot(char *filename,f_point x,f_point y,f_point z) {
+	ofstream of;
+	of.open(filename,ofstream::out|ofstream::trunc);
+	dumpgnuplot(of,x,y,z);
+	of.close();
+};
+
+// An overloaded version of the dumpgnuplot routine, that prints to standard output
+inline void voronoicell::dumpgnuplot(f_point x,f_point y,f_point z) {
+	dumpgnuplot(cout,x,y,z);
+};
+
 // Outputs the Voronoi cell in the POV mesh2 format
-void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) {
+inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) {
 	int i,j,k,l,m,n;
 	of << "mesh2 {" << endl << "vertex_vectors {" << endl << p << "," << endl;
 	for(i=0;i<p;i++) {
@@ -1487,6 +1603,19 @@ void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) {
 		}
 	}
 	of << "}" << endl << "inside_vector <0,0,1>" << endl << "}" << endl;
+};
+
+// An overloaded version of the dumppovmesh routine, that prints to <filename> 
+inline void voronoicell::dumppovmesh(char *filename,f_point x,f_point y,f_point z) {
+	ofstream of;
+	of.open(filename,ofstream::out|ofstream::trunc);
+	dumppovmesh(of,x,y,z);
+	of.close();
+};
+
+// An overloaded version of the dumppovmesh routine, that prints to standard output
+inline void voronoicell::dumppovmesh(f_point x,f_point y,f_point z) {
+	dumppovmesh(cout,x,y,z);
 };
 
 // Randomly perturbs the points in the Voronoi cell by an amount r
@@ -1573,7 +1702,7 @@ void voronoicell::facets(ostream &of) {
 				of << i;
 #endif
 				ed[i][j]=-1-k;
-				l=vor_up(ed[i][nu[k]+j],k);
+				l=vor_up(ed[i][nu[i]+j],k);
 				do {
 #ifdef FACETS_NEIGHBOR
 					of << " (" << k << "," << ne[k][l] << ")";
@@ -1595,8 +1724,7 @@ void voronoicell::facets(ostream &of) {
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-}
-
+};
 
 // For the neighbor-tracking version of the code, this routine labels the facets
 // in an arbitrary order, starting from one
@@ -1609,7 +1737,7 @@ void voronoicell::label_facets() {
 			if (k>=0) {
 				ed[i][j]=-1-k;
 				ne[i][j]=q;
-				l=vor_up(ed[i][nu[k]+j],k);
+				l=vor_up(ed[i][nu[i]+j],k);
 				do {
 					m=ed[k][l];
 					ed[k][l]=-1-m;
@@ -1624,6 +1752,67 @@ void voronoicell::label_facets() {
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			if(ed[i][j]>=0) throw fatal_error("Facet labeling routine didn't look everywhere");
+			ed[i][j]=-1-ed[i][j];
+		}
+	}
+};
+#endif
+
+// For the neighbor-tracking version of the code, this routine checks to make sure the
+// neighbor information of each facets is consistent. 
+#ifdef FACETS_NEIGHBOR
+void voronoicell::facet_check() {
+	int i,j,k,l,m,q;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				ed[i][j]=-1-k;
+				q=ne[i][j];
+				l=vor_up(ed[i][nu[i]+j],k);
+				do {
+					m=ed[k][l];
+					ed[k][l]=-1-m;
+					if (ne[k][l]!=q) cerr << "Facet error at (" << k << "," << l << ")=" << ne[k][l] << ", started from (" << i << "," << j << ")=" << q << endl;
+					l=vor_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+			}
+		}
+	}
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			if(ed[i][j]>=0) throw fatal_error("Facet labeling routine didn't look everywhere");
+			ed[i][j]=-1-ed[i][j];
+		}
+	}
+};
+#endif
+
+// For the neighbor-tracking version of the code, this routine just provides a list
+// of plane IDs
+#ifdef FACETS_NEIGHBOR
+void voronoicell::neighbors(ostream &of) {
+	int i,j,k,l,m,q=1;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				of << " " << ne[i][j];
+				ed[i][j]=-1-k;
+				l=vor_up(ed[i][nu[i]+j],k);
+				do {
+					m=ed[k][l];
+					ed[k][l]=-1-m;
+					l=vor_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+			}
+		}
+	}
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			if(ed[i][j]>=0) throw fatal_error("Neighbor routine didn't look everywhere");
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
@@ -1654,7 +1843,7 @@ void voronoicell::facet_statistics(ostream &of) {
 			if (k>=0) {
 				q=1;
 				ed[i][j]=-1-k;
-				l=vor_up(ed[i][nu[k]+j],k);
+				l=vor_up(ed[i][nu[i]+j],k);
 				do {
 					q++;
 					m=ed[k][l];

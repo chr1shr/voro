@@ -62,15 +62,21 @@ class voronoicell {
 		~voronoicell();
 		inline void init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
 		inline void init_octahedron(f_point l);
-		inline void init_test();
+		inline void init_test(int n);
 		inline void add_vertex(f_point x,f_point y,f_point z,int a);
 		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b);
 		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c);
 		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d);
 		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d,int e);
 		inline void dumppov(ostream &of,f_point x,f_point y,f_point z);
-		void dumppovmesh(ostream &of,f_point x,f_point y,f_point z);
+		inline void dumppov(char *filename,f_point x,f_point y,f_point z);
+		inline void dumppov(f_point x,f_point y,f_point z);
+		inline void dumppovmesh(ostream &of,f_point x,f_point y,f_point z);		
+		inline void dumppovmesh(char *filename,f_point x,f_point y,f_point z);
+		inline void dumppovmesh(f_point x,f_point y,f_point z);
 		inline void dumpgnuplot(ostream &of,f_point x,f_point y,f_point z);
+		inline void dumpgnuplot(char *filename,f_point x,f_point y,f_point z);
+		inline void dumpgnuplot(f_point x,f_point y,f_point z);
 		inline void relcheck();
 		inline void duplicatecheck();
 		inline void relconstruct();
@@ -89,6 +95,8 @@ class voronoicell {
 #ifdef FACETS_NEIGHBOR
 		int **mne,**ne;
 		void label_facets();
+		void facet_check();
+		void neighbors(ostream &of);
 		bool nplane(f_point x,f_point y,f_point z,f_point rs,int p_id);
 		inline bool nplane(f_point x,f_point y,f_point z,int p_id);
 		inline bool plane(f_point x,f_point y,f_point z,f_point rs);
