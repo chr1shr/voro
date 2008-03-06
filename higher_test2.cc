@@ -20,10 +20,7 @@ int main() {
 	v.init(-1,1,-1,1,-1,1);
 
 	// Output the initial cell	
-	ofstream file;
-	file.open("intest",ofstream::out|ofstream::trunc);
-	v.dumpgnuplot(file,0.0,0.0,0.0);
-	file.close();
+	v.dumpgnuplot("intest",0,0,0);
 	
 	// Plane cutting
 	for(int n=0;n<350;n++) {
@@ -38,20 +35,14 @@ int main() {
 				v.plane(x*cos(theta)+sin(theta)*(-y*cos(phi)/rsq-x*r*sin(phi)),
 					y*cos(theta)+sin(theta)*(x*cos(phi)/rsq-y*r*sin(phi)),
 					z*cos(theta)+sin(theta)*rsq*sin(phi),1);
-//			(x,y,z);
-//			(-y/sqrt(x*x+y*y),x/sqrt(x*x+y*y),0);
-//			(-x*z/sqrt,-y*z/sqrt,sqrt(x*x+y*y))
-//			v.plane(x,y,z,1);
 		}
 	}
 	
-	v.dumpgnuplot(cout,0,0,0);
+
 	// Output the Voronoi cell to a file, in the gnuplot format
-	file.open("coolm.pov",ofstream::out|ofstream::trunc);
-	v.dumppovmesh(file,0.0,0.0,0.0);
-	file.close();
-	
-	file.open("coolp.pov",ofstream::out|ofstream::trunc);
-	v.dumppov(file,0.0,0.0,0.0);
-	file.close();
+	v.dumpgnuplot("high_output",0,0,0);
+
+	// Optional POV output
+//	v.dumppovmesh("high_output_mesh.pov",0,0,0);
+//	v.dumppov("high_output.pov",0,0,0);
 }

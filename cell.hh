@@ -7,7 +7,7 @@
 #ifndef FACETS_CELL_HH
 #define FACETS_CELL_HH
 
-#include "constants.hh"
+#include "config.hh"
 #include <cstdio>
 #include <iostream>
 #include <fstream>

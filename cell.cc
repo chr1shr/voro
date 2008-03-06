@@ -1793,7 +1793,7 @@ void voronoicell::facet_check() {
 // of plane IDs
 #ifdef FACETS_NEIGHBOR
 void voronoicell::neighbors(ostream &of) {
-	int i,j,k,l,m,q=1;
+	int i,j,k,l,m;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];

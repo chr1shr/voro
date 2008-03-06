@@ -46,5 +46,5 @@ int main() {
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot
-	con.vdraw("voronoi_cells",gnuplot);
+	con.vdraw_gnuplot("voronoi_cells");
 }

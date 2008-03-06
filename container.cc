@@ -25,7 +25,7 @@ container::container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_po
 	id=new int*[nxyz];
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new f_point*[nxyz];
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 	max_radius=0;
 	for(l=0;l<nxyz;l++) p[l]=new f_point[4*memi];
 #else
@@ -51,7 +51,7 @@ void container::dump(char *filename) {
 	file.open(filename,ofstream::out|ofstream::trunc);
 	for(l=0;l<nxyz;l++) {
 		for (c=0;c<co[l];c++)
-#ifdef FACETS_RADIUS			
+#ifdef FACETS_RADICAL			
 			file << id[l][c] << " " << p[l][4*c] << " " << p[l][4*c+1] << " " << p[l][4*c+2] << " " << p[l][4*c+3] << endl;
 #else
 			file << id[l][c] << " " << p[l][3*c] << " " << p[l][3*c+1] << " " << p[l][3*c+2] << endl;
@@ -61,7 +61,7 @@ void container::dump(char *filename) {
 };
 
 // Put a particle into the correct region of the container
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 void container::put(int n,f_point x,f_point y,f_point z,f_point r) {
 #else
 void container::put(int n,f_point x,f_point y,f_point z) {
@@ -72,7 +72,7 @@ void container::put(int n,f_point x,f_point y,f_point z) {
 		if(i<nx&&j<ny&&k<nz) {
 			i+=nx*j+nxy*k;
 			if(co[i]==mem[i]) addparticlemem(i);
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 			p[i][4*co[i]]=x;p[i][4*co[i]+1]=y;p[i][4*co[i]+2]=z;p[i][4*co[i]+3]=r;
 			if (r>max_radius) max_radius=r;
 #else
@@ -90,7 +90,7 @@ void container::addparticlemem(int i) {
 	if (nmem>maxparticlemem) throw fatal_error("Absolute maximum memory allocation exceeded");
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 	pp=new f_point[4*nmem];
 	for(l=0;l<4*co[i];l++) pp[l]=p[i][l];
 #else
@@ -105,7 +105,7 @@ void container::addparticlemem(int i) {
 // Import a list of particles from standard input
 void container::import(istream &is) {
 	int n;f_point x,y,z;
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 	f_point r;
 	is >> n >> x >> y >> z >> r;
 	while(!is.eof()) {
@@ -148,7 +148,7 @@ void container::regioncount() {
 // Clears a container of particles
 void container::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 	max_radius=0;
 #endif
 };
@@ -166,7 +166,7 @@ void container::vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point y
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(i=0;i<co[s];i++) {
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 			x=p[s][4*i]+px;y=p[s][4*i+1]+py;z=p[s][4*i+2]+pz;
 #else
 			x=p[s][3*i]+px;y=p[s][3*i+1]+py;z=p[s][3*i+2]+pz;
@@ -200,7 +200,7 @@ void container::vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(i=0;i<co[s];i++) {
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 			x=p[s][4*i]+px;y=p[s][4*i+1]+py;z=p[s][4*i+2]+pz;
 #else
 			x=p[s][3*i]+px;y=p[s][3*i+1]+py;z=p[s][3*i+2]+pz;
@@ -245,14 +245,14 @@ void container::vprintall(ostream &of) {
 	int i,s;
 	for(s=0;s<nxyz;s++) {
 		for(i=0;i<co[s];i++) {
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 			x=p[s][4*i];y=p[s][4*i+1];z=p[s][4*i+2];
 #else
 			x=p[s][3*i];y=p[s][3*i+1];z=p[s][3*i+2];
 #endif
 			compute_cell(c,s,i,x,y,z);
 			of << id[s][i] << " " << x << " " << y << " " << z;
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 			of << " " << p[s][4*i+3];
 #endif
 			of << " " << c.volume();
@@ -284,7 +284,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point
 	f_point x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	loop l(this);
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 	f_point crad=p[s][4*i+3];
 	const f_point mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
 	crad*=crad;
@@ -308,7 +308,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point
 	// extend upwards by a long way, and the shells grow very big. It would
 	// be better to use a box-by-box approach, but that's not
 	// straightforward.
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 	while(lrs*mul<c.maxradsq()) {
 #else
 	while(lrs<c.maxradsq()) {
@@ -317,14 +317,14 @@ inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point
 		t=l.init(x,y,z,ur,qx,qy,qz);
 		do {
 			for(j=0;j<co[t];j++) {
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 				x1=p[t][4*j]+qx-x;y1=p[t][4*j+1]+qy-y;z1=p[t][4*j+2]+qz-z;
 #else
 				x1=p[t][3*j]+qx-x;y1=p[t][3*j+1]+qy-y;z1=p[t][3*j+2]+qz-z;
 #endif
 				rs=x1*x1+y1*y1+z1*z1;
 				if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 #ifdef FACETS_NEIGHBOR
 					c.nplane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3],id[t][j]);
 #else
@@ -345,7 +345,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point
 
 // A overloaded version of compute_cell, that sets up the x, y, and z variables.
 inline void container::compute_cell(voronoicell &c,int s,int i) {
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 	double x=p[s][4*i],y=p[s][4*i+1],z=p[s][4*i+2];
 #else
 	double x=p[s][3*i],y=p[s][3*i+1],z=p[s][3*i+2];

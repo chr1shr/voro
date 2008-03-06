@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : February 27th 2008
 
-#ifndef FACETS_CONSTANTS_HH
-#define FACETS_CONSTANTS_HH
+#ifndef FACETS_CONFIG_HH
+#define FACETS_CONFIG_HH
 
 // These constants set the initial memory allocation for the Voronoi cell
 const int initvertices=256;
@@ -29,11 +29,14 @@ const int maxparticlemem=16777216;
 
 // This sets the numerical tolerance. Below these values, the plane cutting
 // snaps to existing vertices rather than creating new ones.
-//typedef double f_point;
-//const f_point tolerance=1e-10;
-//const f_point tolerance2=2e-10;
+#ifdef FACETS_SINGLE_PRECISION
 typedef float f_point;
 const f_point tolerance=1e-5;
 const f_point tolerance2=2e-5;
+#else
+typedef double f_point;
+const f_point tolerance=1e-10;
+const f_point tolerance2=2e-10;
+#endif
 
 #endif

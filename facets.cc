@@ -7,9 +7,6 @@
 #include "cell.cc"
 #include "container.cc"
 
-// Set up the number of blocks that the container is divided into
-const int n_x=3,n_y=3,n_z=3;
-
 // A guess for the memory allocation; should be bigger than 125/(diameter^3).
 const int memory=256;
 
@@ -19,8 +16,7 @@ void helpmessage() {
 }
 
 int main(int argc,char **argv) {
-	int i,n;bool periodic;char buffer[256];
-	f_point x,y,z;
+	int i;bool periodic;char buffer[256];
 	
 	// Check for the periodicity flag, and make sure there are the correct
 	// number of arguments
@@ -29,9 +25,7 @@ int main(int argc,char **argv) {
 	} else if (argc==9) {
 		if (strcmp(argv[1],"-p")==0) {periodic=true;i=2;}
 		else {helpmessage();return 1;}
-	} else {
-		helpmessage();return 1;
-	}
+	} else {helpmessage();return 1;}
 
 	// Read in the dimensions of the test box, and estimate the number of
 	// boxes to divide the region up into

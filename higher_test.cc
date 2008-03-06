@@ -12,7 +12,7 @@ const double theta=pi/4-0.25;
 const double step=2*pi/n;
 
 int main() {
-	double x,y,z,rsq,r,phi;
+	double x,y,z,phi;
 	voronoicell v;
 
 	// Initialize the Voronoi cell to be a cube of side length 2, centered on
@@ -20,10 +20,7 @@ int main() {
 	v.init(-1,1,-1,1,-1,1);
 
 	// Output the initial cell	
-	ofstream file;
-	file.open("intest",ofstream::out|ofstream::trunc);
-	v.dumpgnuplot(file,0.0,0.0,0.0);
-	file.close();
+	v.dumpgnuplot("intest",0,0,0);
 	
 	// Plane cutting
 	for(phi=0;phi<2*pi-0.5*step;phi+=step) {
@@ -38,7 +35,5 @@ int main() {
 	}
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	file.open("test",ofstream::out|ofstream::trunc);
-	v.dumpgnuplot(file,0.0,0.0,0.0);
-	file.close();
+	v.dumpgnuplot("test",0,0,0);
 }

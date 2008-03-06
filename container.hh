@@ -7,7 +7,7 @@
 #ifndef FACETS_CONTAINER_HH
 #define FACETS_CONTAINER_HH
 
-#include "constants.hh"
+#include "config.hh"
 #include <cstdio>
 #include <iostream>
 #include <fstream>
@@ -41,7 +41,7 @@ class container {
 		inline void vprintall(char *filename);
 		inline void compute_cell(voronoicell &c,int s,int i);
 		inline void compute_cell(voronoicell &c,int s,int i,f_point x,f_point y,f_point z);
-#ifdef FACETS_RADIUS
+#ifdef FACETS_RADICAL
 		void put(int n,f_point x,f_point y,f_point z,f_point r);
 		f_point max_radius;
 #else
