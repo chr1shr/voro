@@ -16,11 +16,13 @@ using namespace std;
 
 class loop;
 
-// The container class represents the whole simulation region. The container
-// constructor sets up the geometry and periodicity, and divides the geometry
-// into rectangular grid of blocks, each of which handles the particles in a
-// particular area. Routines exist for putting in particles, importing
-// particles from standard input, and carrying out Voronoi calculations.
+/** The container class represents the whole simulation region. The
+ * container constructor sets up the geometry and periodicity, and divides
+ * the geometry into rectangular grid of blocks, each of which handles the
+ * particles in a particular area. Routines exist for putting in particles,
+ * importing particles from standard input, and carrying out Voronoi
+ * calculations.
+ */
 class container {
 	public:
 		container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_point zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
@@ -59,12 +61,13 @@ class container {
 		friend class loop;
 };
 
-// Many of the container routines require scanning over a rectangular sub-grid of
-// blocks, and the routines for handling this are stored in the loop class.
-// A loop class can first be initialized to either calculate the subgrid which is
-// within a distance r of a vector (vx,vy,vz), or a subgrid corresponding to
-// a rectangular box. The routine inc can then be successively called to
-// step through all the blocks which could be affected.
+/** Many of the container routines require scanning over a rectangular sub-grid
+ * of blocks, and the routines for handling this are stored in the loop class.
+ * A loop class can first be initialized to either calculate the subgrid which
+ * is within a distance r of a vector (vx,vy,vz), or a subgrid corresponding to
+ * a rectangular box. The routine inc can then be successively called to step
+ * through all the blocks which could be affected.
+ */
 class loop {
 	public:
 		loop(container *q);

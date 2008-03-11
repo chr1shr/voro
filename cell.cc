@@ -6,7 +6,7 @@
 
 #include "cell.hh"
 
-// Constructs a Voronoi cell and sets up the initial memory
+/** Constructs a Voronoi cell and sets up the initial memory. */
 voronoicell::voronoicell() :
 	currentvertices(initvertices), currentvertexorder(initvertexorder),
 	currentdeletesize(initdeletesize), currentdeletesize2(initdeletesize2) {
@@ -69,7 +69,7 @@ voronoicell::~voronoicell() {
 	delete [] pts;
 };
 
-// Increases the memory storage for a particular vertex order
+/** Increases the memory storage for a particular vertex order. */
 void voronoicell::addmemory(int i) {
 	int s=2*i+1;
 	if(mem[i]==0) {
@@ -187,7 +187,7 @@ void voronoicell::addmemory_ds2() {
 	currentdeletesize2=i;
 };
 
-// Initializes a Voronoi cell as a rectangular box with the given dimensions
+/** Initializes a Voronoi cell as a rectangular box with the given dimensions */
 inline void voronoicell::init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
@@ -226,7 +226,7 @@ inline void voronoicell::init(f_point xmin,f_point xmax,f_point ymin,f_point yma
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
 };
 
-// Initializes a Voroni cell as a regular octahedron
+/** Initializes a Voroni cell as a regular octahedron. */
 inline void voronoicell::init_octahedron(f_point l) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;
 	mec[4]=p=6;l*=2;
@@ -258,8 +258,9 @@ inline void voronoicell::init_octahedron(f_point l) {
 };
 
 
-// Initializes an arbitrary test object using the add_vertex() and
-// relconstruct() routines
+/** Initializes an arbitrary test object using the add_vertex() and
+ * relconstruct() routines.
+ */
 inline void voronoicell::init_test(int n) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;p=0;
 	switch(n) {
@@ -426,7 +427,10 @@ inline void voronoicell::init_test(int n) {
 #endif
 };
 
-// Adds an order 1 vertex to the memory structure, and specifies its edge
+/** Adds an order one vertex to the memory structure, and specifies its edge.
+ * \param[in] (x,y,z) are the coordinates of the vertex
+ * \param[in] a is the first and only edge of this vertex
+ */
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
 	if (mem[1]==mec[1]) addmemory(1);
@@ -437,7 +441,7 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a) {
 	q[0]=a;q[2]=p++;
 };
 
-// Adds an order 2 vertex to the memory structure, and specifies its edges
+/** Adds an order 2 vertex to the memory structure, and specifies its edges. */
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
 	if (mem[2]==mec[2]) addmemory(2);
@@ -448,7 +452,7 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b) {
 	q[0]=a;q[1]=b;q[4]=p++;
 };
 
-// Adds an order 3 vertex to the memory structure, and specifies its edges
+/** Adds an order 3 vertex to the memory structure, and specifies its edges. */
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
 	if (mem[3]==mec[3]) addmemory(3);
@@ -459,7 +463,7 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c) {
 	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
 };
 
-// Adds an order 4 vertex to the memory structure, and specifies its edges
+/** Adds an order 4 vertex to the memory structure, and specifies its edges. */
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
 	if (mem[4]==mec[4]) addmemory(4);
@@ -470,7 +474,7 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
 };
 
-// Adds an order 5 vertex to the memory structure, and specifies its edges
+/** Adds an order 5 vertex to the memory structure, and specifies its edges. */
 void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
 	if (mem[5]==mec[5]) addmemory(5);
@@ -481,9 +485,9 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
 };
 
-// Checks that the relational table of the Voronoi cell is accurate, and prints
-// out any errors. This algorithm is O(p), so running it every time the plane
-// routine is called will result in a significant slowdown.
+/** Checks that the relational table of the Voronoi cell is accurate, and prints
+ * out any errors. This algorithm is O(p), so running it every time the plane
+ * routine is called will result in a significant slowdown. */
 inline void voronoicell::relcheck() {
 	int i,j;
 	for(i=0;i<p;i++) {
@@ -493,11 +497,11 @@ inline void voronoicell::relcheck() {
 	}
 };
 
-// This routine checks for any two vertices that are connected by more than one
-// edge. The plane algorithm is designed so that this should not happen, so any
-// occurrences are most likely errors. Note that the routine is O(p), so
-// running it every time the plane routine is called will result in a significant
-// slowdown. 
+/** This routine checks for any two vertices that are connected by more than one
+ * edge. The plane algorithm is designed so that this should not happen, so any
+ * occurrences are most likely errors. Note that the routine is O(p), so
+ * running it every time the plane routine is called will result in a significant
+ * slowdown. */
 inline void voronoicell::duplicatecheck() {
 	int i,j,k;
 	for(i=0;i<p;i++) {
@@ -509,7 +513,7 @@ inline void voronoicell::duplicatecheck() {
 	}
 };
 
-// Constructs the relational table if the edges have been specified
+/** Constructs the relational table if the edges have been specified. */
 inline void voronoicell::relconstruct() {
 	int i,j,k,l;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
@@ -523,9 +527,9 @@ inline void voronoicell::relconstruct() {
 	}
 };
 
-// Cuts the Voronoi cell by a particle whose center is at a separation of
-// (x,y,z) from the cell center. The value of rsq should be initially set to
-// x*x+y*y+z*z.
+/** Cuts the Voronoi cell by a particle whose center is at a separation of
+ * (x,y,z) from the cell center. The value of rsq should be initially set to
+ * \f$x^2+y^2+z^2\f$. */
 #ifdef FACETS_NEIGHBOR
 bool voronoicell::nplane(f_point x,f_point y,f_point z,f_point rsq,int p_id) {
 	int *nep,*ned;
@@ -1288,13 +1292,13 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 	return collapseorder2();
 };
 
-// During the creation of a new facet in the plane routine, it is possible
-// that some order 2 vertices may arise. This routine removes them.
-// Suppose an order 2 vertex joins c and d. If there's a edge between
-// c and d already, then the order 2 vertex is just removed; otherwise,
-// the order 2 vertex is removed and c and d are joined together directly.
-// It is possible this process will create order 2 or order 1 vertices,
-// and the routine is continually run until all of them are removed.
+/** During the creation of a new facet in the plane routine, it is possible
+ * that some order two vertices may arise. This routine removes them.
+ * Suppose an order two vertex joins c and d. If there's a edge between
+ * c and d already, then the order two vertex is just removed; otherwise,
+ * the order two vertex is removed and c and d are joined together directly.
+ * It is possible this process will create order two or order one vertices,
+ * and the routine is continually run until all of them are removed. */
 inline bool voronoicell::collapseorder2() {
 	if(!collapseorder1()) return false;
 	int a,b,i,j,k,l;
@@ -1353,8 +1357,8 @@ inline bool voronoicell::collapseorder2() {
 	return true;
 };
 
-// Order 1 vertices can potentially be created during the order 2 collapse
-// routine. This routine removes them.
+/** Order one vertices can potentially be created during the order two collapse
+ * routine. This routine removes them. */
 inline bool voronoicell::collapseorder1() {
 	int i,j,k;
 	while(mec[1]>0) {
@@ -1384,10 +1388,10 @@ inline bool voronoicell::collapseorder1() {
 	return true;
 };
 
-// This routine deletes the kth edge of vertex j and reorganizes the memory.
-// If the neighbor computation is enabled, we also have to supply an
-// handedness flag to decide whether to preserve the plane on the left
-// or right of the connection.
+/** This routine deletes the kth edge of vertex j and reorganizes the memory.
+ * If the neighbor computation is enabled, we also have to supply an
+ * handedness flag to decide whether to preserve the plane on the left
+ * or right of the connection. */
 #ifdef FACETS_NEIGHBOR
 inline bool voronoicell::delete_connection(int j,int k,bool hand) {
 	int *nep,*ned,q=hand?k:vor_up(k,j);
@@ -1437,18 +1441,18 @@ inline bool voronoicell::delete_connection(int j,int k) {
 	return true;
 };
 
-// Cuts a Voronoi cell using the influence of a particle at (x,y,z), first
-// calculating the modulus squared of this vector before passing it to the
-// routine above
+/** Cuts a Voronoi cell using the influence of a particle at (x,y,z), first
+ * calculating the modulus squared of this vector before passing it to the
+ * routine above. */
 inline bool voronoicell::plane(f_point x,f_point y,f_point z) {
 	f_point rsq=x*x+y*y+z*z;
 	return plane(x,y,z,rsq);
 };
 
-// For the neighbor-tracking version of the code, an extra version of the plane
-// routine is provided that doesn't require passing a plane ID. It just makes
-// up the plane ID to be zero. An nplane routine that works without passing
-// the modulus squared is also provided.
+/** For the neighbor-tracking version of the code, an extra version of the plane
+ * routine is provided that doesn't require passing a plane ID. It just makes
+ * up the plane ID to be zero. An nplane routine that works without passing
+ * the modulus squared is also provided. */
 #ifdef FACETS_NEIGHBOR
 inline bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 	return nplane(x,y,z,rsq,0);
@@ -1459,7 +1463,7 @@ inline bool voronoicell::nplane(f_point x,f_point y,f_point z,int p_id) {
 };	
 #endif
 
-// Simple functions for moving around the edges of a given Voronoi vertex
+/** Simple functions for moving around the edges of a given Voronoi vertex. */
 inline int voronoicell::vor_up(int a,int p) {
 	return a==nu[p]-1?0:a+1;
 };
@@ -1467,7 +1471,7 @@ inline int voronoicell::vor_down(int a,int p) {
 	return a==0?nu[p]-1:a-1;
 };
 
-// Calculates the volume of a Voronoi cell
+/** Calculates the volume of a Voronoi cell. */
 inline f_point voronoicell::volume() {
 	const f_point fe=1/48.0;
 	f_point vol=0;
@@ -1508,7 +1512,7 @@ inline f_point voronoicell::volume() {
 	return vol*fe;
 };
 
-// Computes the maximum radius squared
+/** Computes the maximum radius squared.*/
 inline f_point voronoicell::maxradsq() {
 	int i;f_point r,s;
 	r=pts[0]*pts[0]+pts[1]*pts[1]+pts[2]*pts[2];
@@ -1519,8 +1523,8 @@ inline f_point voronoicell::maxradsq() {
 	return r;
 };
 
-// Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
-// stream, displacing the cell by an amount (x,y,z)
+/** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
+ * stream, displacing the cell by an amount (x,y,z). */
 inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
 	int i,j,k;f_point ux,uy,uz;
 	for(i=0;i<p;i++) {
@@ -1533,7 +1537,7 @@ inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
 	}
 };
 
-// An overloaded version of the dumppov routine, that prints to <filename> 
+/** An overloaded version of the dumppov routine, that prints to <filename>. */
 inline void voronoicell::dumppov(char *filename,f_point x,f_point y,f_point z) {
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
@@ -1541,13 +1545,14 @@ inline void voronoicell::dumppov(char *filename,f_point x,f_point y,f_point z) {
 	of.close();
 };
 
-// An overloaded version of the dumppov routine, that prints to standard output
+/** An overloaded version of the dumppov routine, that prints to standard
+ * output. */
 inline void voronoicell::dumppov(f_point x,f_point y,f_point z) {
 	dumppov(cout,x,y,z);
 };
 
-// Outputs the edges of the Voronoi cell (in gnuplot format) to an open file
-// stream, displacing the cell by an amount (x,y,z)
+/** Outputs the edges of the Voronoi cell (in gnuplot format) to an open file
+ * stream, displacing the cell by an amount (x,y,z) */
 inline void voronoicell::dumpgnuplot(ostream &of,f_point x,f_point y,f_point z) {
 	int i,j,k;f_point ux,uy,uz;
 	for(i=0;i<p;i++) {
@@ -1559,7 +1564,7 @@ inline void voronoicell::dumpgnuplot(ostream &of,f_point x,f_point y,f_point z) 
 	}
 };
 
-// An overloaded version of the dumpgnuplot routine, that prints to <filename> 
+/** An overloaded version of the dumpgnuplot routine, that prints to <filename>. */ 
 inline void voronoicell::dumpgnuplot(char *filename,f_point x,f_point y,f_point z) {
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
@@ -1567,12 +1572,12 @@ inline void voronoicell::dumpgnuplot(char *filename,f_point x,f_point y,f_point 
 	of.close();
 };
 
-// An overloaded version of the dumpgnuplot routine, that prints to standard output
+/** An overloaded version of the dumpgnuplot routine, that prints to standard output. */
 inline void voronoicell::dumpgnuplot(f_point x,f_point y,f_point z) {
 	dumpgnuplot(cout,x,y,z);
 };
 
-// Outputs the Voronoi cell in the POV mesh2 format
+/** Outputs the Voronoi cell in the POV mesh2 format. */
 inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) {
 	int i,j,k,l,m,n;
 	of << "mesh2 {" << endl << "vertex_vectors {" << endl << p << "," << endl;
@@ -1605,7 +1610,7 @@ inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) 
 	of << "}" << endl << "inside_vector <0,0,1>" << endl << "}" << endl;
 };
 
-// An overloaded version of the dumppovmesh routine, that prints to <filename> 
+/** An overloaded version of the dumppovmesh routine, that prints to <filename>. */
 inline void voronoicell::dumppovmesh(char *filename,f_point x,f_point y,f_point z) {
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
@@ -1613,30 +1618,30 @@ inline void voronoicell::dumppovmesh(char *filename,f_point x,f_point y,f_point 
 	of.close();
 };
 
-// An overloaded version of the dumppovmesh routine, that prints to standard output
+/** An overloaded version of the dumppovmesh routine, that prints to standard output. */
 inline void voronoicell::dumppovmesh(f_point x,f_point y,f_point z) {
 	dumppovmesh(cout,x,y,z);
 };
 
-// Randomly perturbs the points in the Voronoi cell by an amount r
+/** Randomly perturbs the points in the Voronoi cell by an amount r. */
 inline void voronoicell::perturb(f_point r) {
 	for(int i=0;i<3*p;i++) {
 		pts[i]+=(2*double(rand())/RAND_MAX-1)*r;
 	}
 };
 
-//Initialises the suretest class and creates a buffer for dubious points
+/** Initialises the suretest class and creates a buffer for dubious points. */
 suretest::suretest() : currentdubious(initdubious) {
 	sn=new int[2*currentdubious];
 };
 
-// Suretest destructor to free memory allocation
+/** Suretest destructor to free memory allocation. */
 suretest::~suretest() {
 	delete [] sn;
 };
 
-// Sets up the suretest class with a particular test plane, and removes
-// any special cases from the table
+/** Sets up the suretest class with a particular test plane, and removes
+ * any special cases from the table. */
 inline void suretest::init(f_point x,f_point y,f_point z,f_point rsq) {
 	sc=0;px=x;py=y;pz=z;prsq=rsq;
 };
@@ -1664,8 +1669,8 @@ inline int suretest::test(int n,f_point &ans) {
 	}
 };
 
-// Prints the vertices, their edges, the relation table,
-// and also notifies if any glaring memory errors are visible.
+/** Prints the vertices, their edges, the relation table, and also notifies if
+ * any glaring memory errors are visible. */
 void voronoicell::edgeprint() {
 	int j;
 	for(int i=0;i<p;i++) {
@@ -1688,8 +1693,8 @@ void voronoicell::edgeprint() {
 	}
 };
 
-// Prints out a list of all the facets and their vertices. If the neighbor option
-// is defined, it lists each cutting plane.
+/** Prints out a list of all the facets and their vertices. If the neighbor option
+ * is defined, it lists each cutting plane. */
 void voronoicell::facets(ostream &of) {
 	int i,j,k,l,m;
 	for(i=0;i<p;i++) {
@@ -1726,8 +1731,8 @@ void voronoicell::facets(ostream &of) {
 	}
 };
 
-// For the neighbor-tracking version of the code, this routine labels the facets
-// in an arbitrary order, starting from one
+/** For the neighbor-tracking version of the code, this routine labels the facets
+ * in an arbitrary order, starting from one. */
 #ifdef FACETS_NEIGHBOR
 void voronoicell::label_facets() {
 	int i,j,k,l,m,q=1;
@@ -1758,8 +1763,8 @@ void voronoicell::label_facets() {
 };
 #endif
 
-// For the neighbor-tracking version of the code, this routine checks to make sure the
-// neighbor information of each facets is consistent. 
+/** For the neighbor-tracking version of the code, this routine checks to make sure the
+ * neighbor information of each facets is consistent.*/
 #ifdef FACETS_NEIGHBOR
 void voronoicell::facet_check() {
 	int i,j,k,l,m,q;
@@ -1789,8 +1794,8 @@ void voronoicell::facet_check() {
 };
 #endif
 
-// For the neighbor-tracking version of the code, this routine just provides a list
-// of plane IDs
+/** For the neighbor-tracking version of the code, this routine just provides a list
+ * of plane IDs. */
 #ifdef FACETS_NEIGHBOR
 void voronoicell::neighbors(ostream &of) {
 	int i,j,k,l,m;
@@ -1819,7 +1824,7 @@ void voronoicell::neighbors(ostream &of) {
 }
 #endif
 
-// Overloaded versions of facets
+/** Overloaded versions of facets. */
 inline void voronoicell::facets() {
 	facets(cout);
 };
@@ -1830,8 +1835,8 @@ inline void voronoicell::facets(char *filename) {
 	of.close();
 };
 
-// Examines all the facets, and evaluates them by the number of vertices that
-// they have
+/** Examines all the facets, and evaluates them by the number of vertices that
+ * they have.*/
 void voronoicell::facet_statistics(ostream &of) {
 	int *stat,*pstat,currentfacetsize=initfacetsize,newc,maxf=0;
 	stat=new int[currentfacetsize];
@@ -1875,7 +1880,7 @@ void voronoicell::facet_statistics(ostream &of) {
 	delete [] stat;
 };
 
-// Overloaded versions of facet_statistics
+/** Overloaded versions of facet_statistics */
 inline void voronoicell::facet_statistics() {
 	facet_statistics(cout);
 };

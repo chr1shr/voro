@@ -23,7 +23,7 @@ FACETS=facets facets-radical facets-neighbor facets-radical-neighbor
 DEMO=platonic higher_test higher_test2 cell_test voronoi_test
 
 #Makefile rules
-all: facets-all demo-all
+all: facets-all demo-all doc
 
 facets-all: $(FACETS)
 
@@ -58,3 +58,7 @@ voronoi_test: $(SOURCE) voronoi_test.cc
 
 clean:
 	rm $(FACETS) $(DEMO)
+
+doc: Doxyfile $(SOURCE)
+	doxygen Doxyfile
+	cd latex ; make

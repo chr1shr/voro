@@ -7,11 +7,11 @@
 #include "cell.hh"
 #include "container.hh"
 
-// Container constructor. The first six arguments set the corners of the box to
-// be (xa,ya,za) and (xb,yb,zb). The box is then divided into an nx by ny by nz
-// grid of blocks, set by the following three arguments. The next three
-// arguments are booleans, which set the periodicity in each direction. The
-// final argument sets the amount of memory allocated to each block.
+/** Container constructor. The first six arguments set the corners of the box to
+ * be (xa,ya,za) and (xb,yb,zb). The box is then divided into an nx by ny by nz
+ * grid of blocks, set by the following three arguments. The next three
+ * arguments are booleans, which set the periodicity in each direction. The
+ * final argument sets the amount of memory allocated to each block.*/
 container::container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_point zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
 	: ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
@@ -33,7 +33,7 @@ container::container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_po
 #endif
 };
 
-// Container destructor - free memory
+/** Container destructor - free memory. */
 container::~container() {
 	int l;
 	for(l=0;l<nxyz;l++) delete [] p[l];
@@ -44,7 +44,7 @@ container::~container() {
 	delete [] co;	
 };
 
-// Dumps all the particle positions and identifies to a file
+/** Dumps all the particle positions and identifies to a file. */
 void container::dump(char *filename) {
 	int c,l;
 	ofstream file;
@@ -60,7 +60,7 @@ void container::dump(char *filename) {
 	file.close();
 };
 
-// Put a particle into the correct region of the container
+/** Put a particle into the correct region of the container. */
 #ifdef FACETS_RADICAL
 void container::put(int n,f_point x,f_point y,f_point z,f_point r) {
 #else
@@ -83,7 +83,7 @@ void container::put(int n,f_point x,f_point y,f_point z) {
 	}
 };
 
-// Increase memory for a particular region
+/** Increase memory for a particular region. */
 void container::addparticlemem(int i) {
 	int *idp;f_point *pp;
 	int l,nmem=2*mem[i];
@@ -102,7 +102,7 @@ void container::addparticlemem(int i) {
 	delete [] p[i];p[i]=pp;
 };
 
-// Import a list of particles from standard input
+/** Import a list of particles from standard input. */
 void container::import(istream &is) {
 	int n;f_point x,y,z;
 #ifdef FACETS_RADICAL
@@ -120,14 +120,14 @@ void container::import(istream &is) {
 	}
 };
 
-// An overloaded version of the import routine, that reads the
-// standard input
+/** An overloaded version of the import routine, that reads the standard input.
+ */
 inline void container::import() {
 	import(cin);
 };
 
-// An overloaded version of the import routine, that reads
-// in particles from <filename>
+/** An overloaded version of the import routine, that reads in particles from
+ * <filename>. */
 inline void container::import(char *filename) {
 	ifstream is;
 	is.open(filename,ifstream::in);
@@ -135,7 +135,7 @@ inline void container::import(char *filename) {
 	is.close();
 };
 
-// Outputs the number of particles within each region
+/** Outputs the number of particles within each region. */
 void container::regioncount() {
 	int i,j,k,ijk=0;
 	for(k=0;k<nz;k++) {
@@ -145,7 +145,7 @@ void container::regioncount() {
 	}
 };
 
-// Clears a container of particles
+/** Clears a container of particles. */
 void container::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
 #ifdef FACETS_RADICAL
@@ -153,9 +153,9 @@ void container::clear() {
 #endif
 };
 
-// Computes the Voronoi cells for all particles within a box with corners
-// (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
-// that can be read by gnuplot
+/** Computes the Voronoi cells for all particles within a box with corners
+ * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
+ * that can be read by gnuplot. */
 void container::vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax) {
 	f_point x,y,z,px,py,pz;
 	loop l1(this);
@@ -180,15 +180,15 @@ void container::vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point y
 	of.close();
 };
 
-// If only a filename is supplied to vdraw_gnuplot, then assume that we are
-// calculating the entire simulation region
+/** If only a filename is supplied to vdraw_gnuplot, then assume that we are
+ * calculating the entire simulation region. */
 void container::vdraw_gnuplot(char *filename) {
 	vdraw_gnuplot(filename,ax,bx,ay,by,az,bz);
 };
 
-// Computes the Voronoi cells for all particles within a box with corners
-// (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
-// that can be read by gnuplot
+/** Computes the Voronoi cells for all particles within a box with corners
+ * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
+ * that can be read by gnuplot.*/
 void container::vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax) {
 	f_point x,y,z,px,py,pz;
 	loop l1(this);
@@ -215,15 +215,15 @@ void container::vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,
 	of.close();
 };
 
-// If only a filename is supplied to vdraw_pov, then assume that we are
-// calculating the entire simulation region
+/** If only a filename is supplied to vdraw_pov, then assume that we are
+ * calculating the entire simulation region.*/
 void container::vdraw_pov(char *filename) {
 	vdraw_pov(filename,ax,bx,ay,by,az,bz);
 };
 
 
-// Computes the Voronoi volumes for all the particles, and stores the
-// results according to the particle label in the f_point array bb
+/** Computes the Voronoi volumes for all the particles, and stores the
+ * results according to the particle label in the f_point array bb.*/
 void container::vcomputeall(f_point *bb) {
 	voronoicell c;
 	loop l(this);
@@ -236,8 +236,8 @@ void container::vcomputeall(f_point *bb) {
 	}
 };
 
-// Prints a list of all particle labels, positions, and Voronoi volumes to the
-// standard output
+/** Prints a list of all particle labels, positions, and Voronoi volumes to the
+ * standard output. */
 void container::vprintall(ostream &of) {
 	f_point x,y,z;
 	voronoicell c;
@@ -264,12 +264,12 @@ void container::vprintall(ostream &of) {
 	}
 };
 
-// An overloaded version of vprintall, which just prints to standard output
+/** An overloaded version of vprintall, which just prints to standard output. */
 inline void container::vprintall() {
 	vprintall(cout);
 };
 
-// An overloaded version of vprintall, which outputs the result to <filename>
+/** An overloaded version of vprintall, which outputs the result to <filename>. */
 inline void container::vprintall(char* filename) {
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
@@ -277,9 +277,9 @@ inline void container::vprintall(char* filename) {
 	of.close();
 };
 
-// Computes a single Voronoi cell in the container. This routine can be run by
-// the user, and it is also called multiple times by the functions vprintall,
-// vcomputeall and vdraw.
+/** Computes a single Voronoi cell in the container. This routine can be run by
+ * the user, and it is also called multiple times by the functions vprintall,
+ * vcomputeall and vdraw. */
 inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point y,f_point z) {
 	f_point x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
@@ -343,7 +343,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point
 	}
 };
 
-// A overloaded version of compute_cell, that sets up the x, y, and z variables.
+/** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
 inline void container::compute_cell(voronoicell &c,int s,int i) {
 #ifdef FACETS_RADICAL
 	double x=p[s][4*i],y=p[s][4*i+1],z=p[s][4*i+2];
@@ -353,17 +353,17 @@ inline void container::compute_cell(voronoicell &c,int s,int i) {
 	compute_cell(c,s,i,x,y,z);
 }
 
-// Creates a loop object, by pulling the necesssary constants about the container
-// geometry from a pointer to the current container class
+/** Creates a loop object, by pulling the necesssary constants about the container
+ * geometry from a pointer to the current container class. */
 loop::loop(container *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
 	xsp(q->xsp),ysp(q->ysp),zsp(q->zsp),
 	ax(q->ax),ay(q->ay),az(q->az),
 	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz),
 	xperiodic(q->xperiodic),yperiodic(q->yperiodic),zperiodic(q->zperiodic) {};
 
-// Initializes a loop object, by finding all blocks which are within a distance
-// r of the vector (vx,vy,vz). It returns the first block which is to be
-// tested, and sets the periodic displacement vector (px,py,pz) accordingly.
+/** Initializes a loop object, by finding all blocks which are within a distance
+ * r of the vector (vx,vy,vz). It returns the first block which is to be
+ * tested, and sets the periodic displacement vector (px,py,pz) accordingly. */
 inline int loop::init(f_point vx,f_point vy,f_point vz,f_point r,f_point &px,f_point &py,f_point &pz) {
 	ai=myint((vx-ax-r)*xsp);
 	bi=myint((vx-ax+r)*xsp);
@@ -394,10 +394,10 @@ inline int loop::init(f_point vx,f_point vy,f_point vz,f_point r,f_point &px,f_p
 	return s;
 };
 
-// Initializes a loop object, by finding all blocks which overlap the box with
-// corners (xmin,ymin,zmin) and (xmax,ymax,zmax). It returns the first block
-// which is to be tested, and sets the periodic displacement vector (px,py,pz)
-// accordingly.
+/** Initializes a loop object, by finding all blocks which overlap the box with
+ * corners (xmin,ymin,zmin) and (xmax,ymax,zmax). It returns the first block
+ * which is to be tested, and sets the periodic displacement vector (px,py,pz)
+ * accordingly. */
 inline int loop::init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,f_point &px,f_point &py,f_point &pz) {
 	ai=myint((xmin-ax)*xsp);
 	bi=myint((xmax-ax)*xsp);
@@ -428,8 +428,8 @@ inline int loop::init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_poin
 	return s;
 };
 
-// Returns the next block to be tested in a loop, and updates the periodicity
-// vector if necessary.
+/** Returns the next block to be tested in a loop, and updates the periodicity
+ * vector if necessary. */
 inline int loop::inc(f_point &px,f_point &py,f_point &pz) {
 	if (i<bi) {
 		i++;
@@ -446,20 +446,20 @@ inline int loop::inc(f_point &px,f_point &py,f_point &pz) {
 	} else return -1;
 };
 
-// Custom int function, that gives consistent stepping for negative numbers.
-// With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
-// With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).
+/** Custom int function, that gives consistent stepping for negative numbers.
+ * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
+ * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/
 template <class T>
 inline int loop::myint(T a) {
 	return a<0?int(a)-1:int(a);
 };
 
-// Custom mod function, that gives consistent stepping for negative numbers
+/** Custom mod function, that gives consistent stepping for negative numbers. */
 inline int loop::mymod(int a,int b) {
 	return a>=0?a%b:b-1-(b-1-a)%b;
 };
 
-// Custom div function, that gives consistent stepping for negative numbers
+/** Custom div function, that gives consistent stepping for negative numbers. */
 inline int loop::mydiv(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 };

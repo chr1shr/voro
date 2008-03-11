@@ -14,7 +14,8 @@
 #include <cmath>
 using namespace std;
 
-// Structure for printing fatal error messages and exiting
+/** Structure for printing fatal error messages and exiting
+ */
 struct fatal_error {
     const char *msg;
     fatal_error(const char *p) : msg(p) {
@@ -22,11 +23,12 @@ struct fatal_error {
     }
 };
 
-// Floating point comparisons are notoriously unreliable. This class contains
-// routines to carefully test the positions of vertices in the plane cutting
-// routine. If a dubious case is encountered, the result of the comparison
-// is stored in a table, so it can be accessed later, rather than risking its
-// value changing.
+/** Floating point comparisons are notoriously unreliable. This class contains
+ * routines to carefully test the positions of vertices in the plane cutting
+ * routine. If a dubious case is encountered, the result of the comparison
+ * is stored in a table, so it can be accessed later, rather than risking its
+ * value changing.
+ */
 class suretest {
 	public:
 		f_point *p;
@@ -40,16 +42,17 @@ class suretest {
 		f_point px,py,pz,prsq;
 };
 
-// This class encapsulates all the routines for storing and calculating a
-// single Voronoi cell. The cell can first be initialized by the init function
-// to be a rectangular box. The box can then be successively cut by planes
-// using the plane function.  Other routines exist for outputting the cell,
-// computing its volume, or finding the largest distance of a vertex from the
-// cell center.  The cell is described by three arrays: pts[] which holds the
-// vertex positions, ed[] which holds the table of edges, and rl[] which is a
-// relational table that determines how two vertices are connected to one
-// another. rl[] is redundant, but helps speed up the computation. The function
-// relcheck checks that the relational table is valid.
+/** This class encapsulates all the routines for storing and calculating a
+ * single Voronoi cell. The cell can first be initialized by the init function
+ * to be a rectangular box. The box can then be successively cut by planes
+ * using the plane function.  Other routines exist for outputting the cell,
+ * computing its volume, or finding the largest distance of a vertex from the
+ * cell center.  The cell is described by three arrays: pts[] which holds the
+ * vertex positions, ed[] which holds the table of edges, and rl[] which is a
+ * relational table that determines how two vertices are connected to one
+ * another. rl[] is redundant, but helps speed up the computation. The function
+ * relcheck checks that the relational table is valid.
+ */
 class voronoicell {
 	public:
 		int *mem,**mep,*mec,**ed,*nu,*ds,*ds2;
