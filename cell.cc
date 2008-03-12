@@ -48,6 +48,7 @@ voronoicell::voronoicell() :
 	}
 };
 
+/** The voronoicell destructor deallocates all the dynamic memory. */
 voronoicell::~voronoicell() {
 	delete [] ds;
 	delete [] ds2;
@@ -69,7 +70,15 @@ voronoicell::~voronoicell() {
 	delete [] pts;
 };
 
-/** Increases the memory storage for a particular vertex order. */
+/** Increases the memory storage for a particular vertex order, by increasing
+ * the size of the of the mep and mne <em>(Neighbor version only)</em> arrays.
+ * If the arrays already exist, their size is doubled; if they don't exist,
+ * then new ones of size initnvertices are allocated. The routine also ensures
+ * that the pointers in the ed array are updated, by making use of the back
+ * pointers. For the cases where the back pointer has been temporarily
+ * overwritten in the marginal vertex code, the auxiliary delete stack is
+ * scanned to find out how to update the ed value.
+ *  \param[in] i The order of the vertex memory to be increased.*/
 void voronoicell::addmemory(int i) {
 	int s=2*i+1;
 	if(mem[i]==0) {
@@ -124,6 +133,10 @@ void voronoicell::addmemory(int i) {
 	}
 };
 
+/** Doubles the maximum number of vertices allowed, by reallocating the ed, nu,
+ * pts, and ne <em>(Neighbor version only)</em> arrays. If the allocation
+ * exceeds the absolute maximum set in maxvertices, then the routine throws a
+ * fatal error. */
 void voronoicell::addmemory_vertices() {
 	int i=2*currentvertices,j,**pp,*pnu;
 	if (i>maxvertices) throw fatal_error("Vertex memory allocation exceeded absolute maximum");
@@ -146,6 +159,10 @@ void voronoicell::addmemory_vertices() {
 	currentvertices=i;
 };
 
+/** Doubles the maximum allowed vertex order, by reallocating mem, mep, mec,
+ * and mnu <em>(Neighbor version only)</em> arrays. If the allocation exceeds
+ * the absolute maximum set in maxvertexorder, then the routine causes a fatal
+ * error. */
 void voronoicell::addmemory_vorder() {
 	int i=2*currentvertexorder,j,*p1,**p2;
 	if (i>maxvertexorder) throw fatal_error("Vertex order memory allocation exceeded absolute maximum");
@@ -167,6 +184,9 @@ void voronoicell::addmemory_vorder() {
 	currentvertexorder=i;
 };
 
+/** Doubles the size allocation of the main delete stack. If the allocation
+ * exceeds the absolute maximum set in maxdeletesize, then routine causes a
+ * fatal error. */
 void voronoicell::addmemory_ds() {
 	int i=2*currentdeletesize,j,*pds;
 	if (i>maxdeletesize) throw fatal_error("Delete stack 1 memory allocation exceeded absolute maximum");
@@ -177,6 +197,9 @@ void voronoicell::addmemory_ds() {
 	currentdeletesize=i;
 };
 
+/** Doubles the size allocation of the auxiliary delete stack. If the
+ * allocation exceeds the absolute maximum set in maxdeletesize2, then the
+ * routine causes a fatal error. */
 void voronoicell::addmemory_ds2() {
 	int i=2*currentdeletesize2,j,*pds2;
 	if (i>maxdeletesize2) throw fatal_error("Delete stack 2 memory allocation exceeded absolute maximum");
@@ -226,7 +249,9 @@ inline void voronoicell::init(f_point xmin,f_point xmax,f_point ymin,f_point yma
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
 };
 
-/** Initializes a Voroni cell as a regular octahedron. */
+/** Initializes a Voroni cell as a regular octahedron.
+ * \param l The distance from the octahedron center to a vertex. Six vertices
+ * are initialized at (-l,0,0), (l,0,0), (0,-l,0), (0,l,0), (0,0,-l), and (0,0,l).*/
 inline void voronoicell::init_octahedron(f_point l) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;
 	mec[4]=p=6;l*=2;
@@ -773,7 +798,7 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 			// Copy the edges of the original vertex into the new
 			// one. Delete the edges of the original vertex, and
 			// update the relational table.
-			us=vor_down(i,up);
+			us=cycle_down(i,up);
 			while(i<j) {
 				qp=ed[up][i];
 				qs=ed[up][nu[up]+i];
@@ -930,7 +955,7 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 		cs=2;
 
 		// Set the direction to move in
-		qs=vor_up(us,up);
+		qs=cycle_up(us,up);
 		qp=up;q=u;
 	}
 
@@ -950,7 +975,7 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 			// The point is still in the cutting space. Just add it
 			// to the delete stack and keep moving.
 			if (stack==currentdeletesize) addmemory_ds();
-			qs=vor_up(ed[qp][nu[qp]+qs],lp);
+			qs=cycle_up(ed[qp][nu[qp]+qs],lp);
 			qp=lp;
 			q=l;
 			ds[stack++]=qp;
@@ -987,7 +1012,7 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 			ed[cp][cs]=p;
 			ed[cp][nu[cp]+cs]=0;
 			ed[qp][qs]=-1;
-			qs=vor_up(qs,qp);
+			qs=cycle_up(qs,qp);
 			cp=p++;
 			cs=2;
 		} else {
@@ -1009,7 +1034,7 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 			// we find one which isn't outside the cutting space
 			do {
 				k++;
-				qs=vor_up(qs,qp);
+				qs=cycle_up(qs,qp);
 				lp=ed[qp][qs];
 				lw=sure.test(lp,l);
 			} while (lw==-1);
@@ -1175,7 +1200,7 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 			// and do one less if this was a double edge 
 			qs=iqs;
 			while(i<(newdoubleedge?k:k-1)) {
-				qs=vor_up(qs,qp);
+				qs=cycle_up(qs,qp);
 				lp=ed[qp][qs];ls=ed[qp][nu[qp]+qs];
 #ifdef FACETS_NEIGHBOR
 				ne[j][i]=ne[qp][qs];
@@ -1187,7 +1212,7 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
 				ed[qp][qs]=-1;
 				i++;
 			}
-			qs=vor_up(qs,qp);
+			qs=cycle_up(qs,qp);
 			cs=i;
 			cp=j;
 #ifdef FACETS_NEIGHBOR
@@ -1298,7 +1323,10 @@ bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
  * c and d already, then the order two vertex is just removed; otherwise,
  * the order two vertex is removed and c and d are joined together directly.
  * It is possible this process will create order two or order one vertices,
- * and the routine is continually run until all of them are removed. */
+ * and the routine is continually run until all of them are removed.
+ * \return false if the vertex removal was unsuccessful, indicative of
+ * the cell having zero volume and disappearing; true if the vertex removal
+ * was successful. */
 inline bool voronoicell::collapseorder2() {
 	if(!collapseorder1()) return false;
 	int a,b,i,j,k,l;
@@ -1394,7 +1422,7 @@ inline bool voronoicell::collapseorder1() {
  * or right of the connection. */
 #ifdef FACETS_NEIGHBOR
 inline bool voronoicell::delete_connection(int j,int k,bool hand) {
-	int *nep,*ned,q=hand?k:vor_up(k,j);
+	int *nep,*ned,q=hand?k:cycle_up(k,j);
 #else
 inline bool voronoicell::delete_connection(int j,int k) {
 #endif
@@ -1463,15 +1491,28 @@ inline bool voronoicell::nplane(f_point x,f_point y,f_point z,int p_id) {
 };	
 #endif
 
-/** Simple functions for moving around the edges of a given Voronoi vertex. */
-inline int voronoicell::vor_up(int a,int p) {
+/** This is a simple inline function for picking out the index of the next edge
+ * counterclockwise at the current vertex.
+ * \param a The index of an edge of the current vertex.
+ * \param p The number of the vertex.
+ * \return 0 if a=nu[p]-1, or a+1 otherwise. */
+inline int voronoicell::cycle_up(int a,int p) {
 	return a==nu[p]-1?0:a+1;
 };
-inline int voronoicell::vor_down(int a,int p) {
+
+/** This is a simple inline function for picking out the index of the next edge
+ * clockwise from the current vertex.
+ * \param a The index of an edge of the current vertex.
+ * \param p The number of the vertex.
+ * \return nu[p]-1 if a=0, or a-1 otherwise. */
+inline int voronoicell::cycle_down(int a,int p) {
 	return a==0?nu[p]-1:a-1;
 };
 
-/** Calculates the volume of a Voronoi cell. */
+/** Calculates the volume of the Voronoi cell, by decomposing the cell into
+ * tetrahedra extending outward from the zeroth vertex, which are evaluated
+ * using a scalar triple product.
+ * \return A floating point number holding the calculated volume. */
 inline f_point voronoicell::volume() {
 	const f_point fe=1/48.0;
 	f_point vol=0;
@@ -1485,13 +1526,13 @@ inline f_point voronoicell::volume() {
 			k=ed[i][j];
 			if (k>=0) {
 				ed[i][j]=-1-k;
-				l=vor_up(ed[i][nu[i]+j],k);
+				l=cycle_up(ed[i][nu[i]+j],k);
 				vx=pts[3*k]-pts[0];
 				vy=pts[3*k+1]-pts[1];
 				vz=pts[3*k+2]-pts[2];
 				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
-					n=vor_up(ed[k][nu[k]+l],m);
+					n=cycle_up(ed[k][nu[k]+l],m);
 					wx=pts[3*m]-pts[0];
 					wy=pts[3*m+1]-pts[1];
 					wz=pts[3*m+2]-pts[2];
@@ -1524,7 +1565,9 @@ inline f_point voronoicell::maxradsq() {
 };
 
 /** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
- * stream, displacing the cell by an amount (x,y,z). */
+ * stream, displacing the cell by an amount (x,y,z).
+ * \param of A output stream to write to.
+ * \param (x,y,z) A displacement vector to be added to the cell's position. */
 inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
 	int i,j,k;f_point ux,uy,uz;
 	for(i=0;i<p;i++) {
@@ -1537,7 +1580,10 @@ inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
 	}
 };
 
-/** An overloaded version of the dumppov routine, that prints to <filename>. */
+/** An overloaded version of the dumppov routine, that outputs the edges of
+ * the Voronoi cell (in POV-Ray format) to a file.
+ * \param filename The file to write to.
+ * \param (x,y,z) A displacement vector to be added to the cell's position. */
 inline void voronoicell::dumppov(char *filename,f_point x,f_point y,f_point z) {
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
@@ -1545,8 +1591,9 @@ inline void voronoicell::dumppov(char *filename,f_point x,f_point y,f_point z) {
 	of.close();
 };
 
-/** An overloaded version of the dumppov routine, that prints to standard
- * output. */
+/** An overloaded version of the dumppov routine, that outputs the edges of the
+ * Voronoi cell (in POV-Ray format) to standard output. 
+ * \param (x,y,z) A displacement vector to be added to the cell's position. */
 inline void voronoicell::dumppov(f_point x,f_point y,f_point z) {
 	dumppov(cout,x,y,z);
 };
@@ -1590,10 +1637,10 @@ inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) 
 			k=ed[i][j];
 			if (k>=0) {
 				ed[i][j]=-1-k;
-				l=vor_up(ed[i][nu[i]+j],k);
+				l=cycle_up(ed[i][nu[i]+j],k);
 				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
-					n=vor_up(ed[k][nu[k]+l],m);
+					n=cycle_up(ed[k][nu[k]+l],m);
 					of << "<" << i << "," << k << "," << m << ">" << endl;
 					k=m;l=n;
 					m=ed[k][l];ed[k][l]=-1-m;
@@ -1707,7 +1754,7 @@ void voronoicell::facets(ostream &of) {
 				of << i;
 #endif
 				ed[i][j]=-1-k;
-				l=vor_up(ed[i][nu[i]+j],k);
+				l=cycle_up(ed[i][nu[i]+j],k);
 				do {
 #ifdef FACETS_NEIGHBOR
 					of << " (" << k << "," << ne[k][l] << ")";
@@ -1716,7 +1763,7 @@ void voronoicell::facets(ostream &of) {
 #endif
 					m=ed[k][l];
 					ed[k][l]=-1-m;
-					l=vor_up(ed[k][nu[k]+l],m);
+					l=cycle_up(ed[k][nu[k]+l],m);
 					k=m;
 				} while (k!=i);
 				of << endl;
@@ -1742,12 +1789,12 @@ void voronoicell::label_facets() {
 			if (k>=0) {
 				ed[i][j]=-1-k;
 				ne[i][j]=q;
-				l=vor_up(ed[i][nu[i]+j],k);
+				l=cycle_up(ed[i][nu[i]+j],k);
 				do {
 					m=ed[k][l];
 					ed[k][l]=-1-m;
 					ne[k][l]=q;
-					l=vor_up(ed[k][nu[k]+l],m);
+					l=cycle_up(ed[k][nu[k]+l],m);
 					k=m;
 				} while (k!=i);
 				q++;
@@ -1774,12 +1821,12 @@ void voronoicell::facet_check() {
 			if (k>=0) {
 				ed[i][j]=-1-k;
 				q=ne[i][j];
-				l=vor_up(ed[i][nu[i]+j],k);
+				l=cycle_up(ed[i][nu[i]+j],k);
 				do {
 					m=ed[k][l];
 					ed[k][l]=-1-m;
 					if (ne[k][l]!=q) cerr << "Facet error at (" << k << "," << l << ")=" << ne[k][l] << ", started from (" << i << "," << j << ")=" << q << endl;
-					l=vor_up(ed[k][nu[k]+l],m);
+					l=cycle_up(ed[k][nu[k]+l],m);
 					k=m;
 				} while (k!=i);
 			}
@@ -1805,11 +1852,11 @@ void voronoicell::neighbors(ostream &of) {
 			if (k>=0) {
 				of << " " << ne[i][j];
 				ed[i][j]=-1-k;
-				l=vor_up(ed[i][nu[i]+j],k);
+				l=cycle_up(ed[i][nu[i]+j],k);
 				do {
 					m=ed[k][l];
 					ed[k][l]=-1-m;
-					l=vor_up(ed[k][nu[k]+l],m);
+					l=cycle_up(ed[k][nu[k]+l],m);
 					k=m;
 				} while (k!=i);
 			}
@@ -1848,12 +1895,12 @@ void voronoicell::facet_statistics(ostream &of) {
 			if (k>=0) {
 				q=1;
 				ed[i][j]=-1-k;
-				l=vor_up(ed[i][nu[i]+j],k);
+				l=cycle_up(ed[i][nu[i]+j],k);
 				do {
 					q++;
 					m=ed[k][l];
 					ed[k][l]=-1-m;
-					l=vor_up(ed[k][nu[k]+l],m);
+					l=cycle_up(ed[k][nu[k]+l],m);
 					k=m;
 				} while (k!=i);
 				if (q>=currentfacetsize) {

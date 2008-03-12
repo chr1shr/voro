@@ -17,29 +17,58 @@ using namespace std;
 /** Structure for printing fatal error messages and exiting
  */
 struct fatal_error {
-    const char *msg;
-    fatal_error(const char *p) : msg(p) {
-	cerr << p << endl;
-    }
+	const char *msg;
+	fatal_error(const char *p) : msg(p) {
+		cerr << p << endl;
+	}
 };
 
-/** Floating point comparisons are notoriously unreliable. This class contains
- * routines to carefully test the positions of vertices in the plane cutting
- * routine. If a dubious case is encountered, the result of the comparison
- * is stored in a table, so it can be accessed later, rather than risking its
- * value changing.
+/** Floating point comparisons can be unreliable on some processor architectures,
+ * and can produce unpredictable results. On a number of popular Intel processors,
+ * floating point numbers are held to higher precision when in registers
+ * than when in memory. When a register is swapped from a register to memory,
+ * a truncation error, and in some situations this can create circumstances
+ * where for two numbers c and d, the program finds c>d first, but later c<d.
+ * The programmer has no control over when the swaps between memory and registers
+ * occur, and recompiling with slightly different code can give different results.
+ * One solution to avoid this is to force the compiler to evaluate everything in
+ * memory (e.g. by using the -ffloat-store option in the GNU C++ compiler) but this
+ * could be viewed overkill, since it slows the code down, and the extra
+ * register precision is useful.
+ *
+ * In the plane cutting routine of the voronoicell class, we need to reliably know whether
+ * a vertex lies inside, outside, or on the cutting plane, since if it changed during
+ * the tracing process there would be confusion. This class makes these tests reliable,
+ * by storing the results of marginal cases, where the vertex lies within tolerance2
+ * of the cutting plane. If that vertex is tested again, then code looks up the value
+ * of the table in a buffer, rather than doing the floating point comparison again.
+ * Only vertices which are close to the plane are stored and tested, so this routine
+ * should create minimal computational overhead.
  */
 class suretest {
 	public:
+		/** This is a pointer to the array in the voronoicell class
+		 * which holds the vertex coordinates.*/
 		f_point *p;
+		
 		suretest();
 		~suretest();
 		inline void init(f_point x,f_point y,f_point z,f_point rsq);
 		inline int test(int n,f_point &ans);
 	private:
+		/** This stores the current memory allocation for the marginal
+		 * cases. */
 		int currentdubious;
-		int sc,*sn;
-		f_point px,py,pz,prsq;
+
+		/** This stores the total number of marginal points which are
+		 * currently in the buffer. */
+		int sc;
+
+		int *sn;
+		f_point px;
+		f_point py;
+		f_point pz;
+		f_point prsq;
 };
 
 /** This class encapsulates all the routines for storing and calculating a
@@ -55,12 +84,56 @@ class suretest {
  */
 class voronoicell {
 	public:
-		int *mem,**mep,*mec,**ed,*nu,*ds,*ds2;
-		int currentvertices,currentvertexorder;
-		int currentdeletesize,currentdeletesize2;
+		/** This is an array for holding the */
+		int *mem;
+
+		/** This is an array of pointers to different blocks of memory for storing */
+		int **mep;
+
+		/** This is an array for holding the number */
+		int *mec;
+
+		/** */
+		int **ed;
+		
+		/** */
+		int *nu;
+		
+		/** */
+		int *ds;
+		
+		/** This is the auxiliary delete stack, which has size set by currentdeletesize2 .*/
+		int *ds2;
+
+		/** This holds the current size of the arrays ed and nu, which hold the vertex
+		 * information. If more vertices are created than can fit in this array, then it
+		 * is dynamically extended using the addmemory_vertices routine. */
+		int currentvertices;
+
+		/** This holds the current maximum allowed order of a vertex, which sets the size
+		 * of the mem, mep, and mec arrays. If a vertex is created with more vertices
+		 * than this, the arrays are dynamically extended using the addmemory_vorder
+		 * routine. */
+		int currentvertexorder;
+
+		/** This sets the size of the main delete stack. */
+		int currentdeletesize;
+
+		/** This sets the size of the auxiliary delete stack. */
+		int currentdeletesize2;
+
+		/** This in an array with size 3*currentvertices for holding the positions of the
+		 * vertices. */ 
 		f_point *pts;
+
+		/* This sets the total number of vertices in the current cell.  */
 		int p;
+
+		/* This is a class used in the plane routine for carrying out reliable comparisons
+		 * of whether points in the cell are inside, outside, or on the current
+		 * cutting plane. */
 		suretest sure;
+
 		voronoicell();
 		~voronoicell();
 		inline void init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
@@ -96,7 +169,9 @@ class voronoicell {
 		inline void facet_statistics();
 		inline void facet_statistics(char *filename);
 #ifdef FACETS_NEIGHBOR
-		int **mne,**ne;
+		/** <em>Only present for the neighbor-tracking version.</em> */
+		int **mne;
+		int **ne;
 		void label_facets();
 		void facet_check();
 		void neighbors(ostream &of);
@@ -108,6 +183,7 @@ class voronoicell {
 #endif
 		inline bool plane(f_point x,f_point y,f_point z);
 	private:
+		/** This holds the number of points currently on the auxiliary delete stack. */
 		int stack2;
 		void addmemory(int i);
 		void addmemory_vertices();
@@ -115,8 +191,8 @@ class voronoicell {
 		void addmemory_ds();
 		void addmemory_ds2();
 
-		inline int vor_up(int a,int p);
-		inline int vor_down(int a,int p);
+		inline int cycle_up(int a,int p);
+		inline int cycle_down(int a,int p);
 #ifdef FACETS_NEIGHBOR
 		inline bool delete_connection(int j,int k,bool hand);
 #else
