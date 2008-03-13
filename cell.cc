@@ -22,7 +22,7 @@ voronoicell::voronoicell() :
 	ne=new int*[currentvertices];
 #endif
 	nu=new int[currentvertices];
-	pts=new f_point[3*currentvertices];
+	pts=new fpoint[3*currentvertices];
 	sure.p=pts;
 	for(i=0;i<3;i++) {
 		mem[i]=initnvertices;
@@ -141,7 +141,7 @@ void voronoicell::addmemory_vertices() {
 	int i=2*currentvertices,j,**pp,*pnu;
 	if (i>maxvertices) throw fatal_error("Vertex memory allocation exceeded absolute maximum");
 	cerr << "Vertex memory scaled up to " << i << endl;
-	f_point *ppts;
+	fpoint *ppts;
 	pp=new int*[i];
 	for(j=0;j<currentvertices;j++) pp[j]=ed[j];
 	delete [] ed;ed=pp;
@@ -153,7 +153,7 @@ void voronoicell::addmemory_vertices() {
 	pnu=new int[i];
 	for(j=0;j<currentvertices;j++) pnu[j]=nu[j];
 	delete [] nu;nu=pnu;
-	ppts=new f_point[3*i];
+	ppts=new fpoint[3*i];
 	for(j=0;j<3*currentvertices;j++) ppts[j]=pts[j];
 	delete [] pts;sure.p=pts=ppts;
 	currentvertices=i;
@@ -211,7 +211,7 @@ void voronoicell::addmemory_ds2() {
 };
 
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions */
-inline void voronoicell::init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax) {
+inline void voronoicell::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
@@ -252,7 +252,7 @@ inline void voronoicell::init(f_point xmin,f_point xmax,f_point ymin,f_point yma
 /** Initializes a Voroni cell as a regular octahedron.
  * \param l The distance from the octahedron center to a vertex. Six vertices
  * are initialized at (-l,0,0), (l,0,0), (0,-l,0), (0,l,0), (0,0,-l), and (0,0,l).*/
-inline void voronoicell::init_octahedron(f_point l) {
+inline void voronoicell::init_octahedron(fpoint l) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;
 	mec[4]=p=6;l*=2;
 	pts[0]=-l;pts[1]=0;pts[2]=0;
@@ -456,7 +456,7 @@ inline void voronoicell::init_test(int n) {
  * \param[in] (x,y,z) are the coordinates of the vertex
  * \param[in] a is the first and only edge of this vertex
  */
-void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a) {
+void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
 	if (mem[1]==mec[1]) addmemory(1);
 #ifdef FACETS_NEIGHBOR
@@ -467,7 +467,7 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a) {
 };
 
 /** Adds an order 2 vertex to the memory structure, and specifies its edges. */
-void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b) {
+void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
 	if (mem[2]==mec[2]) addmemory(2);
 #ifdef FACETS_NEIGHBOR
@@ -478,7 +478,7 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b) {
 };
 
 /** Adds an order 3 vertex to the memory structure, and specifies its edges. */
-void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c) {
+void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
 	if (mem[3]==mec[3]) addmemory(3);
 #ifdef FACETS_NEIGHBOR
@@ -489,7 +489,7 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c) {
 };
 
 /** Adds an order 4 vertex to the memory structure, and specifies its edges. */
-void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d) {
+void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
 	if (mem[4]==mec[4]) addmemory(4);
 #ifdef FACETS_NEIGHBOR
@@ -500,7 +500,7 @@ void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int
 };
 
 /** Adds an order 5 vertex to the memory structure, and specifies its edges. */
-void voronoicell::add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d,int e) {
+void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
 	if (mem[5]==mec[5]) addmemory(5);
 #ifdef FACETS_NEIGHBOR
@@ -556,15 +556,15 @@ inline void voronoicell::relconstruct() {
  * (x,y,z) from the cell center. The value of rsq should be initially set to
  * \f$x^2+y^2+z^2\f$. */
 #ifdef FACETS_NEIGHBOR
-bool voronoicell::nplane(f_point x,f_point y,f_point z,f_point rsq,int p_id) {
+bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 	int *nep,*ned;
 #else
-bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
+bool voronoicell::plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 #endif
 	int count=0,i,j,k,up=0,lp=0,tp,cp,qp=1,rp,stack=0;stack2=0;
 	int us=0,ls=0,qs,iqs,cs,uw,qw=0,lw,tw;
 	int *edp,*edd;
-	f_point u,l,t,r,q;bool complicatedsetup=false,newdoubleedge=false,doubleedge=false;
+	fpoint u,l,t,r,q;bool complicatedsetup=false,newdoubleedge=false,doubleedge=false;
 
 	//Initialize the safe testing routine
 	sure.init(x,y,z,rsq);
@@ -1477,8 +1477,8 @@ inline bool voronoicell::delete_connection(int j,int k) {
 /** Cuts a Voronoi cell using the influence of a particle at (x,y,z), first
  * calculating the modulus squared of this vector before passing it to the
  * routine above. */
-inline bool voronoicell::plane(f_point x,f_point y,f_point z) {
-	f_point rsq=x*x+y*y+z*z;
+inline bool voronoicell::plane(fpoint x,fpoint y,fpoint z) {
+	fpoint rsq=x*x+y*y+z*z;
 	return plane(x,y,z,rsq);
 };
 
@@ -1487,11 +1487,11 @@ inline bool voronoicell::plane(f_point x,f_point y,f_point z) {
  * up the plane ID to be zero. An nplane routine that works without passing
  * the modulus squared is also provided. */
 #ifdef FACETS_NEIGHBOR
-inline bool voronoicell::plane(f_point x,f_point y,f_point z,f_point rsq) {
+inline bool voronoicell::plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	return nplane(x,y,z,rsq,0);
 };
-inline bool voronoicell::nplane(f_point x,f_point y,f_point z,int p_id) {
-	f_point rsq=x*x+y*y+z*z;
+inline bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,int p_id) {
+	fpoint rsq=x*x+y*y+z*z;
 	return nplane(x,y,z,rsq,p_id);
 };	
 #endif
@@ -1518,11 +1518,11 @@ inline int voronoicell::cycle_down(int a,int p) {
  * tetrahedra extending outward from the zeroth vertex, which are evaluated
  * using a scalar triple product.
  * \return A floating point number holding the calculated volume. */
-inline f_point voronoicell::volume() {
-	const f_point fe=1/48.0;
-	f_point vol=0;
+inline fpoint voronoicell::volume() {
+	const fpoint fe=1/48.0;
+	fpoint vol=0;
 	int i,j,k,l,m,n;
-	f_point ux,uy,uz,vx,vy,vz,wx,wy,wz;
+	fpoint ux,uy,uz,vx,vy,vz,wx,wy,wz;
 	for(i=1;i<p;i++) {
 		ux=pts[0]-pts[3*i];
 		uy=pts[1]-pts[3*i+1];
@@ -1562,8 +1562,8 @@ inline f_point voronoicell::volume() {
  * of the cell. It can be used to determine when enough particles have
  * been testing an all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
-inline f_point voronoicell::maxradsq() {
-	int i;f_point r,s;
+inline fpoint voronoicell::maxradsq() {
+	int i;fpoint r,s;
 	r=pts[0]*pts[0]+pts[1]*pts[1]+pts[2]*pts[2];
 	for(i=3;i<3*p;i+=3) {
 		s=pts[i]*pts[i]+pts[i+1]*pts[i+1]+pts[i+2]*pts[i+2];
@@ -1576,14 +1576,14 @@ inline f_point voronoicell::maxradsq() {
  * stream, displacing the cell by an amount (x,y,z).
  * \param[in] of A output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position. */
-inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
-	int i,j,k;f_point ux,uy,uz;
+inline void voronoicell::dumppov(ostream &os,fpoint x,fpoint y,fpoint z) {
+	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
-		of << "sphere{<" << ux << "," << uy << "," << uz << ">,r}" << endl;
+		os << "sphere{<" << ux << "," << uy << "," << uz << ">,r}" << endl;
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (k<i) of << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}" << endl;
+			if (k<i) os << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}" << endl;
 		}
 	}
 };
@@ -1593,18 +1593,18 @@ inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
  * \param[in] filename The file to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumppov(char *filename,f_point x,f_point y,f_point z) {
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
-	dumppov(of,x,y,z);
-	of.close();
+inline void voronoicell::dumppov(char *filename,fpoint x,fpoint y,fpoint z) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	dumppov(os,x,y,z);
+	os.close();
 };
 
 /** An overloaded version of the dumppov routine, that outputs the edges of the
  * Voronoi cell (in POV-Ray format) to standard output. 
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumppov(f_point x,f_point y,f_point z) {
+inline void voronoicell::dumppov(fpoint x,fpoint y,fpoint z) {
 	dumppov(cout,x,y,z);
 };
 
@@ -1612,13 +1612,13 @@ inline void voronoicell::dumppov(f_point x,f_point y,f_point z) {
  * \param[in] of An output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumpgnuplot(ostream &of,f_point x,f_point y,f_point z) {
-	int i,j,k;f_point ux,uy,uz;
+inline void voronoicell::dumpgnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
+	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (ed[i][j]<i) of << ux << " " << uy << " " << uz << endl << x+0.5*pts[3*k] << " " << y+0.5*pts[3*k+1] << " " << z+0.5*pts[3*k+2] << endl << endl << endl;
+			if (ed[i][j]<i) os << ux << " " << uy << " " << uz << endl << x+0.5*pts[3*k] << " " << y+0.5*pts[3*k+1] << " " << z+0.5*pts[3*k+2] << endl << endl << endl;
 		}
 	}
 };
@@ -1628,18 +1628,18 @@ inline void voronoicell::dumpgnuplot(ostream &of,f_point x,f_point y,f_point z) 
  * \param[in] filename The name of the file to write to. 
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumpgnuplot(char *filename,f_point x,f_point y,f_point z) {
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
-	dumpgnuplot(of,x,y,z);
-	of.close();
+inline void voronoicell::dumpgnuplot(char *filename,fpoint x,fpoint y,fpoint z) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	dumpgnuplot(os,x,y,z);
+	os.close();
 };
 
 /** An overloaded version of the dumpgnuplot routine, that prints to the
  * standard output.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumpgnuplot(f_point x,f_point y,f_point z) {
+inline void voronoicell::dumpgnuplot(fpoint x,fpoint y,fpoint z) {
 	dumpgnuplot(cout,x,y,z);
 };
 
@@ -1652,13 +1652,13 @@ inline void voronoicell::dumpgnuplot(f_point x,f_point y,f_point z) {
  * \param[in] of An output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) {
+inline void voronoicell::dumppovmesh(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k,l,m,n;
-	of << "mesh2 {" << endl << "vertex_vectors {" << endl << p << "," << endl;
+	os << "mesh2 {" << endl << "vertex_vectors {" << endl << p << "," << endl;
 	for(i=0;i<p;i++) {
-		of << "<" << x+0.5*pts[3*i] << "," << y+0.5*pts[3*i+1] << "," << z+0.5*pts[3*i+2] << ">," << endl;
+		os << "<" << x+0.5*pts[3*i] << "," << y+0.5*pts[3*i+1] << "," << z+0.5*pts[3*i+2] << ">," << endl;
 	}
-	of << "}" << endl << "face_indices {" << endl << 2*(p-2) << "," << endl;
+	os << "}" << endl << "face_indices {" << endl << 2*(p-2) << "," << endl;
 	for(i=1;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
@@ -1668,7 +1668,7 @@ inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) 
 				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
 					n=cycle_up(ed[k][nu[k]+l],m);
-					of << "<" << i << "," << k << "," << m << ">" << endl;
+					os << "<" << i << "," << k << "," << m << ">" << endl;
 					k=m;l=n;
 					m=ed[k][l];ed[k][l]=-1-m;
 				}
@@ -1681,7 +1681,7 @@ inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) 
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-	of << "}" << endl << "inside_vector <0,0,1>" << endl << "}" << endl;
+	os << "}" << endl << "inside_vector <0,0,1>" << endl << "}" << endl;
 };
 
 /** An overloaded version of the dumppovmesh routine, that writes directly to a
@@ -1689,23 +1689,23 @@ inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) 
  * \param[in] filename A filename to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumppovmesh(char *filename,f_point x,f_point y,f_point z) {
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
-	dumppovmesh(of,x,y,z);
-	of.close();
+inline void voronoicell::dumppovmesh(char *filename,fpoint x,fpoint y,fpoint z) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	dumppovmesh(os,x,y,z);
+	os.close();
 };
 
 /** An overloaded version of the dumppovmesh routine, that prints to the
  * standard output.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumppovmesh(f_point x,f_point y,f_point z) {
+inline void voronoicell::dumppovmesh(fpoint x,fpoint y,fpoint z) {
 	dumppovmesh(cout,x,y,z);
 };
 
 /** Randomly perturbs the points in the Voronoi cell by an amount r. */
-inline void voronoicell::perturb(f_point r) {
+inline void voronoicell::perturb(fpoint r) {
 	for(int i=0;i<3*p;i++) {
 		pts[i]+=(2*double(rand())/RAND_MAX-1)*r;
 	}
@@ -1723,11 +1723,11 @@ suretest::~suretest() {
 
 /** Sets up the suretest class with a particular test plane, and removes
  * any special cases from the table. */
-inline void suretest::init(f_point x,f_point y,f_point z,f_point rsq) {
+inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	sc=0;px=x;py=y;pz=z;prsq=rsq;
 };
 
-inline int suretest::test(int n,f_point &ans) {
+inline int suretest::test(int n,fpoint &ans) {
 	ans=px*p[3*n]+py*p[3*n+1]+pz*p[3*n+2]-prsq;
 	if(ans>tolerance2) {
 		return 1;
@@ -1776,31 +1776,31 @@ void voronoicell::edgeprint() {
 
 /** Prints out a list of all the facets and their vertices. If the neighbor option
  * is defined, it lists each cutting plane. */
-void voronoicell::facets(ostream &of) {
+void voronoicell::facets(ostream &os) {
 	int i,j,k,l,m;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
 			if (k>=0) {
 #ifdef FACETS_NEIGHBOR
-				of << "(" << i << "," << ne[i][j] << ")";
+				os << "(" << i << "," << ne[i][j] << ")";
 #else
-				of << i;
+				os << i;
 #endif
 				ed[i][j]=-1-k;
 				l=cycle_up(ed[i][nu[i]+j],k);
 				do {
 #ifdef FACETS_NEIGHBOR
-					of << " (" << k << "," << ne[k][l] << ")";
+					os << " (" << k << "," << ne[k][l] << ")";
 #else
-					of << " " << k;
+					os << " " << k;
 #endif
 					m=ed[k][l];
 					ed[k][l]=-1-m;
 					l=cycle_up(ed[k][nu[k]+l],m);
 					k=m;
 				} while (k!=i);
-				of << endl;
+				os << endl;
 			}
 		}
 	}
@@ -1878,13 +1878,13 @@ void voronoicell::facet_check() {
 /** For the neighbor-tracking version of the code, this routine just provides a list
  * of plane IDs. */
 #ifdef FACETS_NEIGHBOR
-void voronoicell::neighbors(ostream &of) {
+void voronoicell::neighbors(ostream &os) {
 	int i,j,k,l,m;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
 			if (k>=0) {
-				of << " " << ne[i][j];
+				os << " " << ne[i][j];
 				ed[i][j]=-1-k;
 				l=cycle_up(ed[i][nu[i]+j],k);
 				do {
@@ -1910,15 +1910,15 @@ inline void voronoicell::facets() {
 	facets(cout);
 };
 inline void voronoicell::facets(char *filename) {
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
-	facets(of);
-	of.close();
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	facets(os);
+	os.close();
 };
 
 /** Examines all the facets, and evaluates them by the number of vertices that
  * they have.*/
-void voronoicell::facet_statistics(ostream &of) {
+void voronoicell::facet_statistics(ostream &os) {
 	int *stat,*pstat,currentfacetsize=initfacetsize,newc,maxf=0;
 	stat=new int[currentfacetsize];
 	int i,j,k,l,m,q;
@@ -1957,7 +1957,7 @@ void voronoicell::facet_statistics(ostream &of) {
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-	for(i=0;i<=maxf;i++) of << i << " " << stat[i] << endl; 
+	for(i=0;i<=maxf;i++) os << i << " " << stat[i] << endl; 
 	delete [] stat;
 };
 
@@ -1966,8 +1966,8 @@ inline void voronoicell::facet_statistics() {
 	facet_statistics(cout);
 };
 inline void voronoicell::facet_statistics(char *filename) {
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
-	facet_statistics(of);
-	of.close();
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	facet_statistics(os);
+	os.close();
 };

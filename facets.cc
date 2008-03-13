@@ -29,9 +29,9 @@ int main(int argc,char **argv) {
 
 	// Read in the dimensions of the test box, and estimate the number of
 	// boxes to divide the region up into
-	f_point xmin=atof(argv[i]),xmax=atof(argv[i+1]);
-	f_point ymin=atof(argv[i+2]),ymax=atof(argv[i+3]);
-	f_point zmin=atof(argv[i+4]),zmax=atof(argv[i+5]);
+	fpoint xmin=atof(argv[i]),xmax=atof(argv[i+1]);
+	fpoint ymin=atof(argv[i+2]),ymax=atof(argv[i+3]);
+	fpoint zmin=atof(argv[i+4]),zmax=atof(argv[i+5]);
 
 	int nx=int((xmax-xmin)*0.2)+1;
 	int ny=int((ymax-ymin)*0.2)+1;

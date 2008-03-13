@@ -49,12 +49,12 @@ class suretest {
 	public:
 		/** This is a pointer to the array in the voronoicell class
 		 * which holds the vertex coordinates.*/
-		f_point *p;
+		fpoint *p;
 		
 		suretest();
 		~suretest();
-		inline void init(f_point x,f_point y,f_point z,f_point rsq);
-		inline int test(int n,f_point &ans);
+		inline void init(fpoint x,fpoint y,fpoint z,fpoint rsq);
+		inline int test(int n,fpoint &ans);
 	private:
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
@@ -65,10 +65,10 @@ class suretest {
 		int sc;
 
 		int *sn;
-		f_point px;
-		f_point py;
-		f_point pz;
-		f_point prsq;
+		fpoint px;
+		fpoint py;
+		fpoint pz;
+		fpoint prsq;
 };
 
 /** This class encapsulates all the routines for storing and calculating a
@@ -128,7 +128,7 @@ class voronoicell {
 
 		/** This in an array with size 3*currentvertices for holding
 		 * the positions of the vertices. */ 
-		f_point *pts;
+		fpoint *pts;
 
 		/* This sets the total number of vertices in the current cell.  */
 		int p;
@@ -140,36 +140,36 @@ class voronoicell {
 
 		voronoicell();
 		~voronoicell();
-		inline void init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
-		inline void init_octahedron(f_point l);
+		inline void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		inline void init_octahedron(fpoint l);
 		inline void init_test(int n);
-		inline void add_vertex(f_point x,f_point y,f_point z,int a);
-		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b);
-		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c);
-		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d);
-		inline void add_vertex(f_point x,f_point y,f_point z,int a,int b,int c,int d,int e);
-		inline void dumppov(ostream &of,f_point x,f_point y,f_point z);
-		inline void dumppov(char *filename,f_point x,f_point y,f_point z);
-		inline void dumppov(f_point x,f_point y,f_point z);
-		inline void dumppovmesh(ostream &of,f_point x,f_point y,f_point z);		
-		inline void dumppovmesh(char *filename,f_point x,f_point y,f_point z);
-		inline void dumppovmesh(f_point x,f_point y,f_point z);
-		inline void dumpgnuplot(ostream &of,f_point x,f_point y,f_point z);
-		inline void dumpgnuplot(char *filename,f_point x,f_point y,f_point z);
-		inline void dumpgnuplot(f_point x,f_point y,f_point z);
+		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a);
+		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b);
+		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c);
+		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d);
+		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e);
+		inline void dumppov(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void dumppov(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void dumppov(fpoint x,fpoint y,fpoint z);
+		inline void dumppovmesh(ostream &os,fpoint x,fpoint y,fpoint z);		
+		inline void dumppovmesh(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void dumppovmesh(fpoint x,fpoint y,fpoint z);
+		inline void dumpgnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void dumpgnuplot(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void dumpgnuplot(fpoint x,fpoint y,fpoint z);
 		inline void relcheck();
 		inline void duplicatecheck();
 		inline void relconstruct();
-		inline f_point volume();
-		inline f_point maxradsq();
+		inline fpoint volume();
+		inline fpoint maxradsq();
 		inline void edgeprint();
 		inline bool collapseorder1();
 		inline bool collapseorder2();
-		inline void perturb(f_point r);
-		void facets(ostream &of);
+		inline void perturb(fpoint r);
+		void facets(ostream &os);
 		inline void facets();
 		inline void facets(char *filename);
-		void facet_statistics(ostream &of);
+		void facet_statistics(ostream &os);
 		inline void facet_statistics();
 		inline void facet_statistics(char *filename);
 #ifdef FACETS_NEIGHBOR
@@ -178,14 +178,14 @@ class voronoicell {
 		int **ne;
 		void label_facets();
 		void facet_check();
-		void neighbors(ostream &of);
-		bool nplane(f_point x,f_point y,f_point z,f_point rs,int p_id);
-		inline bool nplane(f_point x,f_point y,f_point z,int p_id);
-		inline bool plane(f_point x,f_point y,f_point z,f_point rs);
+		void neighbors(ostream &os);
+		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
+		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
+		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 #else
-		bool plane(f_point x,f_point y,f_point z,f_point rs);
+		bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 #endif
-		inline bool plane(f_point x,f_point y,f_point z);
+		inline bool plane(fpoint x,fpoint y,fpoint z);
 	private:
 		/** This holds the number of points currently on the auxiliary delete stack. */
 		int stack2;

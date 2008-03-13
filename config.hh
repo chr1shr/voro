@@ -30,13 +30,13 @@ const int maxparticlemem=16777216;
 // This sets the numerical tolerance. Below these values, the plane cutting
 // snaps to existing vertices rather than creating new ones.
 #ifdef FACETS_SINGLE_PRECISION
-typedef float f_point;
-const f_point tolerance=1e-5;
-const f_point tolerance2=2e-5;
+typedef float fpoint;
+const fpoint tolerance=1e-5;
+const fpoint tolerance2=2e-5;
 #else
-typedef double f_point;
-const f_point tolerance=1e-10;
-const f_point tolerance2=2e-10;
+typedef double fpoint;
+const fpoint tolerance=1e-10;
+const fpoint tolerance2=2e-10;
 #endif
 
 #endif

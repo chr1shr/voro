@@ -12,7 +12,7 @@
  * grid of blocks, set by the following three arguments. The next three
  * arguments are booleans, which set the periodicity in each direction. The
  * final argument sets the amount of memory allocated to each block.*/
-container::container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_point zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
+container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
 	: ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
@@ -24,12 +24,12 @@ container::container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_po
 	for(l=0;l<nxyz;l++) mem[l]=memi;
 	id=new int*[nxyz];
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
-	p=new f_point*[nxyz];
+	p=new fpoint*[nxyz];
 #ifdef FACETS_RADICAL
 	max_radius=0;
-	for(l=0;l<nxyz;l++) p[l]=new f_point[4*memi];
+	for(l=0;l<nxyz;l++) p[l]=new fpoint[4*memi];
 #else
-	for(l=0;l<nxyz;l++) p[l]=new f_point[3*memi];
+	for(l=0;l<nxyz;l++) p[l]=new fpoint[3*memi];
 #endif
 };
 
@@ -62,9 +62,9 @@ void container::dump(char *filename) {
 
 /** Put a particle into the correct region of the container. */
 #ifdef FACETS_RADICAL
-void container::put(int n,f_point x,f_point y,f_point z,f_point r) {
+void container::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
 #else
-void container::put(int n,f_point x,f_point y,f_point z) {
+void container::put(int n,fpoint x,fpoint y,fpoint z) {
 #endif
 	if(x>ax&&y>ay&&z>az) {
 		int i,j,k;
@@ -85,16 +85,16 @@ void container::put(int n,f_point x,f_point y,f_point z) {
 
 /** Increase memory for a particular region. */
 void container::add_particle_memory(int i) {
-	int *idp;f_point *pp;
+	int *idp;fpoint *pp;
 	int l,nmem=2*mem[i];
 	if (nmem>maxparticlemem) throw fatal_error("Absolute maximum memory allocation exceeded");
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
 #ifdef FACETS_RADICAL
-	pp=new f_point[4*nmem];
+	pp=new fpoint[4*nmem];
 	for(l=0;l<4*co[i];l++) pp[l]=p[i][l];
 #else
-	pp=new f_point[3*nmem];
+	pp=new fpoint[3*nmem];
 	for(l=0;l<3*co[i];l++) pp[l]=p[i][l];
 #endif
 	mem[i]=nmem;
@@ -104,9 +104,9 @@ void container::add_particle_memory(int i) {
 
 /** Import a list of particles from standard input. */
 void container::import(istream &is) {
-	int n;f_point x,y,z;
+	int n;fpoint x,y,z;
 #ifdef FACETS_RADICAL
-	f_point r;
+	fpoint r;
 	is >> n >> x >> y >> z >> r;
 	while(!is.eof()) {
 		put(n,x,y,z,r);
@@ -156,13 +156,13 @@ void container::clear() {
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot. */
-void container::vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax) {
-	f_point x,y,z,px,py,pz;
+void container::vdraw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+	fpoint x,y,z,px,py,pz;
 	loop l1(this);
 	int i,s;
 	voronoicell c;
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(i=0;i<co[s];i++) {
@@ -173,11 +173,11 @@ void container::vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point y
 #endif
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				compute_cell(c,s,i,x,y,z);
-				c.dumpgnuplot(of,x,y,z);
+				c.dumpgnuplot(os,x,y,z);
 			}
 		}
 	} while ((s=l1.inc(px,py,pz))!=-1);
-	of.close();
+	os.close();
 };
 
 /** If only a filename is supplied to vdraw_gnuplot, then assume that we are
@@ -189,14 +189,14 @@ void container::vdraw_gnuplot(char *filename) {
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot.*/
-void container::vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax) {
-	f_point x,y,z,px,py,pz;
+void container::vdraw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+	fpoint x,y,z,px,py,pz;
 	loop l1(this);
 	int i,s;
 	voronoicell c;
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
-	of << "#declare voronoi=union{\n";
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	os << "#declare voronoi=union{\n";
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(i=0;i<co[s];i++) {
@@ -207,12 +207,12 @@ void container::vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,
 #endif
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				compute_cell(c,s,i,x,y,z);
-				c.dumppov(of,x,y,z);break;
+				c.dumppov(os,x,y,z);break;
 			}
 		}
 	} while ((s=l1.inc(px,py,pz))!=-1);
-	of << "}\n";
-	of.close();
+	os << "}\n";
+	os.close();
 };
 
 /** If only a filename is supplied to vdraw_pov, then assume that we are
@@ -223,8 +223,8 @@ void container::vdraw_pov(char *filename) {
 
 
 /** Computes the Voronoi volumes for all the particles, and stores the
- * results according to the particle label in the f_point array bb.*/
-void container::vcomputeall(f_point *bb) {
+ * results according to the particle label in the fpoint array bb.*/
+void container::vcomputeall(fpoint *bb) {
 	voronoicell c;
 	loop l(this);
 	int i,s;
@@ -238,8 +238,8 @@ void container::vcomputeall(f_point *bb) {
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
-void container::vprintall(ostream &of) {
-	f_point x,y,z;
+void container::vprintall(ostream &os) {
+	fpoint x,y,z;
 	voronoicell c;
 	loop l(this);
 	int i,s;
@@ -251,15 +251,15 @@ void container::vprintall(ostream &of) {
 			x=p[s][3*i];y=p[s][3*i+1];z=p[s][3*i+2];
 #endif
 			compute_cell(c,s,i,x,y,z);
-			of << id[s][i] << " " << x << " " << y << " " << z;
+			os << id[s][i] << " " << x << " " << y << " " << z;
 #ifdef FACETS_RADICAL
-			of << " " << p[s][4*i+3];
+			os << " " << p[s][4*i+3];
 #endif
-			of << " " << c.volume();
+			os << " " << c.volume();
 #ifdef FACETS_NEIGHBOR
-			c.neighbors(of);			
+			c.neighbors(os);			
 #endif
-			of << endl;
+			os << endl;
 		}
 	}
 };
@@ -271,22 +271,22 @@ inline void container::vprintall() {
 
 /** An overloaded version of vprintall, which outputs the result to <filename>. */
 inline void container::vprintall(char* filename) {
-	ofstream of;
-	of.open(filename,ofstream::out|ofstream::trunc);
-	vprintall(of);
-	of.close();
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	vprintall(os);
+	os.close();
 };
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
  * vcomputeall and vdraw. */
-inline void container::compute_cell(voronoicell &c,int s,int i,f_point x,f_point y,f_point z) {
-	f_point x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
+inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z) {
+	fpoint x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	loop l(this);
 #ifdef FACETS_RADICAL
-	f_point crad=p[s][4*i+3];
-	const f_point mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
+	fpoint crad=p[s][4*i+3];
+	const fpoint mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
 	crad*=crad;
 #endif
 
@@ -364,7 +364,7 @@ loop::loop(container *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
 /** Initializes a loop object, by finding all blocks which are within a distance
  * r of the vector (vx,vy,vz). It returns the first block which is to be
  * tested, and sets the periodic displacement vector (px,py,pz) accordingly. */
-inline int loop::init(f_point vx,f_point vy,f_point vz,f_point r,f_point &px,f_point &py,f_point &pz) {
+inline int loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
 	if (!xperiodic) {
@@ -398,7 +398,7 @@ inline int loop::init(f_point vx,f_point vy,f_point vz,f_point r,f_point &px,f_p
  * corners (xmin,ymin,zmin) and (xmax,ymax,zmax). It returns the first block
  * which is to be tested, and sets the periodic displacement vector (px,py,pz)
  * accordingly. */
-inline int loop::init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,f_point &px,f_point &py,f_point &pz) {
+inline int loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
 	if (!xperiodic) {
@@ -430,7 +430,7 @@ inline int loop::init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_poin
 
 /** Returns the next block to be tested in a loop, and updates the periodicity
  * vector if necessary. */
-inline int loop::inc(f_point &px,f_point &py,f_point &pz) {
+inline int loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 	if (i<bi) {
 		i++;
 		if (ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}

@@ -25,7 +25,7 @@ class loop;
  */
 class container {
 	public:
-		container(f_point xa,f_point xb,f_point ya,f_point yb,f_point za,f_point zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
+		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container();
 		void dump(char *filename);
 		void import(istream &is);
@@ -33,42 +33,42 @@ class container {
 		inline void import(char *filename);
 		void regioncount();
 		void clear();
-		void vdraw_gnuplot(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
+		void vdraw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void vdraw_gnuplot(char *filename);
-		void vdraw_pov(char *filename,f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax);
+		void vdraw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void vdraw_pov(char *filename);
-		void vcomputeall(f_point *bb);
-		void vprintall(ostream &of);
+		void vcomputeall(fpoint *bb);
+		void vprintall(ostream &os);
 		inline void vprintall();
 		inline void vprintall(char *filename);
 		inline void compute_cell(voronoicell &c,int s,int i);
-		inline void compute_cell(voronoicell &c,int s,int i,f_point x,f_point y,f_point z);
+		inline void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);
 #ifdef FACETS_RADICAL
-		void put(int n,f_point x,f_point y,f_point z,f_point r);
-		f_point max_radius;
+		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
+		fpoint max_radius;
 #else
-		void put(int n,f_point x,f_point y,f_point z);
+		void put(int n,fpoint x,fpoint y,fpoint z);
 #endif
 	private:
 		void add_particle_memory(int i);
 		/** The minimum x coordinate of the container. */
-		const f_point ax;
+		const fpoint ax;
 		/** The maximum x coordinate of the container. */
-		const f_point bx;
+		const fpoint bx;
 		/** The minimum y coordinate of the container. */
-		const f_point ay;
+		const fpoint ay;
 		/** The maximum y coordinate of the container. */
-		const f_point by;
+		const fpoint by;
 		/** The minimum z coordinate of the container. */
-		const f_point az;
+		const fpoint az;
 		/** The maximum z coordinate of the container. */
-		const f_point bz;
+		const fpoint bz;
 		/** The inverse box length in the x direction, set to nx/(bx-ax). */
-		const f_point xsp;
+		const fpoint xsp;
 		/** The inverse box length in the y direction, set to ny/(by-ay). */
-		const f_point ysp;
+		const fpoint ysp;
 		/** The inverse box length in the z direction, set to nz/(bz-az). */
-		const f_point zsp;
+		const fpoint zsp;
 		/** The number of boxes in the x direction. */
 		const int nx;
 		/** The number of boxes in the y direction. */
@@ -97,7 +97,7 @@ class container {
 		int **id;
 		/** A two dimensional array holding particle positions. The first
 		 * index labels the computational box. */
-		f_point **p;
+		fpoint **p;
 		friend class loop;
 };
 
@@ -111,9 +111,9 @@ class container {
 class loop {
 	public:
 		loop(container *q);
-		inline int init(f_point vx,f_point vy,f_point vz,f_point r,f_point &px,f_point &py,f_point &pz);
-		inline int init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,f_point &px,f_point &py,f_point &pz);
-		inline int inc(f_point &px,f_point &py,f_point &pz);
+		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
+		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
+		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
 	private:
 		int i,j,k,ai,bi,aj,bj,ak,bk,s;
 		int ip,jp,kp,aip,ajp,akp,inc1,inc2;
@@ -121,8 +121,8 @@ class loop {
 		inline int step_div(int a,int b);
 		template <class T>
 		inline int step_int(T a);
-		f_point apx,apy,apz;
-		const f_point sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
+		fpoint apx,apy,apz;
+		const fpoint sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
 		const int nx,ny,nz,nxy,nxyz;
 		const bool xperiodic,yperiodic,zperiodic;
 };
