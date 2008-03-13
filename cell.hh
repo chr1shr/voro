@@ -87,7 +87,8 @@ class voronoicell {
 		/** This is an array for holding the */
 		int *mem;
 
-		/** This is an array of pointers to different blocks of memory for storing */
+		/** This is an array of pointers to different blocks of memory
+		 * for storing */
 		int **mep;
 
 		/** This is an array for holding the number */
@@ -102,18 +103,21 @@ class voronoicell {
 		/** */
 		int *ds;
 		
-		/** This is the auxiliary delete stack, which has size set by currentdeletesize2 .*/
+		/** This is the auxiliary delete stack, which has size set by
+		 * currentdeletesize2.*/
 		int *ds2;
 
-		/** This holds the current size of the arrays ed and nu, which hold the vertex
-		 * information. If more vertices are created than can fit in this array, then it
-		 * is dynamically extended using the addmemory_vertices routine. */
+		/** This holds the current size of the arrays ed and nu, which
+		 * hold the vertex information. If more vertices are created
+		 * than can fit in this array, then it is dynamically extended
+		 * using the addmemory_vertices routine. */
 		int currentvertices;
 
-		/** This holds the current maximum allowed order of a vertex, which sets the size
-		 * of the mem, mep, and mec arrays. If a vertex is created with more vertices
-		 * than this, the arrays are dynamically extended using the addmemory_vorder
-		 * routine. */
+		/** This holds the current maximum allowed order of a vertex,
+		 * which sets the size of the mem, mep, and mec arrays. If a
+		 * vertex is created with more vertices than this, the arrays
+		 * are dynamically extended using the addmemory_vorder routine.
+		 */
 		int currentvertexorder;
 
 		/** This sets the size of the main delete stack. */
@@ -122,8 +126,8 @@ class voronoicell {
 		/** This sets the size of the auxiliary delete stack. */
 		int currentdeletesize2;
 
-		/** This in an array with size 3*currentvertices for holding the positions of the
-		 * vertices. */ 
+		/** This in an array with size 3*currentvertices for holding
+		 * the positions of the vertices. */ 
 		f_point *pts;
 
 		/* This sets the total number of vertices in the current cell.  */

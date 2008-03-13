@@ -50,13 +50,53 @@ class container {
 		void put(int n,f_point x,f_point y,f_point z);
 #endif
 	private:
-		void addparticlemem(int i);
-		const f_point ax,bx,ay,by,az,bz;
-		const f_point xsp,ysp,zsp;
-		const int nx,ny,nz,nxy,nxyz;
-		const bool xperiodic,yperiodic,zperiodic;
-		int *co,*mem;
+		void add_particle_memory(int i);
+		/** The minimum x coordinate of the container. */
+		const f_point ax;
+		/** The maximum x coordinate of the container. */
+		const f_point bx;
+		/** The minimum y coordinate of the container. */
+		const f_point ay;
+		/** The maximum y coordinate of the container. */
+		const f_point by;
+		/** The minimum z coordinate of the container. */
+		const f_point az;
+		/** The maximum z coordinate of the container. */
+		const f_point bz;
+		/** The inverse box length in the x direction, set to nx/(bx-ax). */
+		const f_point xsp;
+		/** The inverse box length in the y direction, set to ny/(by-ay). */
+		const f_point ysp;
+		/** The inverse box length in the z direction, set to nz/(bz-az). */
+		const f_point zsp;
+		/** The number of boxes in the x direction. */
+		const int nx;
+		/** The number of boxes in the y direction. */
+		const int ny;
+		/** The number of boxes in the z direction. */
+		const int nz;
+		/** A constant, set to the value of nx multiplied by ny, which
+		 * is used in the routines which step through boxes in
+		 * sequence. */
+		const int nxy;
+		/** A constant, set to the value of nx*ny*nz, which is used in
+		 * the routines which step through boxes in sequence. */
+		const int nxyz;
+		/** A boolean value that determines if the x coordinate in
+		 * periodic or not. */
+		const bool xperiodic;
+		/** A boolean value that determines if the y coordinate in
+		 * periodic or not. */
+		const bool yperiodic;
+		/** A boolean value that determines if the z coordinate in
+		 * periodic or not. */
+		const bool zperiodic;
+		int *co;
+		int *mem;
+
 		int **id;
+		/** A two dimensional array holding particle positions. The first
+		 * index labels the computational box. */
 		f_point **p;
 		friend class loop;
 };
@@ -77,10 +117,10 @@ class loop {
 	private:
 		int i,j,k,ai,bi,aj,bj,ak,bk,s;
 		int ip,jp,kp,aip,ajp,akp,inc1,inc2;
-		inline int mymod(int a,int b);
-		inline int mydiv(int a,int b);
+		inline int step_mod(int a,int b);
+		inline int step_div(int a,int b);
 		template <class T>
-		inline int myint(T a);
+		inline int step_int(T a);
 		f_point apx,apy,apz;
 		const f_point sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
 		const int nx,ny,nz,nxy,nxyz;

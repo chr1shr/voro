@@ -1386,7 +1386,10 @@ inline bool voronoicell::collapseorder2() {
 };
 
 /** Order one vertices can potentially be created during the order two collapse
- * routine. This routine removes them. */
+ * routine. This routine keeps removing them until there are none left.
+ * \return false if the vertex removal was unsuccessful, indicative of
+ * the cell having zero volume and disappearing; true if the vertex removal
+ * was successful. */
 inline bool voronoicell::collapseorder1() {
 	int i,j,k;
 	while(mec[1]>0) {
@@ -1419,7 +1422,9 @@ inline bool voronoicell::collapseorder1() {
 /** This routine deletes the kth edge of vertex j and reorganizes the memory.
  * If the neighbor computation is enabled, we also have to supply an
  * handedness flag to decide whether to preserve the plane on the left
- * or right of the connection. */
+ * or right of the connection.
+ * \return false if a zero order vertex was formed, indicative of the cell
+ * disappearing; true if the vertex removal was successful. */
 #ifdef FACETS_NEIGHBOR
 inline bool voronoicell::delete_connection(int j,int k,bool hand) {
 	int *nep,*ned,q=hand?k:cycle_up(k,j);
@@ -1493,8 +1498,8 @@ inline bool voronoicell::nplane(f_point x,f_point y,f_point z,int p_id) {
 
 /** This is a simple inline function for picking out the index of the next edge
  * counterclockwise at the current vertex.
- * \param a The index of an edge of the current vertex.
- * \param p The number of the vertex.
+ * \param[in] a The index of an edge of the current vertex.
+ * \param[in] p The number of the vertex.
  * \return 0 if a=nu[p]-1, or a+1 otherwise. */
 inline int voronoicell::cycle_up(int a,int p) {
 	return a==nu[p]-1?0:a+1;
@@ -1502,8 +1507,8 @@ inline int voronoicell::cycle_up(int a,int p) {
 
 /** This is a simple inline function for picking out the index of the next edge
  * clockwise from the current vertex.
- * \param a The index of an edge of the current vertex.
- * \param p The number of the vertex.
+ * \param[in] a The index of an edge of the current vertex.
+ * \param[in] p The number of the vertex.
  * \return nu[p]-1 if a=0, or a-1 otherwise. */
 inline int voronoicell::cycle_down(int a,int p) {
 	return a==0?nu[p]-1:a-1;
@@ -1553,7 +1558,10 @@ inline f_point voronoicell::volume() {
 	return vol*fe;
 };
 
-/** Computes the maximum radius squared.*/
+/** Computes the maximum radius squared of a vertex from the center
+ * of the cell. It can be used to determine when enough particles have
+ * been testing an all planes that could cut the cell have been considered.
+ * \return The maximum radius squared of a vertex.*/
 inline f_point voronoicell::maxradsq() {
 	int i;f_point r,s;
 	r=pts[0]*pts[0]+pts[1]*pts[1]+pts[2]*pts[2];
@@ -1566,8 +1574,8 @@ inline f_point voronoicell::maxradsq() {
 
 /** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
  * stream, displacing the cell by an amount (x,y,z).
- * \param of A output stream to write to.
- * \param (x,y,z) A displacement vector to be added to the cell's position. */
+ * \param[in] of A output stream to write to.
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position. */
 inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
 	int i,j,k;f_point ux,uy,uz;
 	for(i=0;i<p;i++) {
@@ -1582,8 +1590,9 @@ inline void voronoicell::dumppov(ostream &of,f_point x,f_point y,f_point z) {
 
 /** An overloaded version of the dumppov routine, that outputs the edges of
  * the Voronoi cell (in POV-Ray format) to a file.
- * \param filename The file to write to.
- * \param (x,y,z) A displacement vector to be added to the cell's position. */
+ * \param[in] filename The file to write to.
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ */
 inline void voronoicell::dumppov(char *filename,f_point x,f_point y,f_point z) {
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
@@ -1593,13 +1602,16 @@ inline void voronoicell::dumppov(char *filename,f_point x,f_point y,f_point z) {
 
 /** An overloaded version of the dumppov routine, that outputs the edges of the
  * Voronoi cell (in POV-Ray format) to standard output. 
- * \param (x,y,z) A displacement vector to be added to the cell's position. */
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ */
 inline void voronoicell::dumppov(f_point x,f_point y,f_point z) {
 	dumppov(cout,x,y,z);
 };
 
-/** Outputs the edges of the Voronoi cell (in gnuplot format) to an open file
- * stream, displacing the cell by an amount (x,y,z) */
+/** Outputs the edges of the Voronoi cell (in gnuplot format) to an output stream.
+ * \param[in] of An output stream to write to.
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ */
 inline void voronoicell::dumpgnuplot(ostream &of,f_point x,f_point y,f_point z) {
 	int i,j,k;f_point ux,uy,uz;
 	for(i=0;i<p;i++) {
@@ -1611,7 +1623,11 @@ inline void voronoicell::dumpgnuplot(ostream &of,f_point x,f_point y,f_point z) 
 	}
 };
 
-/** An overloaded version of the dumpgnuplot routine, that prints to <filename>. */ 
+/** An overloaded version of the dumpgnuplot routine that writes directly to
+ * a file.
+ * \param[in] filename The name of the file to write to. 
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ */
 inline void voronoicell::dumpgnuplot(char *filename,f_point x,f_point y,f_point z) {
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
@@ -1619,12 +1635,23 @@ inline void voronoicell::dumpgnuplot(char *filename,f_point x,f_point y,f_point 
 	of.close();
 };
 
-/** An overloaded version of the dumpgnuplot routine, that prints to standard output. */
+/** An overloaded version of the dumpgnuplot routine, that prints to the
+ * standard output.
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ */
 inline void voronoicell::dumpgnuplot(f_point x,f_point y,f_point z) {
 	dumpgnuplot(cout,x,y,z);
 };
 
-/** Outputs the Voronoi cell in the POV mesh2 format. */
+/** Outputs the Voronoi cell in the POV mesh2 format, described in section
+ * 1.3.2.2 of the POV-Ray documentation. The mesh2 output consists of a list of
+ * vertex vectors, followed by a list of triangular faces. The routine also
+ * makes use of the optional inside_vector specification, which makes the mesh
+ * object solid, so the the POV-Ray Constructive Solid Geometry (CSG) can be
+ * applied.
+ * \param[in] of An output stream to write to.
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ */
 inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) {
 	int i,j,k,l,m,n;
 	of << "mesh2 {" << endl << "vertex_vectors {" << endl << p << "," << endl;
@@ -1657,7 +1684,11 @@ inline void voronoicell::dumppovmesh(ostream &of,f_point x,f_point y,f_point z) 
 	of << "}" << endl << "inside_vector <0,0,1>" << endl << "}" << endl;
 };
 
-/** An overloaded version of the dumppovmesh routine, that prints to <filename>. */
+/** An overloaded version of the dumppovmesh routine, that writes directly to a
+ * file.
+ * \param[in] filename A filename to write to.
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ */
 inline void voronoicell::dumppovmesh(char *filename,f_point x,f_point y,f_point z) {
 	ofstream of;
 	of.open(filename,ofstream::out|ofstream::trunc);
@@ -1665,7 +1696,10 @@ inline void voronoicell::dumppovmesh(char *filename,f_point x,f_point y,f_point 
 	of.close();
 };
 
-/** An overloaded version of the dumppovmesh routine, that prints to standard output. */
+/** An overloaded version of the dumppovmesh routine, that prints to the
+ * standard output.
+ * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ */
 inline void voronoicell::dumppovmesh(f_point x,f_point y,f_point z) {
 	dumppovmesh(cout,x,y,z);
 };

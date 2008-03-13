@@ -71,7 +71,7 @@ void container::put(int n,f_point x,f_point y,f_point z) {
 		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
 		if(i<nx&&j<ny&&k<nz) {
 			i+=nx*j+nxy*k;
-			if(co[i]==mem[i]) addparticlemem(i);
+			if(co[i]==mem[i]) add_particle_memory(i);
 #ifdef FACETS_RADICAL
 			p[i][4*co[i]]=x;p[i][4*co[i]+1]=y;p[i][4*co[i]+2]=z;p[i][4*co[i]+3]=r;
 			if (r>max_radius) max_radius=r;
@@ -84,7 +84,7 @@ void container::put(int n,f_point x,f_point y,f_point z) {
 };
 
 /** Increase memory for a particular region. */
-void container::addparticlemem(int i) {
+void container::add_particle_memory(int i) {
 	int *idp;f_point *pp;
 	int l,nmem=2*mem[i];
 	if (nmem>maxparticlemem) throw fatal_error("Absolute maximum memory allocation exceeded");
@@ -365,30 +365,30 @@ loop::loop(container *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
  * r of the vector (vx,vy,vz). It returns the first block which is to be
  * tested, and sets the periodic displacement vector (px,py,pz) accordingly. */
 inline int loop::init(f_point vx,f_point vy,f_point vz,f_point r,f_point &px,f_point &py,f_point &pz) {
-	ai=myint((vx-ax-r)*xsp);
-	bi=myint((vx-ax+r)*xsp);
+	ai=step_int((vx-ax-r)*xsp);
+	bi=step_int((vx-ax+r)*xsp);
 	if (!xperiodic) {
 		if(ai<0) {ai=0;if (bi<0) bi=0;}
 		if(bi>=nx) {bi=nx-1;if (ai>=nx) ai=nx-1;} 
 	}
-	aj=myint((vy-ay-r)*ysp);
-	bj=myint((vy-ay+r)*ysp);
+	aj=step_int((vy-ay-r)*ysp);
+	bj=step_int((vy-ay+r)*ysp);
 	if (!yperiodic) {
 		if(aj<0) {aj=0;if (bj<0) bj=0;}
 		if(bj>=ny) {bj=ny-1;if (aj>=ny) aj=ny-1;} 
 	}
-	ak=myint((vz-az-r)*zsp);
-	bk=myint((vz-az+r)*zsp);
+	ak=step_int((vz-az-r)*zsp);
+	bk=step_int((vz-az+r)*zsp);
 	if (!zperiodic) {
 		if(ak<0) {ak=0;if (bk<0) bk=0;}
 		if(bk>=nz) {bk=nz-1;if (ak>=nz) ak=nz-1;} 
 	}
 	i=ai;j=aj;k=ak;
-	aip=ip=mymod(i,nx);apx=px=mydiv(i,nx)*sx;
-	ajp=jp=mymod(j,ny);apy=py=mydiv(j,ny)*sy;
-	akp=kp=mymod(k,nz);apz=pz=mydiv(k,nz)*sz;
-	inc1=aip-mymod(bi,nx);
-	inc2=nx*(ny+ajp-mymod(bj,ny))+inc1;
+	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
+	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
+	akp=kp=step_mod(k,nz);apz=pz=step_div(k,nz)*sz;
+	inc1=aip-step_mod(bi,nx);
+	inc2=nx*(ny+ajp-step_mod(bj,ny))+inc1;
 	inc1+=nx;
 	s=aip+nx*(ajp+ny*akp);
 	return s;
@@ -399,30 +399,30 @@ inline int loop::init(f_point vx,f_point vy,f_point vz,f_point r,f_point &px,f_p
  * which is to be tested, and sets the periodic displacement vector (px,py,pz)
  * accordingly. */
 inline int loop::init(f_point xmin,f_point xmax,f_point ymin,f_point ymax,f_point zmin,f_point zmax,f_point &px,f_point &py,f_point &pz) {
-	ai=myint((xmin-ax)*xsp);
-	bi=myint((xmax-ax)*xsp);
+	ai=step_int((xmin-ax)*xsp);
+	bi=step_int((xmax-ax)*xsp);
 	if (!xperiodic) {
 		if(ai<0) {ai=0;if (bi<0) bi=0;}
 		if(bi>=nx) {bi=nx-1;if (ai>=nx) ai=nx-1;} 
 	}
-	aj=myint((ymin-ay)*ysp);
-	bj=myint((ymax-ay)*ysp);
+	aj=step_int((ymin-ay)*ysp);
+	bj=step_int((ymax-ay)*ysp);
 	if (!yperiodic) {
 		if(aj<0) {aj=0;if (bj<0) bj=0;}
 		if(bj>=ny) {bj=ny-1;if (aj>=ny) aj=ny-1;} 
 	}
-	ak=myint((zmin-az)*zsp);
-	bk=myint((zmax-az)*zsp);
+	ak=step_int((zmin-az)*zsp);
+	bk=step_int((zmax-az)*zsp);
 	if (!zperiodic) {
 		if(ak<0) {ak=0;if (bk<0) bk=0;}
 		if(bk>=nz) {bk=nz-1;if (ak>=nz) ak=nz-1;} 
 	}
 	i=ai;j=aj;k=ak;
-	aip=ip=mymod(i,nx);apx=px=mydiv(i,nx)*sx;
-	ajp=jp=mymod(j,ny);apy=py=mydiv(j,ny)*sy;
-	akp=kp=mymod(k,nz);apz=pz=mydiv(k,nz)*sz;
-	inc1=aip-mymod(bi,nx);
-	inc2=nx*(ny+ajp-mymod(bj,ny))+inc1;
+	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
+	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
+	akp=kp=step_mod(k,nz);apz=pz=step_div(k,nz)*sz;
+	inc1=aip-step_mod(bi,nx);
+	inc2=nx*(ny+ajp-step_mod(bj,ny))+inc1;
 	inc1+=nx;
 	s=aip+nx*(ajp+ny*akp);
 	return s;
@@ -450,16 +450,16 @@ inline int loop::inc(f_point &px,f_point &py,f_point &pz) {
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
  * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/
 template <class T>
-inline int loop::myint(T a) {
+inline int loop::step_int(T a) {
 	return a<0?int(a)-1:int(a);
 };
 
 /** Custom mod function, that gives consistent stepping for negative numbers. */
-inline int loop::mymod(int a,int b) {
+inline int loop::step_mod(int a,int b) {
 	return a>=0?a%b:b-1-(b-1-a)%b;
 };
 
 /** Custom div function, that gives consistent stepping for negative numbers. */
-inline int loop::mydiv(int a,int b) {
+inline int loop::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 };
