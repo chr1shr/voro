@@ -211,7 +211,7 @@ void voronoicell::addmemory_ds2() {
 };
 
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions */
-inline void voronoicell::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void voronoicell::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
@@ -1518,7 +1518,7 @@ inline int voronoicell::cycle_down(int a,int p) {
  * tetrahedra extending outward from the zeroth vertex, which are evaluated
  * using a scalar triple product.
  * \return A floating point number holding the calculated volume. */
-inline fpoint voronoicell::volume() {
+fpoint voronoicell::volume() {
 	const fpoint fe=1/48.0;
 	fpoint vol=0;
 	int i,j,k,l,m,n;
@@ -1562,7 +1562,7 @@ inline fpoint voronoicell::volume() {
  * of the cell. It can be used to determine when enough particles have
  * been testing an all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
-inline fpoint voronoicell::maxradsq() {
+fpoint voronoicell::maxradsq() {
 	int i;fpoint r,s;
 	r=pts[0]*pts[0]+pts[1]*pts[1]+pts[2]*pts[2];
 	for(i=3;i<3*p;i+=3) {
@@ -1576,7 +1576,7 @@ inline fpoint voronoicell::maxradsq() {
  * stream, displacing the cell by an amount (x,y,z).
  * \param[in] of A output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position. */
-inline void voronoicell::dumppov(ostream &os,fpoint x,fpoint y,fpoint z) {
+void voronoicell::dumppov(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
@@ -1612,7 +1612,7 @@ inline void voronoicell::dumppov(fpoint x,fpoint y,fpoint z) {
  * \param[in] of An output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-inline void voronoicell::dumpgnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
+void voronoicell::dumpgnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];

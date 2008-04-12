@@ -17,8 +17,8 @@ using namespace std;
 /** Structure for printing fatal error messages and exiting
  */
 struct fatal_error {
-	const char *msg;
-	fatal_error(const char *p) : msg(p) {
+	char *msg;
+	fatal_error(char *p) : msg(p) {
 		cerr << p << endl;
 	}
 };
@@ -140,7 +140,7 @@ class voronoicell {
 
 		voronoicell();
 		~voronoicell();
-		inline void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void init_octahedron(fpoint l);
 		inline void init_test(int n);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a);
@@ -148,20 +148,20 @@ class voronoicell {
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e);
-		inline void dumppov(ostream &os,fpoint x,fpoint y,fpoint z);
+		void dumppov(ostream &os,fpoint x,fpoint y,fpoint z);
 		inline void dumppov(char *filename,fpoint x,fpoint y,fpoint z);
 		inline void dumppov(fpoint x,fpoint y,fpoint z);
-		inline void dumppovmesh(ostream &os,fpoint x,fpoint y,fpoint z);		
+		void dumppovmesh(ostream &os,fpoint x,fpoint y,fpoint z);		
 		inline void dumppovmesh(char *filename,fpoint x,fpoint y,fpoint z);
 		inline void dumppovmesh(fpoint x,fpoint y,fpoint z);
-		inline void dumpgnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
+		void dumpgnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
 		inline void dumpgnuplot(char *filename,fpoint x,fpoint y,fpoint z);
 		inline void dumpgnuplot(fpoint x,fpoint y,fpoint z);
 		inline void relcheck();
 		inline void duplicatecheck();
 		inline void relconstruct();
-		inline fpoint volume();
-		inline fpoint maxradsq();
+		fpoint volume();
+		fpoint maxradsq();
 		inline void edgeprint();
 		inline bool collapseorder1();
 		inline bool collapseorder2();

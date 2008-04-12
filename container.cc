@@ -158,7 +158,7 @@ void container::clear() {
  * that can be read by gnuplot. */
 void container::vdraw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
-	loop l1(this);
+	facets_loop l1(this);
 	int i,s;
 	voronoicell c;
 	ofstream os;
@@ -191,7 +191,7 @@ void container::vdraw_gnuplot(char *filename) {
  * that can be read by gnuplot.*/
 void container::vdraw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
-	loop l1(this);
+	facets_loop l1(this);
 	int i,s;
 	voronoicell c;
 	ofstream os;
@@ -226,7 +226,7 @@ void container::vdraw_pov(char *filename) {
  * results according to the particle label in the fpoint array bb.*/
 void container::vcomputeall(fpoint *bb) {
 	voronoicell c;
-	loop l(this);
+	facets_loop l(this);
 	int i,s;
 	for(s=0;s<nxyz;s++) {
 		for(i=0;i<co[s];i++) {
@@ -241,7 +241,7 @@ void container::vcomputeall(fpoint *bb) {
 void container::vprintall(ostream &os) {
 	fpoint x,y,z;
 	voronoicell c;
-	loop l(this);
+	facets_loop l(this);
 	int i,s;
 	for(s=0;s<nxyz;s++) {
 		for(i=0;i<co[s];i++) {
@@ -283,7 +283,7 @@ inline void container::vprintall(char* filename) {
 inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
-	loop l(this);
+	facets_loop l(this);
 #ifdef FACETS_RADICAL
 	fpoint crad=p[s][4*i+3];
 	const fpoint mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
@@ -353,18 +353,18 @@ inline void container::compute_cell(voronoicell &c,int s,int i) {
 	compute_cell(c,s,i,x,y,z);
 }
 
-/** Creates a loop object, by pulling the necesssary constants about the container
+/** Creates a facets_loop object, by pulling the necesssary constants about the container
  * geometry from a pointer to the current container class. */
-loop::loop(container *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
+facets_loop::facets_loop(container *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
 	xsp(q->xsp),ysp(q->ysp),zsp(q->zsp),
 	ax(q->ax),ay(q->ay),az(q->az),
 	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz),
 	xperiodic(q->xperiodic),yperiodic(q->yperiodic),zperiodic(q->zperiodic) {};
 
-/** Initializes a loop object, by finding all blocks which are within a distance
+/** Initializes a facets_loop object, by finding all blocks which are within a distance
  * r of the vector (vx,vy,vz). It returns the first block which is to be
  * tested, and sets the periodic displacement vector (px,py,pz) accordingly. */
-inline int loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
+inline int facets_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
 	if (!xperiodic) {
@@ -394,11 +394,11 @@ inline int loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &
 	return s;
 };
 
-/** Initializes a loop object, by finding all blocks which overlap the box with
+/** Initializes a facets_loop object, by finding all blocks which overlap the box with
  * corners (xmin,ymin,zmin) and (xmax,ymax,zmax). It returns the first block
  * which is to be tested, and sets the periodic displacement vector (px,py,pz)
  * accordingly. */
-inline int loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
+inline int facets_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
 	if (!xperiodic) {
@@ -430,7 +430,7 @@ inline int loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmi
 
 /** Returns the next block to be tested in a loop, and updates the periodicity
  * vector if necessary. */
-inline int loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
+inline int facets_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 	if (i<bi) {
 		i++;
 		if (ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}
@@ -449,17 +449,16 @@ inline int loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 /** Custom int function, that gives consistent stepping for negative numbers.
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
  * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/
-template <class T>
-inline int loop::step_int(T a) {
+inline int facets_loop::step_int(fpoint a) {
 	return a<0?int(a)-1:int(a);
 };
 
 /** Custom mod function, that gives consistent stepping for negative numbers. */
-inline int loop::step_mod(int a,int b) {
+inline int facets_loop::step_mod(int a,int b) {
 	return a>=0?a%b:b-1-(b-1-a)%b;
 };
 
 /** Custom div function, that gives consistent stepping for negative numbers. */
-inline int loop::step_div(int a,int b) {
+inline int facets_loop::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 };

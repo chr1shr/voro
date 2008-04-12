@@ -14,7 +14,7 @@
 #include <cmath>
 using namespace std;
 
-class loop;
+class facets_loop;
 
 /** The container class represents the whole simulation region. The
  * container constructor sets up the geometry and periodicity, and divides
@@ -98,19 +98,19 @@ class container {
 		/** A two dimensional array holding particle positions. The first
 		 * index labels the computational box. */
 		fpoint **p;
-		friend class loop;
+		friend class facets_loop;
 };
 
 /** Many of the container routines require scanning over a rectangular sub-grid
- * of blocks, and the routines for handling this are stored in the loop class.
- * A loop class can first be initialized to either calculate the subgrid which
+ * of blocks, and the routines for handling this are stored in the facets_loop class.
+ * A facets_loop class can first be initialized to either calculate the subgrid which
  * is within a distance r of a vector (vx,vy,vz), or a subgrid corresponding to
  * a rectangular box. The routine inc can then be successively called to step
  * through all the blocks which could be affected.
  */
-class loop {
+class facets_loop {
 	public:
-		loop(container *q);
+		facets_loop(container *q);
 		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
 		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
 		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
@@ -119,8 +119,7 @@ class loop {
 		int ip,jp,kp,aip,ajp,akp,inc1,inc2;
 		inline int step_mod(int a,int b);
 		inline int step_div(int a,int b);
-		template <class T>
-		inline int step_int(T a);
+		inline int step_int(fpoint a);
 		fpoint apx,apy,apz;
 		const fpoint sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
 		const int nx,ny,nz,nxy,nxyz;
