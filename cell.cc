@@ -78,7 +78,7 @@ voronoicell::~voronoicell() {
  * pointers. For the cases where the back pointer has been temporarily
  * overwritten in the marginal vertex code, the auxiliary delete stack is
  * scanned to find out how to update the ed value.
- *  \param[in] i The order of the vertex memory to be increased.*/
+ * \param[in] i The order of the vertex memory to be increased.*/
 void voronoicell::addmemory(int i) {
 	int s=2*i+1;
 	if(mem[i]==0) {
@@ -284,7 +284,9 @@ inline void voronoicell::init_octahedron(fpoint l) {
 
 
 /** Initializes an arbitrary test object using the add_vertex() and
- * relconstruct() routines.
+ * relconstruct() routines. See the source code for information about
+ * the specific objects.
+ * \param[in] n the number of the test object (from 0 to 9)
  */
 inline void voronoicell::init_test(int n) {
 	for(int i=0;i<initvertexorder;i++) mec[i]=0;p=0;
@@ -1325,8 +1327,8 @@ bool voronoicell::plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
  * It is possible this process will create order two or order one vertices,
  * and the routine is continually run until all of them are removed.
  * \return false if the vertex removal was unsuccessful, indicative of
- * the cell having zero volume and disappearing; true if the vertex removal
- * was successful. */
+ * the cell reducing to zero volume and disappearing; true if the vertex
+ * removal was successful. */
 inline bool voronoicell::collapseorder2() {
 	if(!collapseorder1()) return false;
 	int a,b,i,j,k,l;
@@ -1727,6 +1729,7 @@ inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	sc=0;px=x;py=y;pz=z;prsq=rsq;
 };
 
+/** */
 inline int suretest::test(int n,fpoint &ans) {
 	ans=px*p[3*n]+py*p[3*n+1]+pz*p[3*n+2]-prsq;
 	if(ans>tolerance2) {
@@ -1812,7 +1815,7 @@ void voronoicell::facets(ostream &os) {
 	}
 };
 
-/** For the neighbor-tracking version of the code, this routine labels the facets
+/** <em>(Neighbor version only.)</em> This routine labels the facets
  * in an arbitrary order, starting from one. */
 #ifdef FACETS_NEIGHBOR
 void voronoicell::label_facets() {
@@ -1844,7 +1847,7 @@ void voronoicell::label_facets() {
 };
 #endif
 
-/** For the neighbor-tracking version of the code, this routine checks to make sure the
+/** <em>(Neighbor version only.)</em> This routine checks to make sure the
  * neighbor information of each facets is consistent.*/
 #ifdef FACETS_NEIGHBOR
 void voronoicell::facet_check() {
@@ -1905,10 +1908,13 @@ void voronoicell::neighbors(ostream &os) {
 }
 #endif
 
-/** Overloaded versions of facets. */
+/** An overloaded version of facets() which output the results to the standard
+ * output. */
 inline void voronoicell::facets() {
 	facets(cout);
 };
+
+/** An overloaded version of facets(), which outputs the results to <filename>. */
 inline void voronoicell::facets(char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
@@ -1961,10 +1967,14 @@ void voronoicell::facet_statistics(ostream &os) {
 	delete [] stat;
 };
 
-/** Overloaded versions of facet_statistics */
+/** An overloaded version of facet_statistics() which outputs the results to
+ * standard output. */
 inline void voronoicell::facet_statistics() {
 	facet_statistics(cout);
 };
+
+/** An overloaded version of facet_statistics() which outputs the results to
+ * <filename>. */
 inline void voronoicell::facet_statistics(char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
