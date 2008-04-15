@@ -1,5 +1,5 @@
 // Voronoi calculation code
-//
+// 
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
 // Date     : February 27th 2008
