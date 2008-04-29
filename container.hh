@@ -105,8 +105,8 @@ class container {
  * of blocks, and the routines for handling this are stored in the facets_loop class.
  * A facets_loop class can first be initialized to either calculate the subgrid which
  * is within a distance r of a vector (vx,vy,vz), or a subgrid corresponding to
- * a rectangular box. The routine inc can then be successively called to step
- * through all the blocks which could be affected.
+ * a rectangular box. The routine inc() can then be successively called to step
+ * through all the blocks within this subgrid. 
  */
 class facets_loop {
 	public:
