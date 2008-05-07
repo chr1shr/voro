@@ -174,16 +174,8 @@ class voronoicell {
 		void facet_statistics(ostream &os);
 		inline void facet_statistics();
 		inline void facet_statistics(char *filename);
+		virtual void label_facets();
 #ifdef FACETS_NEIGHBOR
-		/** <em>Only present for the neighbor-tracking version.</em> */
-		int **mne;
-		int **ne;
-		void label_facets();
-		void facet_check();
-		void neighbors(ostream &os);
-		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
-		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
-		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 #else
 		bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 #endif
@@ -204,5 +196,26 @@ class voronoicell {
 #else
 		inline bool delete_connection(int j,int k);
 #endif
+};
+
+class voronoicell_neighbor : public voronoicell {
+	public :
+		int **mne;
+		int **ne;
+		void label_facets();
+		void facet_check();
+		void neighbors(ostream &os);
+		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
+		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
+		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
+	private:
+		inline void neighbor_main_allocate();
+		inline void neighbor_allocate(int i,int m)
+		inline void neighbor_main_deallocate();
+		inline void neighbor_deallocate(int i);
+		inline void neighbor_addmemory_vertices(int i);
+		inline void neighbor_addmemory_vorder(int i);
+		inline void neighbor_init();
+		inline void neighbor_init_octahedron();
 };
 #endif

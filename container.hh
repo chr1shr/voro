@@ -46,6 +46,7 @@ class container {
 		virtual void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
 	protected:
+		inline void initialize_voronoicell(voronoicell &c);
 		void add_particle_memory(int i);
 		/** The amount of memory in the array structure for each particle. This
 		 * is set to 3 when the basic class is initialized, so that the array holds

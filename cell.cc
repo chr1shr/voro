@@ -17,10 +17,7 @@ voronoicell::voronoicell() :
 	mec=new int[currentvertexorder];
 	mep=new int*[currentvertexorder];
 	ed=new int*[currentvertices];
-#ifdef FACETS_NEIGHBOR
-	mne=new int*[currentvertexorder];
-	ne=new int*[currentvertices];
-#endif
+	neighbor_main_allocate();
 	nu=new int[currentvertices];
 	pts=new fpoint[3*currentvertices];
 	sure.p=pts;
@@ -28,23 +25,17 @@ voronoicell::voronoicell() :
 		mem[i]=initnvertices;
 		mep[i]=new int[initnvertices*(2*i+1)];
 		mec[i]=0;
-#ifdef FACETS_NEIGHBOR
-		mne[i]=new int[initnvertices*i];
-#endif
+		neighbor_allocate(i,initnvertices);
 	}
 	mem[3]=init3vertices;
 	mep[3]=new int[init3vertices*7];
 	mec[3]=0;
-#ifdef FACETS_NEIGHBOR
-	mne[3]=new int[init3vertices*3];
-#endif
+	neighbor_allocate(3,init3vertices);
 	for(i=4;i<currentvertexorder;i++) {
 		mem[i]=initnvertices;
 		mep[i]=new int[initnvertices*(2*i+1)];
 		mec[i]=0;
-#ifdef FACETS_NEIGHBOR
-		mne[i]=new int[initnvertices*i];
-#endif
+		neigbor_allocate(i,initnvertices);
 	}
 };
 
@@ -54,17 +45,12 @@ voronoicell::~voronoicell() {
 	delete [] ds2;
 	for(int i=0;i<currentvertexorder;i++) if (mem[i]>0) {
 		delete [] mep[i];
-#ifdef FACETS_NEIGHBOR
-		delete [] mne[i];
-#endif
+		neighbor_deallocate(i);
 	}
 	delete [] mem;
 	delete [] mec;
 	delete [] mep;
-#ifdef FACETS_NEIGHBOR
-	delete [] mne;
-	delete [] ne;
-#endif
+	neighbor_main_deallocate();
 	delete [] ed;
 	delete [] nu;
 	delete [] pts;
@@ -82,9 +68,7 @@ voronoicell::~voronoicell() {
 void voronoicell::addmemory(int i) {
 	int s=2*i+1;
 	if(mem[i]==0) {
-#ifdef FACETS_NEIGHBOR
-		mne[i]=new int[initnvertices*i];
-#endif		
+		neighbor_allocate(i,initnvertices);
 		mep[i]=new int[initnvertices*s];
 		mem[i]=initnvertices;
 		cerr << "Order " << i << " vertex memory created " << endl;
@@ -145,11 +129,7 @@ void voronoicell::addmemory_vertices() {
 	pp=new int*[i];
 	for(j=0;j<currentvertices;j++) pp[j]=ed[j];
 	delete [] ed;ed=pp;
-#ifdef FACETS_NEIGHBOR
-	pp=new int*[i];
-	for(j=0;j<currentvertices;j++) pp[j]=ne[j];
-	delete [] ne;ne=pp;
-#endif
+	neighbor_addmemory_vertices()
 	pnu=new int[i];
 	for(j=0;j<currentvertices;j++) pnu[j]=nu[j];
 	delete [] nu;nu=pnu;
@@ -176,11 +156,7 @@ void voronoicell::addmemory_vorder() {
 	p1=new int[i];
 	for(j=0;j<currentvertexorder;j++) p1[j]=mec[j];while(j<i) p1[j++]=0;
 	delete [] mec;mec=p1;
-#ifdef FACETS_NEIGHBOR
-	p2=new int*[i];
-	for(j=0;j<currentvertexorder;j++) p2[j]=mne[j];
-	delete [] mne;mne=p2;
-#endif
+	neighbor_addmemory_vorder(int i);
 	currentvertexorder=i;
 };
 
@@ -233,19 +209,7 @@ void voronoicell::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zm
 	q[49]=5;q[50]=3;q[51]=6;q[52]=2;q[53]=1;q[54]=0;q[55]=7;
 	ed[0]=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
 	ed[4]=q+28;ed[5]=q+35;ed[6]=q+42;ed[7]=q+49;
-#ifdef FACETS_NEIGHBOR
-	q=mne[3];
-	q[0]=-5;q[1]=-3;q[2]=-1;
-	q[3]=-5;q[4]=-2;q[5]=-3;
-	q[6]=-5;q[7]=-1;q[8]=-4;
-	q[9]=-5;q[10]=-4;q[11]=-2;
-	q[12]=-6;q[13]=-1;q[14]=-3;
-	q[15]=-6;q[16]=-3;q[17]=-2;
-	q[18]=-6;q[19]=-4;q[20]=-1;
-	q[21]=-6;q[22]=-2;q[23]=-4;
-	ne[0]=q;ne[1]=q+3;ne[2]=q+6;ne[3]=q+9;
-	ne[4]=q+12;ne[5]=q+15;ne[6]=q+18;ne[7]=q+21;
-#endif
+	neighbor_init();
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
 };
 
@@ -269,16 +233,7 @@ inline void voronoicell::init_octahedron(fpoint l) {
 	q[36]=0;q[37]=3;q[38]=1;q[39]=2;q[40]=3;q[41]=3;q[42]=1;q[43]=1;q[44]=4;
 	q[45]=0;q[46]=2;q[47]=1;q[48]=3;q[49]=1;q[50]=3;q[51]=3;q[52]=1;q[53]=5;
 	ed[0]=q;ed[1]=q+9;ed[2]=q+18;ed[3]=q+27;ed[4]=q+36;ed[5]=q+45;
-#ifdef FACETS_NEIGHBOR
-	q=mne[4];
-	q[0]=-5;q[1]=-6;q[2]=-7;q[3]=-8;
-	q[4]=-1;q[5]=-2;q[6]=-3;q[7]=-4;
-	q[8]=-6;q[9]=-5;q[10]=-2;q[11]=-1;
-	q[12]=-8;q[13]=-7;q[14]=-4;q[15]=-3;
-	q[16]=-5;q[17]=-8;q[18]=-3;q[19]=-2;
-	q[20]=-7;q[21]=-6;q[22]=-1;q[23]=-4;
-	ne[0]=q;ne[1]=q+4;ne[2]=q+8;ne[3]=q+12;ne[4]=q+16;ne[5]=q+20;
-#endif
+	neighbor_init_octahedron();
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
 };
 
@@ -449,9 +404,7 @@ inline void voronoicell::init_test(int n) {
 	}
 
 	relconstruct();
-#ifdef FACETS_NEIGHBOR
 	label_facets();
-#endif
 };
 
 /** Adds an order one vertex to the memory structure, and specifies its edge.

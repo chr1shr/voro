@@ -251,6 +251,19 @@ inline void container::vprintall(char* filename) {
 	os.close();
 };
 
+/** Initialize the Voronoi cell to be the entire container. For non-periodic
+ * coordinates, this is set by the position of the walls. For periodic
+ * coordinates, the space is equally divided in either direction from the
+ * particle's initial position. That makes sense since those boundaries would
+ * be made by the neighboring periodic images of this particle. */
+inline void container::initialize_voronoicell(voronoicell &c) {
+	float x1,x2,y1,y2,z1,z2;
+	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
+	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
+	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
+	c.init(x1,x2,y1,y2,z1,z2);
+};
+
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
  * vcomputeall and vdraw. */
@@ -258,17 +271,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y
 	fpoint x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	facets_loop l(this);
-
-	// Initialize the voronoi cell to be the entire container. For
-	// non-periodic coordinates, this is set by the position of the walls.
-	// For periodic coordinates, the space is equally divided in either
-	// direction from the particle's initial position. That makes sense
-	// since those boundaries would be made by the neighboring periodic
-	// images of this particle. 
-	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
-	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
-	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
-	c.init(x1,x2,y1,y2,z1,z2);
+	initialize_voronoicell(c);
 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi

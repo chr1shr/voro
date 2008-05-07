@@ -75,25 +75,8 @@ inline void container_poly::compute_cell(voronoicell &c,int s,int i,fpoint x,fpo
 	fpoint crad=p[s][4*i+3];
 	const fpoint mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
 	crad*=crad;
+	initialize_voronoicell(c);
 
-	// Initialize the voronoi cell to be the entire container. For
-	// non-periodic coordinates, this is set by the position of the walls.
-	// For periodic coordinates, the space is equally divided in either
-	// direction from the particle's initial position. That makes sense
-	// since those boundaries would be made by the neighboring periodic
-	// images of this particle. 
-	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
-	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
-	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
-	c.init(x1,x2,y1,y2,z1,z2);
-
-	// Now the cell is cut by testing neighboring particles in concentric
-	// shells. Once the test shell becomes twice as large as the Voronoi
-	// cell we can stop testing. TODO: this can sometimes be inefficient.
-	// For example, sometimes particles at the top of granular packings can
-	// extend upwards by a long way, and the shells grow very big. It would
-	// be better to use a box-by-box approach, but that's not
-	// straightforward.
 	while(lrs*mul<c.maxradsq()) {
 		ur=lr+0.5;urs=ur*ur;
 		t=l.init(x,y,z,ur,qx,qy,qz);
@@ -112,3 +95,62 @@ inline void container_poly::compute_cell(voronoicell &c,int s,int i,fpoint x,fpo
 		lr=ur;lrs=urs;
 	}
 };
+
+inline void voronoicell_neighbor::neighbor_main_allocate() {
+	mne=new int*[currentvertexorder];
+	ne=new int*[currentvertices];
+};
+
+inline void voronoicell_neighbor::neighbor_allocate(int i,int m) {
+	mne[i]=new int[m*i];
+};	
+
+inline void voronoicell_neighbor::neighbor_deallocate(int i) {
+	delete [] mne[i];
+};
+
+inline void voronoicell_neighbor::neighbor_main_deallocate() {
+	delete [] mne;
+	delete [] ne;
+};
+
+inline void voronoicell_neighbor::neighbor_addmemory_vertices(int i) {
+	int *pp;
+	pp=new int*[i];
+	for(int j=0;j<currentvertices;j++) pp[j]=ne[j];
+	delete [] ne;ne=pp;
+};
+
+inline void voronoicell_neighbor::neighbor_addmemory_vorder(int i) {
+	int **p2;
+	p2=new int*[i];
+	for(j=0;j<currentvertexorder;j++) p2[j]=mne[j];
+	delete [] mne;mne=p2;
+};
+
+inline void voronoicell_neighbor::neighbor_init() {
+	int *q;
+	q=mne[3];
+	q[0]=-5;q[1]=-3;q[2]=-1;
+	q[3]=-5;q[4]=-2;q[5]=-3;
+	q[6]=-5;q[7]=-1;q[8]=-4;
+	q[9]=-5;q[10]=-4;q[11]=-2;
+	q[12]=-6;q[13]=-1;q[14]=-3;
+	q[15]=-6;q[16]=-3;q[17]=-2;
+	q[18]=-6;q[19]=-4;q[20]=-1;
+	q[21]=-6;q[22]=-2;q[23]=-4;
+	ne[0]=q;ne[1]=q+3;ne[2]=q+6;ne[3]=q+9;
+	ne[4]=q+12;ne[5]=q+15;ne[6]=q+18;ne[7]=q+21;
+};
+
+inline void voronoicell_neighbor::neighbor_init_octahedron() {
+	int *q;
+	q=mne[4];
+	q[0]=-5;q[1]=-6;q[2]=-7;q[3]=-8;
+	q[4]=-1;q[5]=-2;q[6]=-3;q[7]=-4;
+	q[8]=-6;q[9]=-5;q[10]=-2;q[11]=-1;
+	q[12]=-8;q[13]=-7;q[14]=-4;q[15]=-3;
+	q[16]=-5;q[17]=-8;q[18]=-3;q[19]=-2;
+	q[20]=-7;q[21]=-6;q[22]=-1;q[23]=-4;
+	ne[0]=q;ne[1]=q+4;ne[2]=q+8;ne[3]=q+12;ne[4]=q+16;ne[5]=q+20;
+};	
