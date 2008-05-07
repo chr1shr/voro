@@ -25,10 +25,11 @@ class facets_loop;
  */
 class container {
 	public:
+		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi,int isz);
 		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container();
 		void dump(char *filename);
-		void import(istream &is);
+		virtual void import(istream &is);
 		inline void import();
 		inline void import(char *filename);
 		void regioncount();
@@ -42,15 +43,16 @@ class container {
 		inline void vprintall();
 		inline void vprintall(char *filename);
 		inline void compute_cell(voronoicell &c,int s,int i);
-		inline void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);
-#ifdef FACETS_RADICAL
-		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
-		fpoint max_radius;
-#else
+		virtual void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
-#endif
-	private:
+	protected:
 		void add_particle_memory(int i);
+		/** The amount of memory in the array structure for each particle. This
+		 * is set to 3 when the basic class is initialized, so that the array holds
+		 * (x,y,z) positions. If the container class is initialized as part
+		 * of the derived class container_poly, then this is set to 4, to also
+		 * hold the particle radii. */
+		const int sz;
 		/** The minimum x coordinate of the container. */
 		const fpoint ax;
 		/** The maximum x coordinate of the container. */
@@ -91,7 +93,9 @@ class container {
 		/** A boolean value that determines if the z coordinate in
 		 * periodic or not. */
 		const bool zperiodic;
+
 		int *co;
+		
 		int *mem;
 
 		int **id;
@@ -99,6 +103,19 @@ class container {
 		 * index labels the computational box. */
 		fpoint **p;
 		friend class facets_loop;
+};
+
+class container_poly : public container {
+	public:
+		container_poly(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi) : container(xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi,3), max_radius(0) {};
+		void put(int n,fpoint x,fpoint y,fpoint z);
+		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
+		void import(istream &is);
+		void clear();
+		void vprintall(ostream &os);
+		inline void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);		
+	private:
+		fpoint max_radius;
 };
 
 /** Many of the container routines require scanning over a rectangular sub-grid

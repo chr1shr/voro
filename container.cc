@@ -12,8 +12,8 @@
  * grid of blocks, set by the following three arguments. The next three
  * arguments are booleans, which set the periodicity in each direction. The
  * final argument sets the amount of memory allocated to each block.*/
-container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
-	: ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
+container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi,int isz)
+	: sz(isz), ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	xperiodic(xper), yperiodic(yper), zperiodic(zper) {
@@ -25,12 +25,28 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	id=new int*[nxyz];
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new fpoint*[nxyz];
-#ifdef FACETS_RADICAL
-	max_radius=0;
-	for(l=0;l<nxyz;l++) p[l]=new fpoint[4*memi];
-#else
-	for(l=0;l<nxyz;l++) p[l]=new fpoint[3*memi];
-#endif
+	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
+};
+
+/** Container constructor. The first six arguments set the corners of the box to
+ * be (xa,ya,za) and (xb,yb,zb). The box is then divided into an nx by ny by nz
+ * grid of blocks, set by the following three arguments. The next three
+ * arguments are booleans, which set the periodicity in each direction. The
+ * final argument sets the amount of memory allocated to each block.*/
+container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
+	: sz(3), ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
+	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
+	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
+	xperiodic(xper), yperiodic(yper), zperiodic(zper) {
+	int l;
+	co=new int[nxyz];
+	for(l=0;l<nxyz;l++) co[l]=0;
+	mem=new int[nxyz];
+	for(l=0;l<nxyz;l++) mem[l]=memi;
+	id=new int*[nxyz];
+	for(l=0;l<nxyz;l++) id[l]=new int[memi];
+	p=new fpoint*[nxyz];
+	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
 };
 
 /** Container destructor - free memory. */
@@ -46,38 +62,27 @@ container::~container() {
 
 /** Dumps all the particle positions and identifies to a file. */
 void container::dump(char *filename) {
-	int c,l;
+	int c,l,i;
 	ofstream file;
 	file.open(filename,ofstream::out|ofstream::trunc);
 	for(l=0;l<nxyz;l++) {
 		for (c=0;c<co[l];c++)
-#ifdef FACETS_RADICAL			
-			file << id[l][c] << " " << p[l][4*c] << " " << p[l][4*c+1] << " " << p[l][4*c+2] << " " << p[l][4*c+3] << endl;
-#else
-			file << id[l][c] << " " << p[l][3*c] << " " << p[l][3*c+1] << " " << p[l][3*c+2] << endl;
-#endif
+			file << id[l][c];
+			for(i=sz*c;i<sz*(c+1);i++) file << " " << p[l][i];
+			file << endl;
 	}
 	file.close();
 };
 
 /** Put a particle into the correct region of the container. */
-#ifdef FACETS_RADICAL
-void container::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
-#else
 void container::put(int n,fpoint x,fpoint y,fpoint z) {
-#endif
 	if(x>ax&&y>ay&&z>az) {
 		int i,j,k;
 		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
 		if(i<nx&&j<ny&&k<nz) {
 			i+=nx*j+nxy*k;
 			if(co[i]==mem[i]) add_particle_memory(i);
-#ifdef FACETS_RADICAL
-			p[i][4*co[i]]=x;p[i][4*co[i]+1]=y;p[i][4*co[i]+2]=z;p[i][4*co[i]+3]=r;
-			if (r>max_radius) max_radius=r;
-#else
 			p[i][3*co[i]]=x;p[i][3*co[i]+1]=y;p[i][3*co[i]+2]=z;
-#endif
 			id[i][co[i]++]=n;
 		}
 	}
@@ -90,13 +95,8 @@ void container::add_particle_memory(int i) {
 	if (nmem>maxparticlemem) throw fatal_error("Absolute maximum memory allocation exceeded");
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
-#ifdef FACETS_RADICAL
-	pp=new fpoint[4*nmem];
-	for(l=0;l<4*co[i];l++) pp[l]=p[i][l];
-#else
-	pp=new fpoint[3*nmem];
-	for(l=0;l<3*co[i];l++) pp[l]=p[i][l];
-#endif
+	pp=new fpoint[sz*nmem];
+	for(l=0;l<sz*co[i];l++) pp[l]=p[i][l];
 	mem[i]=nmem;
 	delete [] id[i];id[i]=idp;
 	delete [] p[i];p[i]=pp;
@@ -105,18 +105,10 @@ void container::add_particle_memory(int i) {
 /** Import a list of particles from standard input. */
 void container::import(istream &is) {
 	int n;fpoint x,y,z;
-#ifdef FACETS_RADICAL
-	fpoint r;
-	is >> n >> x >> y >> z >> r;
-	while(!is.eof()) {
-		put(n,x,y,z,r);
-		is >> n >> x >> y >> z >> r;
-#else
 	is >> n >> x >> y >> z;
 	while(!is.eof()) {
 		put(n,x,y,z);
 		is >> n >> x >> y >> z;
-#endif
 	}
 };
 
@@ -148,9 +140,6 @@ void container::regioncount() {
 /** Clears a container of particles. */
 void container::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
-#ifdef FACETS_RADICAL
-	max_radius=0;
-#endif
 };
 
 /** Computes the Voronoi cells for all particles within a box with corners
@@ -166,11 +155,7 @@ void container::vdraw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(i=0;i<co[s];i++) {
-#ifdef FACETS_RADICAL
-			x=p[s][4*i]+px;y=p[s][4*i+1]+py;z=p[s][4*i+2]+pz;
-#else
-			x=p[s][3*i]+px;y=p[s][3*i+1]+py;z=p[s][3*i+2]+pz;
-#endif
+			x=p[s][sz*i]+px;y=p[s][sz*i+1]+py;z=p[s][sz*i+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				compute_cell(c,s,i,x,y,z);
 				c.dumpgnuplot(os,x,y,z);
@@ -200,11 +185,7 @@ void container::vdraw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpo
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(i=0;i<co[s];i++) {
-#ifdef FACETS_RADICAL
-			x=p[s][4*i]+px;y=p[s][4*i+1]+py;z=p[s][4*i+2]+pz;
-#else
-			x=p[s][3*i]+px;y=p[s][3*i+1]+py;z=p[s][3*i+2]+pz;
-#endif
+			x=p[s][sz*i]+px;y=p[s][sz*i+1]+py;z=p[s][sz*i+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				compute_cell(c,s,i,x,y,z);
 				c.dumppov(os,x,y,z);break;
@@ -245,16 +226,9 @@ void container::vprintall(ostream &os) {
 	int i,s;
 	for(s=0;s<nxyz;s++) {
 		for(i=0;i<co[s];i++) {
-#ifdef FACETS_RADICAL
-			x=p[s][4*i];y=p[s][4*i+1];z=p[s][4*i+2];
-#else
-			x=p[s][3*i];y=p[s][3*i+1];z=p[s][3*i+2];
-#endif
+			x=p[s][sz*i];y=p[s][sz*i+1];z=p[s][sz*i+2];
 			compute_cell(c,s,i,x,y,z);
 			os << id[s][i] << " " << x << " " << y << " " << z;
-#ifdef FACETS_RADICAL
-			os << " " << p[s][4*i+3];
-#endif
 			os << " " << c.volume();
 #ifdef FACETS_NEIGHBOR
 			c.neighbors(os);			
@@ -284,11 +258,6 @@ inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y
 	fpoint x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	facets_loop l(this);
-#ifdef FACETS_RADICAL
-	fpoint crad=p[s][4*i+3];
-	const fpoint mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
-	crad*=crad;
-#endif
 
 	// Initialize the voronoi cell to be the entire container. For
 	// non-periodic coordinates, this is set by the position of the walls.
@@ -308,34 +277,18 @@ inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y
 	// extend upwards by a long way, and the shells grow very big. It would
 	// be better to use a box-by-box approach, but that's not
 	// straightforward.
-#ifdef FACETS_RADICAL
-	while(lrs*mul<c.maxradsq()) {
-#else
 	while(lrs<c.maxradsq()) {
-#endif
 		ur=lr+0.5;urs=ur*ur;
 		t=l.init(x,y,z,ur,qx,qy,qz);
 		do {
 			for(j=0;j<co[t];j++) {
-#ifdef FACETS_RADICAL
-				x1=p[t][4*j]+qx-x;y1=p[t][4*j+1]+qy-y;z1=p[t][4*j+2]+qz-z;
-#else
-				x1=p[t][3*j]+qx-x;y1=p[t][3*j+1]+qy-y;z1=p[t][3*j+2]+qz-z;
-#endif
+				x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
 				if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
-#ifdef FACETS_RADICAL
-#ifdef FACETS_NEIGHBOR
-					c.nplane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3],id[t][j]);
-#else
-					c.plane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3]);
-#endif
-#else
 #ifdef FACETS_NEIGHBOR					
 					c.nplane(x1,y1,z1,rs,id[t][j]);
 #else
 					c.plane(x1,y1,z1,rs);
-#endif
 #endif
 			}
 		} while ((t=l.inc(qx,qy,qz))!=-1);
@@ -345,11 +298,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
 inline void container::compute_cell(voronoicell &c,int s,int i) {
-#ifdef FACETS_RADICAL
-	double x=p[s][4*i],y=p[s][4*i+1],z=p[s][4*i+2];
-#else
-	double x=p[s][3*i],y=p[s][3*i+1],z=p[s][3*i+2];
-#endif
+	double x=p[s][sz*i],y=p[s][sz*i+1],z=p[s][sz*i+2];
 	compute_cell(c,s,i,x,y,z);
 }
 

@@ -6,6 +6,7 @@
 
 #include "cell.cc"
 #include "container.cc"
+#include "container_poly.cc"
 
 // A guess for the memory allocation; should be bigger than 125/(diameter^3).
 const int memory=256;
