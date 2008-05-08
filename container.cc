@@ -207,7 +207,7 @@ void container::draw_pov(char *filename) {
 /** Computes the Voronoi volumes for all the particles, and stores the
  * results according to the particle label in the fpoint array bb.*/
 void container::store_cell_volumes(fpoint *bb) {
-	voronoicell_neighbor c;
+	voronoicell c;
 	facets_loop l(this);
 	int i,s;
 	for(s=0;s<nxyz;s++) {
