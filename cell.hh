@@ -59,7 +59,7 @@ class suretest {
 	private:
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
-		int currentdubious;
+		int current_marginal;
 
 		/** This stores the total number of marginal points which are
 		 * currently in the buffer. */
@@ -111,13 +111,13 @@ class voronoicell {
 		/** This holds the current size of the arrays ed and nu, which
 		 * hold the vertex information. If more vertices are created
 		 * than can fit in this array, then it is dynamically extended
-		 * using the addmemory_vertices routine. */
+		 * using the add_memory_vertices routine. */
 		int currentvertices;
 
 		/** This holds the current maximum allowed order of a vertex,
 		 * which sets the size of the mem, mep, and mec arrays. If a
 		 * vertex is created with more vertices than this, the arrays
-		 * are dynamically extended using the addmemory_vorder routine.
+		 * are dynamically extended using the add_memory_vorder routine.
 		 */
 		int currentvertexorder;
 
@@ -150,23 +150,23 @@ class voronoicell {
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e);
-		void dumppov(ostream &os,fpoint x,fpoint y,fpoint z);
-		inline void dumppov(char *filename,fpoint x,fpoint y,fpoint z);
-		inline void dumppov(fpoint x,fpoint y,fpoint z);
-		void dumppovmesh(ostream &os,fpoint x,fpoint y,fpoint z);		
-		inline void dumppovmesh(char *filename,fpoint x,fpoint y,fpoint z);
-		inline void dumppovmesh(fpoint x,fpoint y,fpoint z);
-		void dumpgnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
-		inline void dumpgnuplot(char *filename,fpoint x,fpoint y,fpoint z);
-		inline void dumpgnuplot(fpoint x,fpoint y,fpoint z);
+		void dump_pov(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void dump_pov(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void dump_pov(fpoint x,fpoint y,fpoint z);
+		void dump_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z);		
+		inline void dump_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void dump_pov_mesh(fpoint x,fpoint y,fpoint z);
+		void dump_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void dump_gnuplot(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void dump_gnuplot(fpoint x,fpoint y,fpoint z);
 		inline void relcheck();
-		inline void duplicatecheck();
-		inline void relconstruct();
+		inline void duplicate_check();
+		inline void construct_relations();
 		fpoint volume();
 		fpoint maxradsq();
 		inline void edgeprint();
-		inline bool collapseorder1();
-		inline bool collapseorder2();
+		inline bool collapse_order1();
+		inline bool collapse_order2();
 		inline void perturb(fpoint r);
 		void facets(ostream &os);
 		inline void facets();
@@ -175,47 +175,85 @@ class voronoicell {
 		inline void facet_statistics();
 		inline void facet_statistics(char *filename);
 		virtual void label_facets();
-#ifdef FACETS_NEIGHBOR
-#else
-		bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
-#endif
+		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
+		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
+		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 		inline bool plane(fpoint x,fpoint y,fpoint z);
 	private:
 		/** This holds the number of points currently on the auxiliary delete stack. */
 		int stack2;
 		void addmemory(int i);
-		void addmemory_vertices();
-		void addmemory_vorder();
-		void addmemory_ds();
-		void addmemory_ds2();
+		void add_memory_vertices();
+		void add_memory_vorder();
+		void add_memory_ds();
+		void add_memory_ds2();
 
 		inline int cycle_up(int a,int p);
 		inline int cycle_down(int a,int p);
-#ifdef FACETS_NEIGHBOR
 		inline bool delete_connection(int j,int k,bool hand);
-#else
-		inline bool delete_connection(int j,int k);
-#endif
+		virtual void neighbor_print(ostream &os,int i,int j);
+
+		virtual void neigbors(ostream &os) {};
+		virtual void neighbor_main_allocate() {};
+		virtual void neighbor_allocate(int i,int m) {};
+		virtual void neighbor_main_deallocate() {};
+		virtual void neighbor_deallocate(int i) {};
+		virtual void neighbor_add_memory_vertices(int i) {};
+		virtual void neighbor_add_memory_vorder(int i) {};
+		virtual void neighbor_init() {};
+		virtual void neighbor_init_octahedron() {};
+		virtual void neighbor_set_pointer(int p,int n) {};
+		virtual void neighbor_copy(int a,int b,int c,int d) {};
+		virtual void neighbor_set(int a,int b,int c) {};
+		virtual void neighbor_set_aux1(int k) {};
+		virtual void neighbor_copy_aux1(int a,int b) {};
+		virtual void neighbor_copy_aux1_shift(int a,int b) {};
+		virtual void neighbor_set_aux2(int k) {};
+		virtual void neighbor_copy_aux2(int a,int b) {};
+		virtual void neighbor_copy_pointer(int a,int b) {};
+		virtual void neighbor_set_to_aux1(int j) {};		
+		virtual void neighbor_set_to_aux2(int j) {};
+		virtual void neighbor_edgeprint(int i) {};
+		virtual void neighbor_allocate_aux1(int i) {};
+		virtual void neighbor_switch_to_aux1(int i) {};
+		virtual void neighbor_copy_to_aux1(int i,int m) {};
+		virtual void neighbor_set_to_aux1_offset(int k,int m) {};
 };
 
 class voronoicell_neighbor : public voronoicell {
 	public :
 		int **mne;
 		int **ne;
+		int *paux1;
+		int *paux2;
 		void label_facets();
 		void facet_check();
 		void neighbors(ostream &os);
-		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
-		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
-		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 	private:
 		inline void neighbor_main_allocate();
-		inline void neighbor_allocate(int i,int m)
+		inline void neighbor_allocate(int i,int m);
 		inline void neighbor_main_deallocate();
 		inline void neighbor_deallocate(int i);
-		inline void neighbor_addmemory_vertices(int i);
-		inline void neighbor_addmemory_vorder(int i);
+		inline void neighbor_add_memory_vertices(int i);
+		inline void neighbor_add_memory_vorder(int i);
 		inline void neighbor_init();
 		inline void neighbor_init_octahedron();
+		inline void neighbor_print(ostream &os,int i,int j);
+		inline void neighbor_set_pointer(int p,int n);
+		inline void neighbor_copy(int a,int b,int c,int d);
+		inline void neighbor_set(int a,int b,int c);
+		inline void neighbor_set_aux1(int k);
+		inline void neighbor_copy_aux1(int a,int b);
+		inline void neighbor_copy_aux1_shift(int a,int b);
+		inline void neighbor_set_aux2(int k);
+		inline void neighbor_copy_aux2(int a,int b);
+		inline void neighbor_copy_pointer(int a,int b);
+		inline void neighbor_set_to_aux1(int j);
+		inline void neighbor_set_to_aux2(int j);
+		inline void neighbor_edgeprint(int i);
+		inline void neighbor_allocate_aux1(int i);
+		inline void neighbor_switch_to_aux1(int i);
+		inline void neighbor_copy_to_aux1(int i,int m);
+		inline void neighbor_set_to_aux1_offset(int k,int m);
 };
 #endif

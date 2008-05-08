@@ -47,11 +47,11 @@ int main(int argc,char **argv) {
 
 	// Print out a list of the particles, and their Voronoi volumes
 	sprintf(buffer,"%s.vol",argv[i+6]);
-	con.vprintall(buffer);
+	con.print_all(buffer);
 
 	// Save the Voronoi network of all the particles to a text file in a
 	// format ready for plotting by gnuplot
 	sprintf(buffer,"%s.gnu",argv[i+6]);
-	con.vdraw_gnuplot(buffer);
+	con.draw_gnuplot(buffer);
 	return 0;
 }

@@ -11,7 +11,7 @@
  * be (xa,ya,za) and (xb,yb,zb). The box is then divided into an nx by ny by nz
  * grid of blocks, set by the following three arguments. The next three
  * arguments are booleans, which set the periodicity in each direction. The
- * final argument sets the amount of memory allocated to each block.*/
+ * final argument sets the amount of memory allocated to each block. */
 container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi,int isz)
 	: sz(isz), ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
@@ -32,7 +32,7 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
  * be (xa,ya,za) and (xb,yb,zb). The box is then divided into an nx by ny by nz
  * grid of blocks, set by the following three arguments. The next three
  * arguments are booleans, which set the periodicity in each direction. The
- * final argument sets the amount of memory allocated to each block.*/
+ * final argument sets the amount of memory allocated to each block. */
 container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
 	: sz(3), ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
@@ -128,7 +128,7 @@ inline void container::import(char *filename) {
 };
 
 /** Outputs the number of particles within each region. */
-void container::regioncount() {
+void container::region_count() {
 	int i,j,k,ijk=0;
 	for(k=0;k<nz;k++) {
 		for(j=0;j<ny;j++) {
@@ -140,12 +140,13 @@ void container::regioncount() {
 /** Clears a container of particles. */
 void container::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
+	poly_clear_radius();
 };
 
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot. */
-void container::vdraw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void container::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
 	int i,s;
@@ -165,16 +166,16 @@ void container::vdraw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin
 	os.close();
 };
 
-/** If only a filename is supplied to vdraw_gnuplot, then assume that we are
+/** If only a filename is supplied to draw_gnuplot(), then assume that we are
  * calculating the entire simulation region. */
-void container::vdraw_gnuplot(char *filename) {
-	vdraw_gnuplot(filename,ax,bx,ay,by,az,bz);
+void container::draw_gnuplot(char *filename) {
+	draw_gnuplot(filename,ax,bx,ay,by,az,bz);
 };
 
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot.*/
-void container::vdraw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void container::draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
 	int i,s;
@@ -196,16 +197,16 @@ void container::vdraw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpo
 	os.close();
 };
 
-/** If only a filename is supplied to vdraw_pov, then assume that we are
+/** If only a filename is supplied to draw_pov(), then assume that we are
  * calculating the entire simulation region.*/
-void container::vdraw_pov(char *filename) {
-	vdraw_pov(filename,ax,bx,ay,by,az,bz);
+void container::draw_pov(char *filename) {
+	draw_pov(filename,ax,bx,ay,by,az,bz);
 };
 
 
 /** Computes the Voronoi volumes for all the particles, and stores the
  * results according to the particle label in the fpoint array bb.*/
-void container::vcomputeall(fpoint *bb) {
+void container::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
 	facets_loop l(this);
 	int i,s;
@@ -219,9 +220,8 @@ void container::vcomputeall(fpoint *bb) {
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
-void container::vprintall(ostream &os) {
+inline void container::print_all(ostream &os,voronoicell &c) {
 	fpoint x,y,z;
-	voronoicell c;
 	facets_loop l(this);
 	int i,s;
 	for(s=0;s<nxyz;s++) {
@@ -229,25 +229,56 @@ void container::vprintall(ostream &os) {
 			x=p[s][sz*i];y=p[s][sz*i+1];z=p[s][sz*i+2];
 			compute_cell(c,s,i,x,y,z);
 			os << id[s][i] << " " << x << " " << y << " " << z;
+			if (sz==4) cout << " " << p[s][4*i+3];
 			os << " " << c.volume();
-#ifdef FACETS_NEIGHBOR
 			c.neighbors(os);			
-#endif
 			os << endl;
 		}
 	}
 };
 
-/** An overloaded version of vprintall, which just prints to standard output. */
-inline void container::vprintall() {
-	vprintall(cout);
+/** Prints a list of all particle labels, positions, and Voronoi volumes to the
+ * standard output. */
+void container::print_all(ostream &os) {
+	voronoicell c;
+	print_all(os,c);
 };
 
-/** An overloaded version of vprintall, which outputs the result to <filename>. */
-inline void container::vprintall(char* filename) {
+/** An overloaded version of print_all(), which just prints to standard output. */
+void container::print_all() {
+	voronoicell c;
+	print_all(cout);
+};
+
+/** An overloaded version of print_all(), which outputs the result to <filename>. */
+inline void container::print_all(char* filename) {
+	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	vprintall(os);
+	print_all(os,c);
+	os.close();
+};
+
+/** Prints a list of all particle labels, positions, Voronoi volumes, and a list
+ * of neighboring particles to an output stream.
+ * \param[in] os The output stream to print to.*/
+void container::print_all_neighbor(ostream &os) {
+	voronoicell_neighbor c;
+	print_all(os,c);
+};
+
+/** An overloaded version of print_all_neighbor(), which just prints to standard output. */
+void container::print_all_neighbor() {
+	voronoicell_neighbor c;
+	print_all(cout,c);
+};
+
+/** An overloaded version of print_all_neighbor(), which outputs the result to <filename>. */
+inline void container::print_all_neighbor(char* filename) {
+	voronoicell_neighbor c;
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	print_all(os,c);
 	os.close();
 };
 
@@ -266,7 +297,7 @@ inline void container::initialize_voronoicell(voronoicell &c) {
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
- * vcomputeall and vdraw. */
+ * store_cell_volumes() and draw(). */
 inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
@@ -288,11 +319,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y
 				x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
 				if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
-#ifdef FACETS_NEIGHBOR					
 					c.nplane(x1,y1,z1,rs,id[t][j]);
-#else
-					c.plane(x1,y1,z1,rs);
-#endif
 			}
 		} while ((t=l.inc(qx,qy,qz))!=-1);
 		lr=ur;lrs=urs;

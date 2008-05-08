@@ -38,32 +38,9 @@ void container_poly::import(istream &is) {
 };
 
 /** Clears a container of particles. */
-void container_poly::clear() {
-	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
+void container_poly::poly_clear_radius() {
 	max_radius=0;
 };
-
-/** Prints a list of all particle labels, positions, and Voronoi volumes to the
- * standard output. */
-void container_poly::vprintall(ostream &os) {
-	fpoint x,y,z;
-	voronoicell c;
-	facets_loop l(this);
-	int i,s;
-	for(s=0;s<nxyz;s++) {
-		for(i=0;i<co[s];i++) {
-			x=p[s][sz*i];y=p[s][sz*i+1];z=p[s][sz*i+2];
-			compute_cell(c,s,i,x,y,z);
-			os << id[s][i] << " " << x << " " << y << " " << z << " " << p[s][4*i+3];
-			os << " " << c.volume();
-#ifdef FACETS_NEIGHBOR
-			c.neighbors(os);			
-#endif
-			os << endl;
-		}
-	}
-};
-
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
@@ -85,11 +62,7 @@ inline void container_poly::compute_cell(voronoicell &c,int s,int i,fpoint x,fpo
 				x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
 				if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
-#ifdef FACETS_NEIGHBOR
 					c.nplane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3],id[t][j]);
-#else
-					c.plane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3]);
-#endif
 			}
 		} while ((t=l.inc(qx,qy,qz))!=-1);
 		lr=ur;lrs=urs;
@@ -114,14 +87,14 @@ inline void voronoicell_neighbor::neighbor_main_deallocate() {
 	delete [] ne;
 };
 
-inline void voronoicell_neighbor::neighbor_addmemory_vertices(int i) {
+inline void voronoicell_neighbor::neighbor_add_memory_vertices(int i) {
 	int *pp;
 	pp=new int*[i];
 	for(int j=0;j<currentvertices;j++) pp[j]=ne[j];
 	delete [] ne;ne=pp;
 };
 
-inline void voronoicell_neighbor::neighbor_addmemory_vorder(int i) {
+inline void voronoicell_neighbor::neighbor_add_memory_vorder(int i) {
 	int **p2;
 	p2=new int*[i];
 	for(j=0;j<currentvertexorder;j++) p2[j]=mne[j];
@@ -153,4 +126,161 @@ inline void voronoicell_neighbor::neighbor_init_octahedron() {
 	q[16]=-5;q[17]=-8;q[18]=-3;q[19]=-2;
 	q[20]=-7;q[21]=-6;q[22]=-1;q[23]=-4;
 	ne[0]=q;ne[1]=q+4;ne[2]=q+8;ne[3]=q+12;ne[4]=q+16;ne[5]=q+20;
-};	
+};
+
+inline void voronoicell_neighbor::neighbor_set_pointer(int p,int n) {
+	ne[p]=mne[n]+n*mec[n];
+};
+
+inline void voronoicell_neighbor::neighbor_copy(int a,int b,int c,int d) {
+	ne[a][b]=ne[c][d];
+};
+
+inline void voronoicell_neighbor::neighbor_set(int a,int b,int c) {
+	ne[a][b]=c;
+};
+
+inline void voronoicell_neighbor::neighbor_set_aux1(int k) {
+	paux1=mne[k]+k*mec[k];
+};
+
+inline void voronoicell_neighbor::neighbor_copy_aux1(int a,int b) {
+	paux1[b]=ne[a][b];
+};
+
+inline void voronoicell_neighbor::neighbor_copy_aux1_shift(int a,int b) {
+	paux1[b]=ne[a][b+1];
+};
+
+inline void voronoicell_neighbor::neighbor_set_aux2(int k) {
+	paux2=mne[k]+k*mec[k];
+};
+
+inline void voronoicell_neighbor::neighbor_copy_aux2(int a,int b) {
+	ne[a][b]=paux2[b];
+};
+
+inline void voronoicell_neighbor::neighbor_copy_pointer(int a,int b) {
+	ne[a]=ne[b];
+};
+
+inline void voronoicell_neighbor::neighbor_set_to_aux1(int j) {
+	ne[j]=paux1;
+};
+
+inline void voronoicell_neighbor::neighbor_set_to_aux2(int j) {
+	ne[j]=paux2;
+};
+
+inline void voronoicell_neighbor::neighbor_edgeprint(int i) {
+	cout << "    (";
+	for(int j=0;j<nu[i];j++) {
+		cout << ne[i][j] << (j==nu[i]-1?")":",");
+	}
+};
+
+inline void voronoicell_neighbor::neighbor_allocate_aux1(int i) {
+	paux1=new int[i*mem[i]];
+};
+
+inline void voronoicell_neighbor::neighbor_switch_to_aux1(int i) {
+	delete [] mne[i];
+	mne[i]=paux1;
+};
+
+inline void voronoicell_neighbor::neighbor_copy_to_aux1(int i,int m) {
+	paux1[m]=mne[i][m];
+};
+
+inline void voronoicell_neighbor::neighbor_set_to_aux1_offset(int k,int m) {
+	ne[k]=paux1+m;
+};
+
+/** This routine checks to make sure the neighbor information of each facets is
+ * consistent.*/
+void voronoicell_neighbor::facet_check() {
+	int i,j,k,l,m,q;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				ed[i][j]=-1-k;
+				q=ne[i][j];
+				l=cycle_up(ed[i][nu[i]+j],k);
+				do {
+					m=ed[k][l];
+					ed[k][l]=-1-m;
+					if (ne[k][l]!=q) cerr << "Facet error at (" << k << "," << l << ")=" << ne[k][l] << ", started from (" << i << "," << j << ")=" << q << endl;
+					l=cycle_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+			}
+		}
+	}
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			if(ed[i][j]>=0) throw fatal_error("Facet labeling routine didn't look everywhere");
+			ed[i][j]=-1-ed[i][j];
+		}
+	}
+};
+
+/** This routine provides a list of plane IDs. */
+void voronoicell_neighbor::neighbors(ostream &os) {
+	int i,j,k,l,m;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				os << " " << ne[i][j];
+				ed[i][j]=-1-k;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				do {
+					m=ed[k][l];
+					ed[k][l]=-1-m;
+					l=cycle_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+			}
+		}
+	}
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			if(ed[i][j]>=0) throw fatal_error("Neighbor routine didn't look everywhere");
+			ed[i][j]=-1-ed[i][j];
+		}
+	}
+};
+
+/** This routine labels the facets in an arbitrary order, starting from one. */
+void voronoicell_neighbor::label_facets() {
+	int i,j,k,l,m,q=1;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				ed[i][j]=-1-k;
+				ne[i][j]=q;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				do {
+					m=ed[k][l];
+					ed[k][l]=-1-m;
+					ne[k][l]=q;
+					l=cycle_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+				q++;
+			}
+		}
+	}
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			if(ed[i][j]>=0) throw fatal_error("Facet labeling routine didn't look everywhere");
+			ed[i][j]=-1-ed[i][j];
+		}
+	}
+};
+
+void voronoicell_neighbor::neighbor_print(ostream &os,int i,int j) {
+	os << "(" << i << "," << ne[i][j] << ")";
+};

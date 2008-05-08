@@ -32,20 +32,25 @@ class container {
 		virtual void import(istream &is);
 		inline void import();
 		inline void import(char *filename);
-		void regioncount();
+		void region_count();
 		void clear();
-		void vdraw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
-		inline void vdraw_gnuplot(char *filename);
-		void vdraw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
-		inline void vdraw_pov(char *filename);
-		void vcomputeall(fpoint *bb);
-		void vprintall(ostream &os);
-		inline void vprintall();
-		inline void vprintall(char *filename);
+		void draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		inline void draw_gnuplot(char *filename);
+		void draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		inline void draw_pov(char *filename);
+		void store_cell_volumes(fpoint *bb);
+		void print_all(ostream &os);
+		void print_all();
+		void print_all(char *filename);
+		void print_all_neighbor(ostream &os);
+		void print_all_neighbor();
+		void print_all_neighbor(char *filename);
 		inline void compute_cell(voronoicell &c,int s,int i);
 		virtual void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
 	protected:
+		inline void print_all(ostream &os,voronoicell &c);
+		virtual void poly_clear_radius() {};
 		inline void initialize_voronoicell(voronoicell &c);
 		void add_particle_memory(int i);
 		/** The amount of memory in the array structure for each particle. This
@@ -113,7 +118,6 @@ class container_poly : public container {
 		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
 		void import(istream &is);
 		void clear();
-		void vprintall(ostream &os);
 		inline void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);		
 	private:
 		fpoint max_radius;
