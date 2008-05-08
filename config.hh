@@ -8,24 +8,24 @@
 #define FACETS_CONFIG_HH
 
 // These constants set the initial memory allocation for the Voronoi cell
-const int initvertices=256;
-const int initvertexorder=64;
-const int init3vertices=256;
-const int initnvertices=8;
+const int init_vertices=256;
+const int init_vertex_order=64;
+const int init_3_vertices=256;
+const int init_n_vertices=8;
 const int init_marginal=256;
-const int initdeletesize=256;
-const int initdeletesize2=256;
-const int initfacetsize=32;
+const int init_delete_size=256;
+const int init_delete2_size=256;
+const int init_facet_size=32;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
-const int maxvertices=16777216;
-const int maxvertexorder=2048;
-const int maxnvertices=16777216;
+const int max_vertices=16777216;
+const int max_vertex_order=2048;
+const int max_n_vertices=16777216;
 const int max_marginal=16777216;
-const int maxdeletesize=16777216;
-const int maxdeletesize2=16777216;
-const int maxparticlemem=16777216;
+const int max_delete_size=16777216;
+const int max_delete2_size=16777216;
+const int max_particle_memory=16777216;
 
 // This sets the numerical tolerance. Below these values, the plane cutting
 // snaps to existing vertices rather than creating new ones.

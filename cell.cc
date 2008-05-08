@@ -8,75 +8,66 @@
 
 /** Constructs a Voronoi cell and sets up the initial memory. */
 voronoicell::voronoicell() :
-	currentvertices(initvertices), currentvertexorder(initvertexorder),
-	currentdeletesize(initdeletesize), currentdeletesize2(initdeletesize2) {
+	current_vertices(init_vertices), current_vertex_order(init_vertex_order),
+	current_delete_size(init_delete_size), current_delete2_size(init_delete2_size) {
 	int i;
-	ds=new int[currentdeletesize];
-	ds2=new int[currentdeletesize2];
-	mem=new int[currentvertexorder];
-	mec=new int[currentvertexorder];
-	mep=new int*[currentvertexorder];
-	ed=new int*[currentvertices];
-	neighbor_main_allocate();
-	nu=new int[currentvertices];
-	pts=new fpoint[3*currentvertices];
+	ds=new int[current_delete_size];
+	ds2=new int[current_delete2_size];
+	mem=new int[current_vertex_order];
+	mec=new int[current_vertex_order];
+	mep=new int*[current_vertex_order];
+	ed=new int*[current_vertices];
+	nu=new int[current_vertices];
+	pts=new fpoint[3*current_vertices];
 	sure.p=pts;
 	for(i=0;i<3;i++) {
-		mem[i]=initnvertices;
-		mep[i]=new int[initnvertices*(2*i+1)];
+		mem[i]=init_n_vertices;
+		mep[i]=new int[init_n_vertices*(2*i+1)];
 		mec[i]=0;
-		neighbor_allocate(i,initnvertices);
 	}
-	mem[3]=init3vertices;
-	mep[3]=new int[init3vertices*7];
+	mem[3]=init_3_vertices;
+	mep[3]=new int[init_3_vertices*7];
 	mec[3]=0;
-	cout << "yo\n";
-	neighbor_allocate(3,init3vertices);
-	for(i=4;i<currentvertexorder;i++) {
-		mem[i]=initnvertices;
-		mep[i]=new int[initnvertices*(2*i+1)];
+	for(i=4;i<current_vertex_order;i++) {
+		mem[i]=init_n_vertices;
+		mep[i]=new int[init_n_vertices*(2*i+1)];
 		mec[i]=0;
-		neighbor_allocate(i,initnvertices);
 	}
-};
+}
 
 /** The voronoicell destructor deallocates all the dynamic memory. */
 voronoicell::~voronoicell() {
 	delete [] ds;
 	delete [] ds2;
-	for(int i=0;i<currentvertexorder;i++) if (mem[i]>0) {
-		delete [] mep[i];
-		neighbor_deallocate(i);
-	}
+	for(int i=0;i<current_vertex_order;i++) if (mem[i]>0) delete [] mep[i];
 	delete [] mem;
 	delete [] mec;
 	delete [] mep;
-	neighbor_main_deallocate();
 	delete [] ed;
 	delete [] nu;
 	delete [] pts;
-};
+}
 
 /** Increases the memory storage for a particular vertex order, by increasing
  * the size of the of the mep and mne <em>(Neighbor version only)</em> arrays.
  * If the arrays already exist, their size is doubled; if they don't exist,
- * then new ones of size initnvertices are allocated. The routine also ensures
+ * then new ones of size init_n_vertices are allocated. The routine also ensures
  * that the pointers in the ed array are updated, by making use of the back
  * pointers. For the cases where the back pointer has been temporarily
  * overwritten in the marginal vertex code, the auxiliary delete stack is
  * scanned to find out how to update the ed value.
  * \param[in] i The order of the vertex memory to be increased.*/
-void voronoicell::addmemory(int i) {
+void voronoicell::add_memory(int i) {
 	int s=2*i+1;
 	if(mem[i]==0) {
-		neighbor_allocate(i,initnvertices);
-		mep[i]=new int[initnvertices*s];
-		mem[i]=initnvertices;
+		neighbor_allocate(i,init_n_vertices);
+		mep[i]=new int[init_n_vertices*s];
+		mem[i]=init_n_vertices;
 		cerr << "Order " << i << " vertex memory created " << endl;
 	} else {
 		int j=0,k,*l;
 		mem[i]*=2;
-		if (mem[i]>maxnvertices) throw fatal_error("Point memory allocation exceeded absolute maximum");
+		if (mem[i]>max_n_vertices) throw fatal_error("Point memory allocation exceeded absolute maximum");
 		cerr << "Order " << i << " vertex memory scaled up to " << mem[i] << endl;
 		l=new int[s*mem[i]];
 		int m=0;
@@ -105,80 +96,80 @@ void voronoicell::addmemory(int i) {
 		mep[i]=l;
 		neighbor_switch_to_aux1(i);
 	}
-};
+}
 
 /** Doubles the maximum number of vertices allowed, by reallocating the ed, nu,
  * pts, and ne <em>(Neighbor version only)</em> arrays. If the allocation
- * exceeds the absolute maximum set in maxvertices, then the routine throws a
+ * exceeds the absolute maximum set in max_vertices, then the routine throws a
  * fatal error. */
 void voronoicell::add_memory_vertices() {
-	int i=2*currentvertices,j,**pp,*pnu;
-	if (i>maxvertices) throw fatal_error("Vertex memory allocation exceeded absolute maximum");
+	int i=2*current_vertices,j,**pp,*pnu;
+	if (i>max_vertices) throw fatal_error("Vertex memory allocation exceeded absolute maximum");
 	cerr << "Vertex memory scaled up to " << i << endl;
 	fpoint *ppts;
 	pp=new int*[i];
-	for(j=0;j<currentvertices;j++) pp[j]=ed[j];
+	for(j=0;j<current_vertices;j++) pp[j]=ed[j];
 	delete [] ed;ed=pp;
 	neighbor_add_memory_vertices(i);
 	pnu=new int[i];
-	for(j=0;j<currentvertices;j++) pnu[j]=nu[j];
+	for(j=0;j<current_vertices;j++) pnu[j]=nu[j];
 	delete [] nu;nu=pnu;
 	ppts=new fpoint[3*i];
-	for(j=0;j<3*currentvertices;j++) ppts[j]=pts[j];
+	for(j=0;j<3*current_vertices;j++) ppts[j]=pts[j];
 	delete [] pts;sure.p=pts=ppts;
-	currentvertices=i;
-};
+	current_vertices=i;
+}
 
 /** Doubles the maximum allowed vertex order, by reallocating mem, mep, mec,
  * and mnu <em>(Neighbor version only)</em> arrays. If the allocation exceeds
- * the absolute maximum set in maxvertexorder, then the routine causes a fatal
+ * the absolute maximum set in max_vertex_order, then the routine causes a fatal
  * error. */
 void voronoicell::add_memory_vorder() {
-	int i=2*currentvertexorder,j,*p1,**p2;
-	if (i>maxvertexorder) throw fatal_error("Vertex order memory allocation exceeded absolute maximum");
+	int i=2*current_vertex_order,j,*p1,**p2;
+	if (i>max_vertex_order) throw fatal_error("Vertex order memory allocation exceeded absolute maximum");
 	cerr << "Vertex order memory scaled up to " << i << endl;
 	p1=new int[i];
-	for(j=0;j<currentvertexorder;j++) p1[j]=mem[j];while(j<i) p1[j++]=0;
+	for(j=0;j<current_vertex_order;j++) p1[j]=mem[j];while(j<i) p1[j++]=0;
 	delete [] mem;mem=p1;
 	p2=new int*[i];
-	for(j=0;j<currentvertexorder;j++) p2[j]=mep[j];
+	for(j=0;j<current_vertex_order;j++) p2[j]=mep[j];
 	delete [] mep;mep=p2;
 	p1=new int[i];
-	for(j=0;j<currentvertexorder;j++) p1[j]=mec[j];while(j<i) p1[j++]=0;
+	for(j=0;j<current_vertex_order;j++) p1[j]=mec[j];while(j<i) p1[j++]=0;
 	delete [] mec;mec=p1;
 	neighbor_add_memory_vorder(i);
-	currentvertexorder=i;
-};
+	current_vertex_order=i;
+}
 
 /** Doubles the size allocation of the main delete stack. If the allocation
- * exceeds the absolute maximum set in maxdeletesize, then routine causes a
+ * exceeds the absolute maximum set in max_delete_size, then routine causes a
  * fatal error. */
 void voronoicell::add_memory_ds() {
-	int i=2*currentdeletesize,j,*pds;
-	if (i>maxdeletesize) throw fatal_error("Delete stack 1 memory allocation exceeded absolute maximum");
+	int i=2*current_delete_size,j,*pds;
+	if (i>max_delete_size) throw fatal_error("Delete stack 1 memory allocation exceeded absolute maximum");
 	cerr << "Delete stack 1 memory scaled up to " << i << endl;
 	pds=new int[i];
-	for(j=0;j<currentdeletesize;j++) pds[j]=ds[j];
+	for(j=0;j<current_delete_size;j++) pds[j]=ds[j];
 	delete [] ds;ds=pds;
-	currentdeletesize=i;
-};
+	current_delete_size=i;
+}
 
 /** Doubles the size allocation of the auxiliary delete stack. If the
- * allocation exceeds the absolute maximum set in maxdeletesize2, then the
+ * allocation exceeds the absolute maximum set in max_delete2_size, then the
  * routine causes a fatal error. */
 void voronoicell::add_memory_ds2() {
-	int i=2*currentdeletesize2,j,*pds2;
-	if (i>maxdeletesize2) throw fatal_error("Delete stack 2 memory allocation exceeded absolute maximum");
+	int i=2*current_delete2_size,j,*pds2;
+	if (i>max_delete2_size) throw fatal_error("Delete stack 2 memory allocation exceeded absolute maximum");
 	cerr << "Delete stack 2 memory scaled up to " << i << endl;
 	pds2=new int[i];
-	for(j=0;j<currentdeletesize2;j++) pds2[j]=ds2[j];
+	for(j=0;j<current_delete2_size;j++) pds2[j]=ds2[j];
 	delete [] ds2;ds2=pds2;
-	currentdeletesize2=i;
-};
+	current_delete2_size=i;
+}
 
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions */
 void voronoicell::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
-	for(int i=0;i<initvertexorder;i++) mec[i]=0;
+	for(int i=0;i<init_vertex_order;i++) mec[i]=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
 	pts[3]=xmax;pts[4]=ymin;pts[5]=zmin;
@@ -201,13 +192,13 @@ void voronoicell::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zm
 	ed[4]=q+28;ed[5]=q+35;ed[6]=q+42;ed[7]=q+49;
 	neighbor_init();
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
-};
+}
 
 /** Initializes a Voroni cell as a regular octahedron.
  * \param l The distance from the octahedron center to a vertex. Six vertices
  * are initialized at (-l,0,0), (l,0,0), (0,-l,0), (0,l,0), (0,0,-l), and (0,0,l).*/
 inline void voronoicell::init_octahedron(fpoint l) {
-	for(int i=0;i<initvertexorder;i++) mec[i]=0;
+	for(int i=0;i<init_vertex_order;i++) mec[i]=0;
 	mec[4]=p=6;l*=2;
 	pts[0]=-l;pts[1]=0;pts[2]=0;
 	pts[3]=l;pts[4]=0;pts[5]=0;
@@ -225,7 +216,7 @@ inline void voronoicell::init_octahedron(fpoint l) {
 	ed[0]=q;ed[1]=q+9;ed[2]=q+18;ed[3]=q+27;ed[4]=q+36;ed[5]=q+45;
 	neighbor_init_octahedron();
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
-};
+}
 
 
 /** Initializes an arbitrary test object using the add_vertex() and
@@ -234,7 +225,7 @@ inline void voronoicell::init_octahedron(fpoint l) {
  * \param[in] n the number of the test object (from 0 to 9)
  */
 inline void voronoicell::init_test(int n) {
-	for(int i=0;i<initvertexorder;i++) mec[i]=0;p=0;
+	for(int i=0;i<init_vertex_order;i++) mec[i]=0;p=0;
 	switch(n) {
 		case 0:
 			// A peaked object, with a high vertex 6, and a ridge
@@ -395,7 +386,7 @@ inline void voronoicell::init_test(int n) {
 
 	construct_relations();
 	label_facets();
-};
+}
 
 /** Adds an order one vertex to the memory structure, and specifies its edge.
  * \param[in] (x,y,z) are the coordinates of the vertex
@@ -403,59 +394,59 @@ inline void voronoicell::init_test(int n) {
  */
 void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
-	if (mem[1]==mec[1]) addmemory(1);
+	if (mem[1]==mec[1]) add_memory(1);
 	neighbor_set_pointer(p,1);
 	int *q=mep[1]+3*mec[1]++;ed[p]=q;
 	q[0]=a;q[2]=p++;
-};
+}
 
 /** Adds an order 2 vertex to the memory structure, and specifies its edges. */
 void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
-	if (mem[2]==mec[2]) addmemory(2);
+	if (mem[2]==mec[2]) add_memory(2);
 	neighbor_set_pointer(p,2);
 	int *q=mep[2]+5*mec[2]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[4]=p++;
-};
+}
 
 /** Adds an order 3 vertex to the memory structure, and specifies its edges. */
 void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
-	if (mem[3]==mec[3]) addmemory(3);
+	if (mem[3]==mec[3]) add_memory(3);
 	neighbor_set_pointer(p,3);
 	int *q=mep[3]+7*mec[3]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
-};
+}
 
 /** Adds an order 4 vertex to the memory structure, and specifies its edges. */
 void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
-	if (mem[4]==mec[4]) addmemory(4);
+	if (mem[4]==mec[4]) add_memory(4);
 	neighbor_set_pointer(p,4);
 	int *q=mep[4]+9*mec[4]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
-};
+}
 
 /** Adds an order 5 vertex to the memory structure, and specifies its edges. */
 void voronoicell::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
-	if (mem[5]==mec[5]) addmemory(5);
+	if (mem[5]==mec[5]) add_memory(5);
 	neighbor_set_pointer(p,5);
 	int *q=mep[5]+11*mec[5]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
-};
+}
 
 /** Checks that the relational table of the Voronoi cell is accurate, and prints
  * out any errors. This algorithm is O(p), so running it every time the plane
  * routine is called will result in a significant slowdown. */
-inline void voronoicell::relcheck() {
+inline void voronoicell::check_relations() {
 	int i,j;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			if (ed[ed[i][j]][ed[i][nu[i]+j]]!=i) cout << "Relational error at point " << i << ", edge " << j << "." << endl;
 		}
 	}
-};
+}
 
 /** This routine checks for any two vertices that are connected by more than one
  * edge. The plane algorithm is designed so that this should not happen, so any
@@ -471,7 +462,7 @@ inline void voronoicell::duplicate_check() {
 			}
 		}
 	}
-};
+}
 
 /** Constructs the relational table if the edges have been specified. */
 inline void voronoicell::construct_relations() {
@@ -485,7 +476,7 @@ inline void voronoicell::construct_relations() {
 		}
 		ed[i][nu[i]+j]=l;
 	}
-};
+}
 
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
  * (x,y,z) from the cell center. The value of rsq should be initially set to
@@ -657,7 +648,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 	// We're about to add the first point of the new facet. In either
 	// routine, we have to add a point, so first check there's space for
 	// it.
-	if(p==currentvertices) add_memory_vertices();
+	if(p==current_vertices) add_memory_vertices();
 
 	if (complicatedsetup) {
 		// The search algorithm found a point which is on the cutting
@@ -717,8 +708,8 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 
 			// Add memory for the new vertex if needed, and
 			// initialize
-			while (nu[p]>=currentvertexorder) add_memory_vorder();
-			if (mec[nu[p]]==mem[nu[p]]) addmemory(nu[p]);
+			while (nu[p]>=current_vertex_order) add_memory_vorder();
+			if (mec[nu[p]]==mem[nu[p]]) add_memory(nu[p]);
 			neighbor_set_pointer(p,nu[p]);
 			ed[p]=mep[nu[p]]+(2*nu[p]+1)*mec[nu[p]]++;
 			ed[p][2*nu[p]]=p;
@@ -785,8 +776,8 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 			// Add memory to store the vertex if it doesn't exist
 			// already
 			k=1;
-			while(nu[p]>=currentvertexorder) add_memory_vorder();
-			if (mec[nu[p]]==mem[nu[p]]) addmemory(nu[p]);
+			while(nu[p]>=current_vertex_order) add_memory_vorder();
+			if (mec[nu[p]]==mem[nu[p]]) add_memory(nu[p]);
 
 			// Copy the edges of the original vertex into the new
 			// one. Delete the edges of the original vertex, and
@@ -826,7 +817,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 		} else neighbor_copy(p,0,up,qs);
 		
 		// Add this point to the auxiliary delete stack
-		if (stack2==currentdeletesize2) add_memory_ds2();
+		if (stack2==current_delete2_size) add_memory_ds2();
 		ds2[stack2++]=up;
 
 		// Look at the edges on either side of the group that was
@@ -846,7 +837,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 		// points lp and up. Create a new vertex between them which
 		// lies on the cutting plane. Since u and l differ by at least
 		// the tolerance, this division should never screw up.
-		if (stack==currentdeletesize) add_memory_ds();
+		if (stack==current_delete_size) add_memory_ds();
 		ds[stack++]=up;
 		r=1/(u-l);
 		pts[3*p]=(pts[3*lp]*u-pts[3*up]*l)*r;
@@ -856,7 +847,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 		// This point will always have three edges. Connect one of them
 		// to lp.
 		nu[p]=3;
-		if (mec[3]==mem[3]) addmemory(3);
+		if (mec[3]==mem[3]) add_memory(3);
 		neighbor_set_pointer(p,3);
 		neighbor_set(p,0,p_id);
 		neighbor_copy(p,1,up,us);
@@ -890,7 +881,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 
 			// The point is still in the cutting space. Just add it
 			// to the delete stack and keep moving.
-			if (stack==currentdeletesize) add_memory_ds();
+			if (stack==current_delete_size) add_memory_ds();
 			qs=cycle_up(ed[qp][nu[qp]+qs],lp);
 			qp=lp;
 			q=l;
@@ -903,13 +894,13 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 			// at the point of intersection. Connect it to the
 			// point we just tested. Also connect it to the previous
 			// new point in the facet we're constructing.
-			if(p==currentvertices) add_memory_vertices();
+			if(p==current_vertices) add_memory_vertices();
 			r=1/(q-l);
 			pts[3*p]=(pts[3*lp]*q-pts[3*qp]*l)*r;
 			pts[3*p+1]=(pts[3*lp+1]*q-pts[3*qp+1]*l)*r;
 			pts[3*p+2]=(pts[3*lp+2]*q-pts[3*qp+2]*l)*r;
 			nu[p]=3;
-			if (mec[3]==mem[3]) addmemory(3);
+			if (mec[3]==mem[3]) add_memory(3);
 			ls=ed[qp][qs+nu[qp]];
 			neighbor_set_pointer(p,3);
 			neighbor_set(p,0,p_id);
@@ -935,7 +926,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 			// We're going to introduce a new point right here, but
 			// first we need to figure out the number of edges it
 			// has.
-			if(p==currentvertices) add_memory_vertices();
+			if(p==current_vertices) add_memory_vertices();
 			
 			// If the previous vertex detected a double edge, our
 			// new vertex will have one less edge.
@@ -1031,8 +1022,8 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 			// k now holds the number of edges of the new vertex
 			// we are forming. Add memory for it if it doesn't exist
 			// already.
-			while(k>=currentvertexorder) add_memory_vorder();
-			if (mec[k]==mem[k]) addmemory(k);
+			while(k>=current_vertex_order) add_memory_vorder();
+			if (mec[k]==mem[k]) add_memory(k);
 			
 			// Now create a new vertex with order k, or augment
 			// the existing one
@@ -1061,8 +1052,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 					edd=mep[nu[j]]+(2*nu[j]+1)*--mec[nu[j]];
 					if(edd!=ed[j]) {
 						for(lw=0;lw<=2*nu[j];lw++) ed[j][lw]=edd[lw];
-						neighbor_set_aux2(nu[j]);
-						for(lw=0;lw<nu[j];lw++) neighbor_copy_aux2(j,lw);
+						neighbor_set_aux2_copy(j,nu[j]);
 						neighbor_copy_pointer(edd[2*nu[j]],j);
 						ed[edd[2*nu[j]]]=ed[j];
 					}
@@ -1075,7 +1065,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 				neighbor_set_pointer(p,k);
 				ed[p]=mep[k]+(2*k+1)*mec[k]++;
 				ed[p][2*k]=p;
-				if (stack2==currentdeletesize2) add_memory_ds2();
+				if (stack2==current_delete2_size) add_memory_ds2();
 				ds2[stack2++]=qp;
 				pts[3*p]=pts[3*qp];
 				pts[3*p+1]=pts[3*qp+1];
@@ -1146,7 +1136,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 		ed[j][2*nu[j]]=j;
 		if(ed[j][nu[j]]!=-1) {
 			ed[j][nu[j]]=-1;
-			if (stack==currentdeletesize) add_memory_ds();
+			if (stack==current_delete_size) add_memory_ds();
 			ds[stack++]=j;
 		}
 	}
@@ -1158,7 +1148,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 			qp=ed[cp][j];
 			if(qp!=-1) {
 				if (ed[qp][nu[qp]]!=-1) {
-					if (stack==currentdeletesize) add_memory_ds();
+					if (stack==current_delete_size) add_memory_ds();
 					ds[stack++]=qp;
 					ed[qp][nu[qp]]=-1;
 				}
@@ -1172,8 +1162,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 			j=nu[p];
 			mec[j]--;
 			for(i=0;i<=2*j;i++) ed[p][i]=(mep[j]+(2*j+1)*mec[j])[i];
-			neighbor_set_aux2(j);
-			for(i=0;i<j;i++) neighbor_copy_aux2(p,i);
+			neighbor_set_aux2_copy(p,j);
 			neighbor_copy_pointer(ed[p][2*j],p);
 			ed[ed[p][2*j]]=ed[p];
 		}
@@ -1189,8 +1178,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 			j=nu[qp];
 			mec[j]--;
 			for(i=0;i<=2*j;i++) ed[qp][i]=(mep[j]+(2*j+1)*mec[j])[i];
-			neighbor_set_aux2(j);
-			for(i=0;i<j;i++) neighbor_copy_aux2(qp,i);
+			neighbor_set_aux2_copy(qp,j);
 			neighbor_copy_pointer(ed[qp][2*j],qp);
 			neighbor_copy_pointer(qp,p);
 			ed[ed[qp][2*j]]=ed[qp];
@@ -1211,7 +1199,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 
 	// Collapse any order 2 vertices and exit
 	return collapse_order2();
-};
+}
 
 /** During the creation of a new facet in the plane routine, it is possible
  * that some order two vertices may arise. This routine removes them.
@@ -1272,7 +1260,7 @@ inline bool voronoicell::collapse_order2() {
 		if(!collapse_order1()) return false;
 	}
 	return true;
-};
+}
 
 /** Order one vertices can potentially be created during the order two collapse
  * routine. This routine keeps removing them until there are none left.
@@ -1300,7 +1288,7 @@ inline bool voronoicell::collapse_order1() {
 		}
 	}
 	return true;
-};
+}
 
 /** This routine deletes the kth edge of vertex j and reorganizes the memory.
  * If the neighbor computation is enabled, we also have to supply an
@@ -1315,7 +1303,7 @@ inline bool voronoicell::delete_connection(int j,int k,bool hand) {
 		cout << "Zero order vertex formed" << endl;
 		return false;
 	}
-	if(mec[i]==mem[i]) addmemory(i);
+	if(mec[i]==mem[i]) add_memory(i);
 	neighbor_set_aux1(i);
 	for(l=0;l<q;l++) neighbor_copy_aux1(j,l);
 	while(l<i) {
@@ -1339,15 +1327,14 @@ inline bool voronoicell::delete_connection(int j,int k,bool hand) {
 
 	edd=mep[nu[j]]+(2*nu[j]+1)*--mec[nu[j]];
 	for(l=0;l<=2*nu[j];l++) ed[j][l]=edd[l];
-	neighbor_set_aux2(nu[j]);
-	for(l=0;l<nu[j];l++) neighbor_copy_aux2(j,l);
+	neighbor_set_aux2_copy(j,nu[j]);
 	neighbor_set_to_aux2(edd[2*nu[j]]);
 	neighbor_set_to_aux1(j);
 	ed[edd[2*nu[j]]]=edd;
 	ed[j]=edp;
 	nu[j]=i;
 	return true;
-};
+}
 
 /** Cuts a Voronoi cell using the influence of a particle at (x,y,z), first
  * calculating the modulus squared of this vector before passing it to the
@@ -1355,7 +1342,7 @@ inline bool voronoicell::delete_connection(int j,int k,bool hand) {
 inline bool voronoicell::plane(fpoint x,fpoint y,fpoint z) {
 	fpoint rsq=x*x+y*y+z*z;
 	return nplane(x,y,z,rsq,0);
-};
+}
 
 /** For the neighbor-tracking version of the code, an extra version of the plane
  * routine is provided that doesn't require passing a plane ID. It just makes
@@ -1363,13 +1350,13 @@ inline bool voronoicell::plane(fpoint x,fpoint y,fpoint z) {
  * the modulus squared is also provided. */
 inline bool voronoicell::plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	return nplane(x,y,z,rsq,0);
-};
+}
 
 
 inline bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,int p_id) {
 	fpoint rsq=x*x+y*y+z*z;
 	return nplane(x,y,z,rsq,p_id);
-};
+}
 
 /** This is a simple inline function for picking out the index of the next edge
  * counterclockwise at the current vertex.
@@ -1378,7 +1365,7 @@ inline bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,int p_id) {
  * \return 0 if a=nu[p]-1, or a+1 otherwise. */
 inline int voronoicell::cycle_up(int a,int p) {
 	return a==nu[p]-1?0:a+1;
-};
+}
 
 /** This is a simple inline function for picking out the index of the next edge
  * clockwise from the current vertex.
@@ -1387,7 +1374,7 @@ inline int voronoicell::cycle_up(int a,int p) {
  * \return nu[p]-1 if a=0, or a-1 otherwise. */
 inline int voronoicell::cycle_down(int a,int p) {
 	return a==0?nu[p]-1:a-1;
-};
+}
 
 /** Calculates the volume of the Voronoi cell, by decomposing the cell into
  * tetrahedra extending outward from the zeroth vertex, which are evaluated
@@ -1431,7 +1418,7 @@ fpoint voronoicell::volume() {
 	}
 
 	return vol*fe;
-};
+}
 
 /** Computes the maximum radius squared of a vertex from the center
  * of the cell. It can be used to determine when enough particles have
@@ -1445,7 +1432,7 @@ fpoint voronoicell::maxradsq() {
 		if(s>r) r=s;
 	}
 	return r;
-};
+}
 
 /** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
  * stream, displacing the cell by an amount (x,y,z).
@@ -1461,7 +1448,7 @@ void voronoicell::dump_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
 			if (k<i) os << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}" << endl;
 		}
 	}
-};
+}
 
 /** An overloaded version of the dump_pov routine, that outputs the edges of
  * the Voronoi cell (in POV-Ray format) to a file.
@@ -1473,7 +1460,7 @@ inline void voronoicell::dump_pov(char *filename,fpoint x,fpoint y,fpoint z) {
 	os.open(filename,ofstream::out|ofstream::trunc);
 	dump_pov(os,x,y,z);
 	os.close();
-};
+}
 
 /** An overloaded version of the dump_pov routine, that outputs the edges of the
  * Voronoi cell (in POV-Ray format) to standard output.
@@ -1481,7 +1468,7 @@ inline void voronoicell::dump_pov(char *filename,fpoint x,fpoint y,fpoint z) {
  */
 inline void voronoicell::dump_pov(fpoint x,fpoint y,fpoint z) {
 	dump_pov(cout,x,y,z);
-};
+}
 
 /** Outputs the edges of the Voronoi cell (in gnuplot format) to an output stream.
  * \param[in] of An output stream to write to.
@@ -1496,7 +1483,7 @@ void voronoicell::dump_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
 			if (ed[i][j]<i) os << ux << " " << uy << " " << uz << endl << x+0.5*pts[3*k] << " " << y+0.5*pts[3*k+1] << " " << z+0.5*pts[3*k+2] << endl << endl << endl;
 		}
 	}
-};
+}
 
 /** An overloaded version of the dump_gnuplot routine that writes directly to
  * a file.
@@ -1508,7 +1495,7 @@ inline void voronoicell::dump_gnuplot(char *filename,fpoint x,fpoint y,fpoint z)
 	os.open(filename,ofstream::out|ofstream::trunc);
 	dump_gnuplot(os,x,y,z);
 	os.close();
-};
+}
 
 /** An overloaded version of the dump_gnuplot routine, that prints to the
  * standard output.
@@ -1516,7 +1503,7 @@ inline void voronoicell::dump_gnuplot(char *filename,fpoint x,fpoint y,fpoint z)
  */
 inline void voronoicell::dump_gnuplot(fpoint x,fpoint y,fpoint z) {
 	dump_gnuplot(cout,x,y,z);
-};
+}
 
 /** Outputs the Voronoi cell in the POV mesh2 format, described in section
  * 1.3.2.2 of the POV-Ray documentation. The mesh2 output consists of a list of
@@ -1557,7 +1544,7 @@ inline void voronoicell::dump_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z) {
 		}
 	}
 	os << "}" << endl << "inside_vector <0,0,1>" << endl << "}" << endl;
-};
+}
 
 /** An overloaded version of the dump_pov_mesh routine, that writes directly to a
  * file.
@@ -1569,7 +1556,7 @@ inline void voronoicell::dump_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z
 	os.open(filename,ofstream::out|ofstream::trunc);
 	dump_pov_mesh(os,x,y,z);
 	os.close();
-};
+}
 
 /** An overloaded version of the dump_pov_mesh routine, that prints to the
  * standard output.
@@ -1577,30 +1564,30 @@ inline void voronoicell::dump_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z
  */
 inline void voronoicell::dump_pov_mesh(fpoint x,fpoint y,fpoint z) {
 	dump_pov_mesh(cout,x,y,z);
-};
+}
 
 /** Randomly perturbs the points in the Voronoi cell by an amount r. */
 inline void voronoicell::perturb(fpoint r) {
 	for(int i=0;i<3*p;i++) {
 		pts[i]+=(2*double(rand())/RAND_MAX-1)*r;
 	}
-};
+}
 
 /** Initializes the suretest class and creates a buffer for marginal points. */
 suretest::suretest() : current_marginal(init_marginal) {
 	sn=new int[2*current_marginal];
-};
+}
 
 /** Suretest destructor to free memory allocation. */
 suretest::~suretest() {
 	delete [] sn;
-};
+}
 
 /** Sets up the suretest class with a particular test plane, and removes
  * any special cases from the table. */
 inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	sc=0;px=x;py=y;pz=z;prsq=rsq;
-};
+}
 
 /** */
 inline int suretest::test(int n,fpoint &ans) {
@@ -1611,7 +1598,7 @@ inline int suretest::test(int n,fpoint &ans) {
 		return -1;
 	}
 	return check_marginal(n,ans);
-};
+}
 
 int suretest::check_marginal(int n,fpoint &ans) {
 	int i;
@@ -1627,11 +1614,11 @@ int suretest::check_marginal(int n,fpoint &ans) {
 	sn[sc++]=n;
 	sn[sc++]=ans>tolerance?1:(ans<-tolerance?-1:0);
 	return sn[sc-1];	
-};
+}
 
 /** Prints the vertices, their edges, the relation table, and also notifies if
  * any glaring memory errors are visible. */
-void voronoicell::edgeprint() {
+void voronoicell::print_edges() {
 	int j;
 	for(int i=0;i<p;i++) {
 		cout << i << " " << nu[i] << "  ";
@@ -1639,13 +1626,13 @@ void voronoicell::edgeprint() {
 		cout << "   ";
 		while(j<2*nu[i]) cout << " " << ed[i][j++];
 		cout << "    " << ed[i][j];
-		neighbor_edgeprint(i);
+		neighbor_print_edges(i);
 		cout << "    " << pts[3*i] << " " << pts[3*i+1] << " " << pts[3*i+2];
 		cout << " " << ed[i];
 		if (ed[i]>=mep[nu[i]]+mec[nu[i]]*(2*nu[i]+1)) cout << " Memory error";
 		cout << endl;
 	}
-};
+}
 
 /** Prints out a list of all the facets and their vertices. If the neighbor option
  * is defined, it lists each cutting plane. */
@@ -1676,17 +1663,17 @@ void voronoicell::facets(ostream &os) {
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-};
+}
 
 void voronoicell::neighbor_print(ostream &os,int i,int j) {
 	os << i;
-};
+}
 
 /** An overloaded version of facets() which output the results to the standard
  * output. */
 inline void voronoicell::facets() {
 	facets(cout);
-};
+}
 
 /** An overloaded version of facets(), which outputs the results to <filename>. */
 inline void voronoicell::facets(char *filename) {
@@ -1694,15 +1681,15 @@ inline void voronoicell::facets(char *filename) {
 	os.open(filename,ofstream::out|ofstream::trunc);
 	facets(os);
 	os.close();
-};
+}
 
 /** Examines all the facets, and evaluates them by the number of vertices that
  * they have.*/
 void voronoicell::facet_statistics(ostream &os) {
-	int *stat,*pstat,currentfacetsize=initfacetsize,newc,maxf=0;
-	stat=new int[currentfacetsize];
+	int *stat,*pstat,current_facet_size=init_facet_size,newc,maxf=0;
+	stat=new int[current_facet_size];
 	int i,j,k,l,m,q;
-	for(i=0;i<currentfacetsize;i++) stat[i]=0;
+	for(i=0;i<current_facet_size;i++) stat[i]=0;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
@@ -1717,13 +1704,13 @@ void voronoicell::facet_statistics(ostream &os) {
 					l=cycle_up(ed[k][nu[k]+l],m);
 					k=m;
 				} while (k!=i);
-				if (q>=currentfacetsize) {
-					newc=currentfacetsize*2;
+				if (q>=current_facet_size) {
+					newc=current_facet_size*2;
 					pstat=new int[newc];
-					for(k=0;k<currentfacetsize;k++) pstat[k]=stat[k];
+					for(k=0;k<current_facet_size;k++) pstat[k]=stat[k];
 					while(k<newc) pstat[k]=0;
 					delete [] stat;
-					currentfacetsize=newc;
+					current_facet_size=newc;
 					stat=pstat;
 				}
 				stat[q]++;
@@ -1739,13 +1726,13 @@ void voronoicell::facet_statistics(ostream &os) {
 	}
 	for(i=0;i<=maxf;i++) os << i << " " << stat[i] << endl;
 	delete [] stat;
-};
+}
 
 /** An overloaded version of facet_statistics() which outputs the results to
  * standard output. */
 inline void voronoicell::facet_statistics() {
 	facet_statistics(cout);
-};
+}
 
 /** An overloaded version of facet_statistics() which outputs the results to
  * <filename>. */
@@ -1754,4 +1741,4 @@ inline void voronoicell::facet_statistics(char *filename) {
 	os.open(filename,ofstream::out|ofstream::trunc);
 	facet_statistics(os);
 	os.close();
-};
+}

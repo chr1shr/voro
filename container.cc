@@ -26,7 +26,7 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new fpoint*[nxyz];
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
-};
+}
 
 /** Container constructor. The first six arguments set the corners of the box to
  * be (xa,ya,za) and (xb,yb,zb). The box is then divided into an nx by ny by nz
@@ -47,7 +47,7 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new fpoint*[nxyz];
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
-};
+}
 
 /** Container destructor - free memory. */
 container::~container() {
@@ -58,7 +58,7 @@ container::~container() {
 	delete [] id;
 	delete [] mem;
 	delete [] co;	
-};
+}
 
 /** Dumps all the particle positions and identifies to a file. */
 void container::dump(char *filename) {
@@ -72,7 +72,7 @@ void container::dump(char *filename) {
 			file << endl;
 	}
 	file.close();
-};
+}
 
 /** Put a particle into the correct region of the container. */
 void container::put(int n,fpoint x,fpoint y,fpoint z) {
@@ -86,13 +86,13 @@ void container::put(int n,fpoint x,fpoint y,fpoint z) {
 			id[i][co[i]++]=n;
 		}
 	}
-};
+}
 
 /** Increase memory for a particular region. */
 void container::add_particle_memory(int i) {
 	int *idp;fpoint *pp;
 	int l,nmem=2*mem[i];
-	if (nmem>maxparticlemem) throw fatal_error("Absolute maximum memory allocation exceeded");
+	if (nmem>max_particle_memory) throw fatal_error("Absolute maximum memory allocation exceeded");
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
 	pp=new fpoint[sz*nmem];
@@ -100,7 +100,7 @@ void container::add_particle_memory(int i) {
 	mem[i]=nmem;
 	delete [] id[i];id[i]=idp;
 	delete [] p[i];p[i]=pp;
-};
+}
 
 /** Import a list of particles from standard input. */
 void container::import(istream &is) {
@@ -110,13 +110,13 @@ void container::import(istream &is) {
 		put(n,x,y,z);
 		is >> n >> x >> y >> z;
 	}
-};
+}
 
 /** An overloaded version of the import routine, that reads the standard input.
  */
 inline void container::import() {
 	import(cin);
-};
+}
 
 /** An overloaded version of the import routine, that reads in particles from
  * <filename>. */
@@ -125,7 +125,7 @@ inline void container::import(char *filename) {
 	is.open(filename,ifstream::in);
 	import(is);
 	is.close();
-};
+}
 
 /** Outputs the number of particles within each region. */
 void container::region_count() {
@@ -135,13 +135,13 @@ void container::region_count() {
 			for(i=0;i<nx;i++) cout << "Region (" << i << "," << j << "," << k << "): " << co[ijk++] << " particles" << endl;
 		}
 	}
-};
+}
 
 /** Clears a container of particles. */
 void container::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
 	poly_clear_radius();
-};
+}
 
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
@@ -164,13 +164,13 @@ void container::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,
 		}
 	} while ((s=l1.inc(px,py,pz))!=-1);
 	os.close();
-};
+}
 
 /** If only a filename is supplied to draw_gnuplot(), then assume that we are
  * calculating the entire simulation region. */
 void container::draw_gnuplot(char *filename) {
 	draw_gnuplot(filename,ax,bx,ay,by,az,bz);
-};
+}
 
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
@@ -195,19 +195,19 @@ void container::draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoi
 	} while ((s=l1.inc(px,py,pz))!=-1);
 	os << "}\n";
 	os.close();
-};
+}
 
 /** If only a filename is supplied to draw_pov(), then assume that we are
  * calculating the entire simulation region.*/
 void container::draw_pov(char *filename) {
 	draw_pov(filename,ax,bx,ay,by,az,bz);
-};
+}
 
 
 /** Computes the Voronoi volumes for all the particles, and stores the
  * results according to the particle label in the fpoint array bb.*/
 void container::store_cell_volumes(fpoint *bb) {
-	voronoicell c;
+	voronoicell_neighbor c;
 	facets_loop l(this);
 	int i,s;
 	for(s=0;s<nxyz;s++) {
@@ -216,7 +216,7 @@ void container::store_cell_volumes(fpoint *bb) {
 			bb[id[s][i]]=c.volume();
 		}
 	}
-};
+}
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
@@ -235,20 +235,20 @@ inline void container::print_all(ostream &os,voronoicell &c) {
 			os << endl;
 		}
 	}
-};
+}
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
 void container::print_all(ostream &os) {
 	voronoicell c;
 	print_all(os,c);
-};
+}
 
 /** An overloaded version of print_all(), which just prints to standard output. */
 void container::print_all() {
 	voronoicell c;
 	print_all(cout);
-};
+}
 
 /** An overloaded version of print_all(), which outputs the result to <filename>. */
 inline void container::print_all(char* filename) {
@@ -257,7 +257,7 @@ inline void container::print_all(char* filename) {
 	os.open(filename,ofstream::out|ofstream::trunc);
 	print_all(os,c);
 	os.close();
-};
+}
 
 /** Prints a list of all particle labels, positions, Voronoi volumes, and a list
  * of neighboring particles to an output stream.
@@ -265,13 +265,13 @@ inline void container::print_all(char* filename) {
 void container::print_all_neighbor(ostream &os) {
 	voronoicell_neighbor c;
 	print_all(os,c);
-};
+}
 
 /** An overloaded version of print_all_neighbor(), which just prints to standard output. */
 void container::print_all_neighbor() {
 	voronoicell_neighbor c;
 	print_all(cout,c);
-};
+}
 
 /** An overloaded version of print_all_neighbor(), which outputs the result to <filename>. */
 inline void container::print_all_neighbor(char* filename) {
@@ -280,7 +280,7 @@ inline void container::print_all_neighbor(char* filename) {
 	os.open(filename,ofstream::out|ofstream::trunc);
 	print_all(os,c);
 	os.close();
-};
+}
 
 /** Initialize the Voronoi cell to be the entire container. For non-periodic
  * coordinates, this is set by the position of the walls. For periodic
@@ -293,7 +293,7 @@ inline void container::initialize_voronoicell(voronoicell &c,fpoint x,fpoint y,f
 	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
 	c.init(x1,x2,y1,y2,z1,z2);
-};
+}
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
@@ -324,7 +324,7 @@ inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y
 		} while ((t=l.inc(qx,qy,qz))!=-1);
 		lr=ur;lrs=urs;
 	}
-};
+}
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
 inline void container::compute_cell(voronoicell &c,int s,int i) {
@@ -338,7 +338,7 @@ facets_loop::facets_loop(container *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q-
 	xsp(q->xsp),ysp(q->ysp),zsp(q->zsp),
 	ax(q->ax),ay(q->ay),az(q->az),
 	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz),
-	xperiodic(q->xperiodic),yperiodic(q->yperiodic),zperiodic(q->zperiodic) {};
+	xperiodic(q->xperiodic),yperiodic(q->yperiodic),zperiodic(q->zperiodic) {}
 
 /** Initializes a facets_loop object, by finding all blocks which are within a distance
  * r of the vector (vx,vy,vz). It returns the first block which is to be
@@ -371,7 +371,7 @@ inline int facets_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,f
 	inc1+=nx;
 	s=aip+nx*(ajp+ny*akp);
 	return s;
-};
+}
 
 /** Initializes a facets_loop object, by finding all blocks which overlap the box with
  * corners (xmin,ymin,zmin) and (xmax,ymax,zmax). It returns the first block
@@ -405,7 +405,7 @@ inline int facets_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpo
 	inc1+=nx;
 	s=aip+nx*(ajp+ny*akp);
 	return s;
-};
+}
 
 /** Returns the next block to be tested in a loop, and updates the periodicity
  * vector if necessary. */
@@ -423,21 +423,21 @@ inline int facets_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 		if (kp<nz-1) {kp++;s+=inc2;} else {kp=0;s+=inc2-nxyz;pz+=sz;}
 		return s;
 	} else return -1;
-};
+}
 
 /** Custom int function, that gives consistent stepping for negative numbers.
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
  * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/
 inline int facets_loop::step_int(fpoint a) {
 	return a<0?int(a)-1:int(a);
-};
+}
 
 /** Custom mod function, that gives consistent stepping for negative numbers. */
 inline int facets_loop::step_mod(int a,int b) {
 	return a>=0?a%b:b-1-(b-1-a)%b;
-};
+}
 
 /** Custom div function, that gives consistent stepping for negative numbers. */
 inline int facets_loop::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
-};
+}

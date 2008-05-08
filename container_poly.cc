@@ -20,11 +20,11 @@ void container_poly::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
 			id[i][co[i]++]=n;
 		}
 	}
-};
+}
 
 void container_poly::put(int n,fpoint x,fpoint y,fpoint z) {
 	put(n,x,y,z,0.5);
-};
+}
 
 /** Import a list of particles from standard input. */
 void container_poly::import(istream &is) {
@@ -35,12 +35,12 @@ void container_poly::import(istream &is) {
 		put(n,x,y,z,r);
 		is >> n >> x >> y >> z >> r;
 	}
-};
+}
 
 /** Clears a container of particles. */
 void container_poly::poly_clear_radius() {
 	max_radius=0;
-};
+}
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
@@ -67,40 +67,40 @@ inline void container_poly::compute_cell(voronoicell &c,int s,int i,fpoint x,fpo
 		} while ((t=l.inc(qx,qy,qz))!=-1);
 		lr=ur;lrs=urs;
 	}
-};
+}
 
-inline void voronoicell_neighbor::neighbor_main_allocate() {
-	mne=new int*[currentvertexorder];
-	ne=new int*[currentvertices];
-};
+voronoicell_neighbor::voronoicell_neighbor() {
+	int i;
+	mne=new int*[current_vertex_order];
+	ne=new int*[current_vertices];
+	for(i=0;i<3;i++) mne[i]=new int[init_n_vertices*i];
+	mne[3]=new int[init_3_vertices*3];
+	for(i=4;i<current_vertex_order;i++) mne[i]=new int[init_n_vertices*i];
+}
+
+voronoicell_neighbor::~voronoicell_neighbor() {
+	for(int i=0;i<current_vertex_order;i++) if (mem[i]>0) delete [] mne[i];
+	delete [] mne;
+	delete [] ne;	
+}
 
 inline void voronoicell_neighbor::neighbor_allocate(int i,int m) {
 	mne[i]=new int[m*i];
-	cout << "neigh alloc " << m << " " << i << endl;
-};	
-
-inline void voronoicell_neighbor::neighbor_deallocate(int i) {
-	delete [] mne[i];
-};
-
-inline void voronoicell_neighbor::neighbor_main_deallocate() {
-	delete [] mne;
-	delete [] ne;
-};
+}
 
 inline void voronoicell_neighbor::neighbor_add_memory_vertices(int i) {
 	int **pp;
 	pp=new int*[i];
-	for(int j=0;j<currentvertices;j++) pp[j]=ne[j];
+	for(int j=0;j<current_vertices;j++) pp[j]=ne[j];
 	delete [] ne;ne=pp;
-};
+}
 
 inline void voronoicell_neighbor::neighbor_add_memory_vorder(int i) {
 	int **p2;
 	p2=new int*[i];
-	for(int j=0;j<currentvertexorder;j++) p2[j]=mne[j];
+	for(int j=0;j<current_vertex_order;j++) p2[j]=mne[j];
 	delete [] mne;mne=p2;
-};
+}
 
 inline void voronoicell_neighbor::neighbor_init() {
 	int *q;
@@ -115,7 +115,7 @@ inline void voronoicell_neighbor::neighbor_init() {
 	q[21]=-6;q[22]=-2;q[23]=-4;
 	ne[0]=q;ne[1]=q+3;ne[2]=q+6;ne[3]=q+9;
 	ne[4]=q+12;ne[5]=q+15;ne[6]=q+18;ne[7]=q+21;
-};
+}
 
 inline void voronoicell_neighbor::neighbor_init_octahedron() {
 	int *q;
@@ -127,75 +127,72 @@ inline void voronoicell_neighbor::neighbor_init_octahedron() {
 	q[16]=-5;q[17]=-8;q[18]=-3;q[19]=-2;
 	q[20]=-7;q[21]=-6;q[22]=-1;q[23]=-4;
 	ne[0]=q;ne[1]=q+4;ne[2]=q+8;ne[3]=q+12;ne[4]=q+16;ne[5]=q+20;
-};
+}
 
 inline void voronoicell_neighbor::neighbor_set_pointer(int p,int n) {
 	ne[p]=mne[n]+n*mec[n];
-};
+}
 
 inline void voronoicell_neighbor::neighbor_copy(int a,int b,int c,int d) {
 	ne[a][b]=ne[c][d];
-};
+}
 
 inline void voronoicell_neighbor::neighbor_set(int a,int b,int c) {
 	ne[a][b]=c;
-};
+}
 
 inline void voronoicell_neighbor::neighbor_set_aux1(int k) {
 	paux1=mne[k]+k*mec[k];
-};
+}
 
 inline void voronoicell_neighbor::neighbor_copy_aux1(int a,int b) {
 	paux1[b]=ne[a][b];
-};
+}
 
 inline void voronoicell_neighbor::neighbor_copy_aux1_shift(int a,int b) {
 	paux1[b]=ne[a][b+1];
-};
+}
 
-inline void voronoicell_neighbor::neighbor_set_aux2(int k) {
-	paux2=mne[k]+k*mec[k];
-};
-
-inline void voronoicell_neighbor::neighbor_copy_aux2(int a,int b) {
-	ne[a][b]=paux2[b];
-};
+inline void voronoicell_neighbor::neighbor_set_aux2_copy(int a,int b) {
+	paux2=mne[b]+b*mec[b];
+	for(int i=0;i<b;i++) ne[a][i]=paux2[i];
+}
 
 inline void voronoicell_neighbor::neighbor_copy_pointer(int a,int b) {
 	ne[a]=ne[b];
-};
+}
 
 inline void voronoicell_neighbor::neighbor_set_to_aux1(int j) {
 	ne[j]=paux1;
-};
+}
 
 inline void voronoicell_neighbor::neighbor_set_to_aux2(int j) {
 	ne[j]=paux2;
-};
+}
 
-inline void voronoicell_neighbor::neighbor_edgeprint(int i) {
+inline void voronoicell_neighbor::neighbor_print_edges(int i) {
 	cout << "    (";
 	for(int j=0;j<nu[i];j++) {
 		cout << ne[i][j] << (j==nu[i]-1?")":",");
 	}
-};
+}
 
 inline void voronoicell_neighbor::neighbor_allocate_aux1(int i) {
 	paux1=new int[i*mem[i]];
-};
+}
 
 inline void voronoicell_neighbor::neighbor_switch_to_aux1(int i) {
 	delete [] mne[i];
 	mne[i]=paux1;
-};
+}
 
 inline void voronoicell_neighbor::neighbor_copy_to_aux1(int i,int m) {
 	paux1[m]=mne[i][m];
-};
+}
 
 inline void voronoicell_neighbor::neighbor_set_to_aux1_offset(int k,int m) {
 	ne[k]=paux1+m;
-};
+}
 
 /** This routine checks to make sure the neighbor information of each facets is
  * consistent.*/
@@ -224,7 +221,7 @@ void voronoicell_neighbor::facet_check() {
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-};
+}
 
 /** This routine provides a list of plane IDs. */
 void voronoicell_neighbor::neighbors(ostream &os) {
@@ -251,7 +248,7 @@ void voronoicell_neighbor::neighbors(ostream &os) {
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-};
+}
 
 /** This routine labels the facets in an arbitrary order, starting from one. */
 void voronoicell_neighbor::label_facets() {
@@ -280,8 +277,8 @@ void voronoicell_neighbor::label_facets() {
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-};
+}
 
 void voronoicell_neighbor::neighbor_print(ostream &os,int i,int j) {
 	os << "(" << i << "," << ne[i][j] << ")";
-};
+}
