@@ -47,7 +47,7 @@ int main(int argc,char **argv) {
 
 	// Print out a list of the particles, and their Voronoi volumes
 	sprintf(buffer,"%s.vol",argv[i+6]);
-	con.print_all(buffer);
+	con.print_all_neighbor(buffer);
 
 	// Save the Voronoi network of all the particles to a text file in a
 	// format ready for plotting by gnuplot

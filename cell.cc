@@ -30,12 +30,13 @@ voronoicell::voronoicell() :
 	mem[3]=init3vertices;
 	mep[3]=new int[init3vertices*7];
 	mec[3]=0;
+	cout << "yo\n";
 	neighbor_allocate(3,init3vertices);
 	for(i=4;i<currentvertexorder;i++) {
 		mem[i]=initnvertices;
 		mep[i]=new int[initnvertices*(2*i+1)];
 		mec[i]=0;
-		neigbor_allocate(i,initnvertices);
+		neighbor_allocate(i,initnvertices);
 	}
 };
 
@@ -98,7 +99,7 @@ void voronoicell::addmemory(int i) {
 				cerr << "Relocated dangling pointer" << endl;
 			}
 			for(k=0;k<s;k++,j++) l[j]=mep[i][j];
-			for(k=0;k<i;k++,m++) neighbor_copy_to_aux1(int i,int m);
+			for(k=0;k<i;k++,m++) neighbor_copy_to_aux1(i,m);
 		}
 		delete [] mep[i];
 		mep[i]=l;
@@ -118,7 +119,7 @@ void voronoicell::add_memory_vertices() {
 	pp=new int*[i];
 	for(j=0;j<currentvertices;j++) pp[j]=ed[j];
 	delete [] ed;ed=pp;
-	neighbor_add_memory_vertices()
+	neighbor_add_memory_vertices(i);
 	pnu=new int[i];
 	for(j=0;j<currentvertices;j++) pnu[j]=nu[j];
 	delete [] nu;nu=pnu;
@@ -145,7 +146,7 @@ void voronoicell::add_memory_vorder() {
 	p1=new int[i];
 	for(j=0;j<currentvertexorder;j++) p1[j]=mec[j];while(j<i) p1[j++]=0;
 	delete [] mec;mec=p1;
-	neighbor_add_memory_vorder(int i);
+	neighbor_add_memory_vorder(i);
 	currentvertexorder=i;
 };
 
@@ -729,7 +730,7 @@ bool voronoicell::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 			while(i<j) {
 				qp=ed[up][i];
 				qs=ed[up][nu[up]+i];
-				neighbor_copy(p,k,up,i)
+				neighbor_copy(p,k,up,i);
 				ed[p][k]=qp;
 				ed[p][nu[p]+k]=qs;
 				ed[qp][qs]=p;
@@ -1585,7 +1586,7 @@ inline void voronoicell::perturb(fpoint r) {
 	}
 };
 
-/** Initialises the suretest class and creates a buffer for marginal points. */
+/** Initializes the suretest class and creates a buffer for marginal points. */
 suretest::suretest() : current_marginal(init_marginal) {
 	sn=new int[2*current_marginal];
 };
@@ -1608,21 +1609,24 @@ inline int suretest::test(int n,fpoint &ans) {
 		return 1;
 	} else if(ans<-tolerance2) {
 		return -1;
-	} else {
-		int i;
-		for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
-		if (sc==2*current_marginal) {
-			i=2*current_marginal;
-			if (i>max_marginal) throw fatal_error("Marginal case buffer allocation exceeded absolute maximum");
-			cerr << "Marginal cases buffer scaled up to " << i << endl;
-			int *psn=new int[2*i];
-			for(int j=0;j<2*current_marginal;j++) psn[j]=sn[j];
-			delete [] sn;sn=psn;
-		}
-		sn[sc++]=n;
-		sn[sc++]=ans>tolerance?1:(ans<-tolerance?-1:0);
-		return sn[sc-1];
 	}
+	return check_marginal(n,ans);
+};
+
+int suretest::check_marginal(int n,fpoint &ans) {
+	int i;
+	for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
+	if (sc==2*current_marginal) {
+		i=2*current_marginal;
+		if (i>max_marginal) throw fatal_error("Marginal case buffer allocation exceeded absolute maximum");
+		cerr << "Marginal cases buffer scaled up to " << i << endl;
+		int *psn=new int[2*i];
+		for(int j=0;j<2*current_marginal;j++) psn[j]=sn[j];
+		delete [] sn;sn=psn;
+	}
+	sn[sc++]=n;
+	sn[sc++]=ans>tolerance?1:(ans<-tolerance?-1:0);
+	return sn[sc-1];	
 };
 
 /** Prints the vertices, their edges, the relation table, and also notifies if

@@ -57,6 +57,7 @@ class suretest {
 		inline void init(fpoint x,fpoint y,fpoint z,fpoint rsq);
 		inline int test(int n,fpoint &ans);
 	private:
+		int check_marginal(int n,fpoint &ans);
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
 		int current_marginal;
@@ -141,7 +142,7 @@ class voronoicell {
 		suretest sure;
 
 		voronoicell();
-		~voronoicell();
+		virtual ~voronoicell();
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void init_octahedron(fpoint l);
 		inline void init_test(int n);
@@ -174,12 +175,13 @@ class voronoicell {
 		void facet_statistics(ostream &os);
 		inline void facet_statistics();
 		inline void facet_statistics(char *filename);
-		virtual void label_facets();
+		virtual void label_facets() {};
 		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
 		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
 		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 		inline bool plane(fpoint x,fpoint y,fpoint z);
-	private:
+		virtual void neighbors(ostream &os) {};
+	protected:
 		/** This holds the number of points currently on the auxiliary delete stack. */
 		int stack2;
 		void addmemory(int i);
@@ -193,9 +195,8 @@ class voronoicell {
 		inline bool delete_connection(int j,int k,bool hand);
 		virtual void neighbor_print(ostream &os,int i,int j);
 
-		virtual void neigbors(ostream &os) {};
 		virtual void neighbor_main_allocate() {};
-		virtual void neighbor_allocate(int i,int m) {};
+		virtual void neighbor_allocate(int i,int m) {cout << "hola\n";};
 		virtual void neighbor_main_deallocate() {};
 		virtual void neighbor_deallocate(int i) {};
 		virtual void neighbor_add_memory_vertices(int i) {};
@@ -222,6 +223,7 @@ class voronoicell {
 
 class voronoicell_neighbor : public voronoicell {
 	public :
+		voronoicell_neighbor() : voronoicell() {};
 		int **mne;
 		int **ne;
 		int *paux1;

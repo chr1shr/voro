@@ -46,13 +46,13 @@ void container_poly::poly_clear_radius() {
  * the user, and it is also called multiple times by the functions vprintall,
  * vcomputeall and vdraw. */
 inline void container_poly::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z) {
-	fpoint x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
+	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	facets_loop l(this);
 	fpoint crad=p[s][4*i+3];
 	const fpoint mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
 	crad*=crad;
-	initialize_voronoicell(c);
+	initialize_voronoicell(c,x,y,z);
 
 	while(lrs*mul<c.maxradsq()) {
 		ur=lr+0.5;urs=ur*ur;
@@ -76,6 +76,7 @@ inline void voronoicell_neighbor::neighbor_main_allocate() {
 
 inline void voronoicell_neighbor::neighbor_allocate(int i,int m) {
 	mne[i]=new int[m*i];
+	cout << "neigh alloc " << m << " " << i << endl;
 };	
 
 inline void voronoicell_neighbor::neighbor_deallocate(int i) {
@@ -88,7 +89,7 @@ inline void voronoicell_neighbor::neighbor_main_deallocate() {
 };
 
 inline void voronoicell_neighbor::neighbor_add_memory_vertices(int i) {
-	int *pp;
+	int **pp;
 	pp=new int*[i];
 	for(int j=0;j<currentvertices;j++) pp[j]=ne[j];
 	delete [] ne;ne=pp;
@@ -97,7 +98,7 @@ inline void voronoicell_neighbor::neighbor_add_memory_vertices(int i) {
 inline void voronoicell_neighbor::neighbor_add_memory_vorder(int i) {
 	int **p2;
 	p2=new int*[i];
-	for(j=0;j<currentvertexorder;j++) p2[j]=mne[j];
+	for(int j=0;j<currentvertexorder;j++) p2[j]=mne[j];
 	delete [] mne;mne=p2;
 };
 

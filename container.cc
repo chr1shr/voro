@@ -159,7 +159,7 @@ void container::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,
 			x=p[s][sz*i]+px;y=p[s][sz*i+1]+py;z=p[s][sz*i+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				compute_cell(c,s,i,x,y,z);
-				c.dumpgnuplot(os,x,y,z);
+				c.dump_gnuplot(os,x,y,z);
 			}
 		}
 	} while ((s=l1.inc(px,py,pz))!=-1);
@@ -189,7 +189,7 @@ void container::draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoi
 			x=p[s][sz*i]+px;y=p[s][sz*i+1]+py;z=p[s][sz*i+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				compute_cell(c,s,i,x,y,z);
-				c.dumppov(os,x,y,z);break;
+				c.dump_pov(os,x,y,z);break;
 			}
 		}
 	} while ((s=l1.inc(px,py,pz))!=-1);
@@ -287,7 +287,7 @@ inline void container::print_all_neighbor(char* filename) {
  * coordinates, the space is equally divided in either direction from the
  * particle's initial position. That makes sense since those boundaries would
  * be made by the neighboring periodic images of this particle. */
-inline void container::initialize_voronoicell(voronoicell &c) {
+inline void container::initialize_voronoicell(voronoicell &c,fpoint x,fpoint y,fpoint z) {
 	float x1,x2,y1,y2,z1,z2;
 	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
@@ -299,10 +299,10 @@ inline void container::initialize_voronoicell(voronoicell &c) {
  * the user, and it is also called multiple times by the functions vprintall,
  * store_cell_volumes() and draw(). */
 inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z) {
-	fpoint x1,y1,z1,x2,y2,z2,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
+	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	facets_loop l(this);
-	initialize_voronoicell(c);
+	initialize_voronoicell(c,x,y,z);
 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
