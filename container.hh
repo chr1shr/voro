@@ -21,15 +21,15 @@ class facets_loop;
  * the geometry into rectangular grid of blocks, each of which handles the
  * particles in a particular area. Routines exist for putting in particles,
  * importing particles from standard input, and carrying out Voronoi
- * calculations.
- */
+ * calculations. */
 class container {
 	public:
+		fpoint length_scale;
 		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi,int isz);
 		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
-		virtual ~container();
+		~container();
 		void dump(char *filename);
-		virtual void import(istream &is);
+		void import(istream &is);
 		inline void import();
 		inline void import(char *filename);
 		void region_count();
@@ -45,17 +45,19 @@ class container {
 		void print_all_neighbor(ostream &os);
 		void print_all_neighbor();
 		void print_all_neighbor(char *filename);
-		template<class neigh_opt>
-		inline void compute_cell(voronoicell_base<neigh_opt> &c,int s,int i);
-		template<class neigh_opt>
-		inline void compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,fpoint x,fpoint y,fpoint z);
+		template<class n_option>
+		inline void compute_cell(voronoicell_base<n_option> &c,int s,int i);
+		template<class n_option>
+		inline void compute_cell(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
+		void guess_length_scale();
 	protected:
-		/** The amount of memory in the array structure for each particle. This
-		 * is set to 3 when the basic class is initialized, so that the array holds
-		 * (x,y,z) positions. If the container class is initialized as part
-		 * of the derived class container_poly, then this is set to 4, to also
-		 * hold the particle radii. */
+		/** The amount of memory in the array structure for each
+		 * particle. This is set to 3 when the basic class is
+		 * initialized, so that the array holds (x,y,z) positions. If
+		 * the container class is initialized as part of the derived
+		 * class container_poly, then this is set to 4, to also hold
+		 * the particle radii. */
 		const int sz;
 		/** The minimum x coordinate of the container. */
 		const fpoint ax;
@@ -69,11 +71,14 @@ class container {
 		const fpoint az;
 		/** The maximum z coordinate of the container. */
 		const fpoint bz;
-		/** The inverse box length in the x direction, set to nx/(bx-ax). */
+		/** The inverse box length in the x direction, set to
+		 * nx/(bx-ax). */
 		const fpoint xsp;
-		/** The inverse box length in the y direction, set to ny/(by-ay). */
+		/** The inverse box length in the y direction, set to
+		 * ny/(by-ay). */
 		const fpoint ysp;
-		/** The inverse box length in the z direction, set to nz/(bz-az). */
+		/** The inverse box length in the z direction, set to
+		 * nz/(bz-az). */
 		const fpoint zsp;
 		/** The number of boxes in the x direction. */
 		const int nx;
@@ -97,20 +102,33 @@ class container {
 		/** A boolean value that determines if the z coordinate in
 		 * periodic or not. */
 		const bool zperiodic;
-
+		/* This array holds the number of particles within each
+		 * computational box of the container. */
 		int *co;
-		
+		/* This array holds the maximum amount of particle memory for
+		 * each computational box of the container. If the number of
+		 * particles in a particular box ever approaches this limit,
+		 * more is allocated using the add_particle_memory() function.
+		 */
 		int *mem;
-
+		/* This array holds the numerical IDs of each particle in each
+		 * computational box. */
 		int **id;
-		/** A two dimensional array holding particle positions. The first
-		 * index labels the computational box. */
+		/** A two dimensional array holding particle positions. For the
+		 * derived container_poly class, this also holds particle
+		 * radii. */
 		fpoint **p;
+		/** This contains the maximum radius of a particle in the
+		 * container. For the standard container class, where all
+		 * particles are assumed to have the same radius, this number
+		 * does nothing. However, for the derived container_poly class,
+		 * this number is computed each time a particle is added to the
+		 * container. */
 		fpoint max_radius;
-		template<class neigh_opt>
-		inline void print_all(ostream &os,voronoicell_base<neigh_opt> &c);
-		template<class neigh_opt>
-		inline void initialize_voronoicell(voronoicell_base<neigh_opt> &c,fpoint x,fpoint y,fpoint z);
+		template<class n_option>
+		inline void print_all(ostream &os,voronoicell_base<n_option> &c);
+		template<class n_option>
+		inline void initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		void add_particle_memory(int i);
 	private:
 		friend class facets_loop;
@@ -119,12 +137,12 @@ class container {
 /** A polydisperse version of the container. */
 class container_poly : public container {
 	public:
-		container_poly(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi) : container(xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi,3) {};
+		container_poly(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi) : container(xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi,4) {};
 		void put(int n,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
 		void import(istream &is);
-		template<class neigh_opt>
-		inline void compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,fpoint x,fpoint y,fpoint z);		
+		inline void import();
+		inline void import(char *filename);
 };
 
 /** Many of the container routines require scanning over a rectangular sub-grid

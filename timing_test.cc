@@ -15,11 +15,11 @@ const double z_min=-1,z_max=1;
 
 // Set up the number of blocks that the container is divided
 // into.
-const int n_x=20,n_y=20,n_z=20;
+const int n_x=15,n_y=15,n_z=15;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=20000;
+const int particles=40000;
 
 // This function returns a random double between 0 and 1;
 double rnd() {return double(rand())/RAND_MAX;}
@@ -43,6 +43,8 @@ int main() {
 		z=z_min+rnd()*(z_max-z_min);
 		con.put(i,x,y,z);
 	}
+	con.guess_length_scale();
+	cout << con.length_scale << endl;
 
 	// Print out a list of the particles, and their Voronoi volumes
 	con.store_cell_volumes(bb);

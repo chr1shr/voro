@@ -7,8 +7,8 @@
 #include "cell.hh"
 
 /** Constructs a Voronoi cell and sets up the initial memory. */
-template<class neigh_opt>
-voronoicell_base<neigh_opt>::voronoicell_base() :
+template<class n_option>
+voronoicell_base<n_option>::voronoicell_base() :
 	current_vertices(init_vertices), current_vertex_order(init_vertex_order),
 	current_delete_size(init_delete_size), current_delete2_size(init_delete2_size),
 	neighbor(this) {
@@ -38,8 +38,8 @@ voronoicell_base<neigh_opt>::voronoicell_base() :
 }
 
 /** The voronoicell destructor deallocates all the dynamic memory. */
-template<class neigh_opt>
-voronoicell_base<neigh_opt>::~voronoicell_base() {
+template<class n_option>
+voronoicell_base<n_option>::~voronoicell_base() {
 	delete [] ds;
 	delete [] ds2;
 	for(int i=0;i<current_vertex_order;i++) if (mem[i]>0) delete [] mep[i];
@@ -60,8 +60,8 @@ voronoicell_base<neigh_opt>::~voronoicell_base() {
  * overwritten in the marginal vertex code, the auxiliary delete stack is
  * scanned to find out how to update the ed value.
  * \param[in] i The order of the vertex memory to be increased.*/
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_memory(int i) {
+template<class n_option>
+void voronoicell_base<n_option>::add_memory(int i) {
 	int s=2*i+1;
 	if(mem[i]==0) {
 		neighbor.allocate(i,init_n_vertices);
@@ -106,8 +106,8 @@ void voronoicell_base<neigh_opt>::add_memory(int i) {
  * pts, and ne <em>(Neighbor version only)</em> arrays. If the allocation
  * exceeds the absolute maximum set in max_vertices, then the routine throws a
  * fatal error. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_memory_vertices() {
+template<class n_option>
+void voronoicell_base<n_option>::add_memory_vertices() {
 	int i=2*current_vertices,j,**pp,*pnu;
 	if (i>max_vertices) throw fatal_error("Vertex memory allocation exceeded absolute maximum");
 	cerr << "Vertex memory scaled up to " << i << endl;
@@ -129,8 +129,8 @@ void voronoicell_base<neigh_opt>::add_memory_vertices() {
  * and mnu <em>(Neighbor version only)</em> arrays. If the allocation exceeds
  * the absolute maximum set in max_vertex_order, then the routine causes a fatal
  * error. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_memory_vorder() {
+template<class n_option>
+void voronoicell_base<n_option>::add_memory_vorder() {
 	int i=2*current_vertex_order,j,*p1,**p2;
 	if (i>max_vertex_order) throw fatal_error("Vertex order memory allocation exceeded absolute maximum");
 	cerr << "Vertex order memory scaled up to " << i << endl;
@@ -150,8 +150,8 @@ void voronoicell_base<neigh_opt>::add_memory_vorder() {
 /** Doubles the size allocation of the main delete stack. If the allocation
  * exceeds the absolute maximum set in max_delete_size, then routine causes a
  * fatal error. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_memory_ds() {
+template<class n_option>
+void voronoicell_base<n_option>::add_memory_ds() {
 	int i=2*current_delete_size,j,*pds;
 	if (i>max_delete_size) throw fatal_error("Delete stack 1 memory allocation exceeded absolute maximum");
 	cerr << "Delete stack 1 memory scaled up to " << i << endl;
@@ -164,8 +164,8 @@ void voronoicell_base<neigh_opt>::add_memory_ds() {
 /** Doubles the size allocation of the auxiliary delete stack. If the
  * allocation exceeds the absolute maximum set in max_delete2_size, then the
  * routine causes a fatal error. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_memory_ds2() {
+template<class n_option>
+void voronoicell_base<n_option>::add_memory_ds2() {
 	int i=2*current_delete2_size,j,*pds2;
 	if (i>max_delete2_size) throw fatal_error("Delete stack 2 memory allocation exceeded absolute maximum");
 	cerr << "Delete stack 2 memory scaled up to " << i << endl;
@@ -176,8 +176,8 @@ void voronoicell_base<neigh_opt>::add_memory_ds2() {
 }
 
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+template<class n_option>
+void voronoicell_base<n_option>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	for(int i=0;i<init_vertex_order;i++) mec[i]=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
@@ -206,8 +206,8 @@ void voronoicell_base<neigh_opt>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoin
 /** Initializes a Voroni cell as a regular octahedron.
  * \param l The distance from the octahedron center to a vertex. Six vertices
  * are initialized at (-l,0,0), (l,0,0), (0,-l,0), (0,l,0), (0,0,-l), and (0,0,l).*/
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::init_octahedron(fpoint l) {
+template<class n_option>
+inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
 	for(int i=0;i<init_vertex_order;i++) mec[i]=0;
 	mec[4]=p=6;l*=2;
 	pts[0]=-l;pts[1]=0;pts[2]=0;
@@ -234,8 +234,8 @@ inline void voronoicell_base<neigh_opt>::init_octahedron(fpoint l) {
  * the specific objects.
  * \param[in] n the number of the test object (from 0 to 9)
  */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::init_test(int n) {
+template<class n_option>
+inline void voronoicell_base<n_option>::init_test(int n) {
 	for(int i=0;i<init_vertex_order;i++) mec[i]=0;p=0;
 	switch(n) {
 		case 0:
@@ -403,8 +403,8 @@ inline void voronoicell_base<neigh_opt>::init_test(int n) {
  * \param[in] (x,y,z) are the coordinates of the vertex
  * \param[in] a is the first and only edge of this vertex
  */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
+template<class n_option>
+void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
 	if (mem[1]==mec[1]) add_memory(1);
 	neighbor.set_pointer(p,1);
@@ -413,8 +413,8 @@ void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
 }
 
 /** Adds an order 2 vertex to the memory structure, and specifies its edges. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b) {
+template<class n_option>
+void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
 	if (mem[2]==mec[2]) add_memory(2);
 	neighbor.set_pointer(p,2);
@@ -423,8 +423,8 @@ void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a,in
 }
 
 /** Adds an order 3 vertex to the memory structure, and specifies its edges. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c) {
+template<class n_option>
+void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
 	if (mem[3]==mec[3]) add_memory(3);
 	neighbor.set_pointer(p,3);
@@ -433,8 +433,8 @@ void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a,in
 }
 
 /** Adds an order 4 vertex to the memory structure, and specifies its edges. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d) {
+template<class n_option>
+void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
 	if (mem[4]==mec[4]) add_memory(4);
 	neighbor.set_pointer(p,4);
@@ -443,8 +443,8 @@ void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a,in
 }
 
 /** Adds an order 5 vertex to the memory structure, and specifies its edges. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e) {
+template<class n_option>
+void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
 	if (mem[5]==mec[5]) add_memory(5);
 	neighbor.set_pointer(p,5);
@@ -455,8 +455,8 @@ void voronoicell_base<neigh_opt>::add_vertex(fpoint x,fpoint y,fpoint z,int a,in
 /** Checks that the relational table of the Voronoi cell is accurate, and prints
  * out any errors. This algorithm is O(p), so running it every time the plane
  * routine is called will result in a significant slowdown. */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::check_relations() {
+template<class n_option>
+inline void voronoicell_base<n_option>::check_relations() {
 	int i,j;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
@@ -470,8 +470,8 @@ inline void voronoicell_base<neigh_opt>::check_relations() {
  * occurrences are most likely errors. Note that the routine is O(p), so
  * running it every time the plane routine is called will result in a significant
  * slowdown. */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::duplicate_check() {
+template<class n_option>
+inline void voronoicell_base<n_option>::duplicate_check() {
 	int i,j,k;
 	for(i=0;i<p;i++) {
 		for(j=1;j<nu[i];j++) {
@@ -483,8 +483,8 @@ inline void voronoicell_base<neigh_opt>::duplicate_check() {
 }
 
 /** Constructs the relational table if the edges have been specified. */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::construct_relations() {
+template<class n_option>
+inline void voronoicell_base<n_option>::construct_relations() {
 	int i,j,k,l;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
@@ -500,12 +500,12 @@ inline void voronoicell_base<neigh_opt>::construct_relations() {
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
  * (x,y,z) from the cell center. The value of rsq should be initially set to
  * \f$x^2+y^2+z^2\f$. */
-template<class neigh_opt>
-bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
+template<class n_option>
+bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 	int count=0,i,j,k,up=0,lp=0,tp,cp,qp=1,rp,stack=0;stack2=0;
 	int us=0,ls=0,qs,iqs,cs,uw,qw=0,lw,tw;
 	int *edp,*edd;
-	fpoint u,l,t,r,q;bool complicatedsetup=false,newdoubleedge=false,doubleedge=false;
+	fpoint u,l,t,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
 
 	//Initialize the safe testing routine
 	sure.init(x,y,z,rsq);
@@ -562,8 +562,8 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 			// routine. Otherwise, we use the regular iteration.
 			if (lw==0) {
 				up=lp;
-				complicatedsetup=true;
-			} else complicatedsetup=false;
+				complicated_setup=true;
+			} else complicated_setup=false;
 		} else if (uw==-1) {
 
 			// The test point is outside of the cutting space
@@ -591,13 +591,13 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 				if (up==lp) return true;
 			} while (uw==-1);
 			us=ed[lp][nu[lp]+ls];
-			complicatedsetup=(uw!=1);
+			complicated_setup=(uw!=1);
 		} else {
 
 			// Our original test point was on the plane, so we
 			// automatically head for the complicated setup
 			// routine
-			complicatedsetup=true;
+			complicated_setup=true;
 		}
 	}
 	catch(bool except) {
@@ -623,9 +623,9 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 				if(us<nu[qp]) {
 					up=qp;
 					if(lw==0) {
-						complicatedsetup=true;
+						complicated_setup=true;
 					} else {
-						complicatedsetup=false;
+						complicated_setup=false;
 						u=q;
 						ls=ed[up][nu[up]+us];
 					}
@@ -645,9 +645,9 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 				if(ls<nu[qp]) {
 					if(uw==0) {
 						up=qp;
-						complicatedsetup=true;
+						complicated_setup=true;
 					} else {
-						complicatedsetup=false;
+						complicated_setup=false;
 						lp=qp;l=q;
 						us=ed[lp][nu[lp]+ls];
 					}
@@ -658,7 +658,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 				// The point is in the plane, so we just
 				// proceed with the complicated setup routine
 				up=qp;
-				complicatedsetup=true;
+				complicated_setup=true;
 				break;
 			}
 		}
@@ -670,7 +670,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 	// it.
 	if(p==current_vertices) add_memory_vertices();
 
-	if (complicatedsetup) {
+	if (complicated_setup) {
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
 		// the same location.
@@ -722,7 +722,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 			// doubling up.
 			if(j==nu[up]&&i==1&&rp==0) {
 				nu[p]=nu[up];
-				doubleedge=true;
+				double_edge=true;
 			} else nu[p]=j-i+2;
 			k=1;
 
@@ -787,7 +787,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 			// have to reduce the edge count by one to prevent
 			// doubling up.
 			if (i==j&&qw==0) {
-				doubleedge=true;
+				double_edge=true;
 				nu[p]=nu[up];
 			} else {
 				nu[p]=nu[up]-i+j+1;
@@ -831,7 +831,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 			}
 			qs=j;
 		}
-		if (!doubleedge) {
+		if (!double_edge) {
 			neighbor.copy(p,k,up,qs);
 			neighbor.set(p,0,p_id);
 		} else neighbor.copy(p,0,up,qs);
@@ -950,7 +950,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 			
 			// If the previous vertex detected a double edge, our
 			// new vertex will have one less edge.
-			k=doubleedge?0:1;
+			k=double_edge?0:1;
 			qs=ed[qp][nu[qp]+qs];
 			qp=lp;
 			iqs=qs;
@@ -976,7 +976,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 				// If we're heading into the final part of the
 				// new facet, then we never worry about the
 				// duplicate edge calculation.
-				newdoubleedge=false;
+				new_double_edge=false;
 				if(j>0) k+=nu[j];
 			} else {
 				if (j>0) {
@@ -1001,9 +1001,9 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 							// Now see if the last edge of that other
 							// marginal point actually ends up here.
 							if(ed[i][nu[i]-1]==j) {
-								newdoubleedge=true;
+								new_double_edge=true;
 								k-=1;
-							} else newdoubleedge=false;
+							} else new_double_edge=false;
 						} else {
 
 							// That marginal point hasn't been visited
@@ -1013,11 +1013,11 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 							// of the facet, because that way always creates
 							// an edge.
 							if (j==rp&&lp==up&&ed[qp][nu[qp]+qs]==us) {
-								newdoubleedge=true;
+								new_double_edge=true;
 								k-=1;
-							} else newdoubleedge=false;
+							} else new_double_edge=false;
 						}
-					} else newdoubleedge=false;
+					} else new_double_edge=false;
 				} else {
 
 					// The vertex hasn't been visited
@@ -1032,10 +1032,10 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 						// we came from
 						i=-ed[lp][2*nu[lp]];
 						if(i==cp) {
-							newdoubleedge=true;
+							new_double_edge=true;
 							k-=1;
-						} else newdoubleedge=false;
-					} else newdoubleedge=false;
+						} else new_double_edge=false;
+					} else new_double_edge=false;
 				}
 			}
 			
@@ -1099,7 +1099,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 			// Unless the previous case was a double edge, connect
 			// the first available edge of the new vertex to the
 			// last one in the facet
-			if (!doubleedge) {
+			if (!double_edge) {
 				ed[j][i]=cp;
 				ed[j][nu[j]+i]=cs;
 				neighbor.set(j,i,p_id);
@@ -1111,7 +1111,7 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 			// Copy in the edges of the underlying vertex,
 			// and do one less if this was a double edge
 			qs=iqs;
-			while(i<(newdoubleedge?k:k-1)) {
+			while(i<(new_double_edge?k:k-1)) {
 				qs=cycle_up(qs,qp);
 				lp=ed[qp][qs];ls=ed[qp][nu[qp]+qs];
 				neighbor.copy(j,i,qp,qs);
@@ -1125,11 +1125,11 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
 			qs=cycle_up(qs,qp);
 			cs=i;
 			cp=j;
-			neighbor.copy(j,newdoubleedge?0:cs,qp,qs);
+			neighbor.copy(j,new_double_edge?0:cs,qp,qs);
 
-			// Update the doubleedge flag, to pass it
+			// Update the double_edge flag, to pass it
 			// to the next instance of this routine
-			doubleedge=newdoubleedge;
+			double_edge=new_double_edge;
 		}
 	}
 
@@ -1231,8 +1231,8 @@ bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,i
  * \return false if the vertex removal was unsuccessful, indicative of
  * the cell reducing to zero volume and disappearing; true if the vertex
  * removal was successful. */
-template<class neigh_opt>
-inline bool voronoicell_base<neigh_opt>::collapse_order2() {
+template<class n_option>
+inline bool voronoicell_base<n_option>::collapse_order2() {
 	if(!collapse_order1()) return false;
 	int a,b,i,j,k,l;
 	while(mec[2]>0) {
@@ -1288,8 +1288,8 @@ inline bool voronoicell_base<neigh_opt>::collapse_order2() {
  * \return false if the vertex removal was unsuccessful, indicative of
  * the cell having zero volume and disappearing; true if the vertex removal
  * was successful. */
-template<class neigh_opt>
-inline bool voronoicell_base<neigh_opt>::collapse_order1() {
+template<class n_option>
+inline bool voronoicell_base<n_option>::collapse_order1() {
 	int i,j,k;
 	while(mec[1]>0) {
 		cerr << "Order one collapse" << endl;
@@ -1318,8 +1318,8 @@ inline bool voronoicell_base<neigh_opt>::collapse_order1() {
  * or right of the connection.
  * \return false if a zero order vertex was formed, indicative of the cell
  * disappearing; true if the vertex removal was successful. */
-template<class neigh_opt>
-inline bool voronoicell_base<neigh_opt>::delete_connection(int j,int k,bool hand) {
+template<class n_option>
+inline bool voronoicell_base<n_option>::delete_connection(int j,int k,bool hand) {
 	int q=hand?k:cycle_up(k,j);
 	int i=nu[j]-1,l,*edp,*edd,m;
 	if(i<1) {
@@ -1362,8 +1362,8 @@ inline bool voronoicell_base<neigh_opt>::delete_connection(int j,int k,bool hand
 /** Cuts a Voronoi cell using the influence of a particle at (x,y,z), first
  * calculating the modulus squared of this vector before passing it to the
  * routine above. */
-template<class neigh_opt>
-inline bool voronoicell_base<neigh_opt>::plane(fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline bool voronoicell_base<n_option>::plane(fpoint x,fpoint y,fpoint z) {
 	fpoint rsq=x*x+y*y+z*z;
 	return nplane(x,y,z,rsq,0);
 }
@@ -1372,13 +1372,13 @@ inline bool voronoicell_base<neigh_opt>::plane(fpoint x,fpoint y,fpoint z) {
  * routine is provided that doesn't require passing a plane ID. It just makes
  * up the plane ID to be zero. An nplane routine that works without passing
  * the modulus squared is also provided. */
-template<class neigh_opt>
-inline bool voronoicell_base<neigh_opt>::plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
+template<class n_option>
+inline bool voronoicell_base<n_option>::plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	return nplane(x,y,z,rsq,0);
 }
 
-template<class neigh_opt>
-inline bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,int p_id) {
+template<class n_option>
+inline bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,int p_id) {
 	fpoint rsq=x*x+y*y+z*z;
 	return nplane(x,y,z,rsq,p_id);
 }
@@ -1388,8 +1388,8 @@ inline bool voronoicell_base<neigh_opt>::nplane(fpoint x,fpoint y,fpoint z,int p
  * \param[in] a The index of an edge of the current vertex.
  * \param[in] p The number of the vertex.
  * \return 0 if a=nu[p]-1, or a+1 otherwise. */
-template<class neigh_opt>
-inline int voronoicell_base<neigh_opt>::cycle_up(int a,int p) {
+template<class n_option>
+inline int voronoicell_base<n_option>::cycle_up(int a,int p) {
 	return a==nu[p]-1?0:a+1;
 }
 
@@ -1398,8 +1398,8 @@ inline int voronoicell_base<neigh_opt>::cycle_up(int a,int p) {
  * \param[in] a The index of an edge of the current vertex.
  * \param[in] p The number of the vertex.
  * \return nu[p]-1 if a=0, or a-1 otherwise. */
-template<class neigh_opt>
-inline int voronoicell_base<neigh_opt>::cycle_down(int a,int p) {
+template<class n_option>
+inline int voronoicell_base<n_option>::cycle_down(int a,int p) {
 	return a==0?nu[p]-1:a-1;
 }
 
@@ -1407,8 +1407,8 @@ inline int voronoicell_base<neigh_opt>::cycle_down(int a,int p) {
  * tetrahedra extending outward from the zeroth vertex, which are evaluated
  * using a scalar triple product.
  * \return A floating point number holding the calculated volume. */
-template<class neigh_opt>
-fpoint voronoicell_base<neigh_opt>::volume() {
+template<class n_option>
+fpoint voronoicell_base<n_option>::volume() {
 	const fpoint fe=1/48.0;
 	fpoint vol=0;
 	int i,j,k,l,m,n;
@@ -1452,8 +1452,8 @@ fpoint voronoicell_base<neigh_opt>::volume() {
  * of the cell. It can be used to determine when enough particles have
  * been testing an all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
-template<class neigh_opt>
-fpoint voronoicell_base<neigh_opt>::maxradsq() {
+template<class n_option>
+fpoint voronoicell_base<n_option>::maxradsq() {
 	int i;fpoint r,s;
 	r=pts[0]*pts[0]+pts[1]*pts[1]+pts[2]*pts[2];
 	for(i=3;i<3*p;i+=3) {
@@ -1465,10 +1465,10 @@ fpoint voronoicell_base<neigh_opt>::maxradsq() {
 
 /** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
  * stream, displacing the cell by an amount (x,y,z).
- * \param[in] of A output stream to write to.
+ * \param[in] os A output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::dump_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+void voronoicell_base<n_option>::dump_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
@@ -1485,8 +1485,8 @@ void voronoicell_base<neigh_opt>::dump_pov(ostream &os,fpoint x,fpoint y,fpoint 
  * \param[in] filename The file to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::dump_pov(char *filename,fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void voronoicell_base<n_option>::dump_pov(char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	dump_pov(os,x,y,z);
@@ -1497,17 +1497,17 @@ inline void voronoicell_base<neigh_opt>::dump_pov(char *filename,fpoint x,fpoint
  * Voronoi cell (in POV-Ray format) to standard output.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::dump_pov(fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void voronoicell_base<n_option>::dump_pov(fpoint x,fpoint y,fpoint z) {
 	dump_pov(cout,x,y,z);
 }
 
 /** Outputs the edges of the Voronoi cell (in gnuplot format) to an output stream.
- * \param[in] of An output stream to write to.
+ * \param[in] os A reference to an output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::dump_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+void voronoicell_base<n_option>::dump_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
@@ -1523,8 +1523,8 @@ void voronoicell_base<neigh_opt>::dump_gnuplot(ostream &os,fpoint x,fpoint y,fpo
  * \param[in] filename The name of the file to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::dump_gnuplot(char *filename,fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void voronoicell_base<n_option>::dump_gnuplot(char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	dump_gnuplot(os,x,y,z);
@@ -1535,8 +1535,8 @@ inline void voronoicell_base<neigh_opt>::dump_gnuplot(char *filename,fpoint x,fp
  * standard output.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::dump_gnuplot(fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void voronoicell_base<n_option>::dump_gnuplot(fpoint x,fpoint y,fpoint z) {
 	dump_gnuplot(cout,x,y,z);
 }
 
@@ -1546,11 +1546,11 @@ inline void voronoicell_base<neigh_opt>::dump_gnuplot(fpoint x,fpoint y,fpoint z
  * makes use of the optional inside_vector specification, which makes the mesh
  * object solid, so the the POV-Ray Constructive Solid Geometry (CSG) can be
  * applied.
- * \param[in] of An output stream to write to.
+ * \param[in] os An output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::dump_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void voronoicell_base<n_option>::dump_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k,l,m,n;
 	os << "mesh2 {" << endl << "vertex_vectors {" << endl << p << "," << endl;
 	for(i=0;i<p;i++) {
@@ -1587,8 +1587,8 @@ inline void voronoicell_base<neigh_opt>::dump_pov_mesh(ostream &os,fpoint x,fpoi
  * \param[in] filename A filename to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::dump_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void voronoicell_base<n_option>::dump_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	dump_pov_mesh(os,x,y,z);
@@ -1599,14 +1599,14 @@ inline void voronoicell_base<neigh_opt>::dump_pov_mesh(char *filename,fpoint x,f
  * standard output.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::dump_pov_mesh(fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void voronoicell_base<n_option>::dump_pov_mesh(fpoint x,fpoint y,fpoint z) {
 	dump_pov_mesh(cout,x,y,z);
 }
 
 /** Randomly perturbs the points in the Voronoi cell by an amount r. */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::perturb(fpoint r) {
+template<class n_option>
+inline void voronoicell_base<n_option>::perturb(fpoint r) {
 	for(int i=0;i<3*p;i++) {
 		pts[i]+=(2*double(rand())/RAND_MAX-1)*r;
 	}
@@ -1657,8 +1657,8 @@ int suretest::check_marginal(int n,fpoint &ans) {
 
 /** Prints the vertices, their edges, the relation table, and also notifies if
  * any glaring memory errors are visible. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::print_edges() {
+template<class n_option>
+void voronoicell_base<n_option>::print_edges() {
 	int j;
 	for(int i=0;i<p;i++) {
 		cout << i << " " << nu[i] << "  ";
@@ -1676,8 +1676,8 @@ void voronoicell_base<neigh_opt>::print_edges() {
 
 /** Prints out a list of all the facets and their vertices. If the neighbor option
  * is defined, it lists each cutting plane. */
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::facets(ostream &os) {
+template<class n_option>
+void voronoicell_base<n_option>::facets(ostream &os) {
 	int i,j,k,l,m;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
@@ -1706,20 +1706,26 @@ void voronoicell_base<neigh_opt>::facets(ostream &os) {
 	}
 }
 
+/** This routine is a placeholder which just prints the ID of a
+ * vertex.
+ * \param[in] os The output stream to write to.
+ * \param[in] i The ID of a vertex.
+ * \param[in] j The particular plane of interest (ignored in this routine). */ 
 void neighbor_none::print(ostream &os,int i,int j) {
 	os << i;
 }
 
 /** An overloaded version of facets() which output the results to the standard
  * output. */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::facets() {
+template<class n_option>
+inline void voronoicell_base<n_option>::facets() {
 	facets(cout);
 }
 
-/** An overloaded version of facets(), which outputs the results to <filename>. */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::facets(char *filename) {
+/** An overloaded version of facets(), which outputs the results to a file.
+ * \param[in] filename The name of the file to write to. */
+template<class n_option>
+inline void voronoicell_base<n_option>::facets(char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	facets(os);
@@ -1727,9 +1733,10 @@ inline void voronoicell_base<neigh_opt>::facets(char *filename) {
 }
 
 /** Examines all the facets, and evaluates them by the number of vertices that
- * they have.*/
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::facet_statistics(ostream &os) {
+ * they have.
+ * \param[in] os An open output stream to write to. */
+template<class n_option>
+void voronoicell_base<n_option>::facet_statistics(ostream &os) {
 	int *stat,*pstat,current_facet_size=init_facet_size,newc,maxf=0;
 	stat=new int[current_facet_size];
 	int i,j,k,l,m,q;
@@ -1774,32 +1781,45 @@ void voronoicell_base<neigh_opt>::facet_statistics(ostream &os) {
 
 /** An overloaded version of facet_statistics() which outputs the results to
  * standard output. */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::facet_statistics() {
+template<class n_option>
+inline void voronoicell_base<n_option>::facet_statistics() {
 	facet_statistics(cout);
 }
 
 /** An overloaded version of facet_statistics() which outputs the results to
- * <filename>. */
-template<class neigh_opt>
-inline void voronoicell_base<neigh_opt>::facet_statistics(char *filename) {
+ * a file.
+ * \param[in] filename The name of the file to write to. */
+template<class n_option>
+inline void voronoicell_base<n_option>::facet_statistics(char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	facet_statistics(os);
 	os.close();
 }
 
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::label_facets() {
+/** If the template is instantiated with the neighbor tracking turned on,
+ * then this routine will label all the facets of the current cell. Otherwise
+ * this routine does nothing. */
+template<class n_option>
+void voronoicell_base<n_option>::label_facets() {
 	neighbor.label_facets();
 }
 
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::neighbors(ostream &os) {
+/** If the template is instantiated with the neighbor tracking turned on,
+ * then this routine will print out a list of all the neighbors of a given
+ * cell. Otherwise, this routine does nothing.
+ * \param[in] os An open output stream to write to. */
+template<class n_option>
+void voronoicell_base<n_option>::neighbors(ostream &os) {
 	neighbor.neighbors(os);
 }
 
-template<class neigh_opt>
-void voronoicell_base<neigh_opt>::facet_check() {
+/** If the template is instantiated with the neighbor tracking turned on,
+ * then this routine will check that the neighbor information is consistent,
+ * by tracing around every facet, and ensuring that all the neighbor
+ * information for that facet refers to the same neighbor. If the
+ * neighbor tracking isn't turned on, this routine does nothing. */ 
+template<class n_option>
+void voronoicell_base<n_option>::facet_check() {
 	neighbor.facet_check();
 }

@@ -13,7 +13,7 @@
  * arguments are booleans, which set the periodicity in each direction. The
  * final argument sets the amount of memory allocated to each block. */
 container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi,int isz)
-	: sz(isz), ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
+	: length_scale(1),sz(isz),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	xperiodic(xper), yperiodic(yper), zperiodic(zper),
@@ -35,7 +35,7 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
  * arguments are booleans, which set the periodicity in each direction. The
  * final argument sets the amount of memory allocated to each block. */
 container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
-	: sz(3), ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
+	: length_scale(1),sz(3),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	xperiodic(xper), yperiodic(yper), zperiodic(zper),
@@ -84,7 +84,7 @@ void container::put(int n,fpoint x,fpoint y,fpoint z) {
 		if(i<nx&&j<ny&&k<nz) {
 			i+=nx*j+nxy*k;
 			if(co[i]==mem[i]) add_particle_memory(i);
-			p[i][3*co[i]]=x;p[i][3*co[i]+1]=y;p[i][3*co[i]+2]=z;
+			p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
 			id[i][co[i]++]=n;
 		}
 	}
@@ -142,7 +142,18 @@ void container::region_count() {
 /** Clears a container of particles. */
 void container::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
-	poly_clear_radius();
+	max_radius=0;
+}
+
+/** Guess length scale based on the total number of particles in the container */
+void container::guess_length_scale() {
+	const fpoint third=1/3.0;
+	int sp=0;
+	for(int ijk=0;ijk<nxyz;ijk++) sp+=co[ijk];
+	if (sp>0) {
+		length_scale=(fpoint) sp;
+		length_scale=pow(abs((bx-ax)*(by-ay)*(bz-az)/length_scale),third);
+	}
 }
 
 /** Computes the Voronoi cells for all particles within a box with corners
@@ -222,8 +233,8 @@ void container::store_cell_volumes(fpoint *bb) {
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
-template<class neigh_opt>
-inline void container::print_all(ostream &os,voronoicell_base<neigh_opt> &c) {
+template<class n_option>
+inline void container::print_all(ostream &os,voronoicell_base<n_option> &c) {
 	fpoint x,y,z;
 	facets_loop l(this);
 	int i,s;
@@ -232,7 +243,7 @@ inline void container::print_all(ostream &os,voronoicell_base<neigh_opt> &c) {
 			x=p[s][sz*i];y=p[s][sz*i+1];z=p[s][sz*i+2];
 			compute_cell(c,s,i,x,y,z);
 			os << id[s][i] << " " << x << " " << y << " " << z;
-			if (sz==4) cout << " " << p[s][4*i+3];
+			if (sz==4) os << " " << p[s][4*i+3];
 			os << " " << c.volume();
 			c.neighbors(os);			
 			os << endl;
@@ -290,8 +301,8 @@ inline void container::print_all_neighbor(char* filename) {
  * coordinates, the space is equally divided in either direction from the
  * particle's initial position. That makes sense since those boundaries would
  * be made by the neighboring periodic images of this particle. */
-template<class neigh_opt>
-inline void container::initialize_voronoicell(voronoicell_base<neigh_opt> &c,fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void container::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	float x1,x2,y1,y2,z1,z2;
 	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
@@ -302,8 +313,8 @@ inline void container::initialize_voronoicell(voronoicell_base<neigh_opt> &c,fpo
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
  * store_cell_volumes() and draw(). */
-template<class neigh_opt>
-inline void container::compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,fpoint x,fpoint y,fpoint z) {
+template<class n_option>
+inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	facets_loop l(this);
@@ -318,7 +329,7 @@ inline void container::compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,f
 	// straightforward.
 	if (sz==3) {
 		while(lrs<c.maxradsq()) {
-			ur=lr+0.5;urs=ur*ur;
+			ur=lr+0.5*length_scale;urs=ur*ur;
 			t=l.init(x,y,z,ur,qx,qy,qz);
 			do {
 				for(j=0;j<co[t];j++) {
@@ -331,18 +342,18 @@ inline void container::compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,f
 			lr=ur;lrs=urs;
 		}
 	} else {
-		fpoint crad=p[s][4*i+3];
+		fpoint crad=p[s][sz*i+3];
 		const fpoint mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
 		crad*=crad;
 		while(lrs*mul<c.maxradsq()) {
-			ur=lr+0.5;urs=ur*ur;
+			ur=lr+0.5*length_scale;urs=ur*ur;
 			t=l.init(x,y,z,ur,qx,qy,qz);
 			do {
 				for(j=0;j<co[t];j++) {
 					x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
 					rs=x1*x1+y1*y1+z1*z1;
 					if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
-						c.nplane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3],id[t][j]);
+						c.nplane(x1,y1,z1,rs+crad-p[t][sz*j+3]*p[t][sz*j+3],id[t][j]);
 				}
 			} while ((t=l.inc(qx,qy,qz))!=-1);
 			lr=ur;lrs=urs;
@@ -351,8 +362,8 @@ inline void container::compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,f
 }
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
-template<class neigh_opt>
-inline void container::compute_cell(voronoicell_base<neigh_opt> &c,int s,int i) {
+template<class n_option>
+inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i) {
 	double x=p[s][sz*i],y=p[s][sz*i+1],z=p[s][sz*i+2];
 	compute_cell(c,s,i,x,y,z);
 }

@@ -50,8 +50,7 @@ class suretest {
 	public:
 		/** This is a pointer to the array in the voronoicell class
 		 * which holds the vertex coordinates.*/
-		fpoint *p;
-		
+		fpoint *p;		
 		suretest();
 		~suretest();
 		inline void init(fpoint x,fpoint y,fpoint z,fpoint rsq);
@@ -61,41 +60,43 @@ class suretest {
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
 		int current_marginal;
-
 		/** This stores the total number of marginal points which are
 		 * currently in the buffer. */
 		int sc;
-
+		/** This array contains a list of the marginal points, and also
+		 * the outcomes of the marginal tests. */
 		int *sn;
+		/** The x coordinate of the normal vector to the test plane. */
 		fpoint px;
+		/** The y coordinate of the normal vector to the test plane. */
 		fpoint py;
+		/** The z coordinate of the normal vector to the test plane. */
 		fpoint pz;
+		/** The magnitude of the normal vector to the test plane. */
 		fpoint prsq;
 };
 
 class neighbor_track;
 
 /** This class encapsulates all the routines for storing and calculating a
- * single Voronoi cell. The cell can first be initialized by the init function
+ * single Voronoi cell. The cell can first be initialized by the init() function
  * to be a rectangular box. The box can then be successively cut by planes
  * using the plane function.  Other routines exist for outputting the cell,
  * computing its volume, or finding the largest distance of a vertex from the
- * cell center.  The cell is described by three arrays: pts[] which holds the
- * vertex positions, ed[] which holds the table of edges, and rl[] which is a
- * relational table that determines how two vertices are connected to one
- * another. rl[] is redundant, but helps speed up the computation. The function
- * relcheck checks that the relational table is valid.
- */
-template <class neigh_opt>
+ * cell center.  The cell is described by two arrays. pts[] is a floating point
+ * array which holds the vertex positions. ed[] holds the table of edges, and
+ * also a relation table that determines how two vertices are connected to one
+ * another. The relation table is redundant, but helps speed up the
+ * computation. The function relation_check() checks that the relational table
+ * is valid. */
+template <class n_option>
 class voronoicell_base {
 	public:
 		/** This is an array for holding the */
 		int *mem;
-
 		/** This is an array of pointers to different blocks of memory
 		 * for storing */
 		int **mep;
-
 		/** This is an array for holding the number */
 		int *mec;
 
@@ -186,6 +187,13 @@ class voronoicell_base {
 	private:
 		/** This holds the number of points currently on the auxiliary delete stack. */
 		int stack2;
+		/** This object contains all the functions required to carry out the neighbor
+		 * computation. If the neighbor_none class is used for n_option, then all these
+		 * functions are blank. If the neighbor_track class is used, then the neighbor
+		 * track is enabled. All the functions for the n_option classes are declared
+		 * inline, so that they should all be completely integrated into the routine
+		 * during compilation. */
+		n_option neighbor;
 		inline int cycle_up(int a,int p);
 		inline int cycle_down(int a,int p);
 		void add_memory(int i);
@@ -196,48 +204,80 @@ class voronoicell_base {
 		inline bool collapse_order1();
 		inline bool collapse_order2();
 		inline bool delete_connection(int j,int k,bool hand);
-		neigh_opt neighbor;
 		friend class neighbor_track;
 };
 
+/** This is a class full of empty routines for neighbor computation. If the
+ * voronoicell_base template is instantiated with this class, then it
+ * has the effect of switching off all neighbor computation. Since all these
+ * routines are declared inline, it should have the effect of a zero speed
+ * overhead in the resulting code. */
 class neighbor_none {
 	public:
 		neighbor_none(voronoicell_base<neighbor_none> *ivc) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void allocate(int i,int m) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void add_memory_vertices(int i) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void add_memory_vorder(int i) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void init() {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void init_octahedron() {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void set_pointer(int p,int n) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void copy(int a,int b,int c,int d) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void set(int a,int b,int c) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void set_aux1(int k) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void copy_aux1(int a,int b) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void copy_aux1_shift(int a,int b) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void set_aux2_copy(int a,int b) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void copy_pointer(int a,int b) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void set_to_aux1(int j) {};		
+		/** This is a blank placeholder function that does nothing. */
 		inline void set_to_aux2(int j) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void print_edges(int i) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void allocate_aux1(int i) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void switch_to_aux1(int i) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void copy_to_aux1(int i,int m) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void set_to_aux1_offset(int k,int m) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void print(ostream &os,int i,int j);
+		/** This is a blank placeholder function that does nothing. */
 		inline void label_facets() {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void neighbors(ostream &os) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void facet_check() {};
 };
 
+/** This class encapsulates all the routines which are required to carry out
+ * the neighbor tracking. If the voronoicell_base template is instantiated with
+ * this class, then the neighbor computation is enabled. All these routines are
+ * simple and declared inline, so they should be directly integrated into the
+ * functions in the voronoicell class during compilation, without zero function
+ * call overhead. */
 class neighbor_track {
 	public:
+		int **mne;
+		int **ne;
 		neighbor_track(voronoicell_base<neighbor_track> *ivc);
 		~neighbor_track();
 		voronoicell_base<neighbor_track> *vc;
-		int **mne;
-		int **ne;
-		int *paux1;
-		int *paux2;
 		inline void allocate(int i,int m);
 		inline void add_memory_vertices(int i);
 		inline void add_memory_vorder(int i);
@@ -262,6 +302,13 @@ class neighbor_track {
 		inline void label_facets();
 		inline void neighbors(ostream &os);
 		inline void facet_check();
+	private:
+		/** This is an auxilliary pointer which is used in some of the
+		 * low level neighbor operations. */
+		int *paux1;
+		/** This is a second auxilliary pointer which is used in some
+		 * of the low level neighbor operations. */
+		int *paux2;
 };
 
 /** The basic voronoicell class. */
