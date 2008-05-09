@@ -16,7 +16,8 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	: sz(isz), ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
-	xperiodic(xper), yperiodic(yper), zperiodic(zper) {
+	xperiodic(xper), yperiodic(yper), zperiodic(zper),
+	max_radius(0) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -37,7 +38,8 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	: sz(3), ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
-	xperiodic(xper), yperiodic(yper), zperiodic(zper) {
+	xperiodic(xper), yperiodic(yper), zperiodic(zper),
+	max_radius(0) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -220,7 +222,8 @@ void container::store_cell_volumes(fpoint *bb) {
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
-inline void container::print_all(ostream &os,voronoicell &c) {
+template<class neigh_opt>
+inline void container::print_all(ostream &os,voronoicell_base<neigh_opt> &c) {
 	fpoint x,y,z;
 	facets_loop l(this);
 	int i,s;
@@ -287,7 +290,8 @@ inline void container::print_all_neighbor(char* filename) {
  * coordinates, the space is equally divided in either direction from the
  * particle's initial position. That makes sense since those boundaries would
  * be made by the neighboring periodic images of this particle. */
-inline void container::initialize_voronoicell(voronoicell &c,fpoint x,fpoint y,fpoint z) {
+template<class neigh_opt>
+inline void container::initialize_voronoicell(voronoicell_base<neigh_opt> &c,fpoint x,fpoint y,fpoint z) {
 	float x1,x2,y1,y2,z1,z2;
 	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
@@ -298,7 +302,8 @@ inline void container::initialize_voronoicell(voronoicell &c,fpoint x,fpoint y,f
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
  * store_cell_volumes() and draw(). */
-inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z) {
+template<class neigh_opt>
+inline void container::compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	facets_loop l(this);
@@ -311,23 +316,43 @@ inline void container::compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y
 	// extend upwards by a long way, and the shells grow very big. It would
 	// be better to use a box-by-box approach, but that's not
 	// straightforward.
-	while(lrs<c.maxradsq()) {
-		ur=lr+0.5;urs=ur*ur;
-		t=l.init(x,y,z,ur,qx,qy,qz);
-		do {
-			for(j=0;j<co[t];j++) {
-				x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
-				rs=x1*x1+y1*y1+z1*z1;
-				if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
-					c.nplane(x1,y1,z1,rs,id[t][j]);
-			}
-		} while ((t=l.inc(qx,qy,qz))!=-1);
-		lr=ur;lrs=urs;
+	if (sz==3) {
+		while(lrs<c.maxradsq()) {
+			ur=lr+0.5;urs=ur*ur;
+			t=l.init(x,y,z,ur,qx,qy,qz);
+			do {
+				for(j=0;j<co[t];j++) {
+					x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
+					rs=x1*x1+y1*y1+z1*z1;
+					if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
+						c.nplane(x1,y1,z1,rs,id[t][j]);
+				}
+			} while ((t=l.inc(qx,qy,qz))!=-1);
+			lr=ur;lrs=urs;
+		}
+	} else {
+		fpoint crad=p[s][4*i+3];
+		const fpoint mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
+		crad*=crad;
+		while(lrs*mul<c.maxradsq()) {
+			ur=lr+0.5;urs=ur*ur;
+			t=l.init(x,y,z,ur,qx,qy,qz);
+			do {
+				for(j=0;j<co[t];j++) {
+					x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
+					rs=x1*x1+y1*y1+z1*z1;
+					if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
+						c.nplane(x1,y1,z1,rs+crad-p[t][4*j+3]*p[t][4*j+3],id[t][j]);
+				}
+			} while ((t=l.inc(qx,qy,qz))!=-1);
+			lr=ur;lrs=urs;
+		}
 	}
 }
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
-inline void container::compute_cell(voronoicell &c,int s,int i) {
+template<class neigh_opt>
+inline void container::compute_cell(voronoicell_base<neigh_opt> &c,int s,int i) {
 	double x=p[s][sz*i],y=p[s][sz*i+1],z=p[s][sz*i+2];
 	compute_cell(c,s,i,x,y,z);
 }

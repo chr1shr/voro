@@ -45,8 +45,10 @@ class container {
 		void print_all_neighbor(ostream &os);
 		void print_all_neighbor();
 		void print_all_neighbor(char *filename);
-		inline void compute_cell(voronoicell &c,int s,int i);
-		virtual void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);
+		template<class neigh_opt>
+		inline void compute_cell(voronoicell_base<neigh_opt> &c,int s,int i);
+		template<class neigh_opt>
+		inline void compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
 	protected:
 		/** The amount of memory in the array structure for each particle. This
@@ -104,25 +106,25 @@ class container {
 		/** A two dimensional array holding particle positions. The first
 		 * index labels the computational box. */
 		fpoint **p;
-		inline void print_all(ostream &os,voronoicell &c);
-		inline void initialize_voronoicell(voronoicell &c,fpoint x,fpoint y,fpoint z);
+		fpoint max_radius;
+		template<class neigh_opt>
+		inline void print_all(ostream &os,voronoicell_base<neigh_opt> &c);
+		template<class neigh_opt>
+		inline void initialize_voronoicell(voronoicell_base<neigh_opt> &c,fpoint x,fpoint y,fpoint z);
 		void add_particle_memory(int i);
 	private:
-		virtual void poly_clear_radius() {};
 		friend class facets_loop;
 };
 
 /** A polydisperse version of the container. */
 class container_poly : public container {
 	public:
-		container_poly(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi) : container(xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi,3), max_radius(0) {};
+		container_poly(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi) : container(xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi,3) {};
 		void put(int n,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
 		void import(istream &is);
-		inline void compute_cell(voronoicell &c,int s,int i,fpoint x,fpoint y,fpoint z);		
-	private:
-		inline void poly_clear_radius();
-		fpoint max_radius;
+		template<class neigh_opt>
+		inline void compute_cell(voronoicell_base<neigh_opt> &c,int s,int i,fpoint x,fpoint y,fpoint z);		
 };
 
 /** Many of the container routines require scanning over a rectangular sub-grid
