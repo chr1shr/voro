@@ -20,7 +20,7 @@ int main() {
 	v.init(-1,1,-1,1,-1,1);
 
 	// Output the initial cell	
-	v.dumpgnuplot("intest",0,0,0);
+	v.dump_gnuplot("intest",0,0,0);
 	
 	// Plane cutting
 	for(phi=0;phi<2*pi-0.5*step;phi+=step) {
@@ -31,9 +31,9 @@ int main() {
 		v.plane(y,-x,z,1);
 		v.plane(y,z,x,1);
 		v.plane(y,z,-x,1);
-		v.relcheck();
+//		v.check_relations();
 	}
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.dumpgnuplot("test",0,0,0);
+	v.dump_gnuplot("test",0,0,0);
 }

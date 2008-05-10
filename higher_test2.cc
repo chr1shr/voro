@@ -20,7 +20,7 @@ int main() {
 	v.init(-1,1,-1,1,-1,1);
 
 	// Output the initial cell	
-	v.dumpgnuplot("intest",0,0,0);
+	v.dump_gnuplot("intest",0,0,0);
 	
 	// Plane cutting
 	for(int n=0;n<350;n++) {
@@ -40,9 +40,9 @@ int main() {
 	
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.dumpgnuplot("high_output",0,0,0);
+	v.dump_gnuplot("high_output",0,0,0);
 
 	// Optional POV output
-//	v.dumppovmesh("high_output_mesh.pov",0,0,0);
-//	v.dumppov("high_output.pov",0,0,0);
+//	v.dump_povmesh("high_output_mesh.pov",0,0,0);
+//	v.dump_pov("high_output.pov",0,0,0);
 }

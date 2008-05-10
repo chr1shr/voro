@@ -28,5 +28,5 @@ int main() {
 	}
 	
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.dumpgnuplot("test",0,0,0);
+	v.dump_gnuplot("test",0,0,0);
 }

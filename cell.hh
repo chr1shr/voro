@@ -14,13 +14,11 @@
 #include <cmath>
 using namespace std;
 
-/** Structure for printing fatal error messages and exiting
- */
+/** Structure for printing fatal error messages and exiting */
 struct fatal_error {
-	char *msg;
-	fatal_error(char *p) : msg(p) {
-		cerr << p << endl;
-	}
+	/** This routine prints an error message to the standard error.
+	 * \param[in] p The message to print. */
+	fatal_error(char *p) {cerr << p << endl;}
 };
 
 /** Floating point comparisons can be unreliable on some processor
@@ -92,59 +90,46 @@ class neighbor_track;
 template <class n_option>
 class voronoicell_base {
 	public:
-		/** This is an array for holding the */
+		/** */
 		int *mem;
-		/** This is an array of pointers to different blocks of memory
-		 * for storing */
+		/** */
 		int **mep;
-		/** This is an array for holding the number */
+		/** */
 		int *mec;
-
 		/** */
 		int **ed;
-		
 		/** */
 		int *nu;
-		
 		/** */
 		int *ds;
-		
 		/** This is the auxiliary delete stack, which has size set by
 		 * current_delete2_size.*/
 		int *ds2;
-
 		/** This holds the current size of the arrays ed and nu, which
 		 * hold the vertex information. If more vertices are created
 		 * than can fit in this array, then it is dynamically extended
 		 * using the add_memory_vertices routine. */
 		int current_vertices;
-
 		/** This holds the current maximum allowed order of a vertex,
 		 * which sets the size of the mem, mep, and mec arrays. If a
 		 * vertex is created with more vertices than this, the arrays
 		 * are dynamically extended using the add_memory_vorder routine.
 		 */
 		int current_vertex_order;
-
 		/** This sets the size of the main delete stack. */
 		int current_delete_size;
-
 		/** This sets the size of the auxiliary delete stack. */
 		int current_delete2_size;
-
 		/** This in an array with size 3*current_vertices for holding
 		 * the positions of the vertices. */ 
 		fpoint *pts;
-
 		/** This sets the total number of vertices in the current cell.
 		 */
 		int p;
-
 		/** This is a class used in the plane routine for carrying out
 		 * reliable comparisons of whether points in the cell are
 		 * inside, outside, or on the current cutting plane. */
 		suretest sure;
-
 		voronoicell_base();
 		virtual ~voronoicell_base();
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
@@ -165,7 +150,7 @@ class voronoicell_base {
 		inline void dump_gnuplot(char *filename,fpoint x,fpoint y,fpoint z);
 		inline void dump_gnuplot(fpoint x,fpoint y,fpoint z);
 		inline void check_relations();
-		inline void duplicate_check();
+		inline void check_duplicates();
 		inline void construct_relations();
 		fpoint volume();
 		fpoint maxradsq();
@@ -183,7 +168,7 @@ class voronoicell_base {
 		inline bool plane(fpoint x,fpoint y,fpoint z);
 		void label_facets();
 		void neighbors(ostream &os);
-		void facet_check();
+		void check_facets();
 	private:
 		/** This holds the number of points currently on the auxiliary delete stack. */
 		int stack2;
@@ -214,6 +199,7 @@ class voronoicell_base {
  * overhead in the resulting code. */
 class neighbor_none {
 	public:
+		/** This is a blank constructor. */
 		neighbor_none(voronoicell_base<neighbor_none> *ivc) {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void allocate(int i,int m) {};
@@ -262,7 +248,7 @@ class neighbor_none {
 		/** This is a blank placeholder function that does nothing. */
 		inline void neighbors(ostream &os) {};
 		/** This is a blank placeholder function that does nothing. */
-		inline void facet_check() {};
+		inline void check_facets() {};
 };
 
 /** This class encapsulates all the routines which are required to carry out
@@ -273,10 +259,15 @@ class neighbor_none {
  * call overhead. */
 class neighbor_track {
 	public:
+		/** */
 		int **mne;
+		/** */ 
 		int **ne;
 		neighbor_track(voronoicell_base<neighbor_track> *ivc);
 		~neighbor_track();
+		/** This is a pointer back to the voronoicell class which created
+		 * this class. It is used to reference the members of that
+		 * class in computations. */
 		voronoicell_base<neighbor_track> *vc;
 		inline void allocate(int i,int m);
 		inline void add_memory_vertices(int i);
@@ -301,7 +292,7 @@ class neighbor_track {
 		inline void print(ostream &os,int i,int j);
 		inline void label_facets();
 		inline void neighbors(ostream &os);
-		inline void facet_check();
+		inline void check_facets();
 	private:
 		/** This is an auxilliary pointer which is used in some of the
 		 * low level neighbor operations. */
@@ -312,8 +303,8 @@ class neighbor_track {
 };
 
 /** The basic voronoicell class. */
-class voronoicell : public voronoicell_base<neighbor_none> {};
+typedef voronoicell_base<neighbor_none> voronoicell;
 
 /** A neighbor-tracking version of the voronoicell. */
-class voronoicell_neighbor : public voronoicell_base<neighbor_track> {};
+typedef voronoicell_base<neighbor_track> voronoicell_neighbor;
 #endif

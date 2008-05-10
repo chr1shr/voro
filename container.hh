@@ -24,6 +24,17 @@ class facets_loop;
  * calculations. */
 class container {
 	public:
+		/** This represents a typical length scale for the diameter of
+		 * the particles. It initially takes the default value of 1,
+		 * but its value can be overwritten by the user. There is also
+		 * a function guess_length_scale(), which picks a value based
+		 * on the total number of particles in the container.
+		 *
+		 * The Voronoi cell calculation works by evaluating all
+		 * particles in concentric spherical shells. The length scale
+		 * is used to set how big these shells should be. The closer
+		 * the length scale to the actual separation between particles,
+		 * the faster the cell computation should be. */
 		fpoint length_scale;
 		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi,int isz);
 		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
@@ -102,16 +113,16 @@ class container {
 		/** A boolean value that determines if the z coordinate in
 		 * periodic or not. */
 		const bool zperiodic;
-		/* This array holds the number of particles within each
+		/** This array holds the number of particles within each
 		 * computational box of the container. */
 		int *co;
-		/* This array holds the maximum amount of particle memory for
+		/** This array holds the maximum amount of particle memory for
 		 * each computational box of the container. If the number of
 		 * particles in a particular box ever approaches this limit,
 		 * more is allocated using the add_particle_memory() function.
 		 */
 		int *mem;
-		/* This array holds the numerical IDs of each particle in each
+		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
 		/** A two dimensional array holding particle positions. For the
@@ -134,9 +145,17 @@ class container {
 		friend class facets_loop;
 };
 
-/** A polydisperse version of the container. */
+/** This is a derived version of the container class for handling polydisperse
+ * particles via a radical Voronoi tessellation. The main difference is that
+ * the data structure is changed so that radii are also stored. New versions
+ * of the put and import commands are provided to account for this. All other
+ * routines in the container class are unaffected. */
 class container_poly : public container {
 	public:
+		/** This constructor calls the constructor for the base class,
+		 * and specifies that sz=4, so that four floating point numbers
+		 * are stored for each particle in the container, for the
+		 * (x,y,z) positions, and also the particle radii. */
 		container_poly(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi) : container(xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi,4) {};
 		void put(int n,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
@@ -146,11 +165,11 @@ class container_poly : public container {
 };
 
 /** Many of the container routines require scanning over a rectangular sub-grid
- * of blocks, and the routines for handling this are stored in the facets_loop class.
- * A facets_loop class can first be initialized to either calculate the subgrid which
- * is within a distance r of a vector (vx,vy,vz), or a subgrid corresponding to
- * a rectangular box. The routine inc() can then be successively called to step
- * through all the blocks within this subgrid. 
+ * of blocks, and the routines for handling this are stored in the facets_loop
+ * class. A facets_loop class can first be initialized to either calculate the
+ * subgrid which is within a distance r of a vector (vx,vy,vz), or a subgrid
+ * corresponding to a rectangular box. The routine inc() can then be
+ * successively called to step through all the blocks within this subgrid. 
  */
 class facets_loop {
 	public:

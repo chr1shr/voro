@@ -121,7 +121,8 @@ inline void container::import() {
 }
 
 /** An overloaded version of the import routine, that reads in particles from
- * <filename>. */
+ * a particular file.
+ * \param[in] filename The name of the file to read from. */
 inline void container::import(char *filename) {
 	ifstream is;
 	is.open(filename,ifstream::in);
@@ -145,7 +146,8 @@ void container::clear() {
 	max_radius=0;
 }
 
-/** Guess length scale based on the total number of particles in the container */
+/** Guess length scale by dividing the total volume of the container by the
+ * total number of particles, and then taking the cube root. */
 void container::guess_length_scale() {
 	const fpoint third=1/3.0;
 	int sp=0;
@@ -264,7 +266,9 @@ void container::print_all() {
 	print_all(cout);
 }
 
-/** An overloaded version of print_all(), which outputs the result to <filename>. */
+/** An overloaded version of print_all(), which outputs the result to a particular
+ * file.
+ * \param[in] filename The name fo the file to write to. */
 inline void container::print_all(char* filename) {
 	voronoicell c;
 	ofstream os;
@@ -281,13 +285,16 @@ void container::print_all_neighbor(ostream &os) {
 	print_all(os,c);
 }
 
-/** An overloaded version of print_all_neighbor(), which just prints to standard output. */
+/** An overloaded version of print_all_neighbor(), which just prints to
+ * standard output. */
 void container::print_all_neighbor() {
 	voronoicell_neighbor c;
 	print_all(cout,c);
 }
 
-/** An overloaded version of print_all_neighbor(), which outputs the result to <filename>. */
+/** An overloaded version of print_all_neighbor(), which outputs the result to a
+ * particular file
+ * \param[in] filename The name of the file to write to. */
 inline void container::print_all_neighbor(char* filename) {
 	voronoicell_neighbor c;
 	ofstream os;
@@ -322,11 +329,19 @@ inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i,fp
 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
-	// cell we can stop testing. TODO: this can sometimes be inefficient.
-	// For example, sometimes particles at the top of granular packings can
-	// extend upwards by a long way, and the shells grow very big. It would
-	// be better to use a box-by-box approach, but that's not
-	// straightforward.
+	// cell we can stop testing.
+	//
+	// TODO: this can sometimes be inefficient. For example, sometimes
+	// particles at the top of granular packings can extend upwards by a
+	// long way, and the shells grow very big. It would be better to use a
+	// box-by-box approach, but that's not straightforward.
+	//
+	// TODO: Extra plane cuts due to walls could go here. It would be good
+	// to have a general mechanism for calling wall objects.
+	//
+	// TODO: This initial test, to figure out if this is a polydisperse
+	// case or not, is ugly. It's probably best to recompile using
+	// templates.
 	if (sz==3) {
 		while(lrs<c.maxradsq()) {
 			ur=lr+0.5*length_scale;urs=ur*ur;
@@ -476,4 +491,58 @@ inline int facets_loop::step_mod(int a,int b) {
 /** Custom div function, that gives consistent stepping for negative numbers. */
 inline int facets_loop::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n The numerical ID of the inserted particle.
+ * \param[in] (x,y,z) The position vector of the inserted particle.
+ * \param[in] r The radius of the particle.*/
+void container_poly::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
+	if(x>ax&&y>ay&&z>az) {
+		int i,j,k;
+		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
+		if(i<nx&&j<ny&&k<nz) {
+			i+=nx*j+nxy*k;
+			if(co[i]==mem[i]) add_particle_memory(i);
+			p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;p[i][sz*co[i]+3]=r;
+			if (r>max_radius) max_radius=r;
+			id[i][co[i]++]=n;
+		}
+	}
+}
+
+/** If the radius argument is not supplied to the polydisperse put() routine
+ * then assume that we're using a particle with a unit diameter.
+ * \param[in] n The numerical ID of the inserted particle.
+ * \param[in] (x,y,z) The position vector of the inserted particle. */
+void container_poly::put(int n,fpoint x,fpoint y,fpoint z) {
+	put(n,x,y,z,0.5);
+}
+
+/** Import a list of particles.
+ * \param[in] is An open input stream to read from. */
+void container_poly::import(istream &is) {
+	int n;fpoint x,y,z;
+	fpoint r;
+	is >> n >> x >> y >> z >> r;
+	while(!is.eof()) {
+		put(n,x,y,z,r);
+		is >> n >> x >> y >> z >> r;
+	}
+}
+
+/** An overloaded version of the import routine, that reads the standard input.
+ */
+inline void container_poly::import() {
+	import(cin);
+}
+
+/** An overloaded version of the import routine, that reads in particles from
+ * a particular file.
+ * \param[in] filename The name of the file to open and import. */
+inline void container_poly::import(char *filename) {
+	ifstream is;
+	is.open(filename,ifstream::in);
+	import(is);
+	is.close();
 }

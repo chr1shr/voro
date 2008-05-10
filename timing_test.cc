@@ -6,7 +6,6 @@
 
 #include "cell.cc"
 #include "container.cc"
-#include "container_poly.cc"
 
 // Set up constants for the container geometry
 const double x_min=-1,x_max=1;
@@ -21,7 +20,7 @@ const int n_x=15,n_y=15,n_z=15;
 // introduced
 const int particles=40000;
 
-// This function returns a random double between 0 and 1;
+// This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
 
 int main() {
@@ -32,9 +31,9 @@ int main() {
 
 	// Create a container with the geometry given above, and make it
 	// periodic in each of the three coordinates. Allocate space for
-	// 100 particles within each computational block
+	// 128 particles within each computational block
 	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
-			true,true,true,100);
+			true,true,true,128);
 
 	//Randomly add particles into the container
 	for(i=0;i<particles;i++) {
@@ -44,8 +43,8 @@ int main() {
 		con.put(i,x,y,z);
 	}
 	con.guess_length_scale();
-	cout << con.length_scale << endl;
 
-	// Print out a list of the particles, and their Voronoi volumes
+	// Compute the Voronoi volumes of the particles and store them in
+	// an array
 	con.store_cell_volumes(bb);
 }

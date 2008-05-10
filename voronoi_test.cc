@@ -18,7 +18,7 @@ const int n_x=3,n_y=3,n_z=3;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=200;
+const int particles=20;
 
 // This function returns a random double between 0 and 1;
 double rnd() {return double(rand())/RAND_MAX;}
@@ -28,10 +28,10 @@ int main() {
 	double x,y,z;
 
 	// Create a container with the geometry given above, and make it
-	// periodic in each of the three coordinates. Allocate space for
-	// 100 particles within each computational block
+	// non-periodic in each of the three coordinates. Allocate space for
+	// 16 particles within each computational block
 	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
-			true,true,true,100);
+			false,false,false,16);
 
 	//Randomly add particles into the container
 	for(i=0;i<particles;i++) {
@@ -42,9 +42,9 @@ int main() {
 	}
 
 	// Print out a list of the particles, and their Voronoi volumes
-	con.vprintall();
+	con.print_all();
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot
-	con.vdraw_gnuplot("voronoi_cells");
+	con.draw_gnuplot("voronoi_cells");
 }
