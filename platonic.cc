@@ -23,7 +23,7 @@ int main() {
 	v.dump_gnuplot("tetrahedron",0,0,0);
 
 	// Create a cube. Since this is the default shape
-	// we don't need to do any plane cutting 
+	// we don't need to do any plane cutting. 
 	v.init(-1,1,-1,1,-1,1);
 	v.dump_gnuplot("cube",0,0,0);
 	
