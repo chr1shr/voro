@@ -166,6 +166,8 @@ class voronoicell_base {
 		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
 		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 		inline bool plane(fpoint x,fpoint y,fpoint z);
+		bool plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rs,int &gp);
+		bool plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rs,int &gp);
 		void label_facets();
 		void neighbors(ostream &os);
 		void check_facets();
@@ -189,6 +191,7 @@ class voronoicell_base {
 		inline bool collapse_order1();
 		inline bool collapse_order2();
 		inline bool delete_connection(int j,int k,bool hand);
+		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,int &gp,double g);
 		friend class neighbor_track;
 };
 
