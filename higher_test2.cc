@@ -8,7 +8,7 @@
 
 const double pi=3.1415926535897932384626433832795;
 const int n=64;
-const double theta=0.3;
+const double theta=0.04;
 const double step=2*pi/n;
 
 int main() {
