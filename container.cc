@@ -379,19 +379,149 @@ inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int s,int
 	compute_cell_slow(c,s,i,x,y,z);
 }
 
+
 template<class n_option>
-inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z) {
+inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1;
+	int ci,cj,ck,cijk,gp=0;
+	
+	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
-	i=search.init(c,x,y,z);
-	if (sz==3) {
-		do {
-			for(j=0;j<co[i];j++) {
-				x1=p[i][j]+qx-x;y1=p[i][j]+qy-y;z1=p[i][j]+qz-z;
-				rs=x1*x1+y1*y1+z1*z1;
-				c.nplane(x1,y1,z1,rs,id[i][j]);
+
+	// Test all particles in the particles' local region first
+	for(q=0;q<s;q++) {
+		x1=p[ijk][sz*q]-x;
+		y1=p[ijk][sz*q+1]-y;
+		z1=p[ijk][sz*q+2]-z;
+		rs=x1*x1+y1*y1+z1*z1;
+		c.nplane(x1,y1,z1,rs,id[i][j]);
+	}
+	while(q<co[ijk]) {
+		x1=p[ijk][sz*q]-x;
+		y1=p[ijk][sz*q+1]-y;
+		z1=p[ijk][sz*q+2]-z;
+		rs=x1*x1+y1*y1+z1*z1;
+		c.nplane(x1,y1,z1,rs,id[i][j]);
+	}
+
+	// Update the mask counter, and if it has wrapped around, then
+	// reset the mask
+	mv++;
+	if (mv==0) {
+		for(q=0;q<hxyz;q++) mask[q]=0;
+		mv=1;
+	}
+	s_start=s_end=0;
+
+	ci=xperiodic?nx:i;
+	cj=yperiodic?ny:j;
+	ck=zperiodic?nz:k;
+	cijk=ci+hx*(cj+hy*ck);
+	mask[cijk]=mv;
+
+	if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+	if (ci<hx) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+	if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+	if (cj<hy) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+	if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+	if (ck<hz) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+	
+	while(s_start!=s_end) {
+		if(s_start==s_size) s_start=0;
+		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
+		xlo=ax;
+		if(di>ci) {
+			if(dj>cj) {
+				if(dk>ck) {
+					if (corner_test(xlo,ylo,zlo,xhi,yhi,zhi)) break;
+				} else if(dk<ck) {
+					if (corner_test(xlo,ylo,zhi,xhi,yhi,zlo)) break;
+				} else {
+
+				}
+			} else if(dj<ck) {
+				if(dk>ck) {
+					if (corner_test(xlo,yhi,zlo,xhi,ylo,zhi)) break;
+				} else if(dk<ck) {
+					if (corner_test(xlo,yhi,zhi,xhi,ylo,zlo)) break;
+				} else {
+
+				}
+			} else {
+				if(dk>ck) {
+
+				} else if(dk<ck) {
+
+				} else {
+
+				}
 			}
-		} while ((i=search.inc(qx,qy,qz))!=-1);
+		} else if(di<ci) {
+			if(dj>cj) {
+				if(dk>ck) {
+
+				} else if(dk<ck) {
+
+				} else {
+
+				}
+			} else if(dj<ck) {
+				if(dk>ck) {
+
+				} else if(dk<ck) {
+
+				} else {
+
+				}
+			} else {
+				if(dk>ck) {
+
+				} else if(dk<ck) {
+
+				} else {
+
+				}
+			}
+		} else {
+			if(dj>cj) {
+				if(dk>ck) {
+
+				} else if(dk<ck) {
+
+				} else {
+
+				}
+			} else if(dj<ck) {
+				if(dk>ck) {
+
+				} else if(dk<ck) {
+
+				} else {
+
+				}
+			} else {
+				if(dk>ck) {
+
+				} else if(dk<ck) {
+
+				} else {
+					cout << "error\n";
+				}
+			}
+		}
+	
+		for(j=0;j<co[i];j++) {
+			x1=p[i][j]+qx-x;y1=p[i][j]+qy-y;z1=p[i][j]+qz-z;
+			rs=x1*x1+y1*y1+z1*z1;
+			c.nplane(x1,y1,z1,rs,id[i][j]);
+		}
+
+		if(ci>0) if(mask[cijk-1]!=mv) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+		if(ci<hx) if(mask[cijk+1]!=mv) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+		if(cj>0) if(mask[cijk-hx]!=mv) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+		if(cj<hy) if(mask[cijk+hx]!=mv) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+		if(ck>0) if(mask[cijk-hxy]!=mv) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+		if(ck<hz) if(mask[cijk+hxy]!=mv) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
 	}
 }
 
