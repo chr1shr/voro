@@ -16,8 +16,8 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	: length_scale(1),sz(isz),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
-	xperiodic(xper), yperiodic(yper), zperiodic(zper),
-	max_radius(0) {
+	xperiodic(xper),yperiodic(yper),zperiodic(zper),
+	max_radius(0),search(this) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -38,8 +38,8 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	: length_scale(1),sz(3),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
-	xperiodic(xper), yperiodic(yper), zperiodic(zper),
-	max_radius(0) {
+	xperiodic(xper),yperiodic(yper),zperiodic(zper),
+	max_radius(0),search(this) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -315,13 +315,17 @@ inline void container::initialize_voronoicell(voronoicell_base<n_option> &c,fpoi
 	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
 	c.init(x1,x2,y1,y2,z1,z2);
+	
+	// TODO: Extra plane cuts due to walls could go here. It would be good
+	// to have a general mechanism for calling wall objects.
+	//
 }
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
  * store_cell_volumes() and draw(). */
 template<class n_option>
-inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z) {
+inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int j,t;
 	facets_loop l(this);
@@ -330,14 +334,6 @@ inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i,fp
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
-	//
-	// TODO: this can sometimes be inefficient. For example, sometimes
-	// particles at the top of granular packings can extend upwards by a
-	// long way, and the shells grow very big. It would be better to use a
-	// box-by-box approach, but that's not straightforward.
-	//
-	// TODO: Extra plane cuts due to walls could go here. It would be good
-	// to have a general mechanism for calling wall objects.
 	//
 	// TODO: This initial test, to figure out if this is a polydisperse
 	// case or not, is ugly. It's probably best to recompile using
@@ -373,6 +369,29 @@ inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i,fp
 			} while ((t=l.inc(qx,qy,qz))!=-1);
 			lr=ur;lrs=urs;
 		}
+	}
+}
+
+/** A overloaded version of compute_cell_slow, that sets up the x, y, and z variables. */
+template<class n_option>
+inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int s,int i) {
+	double x=p[s][sz*i],y=p[s][sz*i+1],z=p[s][sz*i+2];
+	compute_cell_slow(c,s,i,x,y,z);
+}
+
+template<class n_option>
+inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z) {
+	fpoint x1,y1,z1;
+	initialize_voronoicell(c,x,y,z);
+	i=search.init(c,x,y,z);
+	if (sz==3) {
+		do {
+			for(j=0;j<co[i];j++) {
+				x1=p[i][j]+qx-x;y1=p[i][j]+qy-y;z1=p[i][j]+qz-z;
+				rs=x1*x1+y1*y1+z1*z1;
+				c.nplane(x1,y1,z1,rs,id[i][j]);
+			}
+		} while ((i=search.inc(qx,qy,qz))!=-1);
 	}
 }
 

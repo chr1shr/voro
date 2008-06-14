@@ -178,7 +178,7 @@ void voronoicell_base<n_option>::add_memory_ds2() {
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions */
 template<class n_option>
 void voronoicell_base<n_option>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
-	for(int i=0;i<init_vertex_order;i++) mec[i]=0;
+	for(int i=0;i<current_vertex_order;i++) mec[i]=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
 	pts[3]=xmax;pts[4]=ymin;pts[5]=zmin;
@@ -203,12 +203,12 @@ void voronoicell_base<n_option>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
 }
 
-/** Initializes a Voroni cell as a regular octahedron.
+/** Initializes a Voronoi cell as a regular octahedron.
  * \param l The distance from the octahedron center to a vertex. Six vertices
  * are initialized at (-l,0,0), (l,0,0), (0,-l,0), (0,l,0), (0,0,-l), and (0,0,l).*/
 template<class n_option>
 inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
-	for(int i=0;i<init_vertex_order;i++) mec[i]=0;
+	for(int i=0;i<current_vertex_order;i++) mec[i]=0;
 	mec[4]=p=6;l*=2;
 	pts[0]=-l;pts[1]=0;pts[2]=0;
 	pts[3]=l;pts[4]=0;pts[5]=0;
@@ -228,6 +228,29 @@ inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
 }
 
+/** Initializes a Voronoi cell as a tetrahedron. It assumes that the normal to
+ * the face for the first three vertices points inside.
+ * \param (x0,y0,z0) A position vector for the first vertex.
+ * \param (x1,y1,z1) A position vector for the second vertex.
+ * \param (x2,y2,z2) A position vector for the third vertex.
+ * \param (x3,y3,z3) A position vector for the fourth vertex. */
+template<class n_option>
+inline void voronoicell_base<n_option>::init_tetrahedron(fpoint x0,fpoint y0,fpoint z0,fpoint x1,fpoint y1,fpoint z1,fpoint x2,fpoint y2,fpoint z2,fpoint x3,fpoint y3,fpoint z3) {
+	for(int i=0;i<current_vertex_order;i++) mec[i]=0;
+	mec[3]=p=4;
+	pts[0]=x0*2;pts[1]=y0*2;pts[2]=z0*2;
+	pts[3]=x1*2;pts[4]=y1*2;pts[5]=z1*2;
+	pts[6]=x2*2;pts[7]=y2*2;pts[8]=z2*2;
+	pts[9]=x3*2;pts[10]=y3*2;pts[11]=z3*2;
+	int *q=mep[3];
+	q[0]=1;q[1]=3;q[2]=2;q[3]=0;q[4]=0;q[5]=0;q[6]=0;
+	q[7]=0;q[8]=2;q[9]=3;q[10]=0;q[11]=2;q[12]=1;q[13]=1;
+	q[14]=0;q[15]=3;q[16]=1;q[17]=2;q[18]=2;q[19]=1;q[20]=2;
+	q[21]=0;q[22]=1;q[23]=2;q[24]=1;q[25]=2;q[26]=1;q[27]=3;
+	ed[0]=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
+	neighbor.init_tetrahedron();
+	nu[0]=nu[1]=nu[2]=nu[3]=3;
+}
 
 /** Initializes an arbitrary test object using the add_vertex() and
  * construct_relations() routines. See the source code for information about
@@ -236,7 +259,7 @@ inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::init_test(int n) {
-	for(int i=0;i<init_vertex_order;i++) mec[i]=0;p=0;
+	for(int i=0;i<current_vertex_order;i++) mec[i]=0;p=0;
 	switch(n) {
 		case 0:
 			// A peaked object, with a high vertex 6, and a ridge
@@ -1972,6 +1995,17 @@ inline void neighbor_track::init_octahedron() {
 	q[16]=-5;q[17]=-8;q[18]=-3;q[19]=-2;
 	q[20]=-7;q[21]=-6;q[22]=-1;q[23]=-4;
 	ne[0]=q;ne[1]=q+4;ne[2]=q+8;ne[3]=q+12;ne[4]=q+16;ne[5]=q+20;
+}
+
+/** This initializes the neighbor information for an octahedron. */
+inline void neighbor_track::init_tetrahedron() {
+	int *q;
+	q=mne[3];
+	q[0]=-4;q[1]=-3;q[2]=-2;
+	q[3]=-3;q[4]=-4;q[5]=-1;
+	q[6]=-4;q[7]=-2;q[8]=-1;
+	q[9]=-2;q[10]=-3;q[11]=-1;
+	ne[0]=q;ne[1]=q+3;ne[2]=q+6;ne[3]=q+9;
 }
 
 /** This is a basic operation to set a new pointer in the ne[] array.

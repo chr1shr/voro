@@ -134,6 +134,7 @@ class voronoicell_base {
 		virtual ~voronoicell_base();
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void init_octahedron(fpoint l);
+		inline void init_tetrahedron(fpoint x0,fpoint y0,fpoint z0,fpoint x1,fpoint y1,fpoint z1,fpoint x2,fpoint y2,fpoint z2,fpoint x3,fpoint y3,fpoint z3);
 		inline void init_test(int n);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b);
@@ -215,6 +216,8 @@ class neighbor_none {
 		/** This is a blank placeholder function that does nothing. */
 		inline void init_octahedron() {};
 		/** This is a blank placeholder function that does nothing. */
+		inline void init_tetrahedron() {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void set_pointer(int p,int n) {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void copy(int a,int b,int c,int d) {};
@@ -277,6 +280,7 @@ class neighbor_track {
 		inline void add_memory_vorder(int i);
 		inline void init();
 		inline void init_octahedron();
+		inline void init_tetrahedron();
 		inline void set_pointer(int p,int n);
 		inline void copy(int a,int b,int c,int d);
 		inline void set(int a,int b,int c);

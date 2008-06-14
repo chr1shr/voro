@@ -15,6 +15,7 @@
 using namespace std;
 
 class facets_loop;
+class facets_search;
 
 /** The container class represents the whole simulation region. The
  * container constructor sets up the geometry and periodicity, and divides
@@ -56,6 +57,10 @@ class container {
 		void print_all_neighbor(ostream &os);
 		void print_all_neighbor();
 		void print_all_neighbor(char *filename);
+		template<class n_option>
+		inline void compute_cell_slow(voronoicell_base<n_option> &c,int s,int i);
+		template<class n_option>
+		inline void compute_cell_slow(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z);
 		template<class n_option>
 		inline void compute_cell(voronoicell_base<n_option> &c,int s,int i);
 		template<class n_option>
@@ -142,7 +147,9 @@ class container {
 		inline void initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		void add_particle_memory(int i);
 	private:
+		friend class facets_search;
 		friend class facets_loop;
+		facets_search search;
 };
 
 /** This is a derived version of the container class for handling polydisperse
@@ -187,5 +194,23 @@ class facets_loop {
 		const fpoint sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
 		const int nx,ny,nz,nxy,nxyz;
 		const bool xperiodic,yperiodic,zperiodic;
+};
+
+class facets_search {
+	public:
+		facets_search(container *q);
+		inline int init(fpoint vx,fpoint vy,fpoint vz);
+		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
+		inline void add_list_memory();
+	private:
+		int ci,cj,ck;
+		unsigned int *m;
+		int *s;
+		unsigned int v;
+		int s_start,s_end,s_size;
+		const fpoint sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
+		const int nx,ny,nz,nxy,nxyz;
+		const bool xperiodic,yperiodic,zperiodic;
+		const int hx,hy,hz,hxy,hxyz;
 };
 #endif
