@@ -384,6 +384,7 @@ template<class n_option>
 inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1;
 	int ci,cj,ck,cijk,gp=0;
+	fpoint fx=x-ax-(bx-ax)*i,fy=y-ay-(by-ay)*j,fz=z-az-(bz-az)*k;
 	
 	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
@@ -429,7 +430,9 @@ inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,in
 	while(s_start!=s_end) {
 		if(s_start==s_size) s_start=0;
 		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
-		xlo=ax;
+		xlo=(di-ci)*(bx-ax)/n-fx;xhi=xlo+(bx-ax)/n;
+		ylo=(dj-cj)*(by-ay)/n-fy;yhi=ylo+(by-ay)/n;
+		zlo=(dk-ck)*(bz-az)/n-fz;zhi=zlo+(bz-az)/n;
 		if(di>ci) {
 			if(dj>cj) {
 				if(dk>ck) {
@@ -459,17 +462,17 @@ inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,in
 		} else if(di<ci) {
 			if(dj>cj) {
 				if(dk>ck) {
-
+					if (corner_test(xhi,ylo,zlo,xlo,yhi,zhi)) break;
 				} else if(dk<ck) {
-
+					if (corner_test(xhi,ylo,zhi,xlo,yhi,zlo)) break;
 				} else {
 
 				}
 			} else if(dj<ck) {
 				if(dk>ck) {
-
+					if (corner_test(xhi,yhi,zlo,xlo,ylo,zhi)) break;
 				} else if(dk<ck) {
-
+					if (corner_test(xhi,yhi,zhi,xlo,ylo,zlo)) break;
 				} else {
 
 				}
@@ -524,6 +527,10 @@ inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,in
 		if(ck<hz) if(mask[cijk+hxy]!=mv) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
 	}
 }
+
+template<class n_option>
+inline void container::corner_test(voronoicell_base<n_option> &c,int gp,fpoint a,fpoint b,fpoint c,fpoint d,fpoint e,fpoint f) {
+	if (c.plane_intersects_guess(a,b,c,
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
 template<class n_option>
