@@ -192,7 +192,7 @@ class voronoicell_base {
 		inline bool collapse_order1();
 		inline bool collapse_order2();
 		inline bool delete_connection(int j,int k,bool hand);
-		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,int &gp,double g);
+		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,int &gp,fpoint g);
 		friend class neighbor_track;
 };
 

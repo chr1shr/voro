@@ -1637,7 +1637,7 @@ inline void voronoicell_base<n_option>::dump_pov_mesh(fpoint x,fpoint y,fpoint z
 template<class n_option>
 inline void voronoicell_base<n_option>::perturb(fpoint r) {
 	for(int i=0;i<3*p;i++) {
-		pts[i]+=(2*double(rand())/RAND_MAX-1)*r;
+		pts[i]+=(2*fpoint(rand())/RAND_MAX-1)*r;
 	}
 }
 
@@ -1856,8 +1856,8 @@ void voronoicell_base<n_option>::check_facets() {
 /** This routine tests to see whether the cell intersects a plane, given an initial
  * starting vertex. */
 template<class n_option>
-bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp) {
-	int gw;double g;
+bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp) {
+	int gw;fpoint g;
 	sure.init(x,y,z,rsq);
 	gw=sure.test(gp,g);
 	if (gw==-1) return plane_intersects_track(x,y,z,rsq,gp,g);
@@ -1865,15 +1865,15 @@ bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint
 }
 
 template<class n_option>
-bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp) {
+bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp) {
 	gp=0;
 	int gw;
-	double g;
+	fpoint g;
 	sure.init(x,y,z,rsq);
 	gw=sure.test(gp,g);
 	if (gw==-1) {
 		int ca,cc,mp,mw;
-		double m=g;
+		fpoint m=g;
 		ca=mp=1;cc=p>>3;
 		while(ca<cc) {
 			mw=sure.test(mp,m);
@@ -1887,9 +1887,9 @@ bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpo
 }
 
 template<class n_option>
-inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp,double g) {
-	int count=0,i,up,tp,gw,tw;
-	double t,u;gw=-1;
+inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp,fpoint g) {
+	int count=0,i,tp,gw=-1;
+	fpoint t;
 	// The test point is outside of the cutting space
 	do {
 		
@@ -1904,19 +1904,25 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 		// Test all the neighbors of the current point
 		// and find the one which is closest to the
 		// plane
-		up=gp;u=g;
+	/*	up=gp;u=g;
 		for(i=0;i<nu[gp];i++) {
 			tp=ed[gp][i];
 			tw=sure.test(tp,t);
 			if(t>u) {u=t;up=tp;gw=tw;}
+		}*/
+		for(i=0;i<nu[gp];i++) {
+			tp=ed[gp][i];
+			gw=sure.test(tp,t);
+			if(t>g) {gp=tp;g=t;break;}
 		}
+		if (i==nu[gp]) return false;
 
 		// If we couldn't find a point and the object
 		// is convex, then the whole cell must be
 		// outside the cutting space, so it's not
 		// intersected at all
-		if (up==gp) return false;
-		gp=up;g=u;
+//		if (up==gp) return false;
+//		gp=up;g=u;
 	} while (gw==-1);
 	return true;
 }

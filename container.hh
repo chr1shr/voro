@@ -15,7 +15,6 @@
 using namespace std;
 
 class facets_loop;
-class facets_search;
 
 /** The container class represents the whole simulation region. The
  * container constructor sets up the geometry and periodicity, and divides
@@ -58,13 +57,13 @@ class container {
 		void print_all_neighbor();
 		void print_all_neighbor(char *filename);
 		template<class n_option>
-		inline void compute_cell_slow(voronoicell_base<n_option> &c,int s,int i);
+		inline void compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
-		inline void compute_cell_slow(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z);
+		void compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		template<class n_option>
-		inline void compute_cell(voronoicell_base<n_option> &c,int s,int i);
+		inline void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
-		inline void compute_cell(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z);
+		void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
 		void guess_length_scale();
 	protected:
@@ -109,6 +108,19 @@ class container {
 		/** A constant, set to the value of nx*ny*nz, which is used in
 		 * the routines which step through boxes in sequence. */
 		const int nxyz;
+		/** The number of boxes in the x direction for the searching mask. */
+		const int hx;
+		/** The number of boxes in the y direction for the searching mask. */
+		const int hy;
+		/** The number of boxes in the z direction for the searching mask. */
+		const int hz;
+		/** A constant, set to the value of hx multiplied by hy, which
+		 * is used in the routines which step through mask boxes in
+		 * sequence. */
+		const int hxy;
+		/** A constant, set to the value of hx*hy*hz, which is used in
+		 * the routines which step through mask boxes in sequence. */
+		const int hxyz;
 		/** A boolean value that determines if the x coordinate in
 		 * periodic or not. */
 		const bool xperiodic;
@@ -130,6 +142,12 @@ class container {
 		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
+		/** This array is used as a mask. */
+		unsigned int *mask;
+		int *sl;
+		unsigned int mv;
+		/** The current size of the search list. */
+		int s_start,s_end,s_size;
 		/** A two dimensional array holding particle positions. For the
 		 * derived container_poly class, this also holds particle
 		 * radii. */
@@ -146,10 +164,23 @@ class container {
 		template<class n_option>
 		inline void initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		void add_particle_memory(int i);
+		void add_list_memory();
 	private:
-		friend class facets_search;
+		template<class n_option>
+		inline bool corner_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
+		template<class n_option>
+		inline bool edge_x_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh);
+		template<class n_option>
+		inline bool edge_y_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh);
+		template<class n_option>
+		inline bool edge_z_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1);
+		template<class n_option>
+		inline bool face_x_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1);
+		template<class n_option>
+		inline bool face_y_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1);
+		template<class n_option>
+		inline bool face_z_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1);
 		friend class facets_loop;
-		facets_search search;
 };
 
 /** This is a derived version of the container class for handling polydisperse
@@ -184,9 +215,10 @@ class facets_loop {
 		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
 		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
 		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
+		int ip,jp,kp;
 	private:
 		int i,j,k,ai,bi,aj,bj,ak,bk,s;
-		int ip,jp,kp,aip,ajp,akp,inc1,inc2;
+		int aip,ajp,akp,inc1,inc2;
 		inline int step_mod(int a,int b);
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);
@@ -194,23 +226,5 @@ class facets_loop {
 		const fpoint sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
 		const int nx,ny,nz,nxy,nxyz;
 		const bool xperiodic,yperiodic,zperiodic;
-};
-
-class facets_search {
-	public:
-		facets_search(container *q);
-		inline int init(fpoint vx,fpoint vy,fpoint vz);
-		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
-		inline void add_list_memory();
-	private:
-		int ci,cj,ck;
-		unsigned int *m;
-		int *s;
-		unsigned int v;
-		int s_start,s_end,s_size;
-		const fpoint sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
-		const int nx,ny,nz,nxy,nxyz;
-		const bool xperiodic,yperiodic,zperiodic;
-		const int hx,hy,hz,hxy,hxyz;
 };
 #endif

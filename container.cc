@@ -16,8 +16,9 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	: length_scale(1),sz(isz),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
+	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
 	xperiodic(xper),yperiodic(yper),zperiodic(zper),
-	max_radius(0),search(this) {
+	mv(0),max_radius(0) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -27,6 +28,10 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new fpoint*[nxyz];
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
+	mask=new unsigned int[hxyz];
+	for(l=0;l<hxyz;l++) mask[l]=0;
+	s_size=30*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
+	sl=new int[s_size];
 }
 
 /** Container constructor. The first six arguments set the corners of the box to
@@ -38,8 +43,9 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	: length_scale(1),sz(3),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
+	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
 	xperiodic(xper),yperiodic(yper),zperiodic(zper),
-	max_radius(0),search(this) {
+	mv(0),max_radius(0) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -49,6 +55,10 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	p=new fpoint*[nxyz];
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
+	mask=new unsigned int[hxyz];
+	for(l=0;l<hxyz;l++) mask[l]=0;
+	s_size=30*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
+	sl=new int[s_size];
 }
 
 /** Container destructor - free memory. */
@@ -102,6 +112,23 @@ void container::add_particle_memory(int i) {
 	mem[i]=nmem;
 	delete [] id[i];id[i]=idp;
 	delete [] p[i];p[i]=pp;
+}
+
+/** Add list memory. */
+inline void container::add_list_memory() {
+	cout << "addmem\n";
+	int i,j=0,*ps;
+	s_size*=2;
+	ps=new int[s_size];
+	if(s_start<=s_end) {
+		for(i=s_start;i<s_end;i++) ps[j++]=sl[i];
+	} else {
+		cout << s_start << " " << s_end << " " << s_size << endl;
+		for(i=s_start;i<s_size;i++) ps[j++]=sl[i];
+		for(i=0;i<s_end;i++) ps[j++]=sl[i];
+	}
+	s_start=0;s_end=j;
+	delete [] sl;sl=ps;
 }
 
 /** Import a list of particles from standard input. */
@@ -164,16 +191,16 @@ void container::guess_length_scale() {
 void container::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
-	int i,s;
+	int q,s;
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
-		for(i=0;i<co[s];i++) {
-			x=p[s][sz*i]+px;y=p[s][sz*i+1]+py;z=p[s][sz*i+2]+pz;
+		for(q=0;q<co[s];q++) {
+			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				compute_cell(c,s,i,x,y,z);
+				compute_cell_slow(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z);
 				c.dump_gnuplot(os,x,y,z);
 			}
 		}
@@ -193,18 +220,18 @@ void container::draw_gnuplot(char *filename) {
 void container::draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
-	int i,s;
+	int q,s;
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	os << "#declare voronoi=union{\n";
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
-		for(i=0;i<co[s];i++) {
-			x=p[s][sz*i]+px;y=p[s][sz*i+1]+py;z=p[s][sz*i+2]+pz;
+		for(q=0;q<co[s];q++) {
+			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				compute_cell(c,s,i,x,y,z);
-				c.dump_pov(os,x,y,z);break;
+				compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z);
+				c.dump_pov(os,x,y,z);
 			}
 		}
 	} while ((s=l1.inc(px,py,pz))!=-1);
@@ -223,12 +250,16 @@ void container::draw_pov(char *filename) {
  * results according to the particle label in the fpoint array bb.*/
 void container::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
-	facets_loop l(this);
-	int i,s;
-	for(s=0;s<nxyz;s++) {
-		for(i=0;i<co[s];i++) {
-			compute_cell(c,s,i);
-			bb[id[s][i]]=c.volume();
+	int i,j,k,ijk=0,q;
+	for (k=0;k<nz;k++) {
+		for(j=0;j<ny;j++) {
+			for(i=0;i<nx;i++) {
+				for(q=0;q<co[ijk];q++) {
+					compute_cell(c,i,j,k,ijk,q);
+					bb[id[ijk][q]]=c.volume();
+				}
+				ijk++;
+			}
 		}
 	}
 }
@@ -238,17 +269,21 @@ void container::store_cell_volumes(fpoint *bb) {
 template<class n_option>
 inline void container::print_all(ostream &os,voronoicell_base<n_option> &c) {
 	fpoint x,y,z;
-	facets_loop l(this);
-	int i,s;
-	for(s=0;s<nxyz;s++) {
-		for(i=0;i<co[s];i++) {
-			x=p[s][sz*i];y=p[s][sz*i+1];z=p[s][sz*i+2];
-			compute_cell(c,s,i,x,y,z);
-			os << id[s][i] << " " << x << " " << y << " " << z;
-			if (sz==4) os << " " << p[s][4*i+3];
-			os << " " << c.volume();
-			c.neighbors(os);			
-			os << endl;
+	int i,j,k,ijk=0,q;
+	for (k=0;k<nz;k++) {
+		for(j=0;j<ny;j++) {
+			for(i=0;i<nx;i++) {
+				for(q=0;q<co[ijk];q++) {
+					x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
+					compute_cell(c,i,j,k,ijk,q,x,y,z);
+					os << id[ijk][q] << " " << x << " " << y << " " << z;
+					if (sz==4) os << " " << p[ijk][4*q+3];
+					os << " " << c.volume();
+					c.neighbors(os);		
+					os << endl;
+				}
+				ijk++;
+			}
 		}
 	}
 }
@@ -323,14 +358,13 @@ inline void container::initialize_voronoicell(voronoicell_base<n_option> &c,fpoi
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
- * store_cell_volumes() and draw(). */
+ * store_cell_volumes() and draw(). */ 
 template<class n_option>
-inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int s,int i,fpoint x,fpoint y,fpoint z) {
+void container::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
-	int j,t;
+	int q,t;
 	facets_loop l(this);
 	initialize_voronoicell(c,x,y,z);
-
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
@@ -343,11 +377,11 @@ inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int s,int
 			ur=lr+0.5*length_scale;urs=ur*ur;
 			t=l.init(x,y,z,ur,qx,qy,qz);
 			do {
-				for(j=0;j<co[t];j++) {
-					x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
+				for(q=0;q<co[t];q++) {
+					x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
 					rs=x1*x1+y1*y1+z1*z1;
-					if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
-						c.nplane(x1,y1,z1,rs,id[t][j]);
+					if (lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t))
+						c.nplane(x1,y1,z1,rs,id[t][q]);
 				}
 			} while ((t=l.inc(qx,qy,qz))!=-1);
 			lr=ur;lrs=urs;
@@ -360,11 +394,11 @@ inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int s,int
 			ur=lr+0.5*length_scale;urs=ur*ur;
 			t=l.init(x,y,z,ur,qx,qy,qz);
 			do {
-				for(j=0;j<co[t];j++) {
-					x1=p[t][sz*j]+qx-x;y1=p[t][sz*j+1]+qy-y;z1=p[t][sz*j+2]+qz-z;
+				for(q=0;q<co[t];q++) {
+					x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
 					rs=x1*x1+y1*y1+z1*z1;
-					if (lrs-tolerance<rs&&rs<urs&&(j!=i||s!=t))
-						c.nplane(x1,y1,z1,rs+crad-p[t][sz*j+3]*p[t][sz*j+3],id[t][j]);
+					if (lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t))
+						c.nplane(x1,y1,z1,rs+crad-p[t][sz*q+3]*p[t][sz*q+3],id[t][q]);
 				}
 			} while ((t=l.inc(qx,qy,qz))!=-1);
 			lr=ur;lrs=urs;
@@ -374,18 +408,17 @@ inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int s,int
 
 /** A overloaded version of compute_cell_slow, that sets up the x, y, and z variables. */
 template<class n_option>
-inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int s,int i) {
-	double x=p[s][sz*i],y=p[s][sz*i+1],z=p[s][sz*i+2];
-	compute_cell_slow(c,s,i,x,y,z);
+inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
+	compute_cell_slow(c,i,j,k,ijk,s,x,y,z);
 }
 
-
 template<class n_option>
-inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
-	fpoint x1,y1,z1;
-	int ci,cj,ck,cijk,gp=0;
-	fpoint fx=x-ax-(bx-ax)*i,fy=y-ay-(by-ay)*j,fz=z-az-(bz-az)*k;
-	
+void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
+	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
+	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
+	int ci,cj,ck,cijk,di,dj,dk,dijk,ei,ej,ek,eijk,gp=0,q;
 	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
 
@@ -403,6 +436,7 @@ inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,in
 		z1=p[ijk][sz*q+2]-z;
 		rs=x1*x1+y1*y1+z1*z1;
 		c.nplane(x1,y1,z1,rs,id[i][j]);
+		q++;
 	}
 
 	// Update the mask counter, and if it has wrapped around, then
@@ -417,126 +451,203 @@ inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,in
 	ci=xperiodic?nx:i;
 	cj=yperiodic?ny:j;
 	ck=zperiodic?nz:k;
+	fpoint fx=x-ax-boxx*(i-ci),fy=y-ay-boxy*(j-cj),fz=z-az-boxz*(k-ck);
 	cijk=ci+hx*(cj+hy*ck);
 	mask[cijk]=mv;
 
 	if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-	if (ci<hx) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+	if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
 	if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-	if (cj<hy) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+	if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
 	if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
-	if (ck<hz) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
-	
+	if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
 	while(s_start!=s_end) {
 		if(s_start==s_size) s_start=0;
 		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
-		xlo=(di-ci)*(bx-ax)/n-fx;xhi=xlo+(bx-ax)/n;
-		ylo=(dj-cj)*(by-ay)/n-fy;yhi=ylo+(by-ay)/n;
-		zlo=(dk-ck)*(bz-az)/n-fz;zhi=zlo+(bz-az)/n;
+		xlo=di*boxx-fx;xhi=xlo+boxx;
+		ylo=dj*boxy-fy;yhi=ylo+boxy;
+		zlo=dk*boxz-fz;zhi=zlo+boxz;
 		if(di>ci) {
 			if(dj>cj) {
 				if(dk>ck) {
-					if (corner_test(xlo,ylo,zlo,xhi,yhi,zhi)) break;
+					if (corner_test(c,gp,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(xlo,ylo,zhi,xhi,yhi,zlo)) break;
+					if (corner_test(c,gp,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-
+					if (edge_z_test(c,gp,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				}
-			} else if(dj<ck) {
+			} else if(dj<cj) {
 				if(dk>ck) {
-					if (corner_test(xlo,yhi,zlo,xhi,ylo,zhi)) break;
+					if (corner_test(c,gp,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(xlo,yhi,zhi,xhi,ylo,zlo)) break;
+					if (corner_test(c,gp,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
 				} else {
-
+					if (edge_z_test(c,gp,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-
+					if (edge_y_test(c,gp,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-
+					if (edge_y_test(c,gp,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-
+					if (face_x_test(c,gp,xlo,ylo,zlo,yhi,zhi)) continue;
 				}
 			}
 		} else if(di<ci) {
 			if(dj>cj) {
 				if(dk>ck) {
-					if (corner_test(xhi,ylo,zlo,xlo,yhi,zhi)) break;
+					if (corner_test(c,gp,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(xhi,ylo,zhi,xlo,yhi,zlo)) break;
+					if (corner_test(c,gp,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
 				} else {
-
+					if (edge_z_test(c,gp,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				}
-			} else if(dj<ck) {
+			} else if(dj<cj) {
 				if(dk>ck) {
-					if (corner_test(xhi,yhi,zlo,xlo,ylo,zhi)) break;
+					if (corner_test(c,gp,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(xhi,yhi,zhi,xlo,ylo,zlo)) break;
+					if (corner_test(c,gp,xhi,yhi,zhi,xlo,ylo,zlo)) continue;
 				} else {
-
+					if (edge_z_test(c,gp,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-
+					if (edge_y_test(c,gp,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				} else if(dk<ck) {
-
+					if (edge_y_test(c,gp,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
 				} else {
-
+					if (face_x_test(c,gp,xhi,ylo,zlo,yhi,zhi)) continue;
 				}
 			}
 		} else {
 			if(dj>cj) {
 				if(dk>ck) {
-
+					if (edge_x_test(c,gp,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-
+					if (edge_x_test(c,gp,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-
+					if (face_y_test(c,gp,xlo,ylo,zlo,xhi,zhi)) continue;
 				}
-			} else if(dj<ck) {
+			} else if(dj<cj) {
 				if(dk>ck) {
-
+					if (edge_x_test(c,gp,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				} else if(dk<ck) {
-
+					if (edge_x_test(c,gp,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
 				} else {
-
+					if (face_y_test(c,gp,xlo,yhi,zlo,xhi,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-
+					if (face_z_test(c,gp,xlo,ylo,zlo,xhi,yhi)) continue;
 				} else if(dk<ck) {
-
+					if (face_z_test(c,gp,xlo,ylo,zhi,xhi,yhi)) continue;
 				} else {
 					cout << "error\n";
 				}
 			}
 		}
-	
-		for(j=0;j<co[i];j++) {
-			x1=p[i][j]+qx-x;y1=p[i][j]+qy-y;z1=p[i][j]+qz-z;
+
+		if(xperiodic) {ei=i+di-nx;if (ei<0) {qx=ax-bx;ei+=nx;} else if (ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
+		if(yperiodic) {ej=j+dj-ny;if (ej<0) {qy=ay-by;ej+=ny;} else if (ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
+		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
+
+		eijk=ei+nx*(ej+ny*ek);
+		for(q=0;q<co[eijk];q++) {
+			x1=p[eijk][sz*q]+qx-x;
+			y1=p[eijk][sz*q+1]+qy-y;
+			z1=p[eijk][sz*q+2]+qz-z;
 			rs=x1*x1+y1*y1+z1*z1;
-			c.nplane(x1,y1,z1,rs,id[i][j]);
+			c.nplane(x1,y1,z1,rs,id[eijk][q]);
 		}
 
-		if(ci>0) if(mask[cijk-1]!=mv) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-		if(ci<hx) if(mask[cijk+1]!=mv) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-		if(cj>0) if(mask[cijk-hx]!=mv) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-		if(cj<hy) if(mask[cijk+hx]!=mv) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-		if(ck>0) if(mask[cijk-hxy]!=mv) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
-		if(ck<hz) if(mask[cijk+hxy]!=mv) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
+
+		dijk=di+hx*(dj+hy*dk);
+		if(di>0) if(mask[dijk-1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-1]=mv;sl[s_end++]=di-1;sl[s_end++]=dj;sl[s_end++]=dk;}
+		if(di<hx-1) if(mask[dijk+1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+1]=mv;sl[s_end++]=di+1;sl[s_end++]=dj;sl[s_end++]=dk;}
+		if(dj>0) if(mask[dijk-hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hx]=mv;sl[s_end++]=di;sl[s_end++]=dj-1;sl[s_end++]=dk;}
+		if(dj<hy-1) if(mask[dijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hx]=mv;sl[s_end++]=di;sl[s_end++]=dj+1;sl[s_end++]=dk;}
+		if(dk>0) if(mask[dijk-hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk-1;}
+		if(dk<hz-1) if(mask[dijk+hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk+1;}
 	}
 }
 
 template<class n_option>
-inline void container::corner_test(voronoicell_base<n_option> &c,int gp,fpoint a,fpoint b,fpoint c,fpoint d,fpoint e,fpoint f) {
-	if (c.plane_intersects_guess(a,b,c,
+inline bool container::corner_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
+	if (c.plane_intersects_guess(xh,yl,zl,xl*xh+yl*yl+zl*zl,gp)) return false;
+	if (c.plane_intersects(xh,yh,zl,xl*xh+yl*yh+zl*zl,gp)) return false;
+	if (c.plane_intersects(xl,yh,zl,xl*xl+yl*yh+zl*zl,gp)) return false;
+	if (c.plane_intersects(xl,yh,zh,xl*xl+yl*yh+zl*zh,gp)) return false;
+	if (c.plane_intersects(xl,yl,zh,xl*xl+yl*yl+zl*zh,gp)) return false;
+	if (c.plane_intersects(xh,yl,zh,xl*xh+yl*yl+zl*zh,gp)) return false;
+	return true;
+}
+
+template<class n_option>
+inline bool container::edge_x_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
+	if (c.plane_intersects_guess(x0,yl,zh,yl*yl+zl*zh,gp)) return false;
+	if (c.plane_intersects(x1,yl,zh,yl*yl+zl*zh,gp)) return false;
+	if (c.plane_intersects(x1,yl,zl,yl*yl+zl*zl,gp)) return false;
+	if (c.plane_intersects(x0,yl,zl,yl*yl+zl*zl,gp)) return false;
+	if (c.plane_intersects(x0,yh,zl,yl*yh+zl*zl,gp)) return false;
+	if (c.plane_intersects(x1,yh,zl,yl*yh+zl*zl,gp)) return false;
+	return true;
+}
+
+template<class n_option>
+inline bool container::edge_y_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
+	if (c.plane_intersects_guess(xl,y0,zh,xl*xl+zl*zh,gp)) return false;
+	if (c.plane_intersects(xl,y1,zh,xl*xl+zl*zh,gp)) return false;
+	if (c.plane_intersects(xl,y1,zl,xl*xl+zl*zl,gp)) return false;
+	if (c.plane_intersects(xl,y0,zl,xl*xl+zl*zl,gp)) return false;
+	if (c.plane_intersects(xh,y0,zl,xl*xh+zl*zl,gp)) return false;
+	if (c.plane_intersects(xh,y1,zl,xl*xh+zl*zl,gp)) return false;
+	return true;
+}
+
+template<class n_option>
+inline bool container::edge_z_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
+	if (c.plane_intersects_guess(xl,yh,z0,xl*xl+yl*yh,gp)) return false;
+	if (c.plane_intersects(xl,yh,z1,xl*xl+yl*yh,gp)) return false;
+	if (c.plane_intersects(xl,yl,z1,xl*xl+yl*yl,gp)) return false;
+	if (c.plane_intersects(xl,yl,z0,xl*xl+yl*yl,gp)) return false;
+	if (c.plane_intersects(xh,yl,z0,xl*xh+yl*yl,gp)) return false;
+	if (c.plane_intersects(xh,yl,z1,xl*xh+yl*yl,gp)) return false;
+	return true;
+}
+
+template<class n_option>
+inline bool container::face_x_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
+	if (c.plane_intersects_guess(xl,y0,z0,xl*xl,gp)) return false;
+	if (c.plane_intersects(xl,y0,z1,xl*xl,gp)) return false;
+	if (c.plane_intersects(xl,y1,z1,xl*xl,gp)) return false;
+	if (c.plane_intersects(xl,y1,z0,xl*xl,gp)) return false;
+	return true;
+}
+
+template<class n_option>
+inline bool container::face_y_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
+	if (c.plane_intersects_guess(x0,yl,z0,yl*yl,gp)) return false;
+	if (c.plane_intersects(x0,yl,z1,yl*yl,gp)) return false;
+	if (c.plane_intersects(x1,yl,z1,yl*yl,gp)) return false;
+	if (c.plane_intersects(x1,yl,z0,yl*yl,gp)) return false;
+	return true;
+}
+
+template<class n_option>
+inline bool container::face_z_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
+	if (c.plane_intersects_guess(x0,y0,zl,zl*zl,gp)) return false;
+	if (c.plane_intersects(x0,y1,zl,zl*zl,gp)) return false;
+	if (c.plane_intersects(x1,y1,zl,zl*zl,gp)) return false;
+	if (c.plane_intersects(x1,y0,zl,zl*zl,gp)) return false;
+	return true;
+}
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
 template<class n_option>
-inline void container::compute_cell(voronoicell_base<n_option> &c,int s,int i) {
-	double x=p[s][sz*i],y=p[s][sz*i+1],z=p[s][sz*i+2];
-	compute_cell(c,s,i,x,y,z);
+inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
+	compute_cell(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** Creates a facets_loop object, by pulling the necesssary constants about the container
