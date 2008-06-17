@@ -15,6 +15,7 @@
 using namespace std;
 
 class facets_loop;
+class wall;
 
 /** The container class represents the whole simulation region. The
  * container constructor sets up the geometry and periodicity, and divides
@@ -65,6 +66,7 @@ class container {
 		template<class n_option>
 		void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
+		void add_wall(wall &w);
 		void guess_length_scale();
 	protected:
 		/** The amount of memory in the array structure for each
@@ -159,6 +161,14 @@ class container {
 		 * this number is computed each time a particle is added to the
 		 * container. */
 		fpoint max_radius;
+		/** This array holds pointers to any wall objects that have
+		 * been added to the container. */
+		wall **walls;
+		/** The current number of wall objects, initially set to zero. */
+		int wall_number;
+		/** The current amount of memory allocated for walls. */
+		int current_wall_size;
+
 		template<class n_option>
 		inline void print_all(ostream &os,voronoicell_base<n_option> &c);
 		template<class n_option>
@@ -226,5 +236,13 @@ class facets_loop {
 		const fpoint sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
 		const int nx,ny,nz,nxy,nxyz;
 		const bool xperiodic,yperiodic,zperiodic;
+};
+
+class wall {
+	public:
+		virtual ~wall() {};
+		virtual bool point_inside(fpoint x,fpoint y,fpoint z) = 0;
+		virtual void cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) = 0;
+		virtual void cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) = 0;
 };
 #endif

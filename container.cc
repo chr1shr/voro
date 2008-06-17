@@ -18,7 +18,7 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
 	xperiodic(xper),yperiodic(yper),zperiodic(zper),
-	mv(0),max_radius(0) {
+	mv(0),max_radius(0),wall_number(0) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -32,6 +32,7 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	for(l=0;l<hxyz;l++) mask[l]=0;
 	s_size=30*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
 	sl=new int[s_size];
+	walls=new wall*[current_wall_size];
 }
 
 /** Container constructor. The first six arguments set the corners of the box to
@@ -45,7 +46,7 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
 	xperiodic(xper),yperiodic(yper),zperiodic(zper),
-	mv(0),max_radius(0) {
+	mv(0),max_radius(0),wall_number(0),current_wall_size(init_wall_size) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -59,6 +60,7 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	for(l=0;l<hxyz;l++) mask[l]=0;
 	s_size=30*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
 	sl=new int[s_size];
+	walls=new wall*[current_wall_size];
 }
 
 /** Container destructor - free memory. */
@@ -351,9 +353,7 @@ inline void container::initialize_voronoicell(voronoicell_base<n_option> &c,fpoi
 	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
 	c.init(x1,x2,y1,y2,z1,z2);
 	
-	// TODO: Extra plane cuts due to walls could go here. It would be good
-	// to have a general mechanism for calling wall objects.
-	//
+	for(int j=0;j<wall_number;j++) walls[j]->cut_cell(c,x,y,z);
 }
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
@@ -421,8 +421,9 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 	int ci,cj,ck,cijk,di,dj,dk,dijk,ei,ej,ek,eijk,gp=0,q;
 	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
+	int fuc=0;fpoint mrs;
 
-	// Test all particles in the particles' local region first
+	// Test all particles in the particle's local region first
 	for(q=0;q<s;q++) {
 		x1=p[ijk][sz*q]-x;
 		y1=p[ijk][sz*q+1]-y;
@@ -439,6 +440,7 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 		q++;
 	}
 
+	mrs=c.maxradsq();
 	// Update the mask counter, and if it has wrapped around, then
 	// reset the mask
 	mv++;
@@ -462,6 +464,9 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 	if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
 	if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
 	while(s_start!=s_end) {
+		if (++fuc==4) {
+			fuc=0;mrs=c.maxradsq();
+		}
 		if(s_start==s_size) s_start=0;
 		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
 		xlo=di*boxx-fx;xhi=xlo+boxx;
@@ -557,6 +562,7 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 			y1=p[eijk][sz*q+1]+qy-y;
 			z1=p[eijk][sz*q+2]+qz-z;
 			rs=x1*x1+y1*y1+z1*z1;
+			if (rs<mrs)
 			c.nplane(x1,y1,z1,rs,id[eijk][q]);
 		}
 
@@ -812,4 +818,17 @@ inline void container_poly::import(char *filename) {
 	is.open(filename,ifstream::in);
 	import(is);
 	is.close();
+}
+
+/** Adds a wall to the container. */
+void container::add_wall(wall& w) {
+	if (wall_number==current_wall_size) {
+		current_wall_size*=2;
+		if (current_wall_size>max_wall_size) throw fatal_error("Wall memory allocation exceeded absolute maximum");
+		wall **pwall;
+		pwall=new wall*[current_wall_size];
+		for(int i=0;i<wall_number;i++) pwall[i]=walls[i];
+		delete [] walls;walls=pwall;		
+	}
+	walls[wall_number++]=&w;
 }

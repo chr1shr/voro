@@ -16,6 +16,7 @@ const int init_marginal=256;
 const int init_delete_size=256;
 const int init_delete2_size=256;
 const int init_facet_size=32;
+const int init_wall_size=32;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
@@ -26,6 +27,7 @@ const int max_marginal=16777216;
 const int max_delete_size=16777216;
 const int max_delete2_size=16777216;
 const int max_particle_memory=16777216;
+const int max_wall_size=2048;
 
 // This sets the numerical tolerance. Below these values, the plane cutting
 // snaps to existing vertices rather than creating new ones.
