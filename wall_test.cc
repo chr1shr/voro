@@ -15,11 +15,11 @@ const fpoint z_min=-1,z_max=1;
 
 // Set up the number of blocks that the container is divided
 // into.
-const int n_x=16,n_y=16,n_z=16;
+const int n_x=18,n_y=18,n_z=18;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=50000;
+const int particles=100000;
 
 // This function returns a random fpoint between 0 and 1;
 fpoint rnd() {return fpoint(rand())/RAND_MAX;}

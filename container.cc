@@ -440,6 +440,7 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 		rs=x1*x1+y1*y1+z1*z1;
 		c.nplane(x1,y1,z1,rs,id[i][j]);
 	}
+	q++;
 	while(q<co[ijk]) {
 		x1=p[ijk][sz*q]-x;
 		y1=p[ijk][sz*q+1]-y;

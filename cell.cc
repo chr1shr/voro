@@ -1892,44 +1892,46 @@ bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint
 
 template<class n_option>
 inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rsq,fpoint g) {
-	int count=0,i,tp,gw=-1;
+	int count=0,ls,us,tp,tw;
 	fpoint t;
 	// The test point is outside of the cutting space
-	do {
-		
-		// If we have been around this loop more times
-		// than there are points, there's a floating
-		// point problem, so we'll bail out
-		if (++count>=p) {
-			cerr << "Err bailed\n";
-			for(up=0;up<p;up++) if (sure.test(up,g)!=-1) return true;
-			return false;
+	for(us=0;us<nu[up];us++) {
+		tp=ed[up][us];
+		tw=sure.test(tp,t);
+		if(t>g) {
+			ls=ed[up][nu[up]+us];
+			up=tp;
+			g=t;
+			while (tw==-1) {
+				if (++count>=p) {
+					cerr << "Err bailed\n";
+					for(up=0;up<p;up++) if (sure.test(up,g)!=-1) return true;
+					return false;
+				}
+				
+				// Test all the neighbors of the current point
+				// and find the one which is closest to the
+				// plane
+				for(us=0;us<ls;us++) {
+					tp=ed[up][us];
+					tw=sure.test(tp,t);
+					if(t>g) {ls=ed[up][nu[up]+us];up=tp;g=t;break;}
+				}
+				if (us==ls) {
+					us++;
+					while(us<nu[up]) {
+						tp=ed[up][us];
+						tw=sure.test(tp,t);
+						if(t>g) {ls=ed[up][nu[up]+us];up=tp;g=t;break;}
+						us++;
+					}
+					if (us==nu[up]) return false;
+				}
+			}
+			return true;
 		}
-		
-		// Test all the neighbors of the current point
-		// and find the one which is closest to the
-		// plane
-	/*	up=gp;u=g;
-		for(i=0;i<nu[gp];i++) {
-			tp=ed[gp][i];
-			tw=sure.test(tp,t);
-			if(t>u) {u=t;up=tp;gw=tw;}
-		}*/
-		for(i=0;i<nu[up];i++) {
-			tp=ed[up][i];
-			gw=sure.test(tp,t);
-			if(t>g) {up=tp;g=t;break;}
-		}
-		if (i==nu[up]) return false;
-
-		// If we couldn't find a point and the object
-		// is convex, then the whole cell must be
-		// outside the cutting space, so it's not
-		// intersected at all
-//		if (up==gp) return false;
-//		gp=up;g=u;
-	} while (gw==-1);
-	return true;
+	}
+	return false;
 }
 
 /** This constructs the neighbor_track class, within a current
