@@ -67,6 +67,8 @@ class container {
 		void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
 		void add_wall(wall &w);
+		bool point_inside(fpoint x,fpoint y,fpoint z); 
+		bool point_inside_walls(fpoint x,fpoint y,fpoint z); 
 		void guess_length_scale();
 	protected:
 		/** The amount of memory in the array structure for each

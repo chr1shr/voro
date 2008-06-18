@@ -202,7 +202,7 @@ void container::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,
 		for(q=0;q<co[s];q++) {
 			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				compute_cell_slow(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z);
+				compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z);
 				c.dump_gnuplot(os,x,y,z);
 			}
 		}
@@ -257,7 +257,7 @@ void container::store_cell_volumes(fpoint *bb) {
 		for(j=0;j<ny;j++) {
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
-					compute_cell(c,i,j,k,ijk,q);
+					compute_cell_slow(c,i,j,k,ijk,q);
 					bb[id[ijk][q]]=c.volume();
 				}
 				ijk++;
@@ -352,8 +352,17 @@ inline void container::initialize_voronoicell(voronoicell_base<n_option> &c,fpoi
 	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
 	c.init(x1,x2,y1,y2,z1,z2);
-	
 	for(int j=0;j<wall_number;j++) walls[j]->cut_cell(c,x,y,z);
+}
+
+bool container::point_inside(fpoint x,fpoint y,fpoint z) {
+	if(x<ax||x>bx||y<ay||y>by||z<az||z>bz) return false;
+	return point_inside_walls(x,y,z);
+}
+
+bool container::point_inside_walls(fpoint x,fpoint y,fpoint z) {
+	for(int j=0;j<wall_number;j++) if (!walls[j]->point_inside(x,y,z)) return false;
+	return true;
 }
 
 /** Computes a single Voronoi cell in the container. This routine can be run by
@@ -535,9 +544,9 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 				}
 			} else if(dj<cj) {
 				if(dk>ck) {
-					if (edge_x_test(c,gp,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+					if (edge_x_test(c,gp,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_x_test(c,gp,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
+					if (edge_x_test(c,gp,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
 				} else {
 					if (face_y_test(c,gp,xlo,yhi,zlo,xhi,zhi)) continue;
 				}
