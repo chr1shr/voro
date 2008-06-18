@@ -592,20 +592,25 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				// and find the one which is closest to the
 				// plane
 				l=u;lp=up;lw=uw;
-				for(i=0;i<nu[lp];i++) {
+		/*		for(i=0;i<nu[lp];i++) {
 					tp=ed[lp][i];
 					tw=sure.test(tp,t);
 					if(t>u) {u=t;uw=tw;up=tp;ls=i;}
+				}*/
+				for(i=0;i<nu[lp];i++) {
+					up=ed[lp][i];
+					uw=sure.test(up,u);
+					if(u>l) break;
 				}
+				if (i==nu[lp]) return true;
 
 				// If we couldn't find a point and the object
 				// is convex, then the whole cell must be
 				// outside the cutting space, so it's not
 				// intersected at all
-				if (up==lp) {
-	cout << "bail " << count << endl;
-					return true;}
+				if (up==lp) return true;
 			} while (uw==-1);
+			ls=i;	//XXX Added in mod
 			us=ed[lp][nu[lp]+ls];
 			complicated_setup=(uw!=1);
 		} else {
@@ -680,7 +685,6 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		}
 		if(qp==p) return qw==-1?true:false;
 	}
-	cout << count << endl;
 
 	// We're about to add the first point of the new facet. In either
 	// routine, we have to add a point, so first check there's space for
@@ -1897,6 +1901,7 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 		// than there are points, there's a floating
 		// point problem, so we'll bail out
 		if (++count>=p) {
+			cerr << "Err bailed\n";
 			for(up=0;up<p;up++) if (sure.test(up,g)!=-1) return true;
 			return false;
 		}

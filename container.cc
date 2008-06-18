@@ -565,16 +565,13 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 		if(yperiodic) {ej=j+dj-ny;if (ej<0) {qy=ay-by;ej+=ny;} else if (ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
 		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
 
-		cout << "newblock\n";
 		eijk=ei+nx*(ej+ny*ek);
 		for(q=0;q<co[eijk];q++) {
 			x1=p[eijk][sz*q]+qx-x;
 			y1=p[eijk][sz*q+1]+qy-y;
 			z1=p[eijk][sz*q+2]+qz-z;
 			rs=x1*x1+y1*y1+z1*z1;
-			if (rs<mrs) {
-				cout << x1 << y1 << z1;
-			c.nplane(x1,y1,z1,rs,id[eijk][q]);}
+			if (rs<mrs) c.nplane(x1,y1,z1,rs,id[eijk][q]);
 		}
 
 		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
