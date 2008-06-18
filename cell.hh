@@ -126,6 +126,7 @@ class voronoicell_base {
 		/** This sets the total number of vertices in the current cell.
 		 */
 		int p;
+		int up;
 		/** This is a class used in the plane routine for carrying out
 		 * reliable comparisons of whether points in the cell are
 		 * inside, outside, or on the current cutting plane. */
@@ -167,8 +168,8 @@ class voronoicell_base {
 		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
 		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 		inline bool plane(fpoint x,fpoint y,fpoint z);
-		bool plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rs,int &gp);
-		bool plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rs,int &gp);
+		bool plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rs);
+		bool plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rs);
 		void label_facets();
 		void neighbors(ostream &os);
 		void check_facets();
@@ -192,7 +193,7 @@ class voronoicell_base {
 		inline bool collapse_order1();
 		inline bool collapse_order2();
 		inline bool delete_connection(int j,int k,bool hand);
-		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,int &gp,fpoint g);
+		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,fpoint g);
 		friend class neighbor_track;
 };
 

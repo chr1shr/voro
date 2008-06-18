@@ -257,7 +257,7 @@ void container::store_cell_volumes(fpoint *bb) {
 		for(j=0;j<ny;j++) {
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
-					compute_cell_slow(c,i,j,k,ijk,q);
+					compute_cell(c,i,j,k,ijk,q);
 					bb[id[ijk][q]]=c.volume();
 				}
 				ijk++;
@@ -427,7 +427,7 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
 	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
-	int ci,cj,ck,cijk,di,dj,dk,dijk,ei,ej,ek,eijk,gp=0,q;
+	int ci,cj,ck,cijk,di,dj,dk,dijk,ei,ej,ek,eijk,q;
 	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
 	int fuc=0;fpoint mrs;
@@ -467,10 +467,10 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 	mask[cijk]=mv;
 
 	if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-	if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
 	if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-	if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
 	if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+	if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+	if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
 	if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
 	while(s_start!=s_end) {
 		if (++fuc==4) {
@@ -484,77 +484,77 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 		if(di>ci) {
 			if(dj>cj) {
 				if(dk>ck) {
-					if (corner_test(c,gp,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+					if (corner_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(c,gp,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+					if (corner_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-					if (edge_z_test(c,gp,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+					if (edge_z_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				}
 			} else if(dj<cj) {
 				if(dk>ck) {
-					if (corner_test(c,gp,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+					if (corner_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(c,gp,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
+					if (corner_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
 				} else {
-					if (edge_z_test(c,gp,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+					if (edge_z_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-					if (edge_y_test(c,gp,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+					if (edge_y_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_y_test(c,gp,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+					if (edge_y_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-					if (face_x_test(c,gp,xlo,ylo,zlo,yhi,zhi)) continue;
+					if (face_x_test(c,xlo,ylo,zlo,yhi,zhi)) continue;
 				}
 			}
 		} else if(di<ci) {
 			if(dj>cj) {
 				if(dk>ck) {
-					if (corner_test(c,gp,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+					if (corner_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(c,gp,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
+					if (corner_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
 				} else {
-					if (edge_z_test(c,gp,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+					if (edge_z_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				}
 			} else if(dj<cj) {
 				if(dk>ck) {
-					if (corner_test(c,gp,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
+					if (corner_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(c,gp,xhi,yhi,zhi,xlo,ylo,zlo)) continue;
+					if (corner_test(c,xhi,yhi,zhi,xlo,ylo,zlo)) continue;
 				} else {
-					if (edge_z_test(c,gp,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
+					if (edge_z_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-					if (edge_y_test(c,gp,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+					if (edge_y_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_y_test(c,gp,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
+					if (edge_y_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
 				} else {
-					if (face_x_test(c,gp,xhi,ylo,zlo,yhi,zhi)) continue;
+					if (face_x_test(c,xhi,ylo,zlo,yhi,zhi)) continue;
 				}
 			}
 		} else {
 			if(dj>cj) {
 				if(dk>ck) {
-					if (edge_x_test(c,gp,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+					if (edge_x_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_x_test(c,gp,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+					if (edge_x_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-					if (face_y_test(c,gp,xlo,ylo,zlo,xhi,zhi)) continue;
+					if (face_y_test(c,xlo,ylo,zlo,xhi,zhi)) continue;
 				}
 			} else if(dj<cj) {
 				if(dk>ck) {
-					if (edge_x_test(c,gp,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+					if (edge_x_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_x_test(c,gp,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
+					if (edge_x_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
 				} else {
-					if (face_y_test(c,gp,xlo,yhi,zlo,xhi,zhi)) continue;
+					if (face_y_test(c,xlo,yhi,zlo,xhi,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-					if (face_z_test(c,gp,xlo,ylo,zlo,xhi,yhi)) continue;
+					if (face_z_test(c,xlo,ylo,zlo,xhi,yhi)) continue;
 				} else if(dk<ck) {
-					if (face_z_test(c,gp,xlo,ylo,zhi,xhi,yhi)) continue;
+					if (face_z_test(c,xlo,ylo,zhi,xhi,yhi)) continue;
 				} else {
 					cout << "error\n";
 				}
@@ -565,96 +565,98 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 		if(yperiodic) {ej=j+dj-ny;if (ej<0) {qy=ay-by;ej+=ny;} else if (ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
 		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
 
+		cout << "newblock\n";
 		eijk=ei+nx*(ej+ny*ek);
 		for(q=0;q<co[eijk];q++) {
 			x1=p[eijk][sz*q]+qx-x;
 			y1=p[eijk][sz*q+1]+qy-y;
 			z1=p[eijk][sz*q+2]+qz-z;
 			rs=x1*x1+y1*y1+z1*z1;
-			if (rs<mrs)
-			c.nplane(x1,y1,z1,rs,id[eijk][q]);
+			if (rs<mrs) {
+				cout << x1 << y1 << z1;
+			c.nplane(x1,y1,z1,rs,id[eijk][q]);}
 		}
 
 		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
 
 		dijk=di+hx*(dj+hy*dk);
 		if(di>0) if(mask[dijk-1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-1]=mv;sl[s_end++]=di-1;sl[s_end++]=dj;sl[s_end++]=dk;}
-		if(di<hx-1) if(mask[dijk+1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+1]=mv;sl[s_end++]=di+1;sl[s_end++]=dj;sl[s_end++]=dk;}
 		if(dj>0) if(mask[dijk-hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hx]=mv;sl[s_end++]=di;sl[s_end++]=dj-1;sl[s_end++]=dk;}
-		if(dj<hy-1) if(mask[dijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hx]=mv;sl[s_end++]=di;sl[s_end++]=dj+1;sl[s_end++]=dk;}
 		if(dk>0) if(mask[dijk-hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk-1;}
+		if(di<hx-1) if(mask[dijk+1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+1]=mv;sl[s_end++]=di+1;sl[s_end++]=dj;sl[s_end++]=dk;}
+		if(dj<hy-1) if(mask[dijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hx]=mv;sl[s_end++]=di;sl[s_end++]=dj+1;sl[s_end++]=dk;}
 		if(dk<hz-1) if(mask[dijk+hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk+1;}
 	}
 }
 
 template<class n_option>
-inline bool container::corner_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
-	if (c.plane_intersects_guess(xh,yl,zl,xl*xh+yl*yl+zl*zl,gp)) return false;
-	if (c.plane_intersects(xh,yh,zl,xl*xh+yl*yh+zl*zl,gp)) return false;
-	if (c.plane_intersects(xl,yh,zl,xl*xl+yl*yh+zl*zl,gp)) return false;
-	if (c.plane_intersects(xl,yh,zh,xl*xl+yl*yh+zl*zh,gp)) return false;
-	if (c.plane_intersects(xl,yl,zh,xl*xl+yl*yl+zl*zh,gp)) return false;
-	if (c.plane_intersects(xh,yl,zh,xl*xh+yl*yl+zl*zh,gp)) return false;
+inline bool container::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
+	if (c.plane_intersects_guess(xh,yl,zl,xl*xh+yl*yl+zl*zl)) return false;
+	if (c.plane_intersects(xh,yh,zl,xl*xh+yl*yh+zl*zl)) return false;
+	if (c.plane_intersects(xl,yh,zl,xl*xl+yl*yh+zl*zl)) return false;
+	if (c.plane_intersects(xl,yh,zh,xl*xl+yl*yh+zl*zh)) return false;
+	if (c.plane_intersects(xl,yl,zh,xl*xl+yl*yl+zl*zh)) return false;
+	if (c.plane_intersects(xh,yl,zh,xl*xh+yl*yl+zl*zh)) return false;
 	return true;
 }
 
 template<class n_option>
-inline bool container::edge_x_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
-	if (c.plane_intersects_guess(x0,yl,zh,yl*yl+zl*zh,gp)) return false;
-	if (c.plane_intersects(x1,yl,zh,yl*yl+zl*zh,gp)) return false;
-	if (c.plane_intersects(x1,yl,zl,yl*yl+zl*zl,gp)) return false;
-	if (c.plane_intersects(x0,yl,zl,yl*yl+zl*zl,gp)) return false;
-	if (c.plane_intersects(x0,yh,zl,yl*yh+zl*zl,gp)) return false;
-	if (c.plane_intersects(x1,yh,zl,yl*yh+zl*zl,gp)) return false;
+inline bool container::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
+	if (c.plane_intersects_guess(x0,yl,zh,yl*yl+zl*zh)) return false;
+	if (c.plane_intersects(x1,yl,zh,yl*yl+zl*zh)) return false;
+	if (c.plane_intersects(x1,yl,zl,yl*yl+zl*zl)) return false;
+	if (c.plane_intersects(x0,yl,zl,yl*yl+zl*zl)) return false;
+	if (c.plane_intersects(x0,yh,zl,yl*yh+zl*zl)) return false;
+	if (c.plane_intersects(x1,yh,zl,yl*yh+zl*zl)) return false;
 	return true;
 }
 
 template<class n_option>
-inline bool container::edge_y_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
-	if (c.plane_intersects_guess(xl,y0,zh,xl*xl+zl*zh,gp)) return false;
-	if (c.plane_intersects(xl,y1,zh,xl*xl+zl*zh,gp)) return false;
-	if (c.plane_intersects(xl,y1,zl,xl*xl+zl*zl,gp)) return false;
-	if (c.plane_intersects(xl,y0,zl,xl*xl+zl*zl,gp)) return false;
-	if (c.plane_intersects(xh,y0,zl,xl*xh+zl*zl,gp)) return false;
-	if (c.plane_intersects(xh,y1,zl,xl*xh+zl*zl,gp)) return false;
+inline bool container::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
+	if (c.plane_intersects_guess(xl,y0,zh,xl*xl+zl*zh)) return false;
+	if (c.plane_intersects(xl,y1,zh,xl*xl+zl*zh)) return false;
+	if (c.plane_intersects(xl,y1,zl,xl*xl+zl*zl)) return false;
+	if (c.plane_intersects(xl,y0,zl,xl*xl+zl*zl)) return false;
+	if (c.plane_intersects(xh,y0,zl,xl*xh+zl*zl)) return false;
+	if (c.plane_intersects(xh,y1,zl,xl*xh+zl*zl)) return false;
 	return true;
 }
 
 template<class n_option>
-inline bool container::edge_z_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
-	if (c.plane_intersects_guess(xl,yh,z0,xl*xl+yl*yh,gp)) return false;
-	if (c.plane_intersects(xl,yh,z1,xl*xl+yl*yh,gp)) return false;
-	if (c.plane_intersects(xl,yl,z1,xl*xl+yl*yl,gp)) return false;
-	if (c.plane_intersects(xl,yl,z0,xl*xl+yl*yl,gp)) return false;
-	if (c.plane_intersects(xh,yl,z0,xl*xh+yl*yl,gp)) return false;
-	if (c.plane_intersects(xh,yl,z1,xl*xh+yl*yl,gp)) return false;
+inline bool container::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
+	if (c.plane_intersects_guess(xl,yh,z0,xl*xl+yl*yh)) return false;
+	if (c.plane_intersects(xl,yh,z1,xl*xl+yl*yh)) return false;
+	if (c.plane_intersects(xl,yl,z1,xl*xl+yl*yl)) return false;
+	if (c.plane_intersects(xl,yl,z0,xl*xl+yl*yl)) return false;
+	if (c.plane_intersects(xh,yl,z0,xl*xh+yl*yl)) return false;
+	if (c.plane_intersects(xh,yl,z1,xl*xh+yl*yl)) return false;
 	return true;
 }
 
 template<class n_option>
-inline bool container::face_x_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
-	if (c.plane_intersects_guess(xl,y0,z0,xl*xl,gp)) return false;
-	if (c.plane_intersects(xl,y0,z1,xl*xl,gp)) return false;
-	if (c.plane_intersects(xl,y1,z1,xl*xl,gp)) return false;
-	if (c.plane_intersects(xl,y1,z0,xl*xl,gp)) return false;
+inline bool container::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
+	if (c.plane_intersects_guess(xl,y0,z0,xl*xl)) return false;
+	if (c.plane_intersects(xl,y0,z1,xl*xl)) return false;
+	if (c.plane_intersects(xl,y1,z1,xl*xl)) return false;
+	if (c.plane_intersects(xl,y1,z0,xl*xl)) return false;
 	return true;
 }
 
 template<class n_option>
-inline bool container::face_y_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
-	if (c.plane_intersects_guess(x0,yl,z0,yl*yl,gp)) return false;
-	if (c.plane_intersects(x0,yl,z1,yl*yl,gp)) return false;
-	if (c.plane_intersects(x1,yl,z1,yl*yl,gp)) return false;
-	if (c.plane_intersects(x1,yl,z0,yl*yl,gp)) return false;
+inline bool container::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
+	if (c.plane_intersects_guess(x0,yl,z0,yl*yl)) return false;
+	if (c.plane_intersects(x0,yl,z1,yl*yl)) return false;
+	if (c.plane_intersects(x1,yl,z1,yl*yl)) return false;
+	if (c.plane_intersects(x1,yl,z0,yl*yl)) return false;
 	return true;
 }
 
 template<class n_option>
-inline bool container::face_z_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
-	if (c.plane_intersects_guess(x0,y0,zl,zl*zl,gp)) return false;
-	if (c.plane_intersects(x0,y1,zl,zl*zl,gp)) return false;
-	if (c.plane_intersects(x1,y1,zl,zl*zl,gp)) return false;
-	if (c.plane_intersects(x1,y0,zl,zl*zl,gp)) return false;
+inline bool container::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
+	if (c.plane_intersects_guess(x0,y0,zl,zl*zl)) return false;
+	if (c.plane_intersects(x0,y1,zl,zl*zl)) return false;
+	if (c.plane_intersects(x1,y1,zl,zl*zl)) return false;
+	if (c.plane_intersects(x1,y0,zl,zl*zl)) return false;
 	return true;
 }
 

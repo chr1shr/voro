@@ -179,19 +179,19 @@ class container {
 		void add_list_memory();
 	private:
 		template<class n_option>
-		inline bool corner_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
+		inline bool corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
 		template<class n_option>
-		inline bool edge_x_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh);
+		inline bool edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh);
 		template<class n_option>
-		inline bool edge_y_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh);
+		inline bool edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh);
 		template<class n_option>
-		inline bool edge_z_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1);
+		inline bool edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1);
 		template<class n_option>
-		inline bool face_x_test(voronoicell_base<n_option> &c,int gp,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1);
+		inline bool face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1);
 		template<class n_option>
-		inline bool face_y_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1);
+		inline bool face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1);
 		template<class n_option>
-		inline bool face_z_test(voronoicell_base<n_option> &c,int gp,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1);
+		inline bool face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1);
 		friend class facets_loop;
 };
 

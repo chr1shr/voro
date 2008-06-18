@@ -178,7 +178,7 @@ void voronoicell_base<n_option>::add_memory_ds2() {
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions */
 template<class n_option>
 void voronoicell_base<n_option>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
-	for(int i=0;i<current_vertex_order;i++) mec[i]=0;
+	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
 	pts[3]=xmax;pts[4]=ymin;pts[5]=zmin;
@@ -208,7 +208,7 @@ void voronoicell_base<n_option>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint
  * are initialized at (-l,0,0), (l,0,0), (0,-l,0), (0,l,0), (0,0,-l), and (0,0,l).*/
 template<class n_option>
 inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
-	for(int i=0;i<current_vertex_order;i++) mec[i]=0;
+	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[4]=p=6;l*=2;
 	pts[0]=-l;pts[1]=0;pts[2]=0;
 	pts[3]=l;pts[4]=0;pts[5]=0;
@@ -236,7 +236,7 @@ inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
  * \param (x3,y3,z3) A position vector for the fourth vertex. */
 template<class n_option>
 inline void voronoicell_base<n_option>::init_tetrahedron(fpoint x0,fpoint y0,fpoint z0,fpoint x1,fpoint y1,fpoint z1,fpoint x2,fpoint y2,fpoint z2,fpoint x3,fpoint y3,fpoint z3) {
-	for(int i=0;i<current_vertex_order;i++) mec[i]=0;
+	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=4;
 	pts[0]=x0*2;pts[1]=y0*2;pts[2]=z0*2;
 	pts[3]=x1*2;pts[4]=y1*2;pts[5]=z1*2;
@@ -259,7 +259,7 @@ inline void voronoicell_base<n_option>::init_tetrahedron(fpoint x0,fpoint y0,fpo
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::init_test(int n) {
-	for(int i=0;i<current_vertex_order;i++) mec[i]=0;p=0;
+	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=p=0;
 	switch(n) {
 		case 0:
 			// A peaked object, with a high vertex 6, and a ridge
@@ -525,25 +525,16 @@ inline void voronoicell_base<n_option>::construct_relations() {
  * \f$x^2+y^2+z^2\f$. */
 template<class n_option>
 bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
-	int count=0,i,j,k,up=0,lp=0,tp,cp,qp=1,rp,stack=0;stack2=0;
+	int count=0,i,j,k,lp=up,tp,cp,qp=1,rp,stack=0;stack2=0;
 	int us=0,ls=0,qs,iqs,cs,uw,qw=0,lw,tw;
 	int *edp,*edd;
 	fpoint u,l,t,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
-
 	//Initialize the safe testing routine
 	sure.init(x,y,z,rsq);
 
 	//Test approximately sqrt(n)/4 points for their proximity to the plane
 	//and keep the one which is closest
-	uw=sure.test(up,u);t=abs(u);
-	tw=qp=1;rp=p>>3;
-	while(tw<rp) {
-		qw=sure.test(qp,q);
-		r=abs(q);
-		if(r<t) {up=qp;u=q;t=r;uw=qw;}
-		tw+=qp++;
-	}
-	lp=up;lw=uw;l=u;
+	lw=uw=sure.test(up,u);l=u;
 
 	// Starting from an initial guess, we now move from vertex to vertex,
 	// to try and find an edge which intersects the cutting plane,
@@ -611,7 +602,9 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				// is convex, then the whole cell must be
 				// outside the cutting space, so it's not
 				// intersected at all
-				if (up==lp) return true;
+				if (up==lp) {
+	cout << "bail " << count << endl;
+					return true;}
 			} while (uw==-1);
 			us=ed[lp][nu[lp]+ls];
 			complicated_setup=(uw!=1);
@@ -687,6 +680,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		}
 		if(qp==p) return qw==-1?true:false;
 	}
+	cout << count << endl;
 
 	// We're about to add the first point of the new facet. In either
 	// routine, we have to add a point, so first check there's space for
@@ -1198,6 +1192,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			}
 		}
 	}
+	up=0;
 
 	// Delete them from the array structure
 	while(stack>0) {
@@ -1209,32 +1204,32 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			neighbor.copy_pointer(ed[p][2*j],p);
 			ed[ed[p][2*j]]=ed[p];
 		}
-		qp=ds[--stack];
-		if (qp<p) {
+		up=ds[--stack];
+		if (up<p) {
 
 			// Vertex management
-			pts[3*qp]=pts[3*p];
-			pts[3*qp+1]=pts[3*p+1];
-			pts[3*qp+2]=pts[3*p+2];
+			pts[3*up]=pts[3*p];
+			pts[3*up+1]=pts[3*p+1];
+			pts[3*up+2]=pts[3*p+2];
 
 			// Memory management
-			j=nu[qp];
+			j=nu[up];
 			mec[j]--;
-			for(i=0;i<=2*j;i++) ed[qp][i]=(mep[j]+(2*j+1)*mec[j])[i];
-			neighbor.set_aux2_copy(qp,j);
-			neighbor.copy_pointer(ed[qp][2*j],qp);
-			neighbor.copy_pointer(qp,p);
-			ed[ed[qp][2*j]]=ed[qp];
+			for(i=0;i<=2*j;i++) ed[up][i]=(mep[j]+(2*j+1)*mec[j])[i];
+			neighbor.set_aux2_copy(up,j);
+			neighbor.copy_pointer(ed[up][2*j],up);
+			neighbor.copy_pointer(up,p);
+			ed[ed[up][2*j]]=ed[up];
 
 			// Edge management
-			ed[qp]=ed[p];
-			nu[qp]=nu[p];
-			for(i=0;i<nu[qp];i++) {
-				if (ed[qp][i]==-1) throw fatal_error("fishy");
-				ed[ed[qp][i]][ed[qp][nu[qp]+i]]=qp;
+			ed[up]=ed[p];
+			nu[up]=nu[p];
+			for(i=0;i<nu[up];i++) {
+				if (ed[up][i]==-1) throw fatal_error("fishy");
+				ed[ed[up][i]][ed[up][nu[up]+i]]=up;
 			}
-			ed[qp][2*nu[qp]]=qp;
-		} else p++;
+			ed[up][2*nu[up]]=up;
+		} else up=p++;
 	}
 
 	// Check for any vertices of zero order
@@ -1289,7 +1284,9 @@ inline bool voronoicell_base<n_option>::collapse_order2() {
 
 		// Compact the memory
 		--p;
+		if(up==i) up=0;
 		if(p!=i) {
+			if (up==p) up=i;
 			pts[3*i]=pts[3*p];
 			pts[3*i+1]=pts[3*p+1];
 			pts[3*i+2]=pts[3*p+2];
@@ -1315,13 +1312,16 @@ template<class n_option>
 inline bool voronoicell_base<n_option>::collapse_order1() {
 	int i,j,k;
 	while(mec[1]>0) {
+		up=0;
 		cerr << "Order one collapse" << endl;
 		i=--mec[1];
 		j=mep[1][3*i];k=mep[1][3*i+1];
 		i=mep[1][3*i+2];
 		if(!delete_connection(j,k,false)) return false;
 		--p;
+		if(up==i) up=0;
 		if(p!=i) {
+			if (up==p) up=i;
 			pts[3*i]=pts[3*p];
 			pts[3*i+1]=pts[3*p+1];
 			pts[3*i+2]=pts[3*p+2];
@@ -1856,21 +1856,21 @@ void voronoicell_base<n_option>::check_facets() {
 /** This routine tests to see whether the cell intersects a plane, given an initial
  * starting vertex. */
 template<class n_option>
-bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp) {
+bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	int gw;fpoint g;
 	sure.init(x,y,z,rsq);
-	gw=sure.test(gp,g);
-	if (gw==-1) return plane_intersects_track(x,y,z,rsq,gp,g);
+	gw=sure.test(up,g);
+	if (gw==-1) return plane_intersects_track(x,y,z,rsq,g);
 	return true;
 }
 
 template<class n_option>
-bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp) {
-	gp=0;
+bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq) {
+	up=0;
 	int gw;
 	fpoint g;
 	sure.init(x,y,z,rsq);
-	gw=sure.test(gp,g);
+	gw=sure.test(up,g);
 	if (gw==-1) {
 		int ca,cc,mp,mw;
 		fpoint m=g;
@@ -1878,16 +1878,16 @@ bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint
 		while(ca<cc) {
 			mw=sure.test(mp,m);
 			if (mw!=-1) return true;
-			if (m>g) {g=m;gp=mp;}
+			if (m>g) {g=m;up=mp;}
 			ca+=mp++;
 		}
-		return plane_intersects_track(x,y,z,rsq,gp,g);
+		return plane_intersects_track(x,y,z,rsq,g);
 	}
 	return true;
 }
 
 template<class n_option>
-inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rsq,int &gp,fpoint g) {
+inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rsq,fpoint g) {
 	int count=0,i,tp,gw=-1;
 	fpoint t;
 	// The test point is outside of the cutting space
@@ -1897,7 +1897,7 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 		// than there are points, there's a floating
 		// point problem, so we'll bail out
 		if (++count>=p) {
-			for(gp=0;gp<p;gp++) if (sure.test(gp,g)!=-1) return true;
+			for(up=0;up<p;up++) if (sure.test(up,g)!=-1) return true;
 			return false;
 		}
 		
@@ -1910,12 +1910,12 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 			tw=sure.test(tp,t);
 			if(t>u) {u=t;up=tp;gw=tw;}
 		}*/
-		for(i=0;i<nu[gp];i++) {
-			tp=ed[gp][i];
+		for(i=0;i<nu[up];i++) {
+			tp=ed[up][i];
 			gw=sure.test(tp,t);
-			if(t>g) {gp=tp;g=t;break;}
+			if(t>g) {up=tp;g=t;break;}
 		}
-		if (i==nu[gp]) return false;
+		if (i==nu[up]) return false;
 
 		// If we couldn't find a point and the object
 		// is convex, then the whole cell must be
