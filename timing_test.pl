@@ -28,9 +28,9 @@ foreach $r (@range) {
 		<F>=~m/(\d*)m([\d\.]*)s/;$rs=$1*60+$2;$ts+=$rs;$ts2+=$rs*$rs;
 	}
 	$tr/=$tries;$tu/=$tries;$ts/=$tries;
-	$tr2=sqrt($tr2/$tries-$tr*$tr);
-	$tu2=sqrt($tu2/$tries-$tu*$tu);
-	$ts2=sqrt($ts2/$tries-$ts*$ts);
+	$tr2=$tr2/$tries-$tr*$tr;$tr2=$tr2>0?sqrt($tr2):0;
+	$tu2=$tu2/$tries-$tu*$tu;$tu2=$tu2>0?sqrt($tu2):0;
+	$ts2=$ts2/$tries-$ts*$ts;$ts2=$ts2>0?sqrt($ts2):0;
 	chdir "..";
 	print "$r $tr $tu $ts $tr2 $tu2 $ts2\n";
 }
