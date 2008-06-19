@@ -15,7 +15,7 @@ const fpoint z_min=-1,z_max=1;
 
 // Set up the number of blocks that the container is divided
 // into.
-const int n_x=18,n_y=18,n_z=18;
+const int n_x=NNN,n_y=NNN,n_z=NNN;
 
 // Set the number of particles that are going to be randomly
 // introduced
@@ -53,7 +53,7 @@ int main() {
 	con.guess_length_scale();
 
 	con.store_cell_volumes(bb);x=0;
-	for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
+	//for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot

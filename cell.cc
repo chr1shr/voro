@@ -525,51 +525,60 @@ inline void voronoicell_base<n_option>::construct_relations() {
  * \f$x^2+y^2+z^2\f$. */
 template<class n_option>
 bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
-	int count=0,i,j,k,lp=up,tp,cp,qp=1,rp,stack=0;stack2=0;
-	int us=0,ls=0,qs,iqs,cs,uw,qw=0,lw,tw;
+	int count=0,i,j,k,lp=up,cp,qp,rp,stack=0;stack2=0;
+	int us=0,ls=0,qs,iqs,cs,uw,qw,lw;
 	int *edp,*edd;
-	fpoint u,l,t,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
+	fpoint u,l,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
 	//Initialize the safe testing routine
 	sure.init(x,y,z,rsq);
 
 	//Test approximately sqrt(n)/4 points for their proximity to the plane
 	//and keep the one which is closest
-	lw=uw=sure.test(up,u);l=u;
+	uw=sure.test(up,u);
 
 	// Starting from an initial guess, we now move from vertex to vertex,
 	// to try and find an edge which intersects the cutting plane,
 	// or a vertex which is on the plane
 	try {
 		if(uw==1) {
-
-			// The test point is within the cutting space
+			// The test point is inside the cutting plane.
+			us=0;
 			do {
+				lp=ed[up][us];
+				lw=sure.test(lp,l);
+				if(l<u) break;
+				us++;
+			} while (us<nu[up]);
 
-				// If we have been around this loop more times
-				// than there are points, there's a floating
-				// point problem, so we'll bail out
-				if (++count>=p) throw true;
-				
-				// Test all the neighbors of the current point
-				// and find the one which is closest to the
-				// plane
-				u=l;up=lp;uw=lw;
-				for(i=0;i<nu[up];i++) {
-					tp=ed[up][i];
-					tw=sure.test(tp,t);
-					if(t<l) {l=t;lw=tw;lp=tp;us=i;}
-				}
-
-				// If we couldn't find a point and the object
-				// is convex, then the whole cell must be
-				// within the cutting space, so there's nothing
-				// left
-				if (lp==up) {
-					cerr << "Failed to find intersection" << endl;
-					return false;
-				}
-			} while (lw==1);
+			if(us==nu[up]) {
+				cerr << "Failed to find intersection" << endl;
+				return false;
+			}
+			
 			ls=ed[up][nu[up]+us];
+			while(lw==1) {
+				if(++count>=p) throw true;
+				u=l;up=lp;
+				for(us=0;us<ls;us++) {
+					lp=ed[up][us];
+					lw=sure.test(lp,l);
+					if(l<u) break;
+				}
+				if(us==ls) {
+					us++;
+					while(us<nu[up]) {
+						lp=ed[up][us];
+						lw=sure.test(lp,l);
+						if(l<u) break;
+						us++;
+					}
+					if(us==nu[up]) {
+						cerr << "Failed to find intersection" << endl;
+						return false;
+					}
+				}
+				ls=ed[up][nu[up]+us];
+			}
 
 			// If the last point in the iteration is within the
 			// plane, we need to do the complicated setup
@@ -579,40 +588,43 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				complicated_setup=true;
 			} else complicated_setup=false;
 		} else if (uw==-1) {
-
-			// The test point is outside of the cutting space
+			us=0;
 			do {
+				qp=ed[up][us];
+				qw=sure.test(qp,q);
+				if(u<q) break;
+				us++;
+			} while (us<nu[up]);
+			if(us==nu[up]) return true;
 
-				// If we have been around this loop more times
-				// than there are points, there's a floating
-				// point problem, so we'll bail out
-				if (++count>=p) throw true;
-				
-				// Test all the neighbors of the current point
-				// and find the one which is closest to the
-				// plane
-				l=u;lp=up;lw=uw;
-		/*		for(i=0;i<nu[lp];i++) {
-					tp=ed[lp][i];
-					tw=sure.test(tp,t);
-					if(t>u) {u=t;uw=tw;up=tp;ls=i;}
-				}*/
-				for(i=0;i<nu[lp];i++) {
-					up=ed[lp][i];
-					uw=sure.test(up,u);
-					if(u>l) break;
+			while(qw==-1) {
+				qs=ed[up][nu[up]+us];
+				if(++count>=p) throw true;
+				u=q;up=qp;
+				for(us=0;us<qs;us++) {
+					qp=ed[up][us];
+					qw=sure.test(qp,q);
+					if(u<q) break;
 				}
-				if (i==nu[lp]) return true;
-
-				// If we couldn't find a point and the object
-				// is convex, then the whole cell must be
-				// outside the cutting space, so it's not
-				// intersected at all
-				if (up==lp) return true;
-			} while (uw==-1);
-			ls=i;	//XXX Added in mod
-			us=ed[lp][nu[lp]+ls];
-			complicated_setup=(uw!=1);
+				if(us==qs) {
+					us++;
+					while(us<nu[up]) {
+						qp=ed[up][us];
+						qw=sure.test(qp,q);
+						if(u<q) break;
+						us++;
+					}
+					if(us==nu[up]) return true;
+				}
+			}
+			if (qw==1) {
+				lp=up;ls=us;l=u;
+				up=qp;us=ed[lp][nu[lp]+ls];u=q;
+				complicated_setup=false;
+			} else {
+				up=qp;
+				complicated_setup=true;
+			}
 		} else {
 
 			// Our original test point was on the plane, so we
@@ -622,12 +634,12 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		}
 	}
 	catch(bool except) {
-
 		// This routine is a fall-back, in case floating point errors
 		// cause the usual search routine to fail. In the fall-back
 		// routine, we just test every edge to find one straddling
 		// the plane.
 		cerr << "Bailed out of convex calculation\n";
+		qw=1;
 		for(qp=0;qp<p;qp++) {
 			qw=sure.test(qp,q);
 			if (qw==1) {
@@ -1901,7 +1913,6 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 		if(t>g) {
 			ls=ed[up][nu[up]+us];
 			up=tp;
-			g=t;
 			while (tw==-1) {
 				if (++count>=p) {
 					cerr << "Err bailed\n";
@@ -1914,15 +1925,15 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 				// plane
 				for(us=0;us<ls;us++) {
 					tp=ed[up][us];
-					tw=sure.test(tp,t);
-					if(t>g) {ls=ed[up][nu[up]+us];up=tp;g=t;break;}
+					tw=sure.test(tp,g);
+					if(g>t) {ls=ed[up][nu[up]+us];up=tp;t=g;break;}
 				}
 				if (us==ls) {
 					us++;
 					while(us<nu[up]) {
 						tp=ed[up][us];
-						tw=sure.test(tp,t);
-						if(t>g) {ls=ed[up][nu[up]+us];up=tp;g=t;break;}
+						tw=sure.test(tp,g);
+						if(g>t) {ls=ed[up][nu[up]+us];up=tp;t=g;break;}
 						us++;
 					}
 					if (us==nu[up]) return false;
