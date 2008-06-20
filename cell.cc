@@ -1873,28 +1873,24 @@ void voronoicell_base<n_option>::check_facets() {
  * starting vertex. */
 template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rsq) {
-	int gw;fpoint g;
-	sure.init(x,y,z,rsq);
-	gw=sure.test(up,g);
-	if (gw==-1) return plane_intersects_track(x,y,z,rsq,g);
+	fpoint g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+	if (g<rsq) return plane_intersects_track(x,y,z,rsq,g);
 	return true;
 }
 
 template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	up=0;
-	int gw;
-	fpoint g;
-	sure.init(x,y,z,rsq);
-	gw=sure.test(up,g);
-	if (gw==-1) {
-		int ca,cc,mp,mw;
-		fpoint m=g;
-		ca=mp=1;cc=p>>3;
+	fpoint g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+	if (g<rsq) { 
+		int ca=1,cc=p>>3,mp=1;
+		fpoint m;
 		while(ca<cc) {
-			mw=sure.test(mp,m);
-			if (mw!=-1) return true;
-			if (m>g) {g=m;up=mp;}
+			m=x*pts[3*mp]+y*pts[3*mp+1]+z*pts[3*mp+2];
+			if (m>g) {
+				if (m>rsq) return true;
+				g=m;up=mp;
+			}
 			ca+=mp++;
 		}
 		return plane_intersects_track(x,y,z,rsq,g);
@@ -1904,19 +1900,19 @@ bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint
 
 template<class n_option>
 inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rsq,fpoint g) {
-	int count=0,ls,us,tp,tw;
+	int count=0,ls,us,tp;
 	fpoint t;
 	// The test point is outside of the cutting space
 	for(us=0;us<nu[up];us++) {
 		tp=ed[up][us];
-		tw=sure.test(tp,t);
+		t=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
 		if(t>g) {
 			ls=ed[up][nu[up]+us];
 			up=tp;
-			while (tw==-1) {
+			while (t<rsq) {
 				if (++count>=p) {
 					cerr << "Err bailed\n";
-					for(up=0;up<p;up++) if (sure.test(up,g)!=-1) return true;
+					for(tp=0;tp<p;tp++) if (x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) return true;
 					return false;
 				}
 				
@@ -1925,14 +1921,14 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 				// plane
 				for(us=0;us<ls;us++) {
 					tp=ed[up][us];
-					tw=sure.test(tp,g);
+					g=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
 					if(g>t) {ls=ed[up][nu[up]+us];up=tp;t=g;break;}
 				}
 				if (us==ls) {
 					us++;
 					while(us<nu[up]) {
 						tp=ed[up][us];
-						tw=sure.test(tp,g);
+						g=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
 						if(g>t) {ls=ed[up][nu[up]+us];up=tp;t=g;break;}
 						us++;
 					}

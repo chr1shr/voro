@@ -422,8 +422,460 @@ inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int i,int
 	compute_cell_slow(c,i,j,k,ijk,s,x,y,z);
 }
 
+/** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
+template<class n_option>
+inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
+	compute_cell(c,i,j,k,ijk,s,x,y,z);
+}
+
 template<class n_option>
 void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
+	const fpoint bxsq=boxx*boxx+boxy*boxy+boxz*boxz;
+	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
+	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
+	int ci,cj,ck,cijk,di,dj,dk,dijk,ei,ej,ek,eijk,q;
+	// Initialize the Voronoi cell to fill the entire container
+	initialize_voronoicell(c,x,y,z);
+	fpoint crs,mrs;
+
+//	int ct1=0,ct2=0,ct3=0;
+
+	int count=0,next_count=1,list_index=0,list_size=19;
+//	int count_list[]={2,3,5,7,10,15,21};
+//	int count_list[]={3,5,8,12,17,22,38};
+	int count_list[]={2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,25,36,49,64};
+
+	// Test all particles in the particle's local region first
+	for(q=0;q<s;q++) {
+		x1=p[ijk][sz*q]-x;
+		y1=p[ijk][sz*q+1]-y;
+		z1=p[ijk][sz*q+2]-z;
+		rs=x1*x1+y1*y1+z1*z1;
+		c.nplane(x1,y1,z1,rs,id[i][j]);
+	}
+	q++;
+	while(q<co[ijk]) {
+		x1=p[ijk][sz*q]-x;
+		y1=p[ijk][sz*q+1]-y;
+		z1=p[ijk][sz*q+2]-z;
+		rs=x1*x1+y1*y1+z1*z1;
+		c.nplane(x1,y1,z1,rs,id[i][j]);
+		q++;
+	}
+
+	mrs=c.maxradsq();
+	// Update the mask counter, and if it has wrapped around, then
+	// reset the mask
+	mv++;
+	if (mv==0) {
+		for(q=0;q<hxyz;q++) mask[q]=0;
+		mv=1;
+	}
+	s_start=s_end=0;
+
+	ci=xperiodic?nx:i;
+	cj=yperiodic?ny:j;
+	ck=zperiodic?nz:k;
+	fpoint fx=x-ax-boxx*i,fy=y-ay-boxy*j,fz=z-az-boxz*k;
+	bool clx=fx<0.5*boxx,cly=fy<0.5*boxy,clz=fz<0.5*boxz;
+	fx+=boxx*ci;fy+=boxy*cj;fz+=boxz*ck;
+	cijk=ci+hx*(cj+hy*ck);
+	mask[cijk]=mv;
+
+	if (clx) {
+		if (cly) {
+			if (clz) {
+				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+			} else {
+				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+			}
+		} else {
+			if (clz) {
+				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+			} else {
+				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+			}
+		}
+	} else {
+		if (cly) {
+			if (clz) {
+				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+			} else {
+				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+			}
+		} else {
+			if (clz) {
+				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+			} else {
+				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
+				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
+				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
+				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+			}
+		}
+	}
+	
+	//cout << "bleh" << endl;
+	while(s_start!=s_end) {
+		if (s_start==s_size) s_start=0;
+		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
+	//	cout << di << " " << dj << " " << dk << endl;
+		if(di>ci) {
+			xlo=di*boxx-fx;
+			crs=xlo*xlo;
+			if(dj>cj) {
+				ylo=dj*boxy-fy;
+				crs+=ylo*ylo;
+				if(dk>ck) {
+					zlo=dk*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=bxsq+2*(boxx*xlo+boxy*ylo+boxz*zlo);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=bxsq+2*(boxx*xlo+boxy*ylo-boxz*zlo);
+				} else {
+					if(crs>mrs) continue;
+					zlo=(clz?dk+1:dk)*boxz-fz;
+					crs+=boxx*(2*xlo+boxx)+boxy*(2*ylo+boxy)+zlo*zlo;
+				}
+			} else if(dj<cj) {
+				ylo=(dj+1)*boxy-fy;
+				crs+=ylo*ylo;
+				if(dk>ck) {
+					zlo=dk*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=bxsq+2*(boxx*xlo-boxy*ylo+boxz*zlo);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=bxsq+2*(boxx*xlo-boxy*ylo-boxz*zlo);
+				} else {
+					if(crs>mrs) continue;
+					zlo=(clz?dk+1:dk)*boxz-fz;
+					crs+=boxx*(2*xlo+boxx)+boxy*(-2*ylo+boxy)+zlo*zlo;
+				}
+			} else {
+				if(dk>ck) {
+					zlo=dk*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(2*zlo+boxz);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(-2*zlo+boxz);
+				} else {
+					if(crs>mrs) continue;
+					zlo=(clz?dk+1:dk)*boxz-fz;
+					crs+=zlo*zlo;
+				}
+				ylo=(cly?dj+1:dj)*boxy-fy;
+				crs+=ylo*ylo+boxx*(2*xlo+boxx);
+			}
+		} else if(di<ci) {
+			xlo=(di+1)*boxx-fx;
+			crs=xlo*xlo;
+			if(dj>cj) {
+				ylo=dj*boxy-fy;
+				crs+=ylo*ylo;
+				if(dk>ck) {
+					zlo=dk*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=bxsq+2*(-boxx*xlo+boxy*ylo+boxz*zlo);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=bxsq+2*(-boxx*xlo+boxy*ylo-boxz*zlo);
+				} else {
+					if(crs>mrs) continue;
+					zlo=(clz?(dk+1):dk)*boxz-fz;
+					crs+=boxx*(-2*xlo+boxx)+boxy*(2*ylo+boxy)+zlo*zlo;
+				}
+			} else if(dj<cj) {
+				ylo=(dj+1)*boxy-fy;
+				crs+=ylo*ylo;
+				if(dk>ck) {
+					zlo=dk*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=bxsq+2*(-boxx*xlo-boxy*ylo+boxz*zlo);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=bxsq+2*(-boxx*xlo-boxy*ylo-boxz*zlo);
+				} else {
+					if(crs>mrs) continue;
+					zlo=(clz?(dk+1):dk)*boxz-fz;
+					crs+=boxx*(-2*xlo+boxx)+boxy*(-2*ylo+boxy)+zlo*zlo;
+				}
+			} else {
+				if(dk>ck) {
+					zlo=dk*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(2*zlo+boxz);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(-2*zlo+boxz);
+				} else {
+					if(crs>mrs) continue;
+					zlo=(clz?dk+1:dk)*boxz-fz;
+					crs+=zlo*zlo;
+				}
+				ylo=(cly?dj+1:dj)*boxy-fy;
+				crs+=ylo*ylo+boxx*(-2*xlo+boxx);
+			}
+		} else {
+			if(dj>cj) {
+				ylo=dj*boxy-fy;
+				crs=ylo*ylo;
+				if(dk>ck) {
+					zlo=dk*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(2*zlo+boxz);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(-2*zlo+boxz);
+				} else {
+					if(crs>mrs) continue;
+					zlo=(clz?dk+1:dk)*boxz-fz;
+					crs+=zlo*zlo;
+				}
+				crs+=boxy*(2*ylo+boxy);
+			} else if(dj<cj) {
+				ylo=(dj+1)*boxy-fy;
+				crs=ylo*ylo;
+				if(dk>ck) {
+					zlo=dk*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(2*zlo+boxz);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;
+					crs+=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(-2*zlo+boxz);
+				} else {
+					if(crs>mrs) continue;
+					zlo=(clz?dk+1:dk)*boxz-fz;
+					crs+=zlo*zlo;
+				}
+				crs+=boxy*(-2*ylo+boxy);
+			} else {
+				if(dk>ck) {
+					zlo=dk*boxz-fz;crs=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(2*zlo+boxz);
+				} else if(dk<ck) {
+					zlo=(dk+1)*boxz-fz;crs=zlo*zlo;if(crs>mrs) continue;
+					crs+=boxz*(-2*zlo+boxz);
+				} else {
+					crs=0;
+					cout << "error\n";
+				}
+				ylo=(cly?dj+1:dj)*boxy-fy;
+				crs+=ylo*ylo;
+			}
+			xlo=(clx?di+1:di)*boxx-fx;
+			crs+=xlo*xlo;
+		}
+
+		if(xperiodic) {ei=i+di-nx;if (ei<0) {qx=ax-bx;ei+=nx;} else if (ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
+		if(yperiodic) {ej=j+dj-ny;if (ej<0) {qy=ay-by;ej+=ny;} else if (ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
+		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
+		eijk=ei+nx*(ej+ny*ek);
+
+		if(mrs>crs) {
+			//ct1++;
+			for(q=0;q<co[eijk];q++) {
+				x1=p[eijk][sz*q]+qx-x;
+				y1=p[eijk][sz*q+1]+qy-y;
+				z1=p[eijk][sz*q+2]+qz-z;
+				rs=x1*x1+y1*y1+z1*z1;
+				c.nplane(x1,y1,z1,rs,id[eijk][q]);
+			}
+		} else {
+			//ct2++;
+			for(q=0;q<co[eijk];q++) {
+				x1=p[eijk][sz*q]+qx-x;
+				y1=p[eijk][sz*q+1]+qy-y;
+				z1=p[eijk][sz*q+2]+qz-z;
+				rs=x1*x1+y1*y1+z1*z1;
+				if (rs<mrs) c.nplane(x1,y1,z1,rs,id[eijk][q]);
+			}
+		}
+
+		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
+
+		dijk=di+hx*(dj+hy*dk);
+		if(di>0) if(mask[dijk-1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-1]=mv;sl[s_end++]=di-1;sl[s_end++]=dj;sl[s_end++]=dk;}
+		if(dj>0) if(mask[dijk-hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hx]=mv;sl[s_end++]=di;sl[s_end++]=dj-1;sl[s_end++]=dk;}
+		if(dk>0) if(mask[dijk-hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk-1;}
+		if(di<hx-1) if(mask[dijk+1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+1]=mv;sl[s_end++]=di+1;sl[s_end++]=dj;sl[s_end++]=dk;}
+		if(dj<hy-1) if(mask[dijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hx]=mv;sl[s_end++]=di;sl[s_end++]=dj+1;sl[s_end++]=dk;}
+		if(dk<hz-1) if(mask[dijk+hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk+1;}
+		
+		count++;
+		if (count==next_count) {
+			mrs=c.maxradsq();
+			if(list_index==list_size) {count=0;break;}
+			else next_count=count_list[list_index++];
+		}
+	}
+
+	while(s_start!=s_end) {
+		if(s_start==s_size) s_start=0;
+		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
+		xlo=di*boxx-fx;xhi=xlo+boxx;
+		ylo=dj*boxy-fy;yhi=ylo+boxy;
+		zlo=dk*boxz-fz;zhi=zlo+boxz;
+		if(di>ci) {
+			if(dj>cj) {
+				if(dk>ck) {
+					if (corner_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+				} else if(dk<ck) {
+					if (corner_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+				} else {
+					if (edge_z_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+				}
+			} else if(dj<cj) {
+				if(dk>ck) {
+					if (corner_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+				} else if(dk<ck) {
+					if (corner_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
+				} else {
+					if (edge_z_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+				}
+			} else {
+				if(dk>ck) {
+					if (edge_y_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+				} else if(dk<ck) {
+					if (edge_y_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+				} else {
+					if (face_x_test(c,xlo,ylo,zlo,yhi,zhi)) continue;
+				}
+			}
+		} else if(di<ci) {
+			if(dj>cj) {
+				if(dk>ck) {
+					if (corner_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+				} else if(dk<ck) {
+					if (corner_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
+				} else {
+					if (edge_z_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+				}
+			} else if(dj<cj) {
+				if(dk>ck) {
+					if (corner_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
+				} else if(dk<ck) {
+					if (corner_test(c,xhi,yhi,zhi,xlo,ylo,zlo)) continue;
+				} else {
+					if (edge_z_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
+				}
+			} else {
+				if(dk>ck) {
+					if (edge_y_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+				} else if(dk<ck) {
+					if (edge_y_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
+				} else {
+					if (face_x_test(c,xhi,ylo,zlo,yhi,zhi)) continue;
+				}
+			}
+		} else {
+			if(dj>cj) {
+				if(dk>ck) {
+					if (edge_x_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+				} else if(dk<ck) {
+					if (edge_x_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+				} else {
+					if (face_y_test(c,xlo,ylo,zlo,xhi,zhi)) continue;
+				}
+			} else if(dj<cj) {
+				if(dk>ck) {
+					if (edge_x_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+				} else if(dk<ck) {
+					if (edge_x_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
+				} else {
+					if (face_y_test(c,xlo,yhi,zlo,xhi,zhi)) continue;
+				}
+			} else {
+				if(dk>ck) {
+					if (face_z_test(c,xlo,ylo,zlo,xhi,yhi)) continue;
+				} else if(dk<ck) {
+					if (face_z_test(c,xlo,ylo,zhi,xhi,yhi)) continue;
+				} else {
+					cout << "error\n";
+				}
+			}
+		}
+
+		if(xperiodic) {ei=i+di-nx;if (ei<0) {qx=ax-bx;ei+=nx;} else if (ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
+		if(yperiodic) {ej=j+dj-ny;if (ej<0) {qy=ay-by;ej+=ny;} else if (ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
+		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
+
+		eijk=ei+nx*(ej+ny*ek);
+		for(q=0;q<co[eijk];q++) {
+			//ct3++;
+			x1=p[eijk][sz*q]+qx-x;
+			y1=p[eijk][sz*q+1]+qy-y;
+			z1=p[eijk][sz*q+2]+qz-z;
+			rs=x1*x1+y1*y1+z1*z1;
+	//		if (rs<mrs)
+			c.nplane(x1,y1,z1,rs,id[eijk][q]);
+		}
+
+		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
+
+		dijk=di+hx*(dj+hy*dk);
+		if(di>0) if(mask[dijk-1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-1]=mv;sl[s_end++]=di-1;sl[s_end++]=dj;sl[s_end++]=dk;}
+		if(dj>0) if(mask[dijk-hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hx]=mv;sl[s_end++]=di;sl[s_end++]=dj-1;sl[s_end++]=dk;}
+		if(dk>0) if(mask[dijk-hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk-1;}
+		if(di<hx-1) if(mask[dijk+1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+1]=mv;sl[s_end++]=di+1;sl[s_end++]=dj;sl[s_end++]=dk;}
+		if(dj<hy-1) if(mask[dijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hx]=mv;sl[s_end++]=di;sl[s_end++]=dj+1;sl[s_end++]=dk;}
+		if(dk<hz-1) if(mask[dijk+hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk+1;}
+		//if (count>=4) {count=0;mrs=c.maxradsq();}
+	}
+//	cout << ct1 << " " << ct2 << " " << ct3 << endl;
+}
+
+template<class n_option>
+void container::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
 	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
@@ -431,7 +883,6 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
 	int fuc=0;fpoint mrs;
-
 	// Test all particles in the particle's local region first
 	for(q=0;q<s;q++) {
 		x1=p[ijk][sz*q]-x;
@@ -587,6 +1038,8 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 	}
 }
 
+
+
 template<class n_option>
 inline bool container::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
 	if (c.plane_intersects_guess(xh,yl,zl,xl*xh+yl*yl+zl*zl)) return false;
@@ -660,9 +1113,9 @@ inline bool container::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoin
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
 template<class n_option>
-inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline void container::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
-	compute_cell(c,i,j,k,ijk,s,x,y,z);
+	compute_cell_blocks(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** Creates a facets_loop object, by pulling the necesssary constants about the container

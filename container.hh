@@ -62,6 +62,10 @@ class container {
 		template<class n_option>
 		void compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		template<class n_option>
+		inline void compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
+		template<class n_option>
+		void compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
+		template<class n_option>
 		inline void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
 		void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
