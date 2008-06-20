@@ -433,7 +433,7 @@ template<class n_option>
 void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
 	const fpoint bxsq=boxx*boxx+boxy*boxy+boxz*boxz;
-	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
+	fpoint x1,y1,z1,qx=0,qy=0,qz=0,gx,gy,gz;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
 	int ci,cj,ck,cijk,di,dj,dk,dijk,ei,ej,ek,eijk,q;
 	// Initialize the Voronoi cell to fill the entire container
@@ -442,10 +442,11 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 
 //	int ct1=0,ct2=0,ct3=0;
 
-	int count=0,next_count=1,list_index=0,list_size=19;
+	int count=0,next_count=1,list_index=0,list_size=7;
 //	int count_list[]={2,3,5,7,10,15,21};
 //	int count_list[]={3,5,8,12,17,22,38};
-	int count_list[]={2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,25,36,49,64};
+//	int count_list[]={2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,25,36,49,64};
+	int count_list[]={3,8,16,25,36,49,64};
 
 	// Test all particles in the particle's local region first
 	for(q=0;q<s;q++) {
@@ -480,81 +481,183 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 	ck=zperiodic?nz:k;
 	fpoint fx=x-ax-boxx*i,fy=y-ay-boxy*j,fz=z-az-boxz*k;
 	bool clx=fx<0.5*boxx,cly=fy<0.5*boxy,clz=fz<0.5*boxz;
-	fx+=boxx*ci;fy+=boxy*cj;fz+=boxz*ck;
 	cijk=ci+hx*(cj+hy*ck);
 	mask[cijk]=mv;
 
-	if (clx) {
+	if(clx) {
 		if (cly) {
 			if (clz) {
-				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
-				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+				if(fx>fy) {
+					if (fx>fz) {
+						if (fy>fz) {mask_z_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);
+							mask_z_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);}
+						else {mask_y_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);
+							mask_y_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);}
+					} else {mask_y_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);
+						mask_y_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);}
+				} else {
+					if (fx>fz) {mask_z_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);
+						mask_z_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);}
+					else {
+						if (fy>fz) {mask_x_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);
+							mask_x_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);}
+						else {mask_x_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);
+							mask_x_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);}
+					}
+				}
 			} else {
-				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
-				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+				gz=boxz-fz;
+				if(fx>fy) {
+					if (fx>gz) {
+						if (fy>gz) {mask_z_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);
+							mask_z_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);}
+						else {mask_y_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);
+							mask_y_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);}
+					} else {mask_y_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);
+						mask_y_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);}
+				} else {
+					if (fx>gz) {mask_z_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);
+						mask_z_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);}
+					else {
+						if (fy>gz) {mask_x_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);
+							mask_x_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);}
+						else {mask_x_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);
+							mask_x_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);}
+					}
+				}
 			}
 		} else {
+			gy=boxy-fy;
 			if (clz) {
-				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
-				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+				if(fx>gy) {
+					if (fx>fz) {
+						if (gy>fz) {mask_z_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);
+							mask_z_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);}
+						else {mask_y_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);
+							mask_y_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);}
+					} else {mask_y_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);
+						mask_y_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);}
+				} else {
+					if (fx>fz) {mask_z_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);
+						mask_z_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);}
+					else {
+						if (gy>fz) {mask_x_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);
+							mask_x_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);}
+						else {mask_x_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);
+							mask_x_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);}
+					}
+				}
 			} else {
-				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
-				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+				gz=boxz-fz;
+				if(fx>gy) {
+					if (fx>gz) {
+						if (gy>gz) {mask_z_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);
+							mask_z_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);}
+						else {mask_y_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);
+							mask_y_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);}
+					} else {mask_y_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);
+						mask_y_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);}
+				} else {
+					if (fx>gz) {mask_z_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);
+						mask_z_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);}
+					else {
+						if (gy>gz) {mask_x_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);
+							mask_x_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);}
+						else {mask_x_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);
+							mask_x_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);}
+					}
+				}
 			}
 		}
 	} else {
+		gx=boxx-fx;
 		if (cly) {
 			if (clz) {
-				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
-				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+				if(gx>fy) {
+					if (gx>fz) {
+						if (fy>fz) {mask_z_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);
+							mask_z_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);}
+						else {mask_y_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);
+							mask_y_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);}
+					} else {mask_y_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);
+						mask_y_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);}
+				} else {
+					if (gx>fz) {mask_z_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);
+						mask_z_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);}
+					else {
+						if (fy>fz) {mask_x_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);
+							mask_x_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);}
+						else {mask_x_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);
+							mask_x_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);}
+					}
+				}
 			} else {
-				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
-				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+				gz=boxz-fz;
+				if(gx>fy) {
+					if (gx>gz) {
+						if (fy>gz) {mask_z_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);
+							mask_z_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);}
+						else {mask_y_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);
+							mask_y_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);}
+					} else {mask_y_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);
+						mask_y_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);}
+				} else {
+					if (gx>gz) {mask_z_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);
+						mask_z_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);}
+					else {
+						if (fy>gz) {mask_x_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);
+							mask_x_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);}
+						else {mask_x_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);
+							mask_x_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);}
+					}
+				}
 			}
 		} else {
+			gy=boxy-fy;
 			if (clz) {
-				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
-				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
+				if(gx>gy) {
+					if (gx>fz) {
+						if (gy>fz) {mask_z_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);
+							mask_z_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);}
+						else {mask_y_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);
+							mask_y_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);}
+					} else {mask_y_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);
+						mask_y_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);}
+				} else {
+					if (gx>fz) {mask_z_m(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);
+						mask_z_p(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);}
+					else {
+						if (gy>fz) {mask_x_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);
+							mask_x_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);}
+						else {mask_x_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);
+							mask_x_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);}
+					}
+				}
 			} else {
-				if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-				if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
-				if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-				if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-				if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
+				gz=boxz-fz;
+				if(gx>gy) {
+					if (gx>gz) {
+						if (gy>gz) {mask_z_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);
+							mask_z_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);}
+						else {mask_y_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);
+							mask_y_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);}
+					} else {mask_y_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);
+						mask_y_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);}
+				} else {
+					if (gx>gz) {mask_z_p(cijk,ci,cj,ck);mask_x_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);
+						mask_z_m(cijk,ci,cj,ck);mask_x_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);}
+					else {
+						if (gy>gz) {mask_x_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);
+							mask_x_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);}
+						else {mask_x_p(cijk,ci,cj,ck);mask_y_p(cijk,ci,cj,ck);mask_z_p(cijk,ci,cj,ck);
+							mask_x_m(cijk,ci,cj,ck);mask_y_m(cijk,ci,cj,ck);mask_z_m(cijk,ci,cj,ck);}
+					}
+				}
 			}
 		}
 	}
+	fx+=boxx*ci;fy+=boxy*cj;fz+=boxz*ck;
 	
-	//cout << "bleh" << endl;
 	while(s_start!=s_end) {
 		if (s_start==s_size) s_start=0;
 		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
@@ -872,6 +975,30 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 		//if (count>=4) {count=0;mrs=c.maxradsq();}
 	}
 //	cout << ct1 << " " << ct2 << " " << ct3 << endl;
+}
+
+inline void container::mask_x_p(int cijk,int ci,int cj,int ck) {
+	if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;}
+}
+
+inline void container::mask_x_m(int cijk,int ci,int cj,int ck) {
+	if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;}
+}
+
+inline void container::mask_y_p(int cijk,int ci,int cj,int ck) {
+	if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;}
+}
+
+inline void container::mask_y_m(int cijk,int ci,int cj,int ck) {
+	if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;}
+}
+
+inline void container::mask_z_p(int cijk,int ci,int cj,int ck) {
+	if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;}
+}
+
+inline void container::mask_z_m(int cijk,int ci,int cj,int ck) {
+	if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;}
 }
 
 template<class n_option>

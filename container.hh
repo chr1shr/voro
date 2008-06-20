@@ -196,6 +196,12 @@ class container {
 		inline bool face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1);
 		template<class n_option>
 		inline bool face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1);
+		void mask_x_p(int cijk,int ci,int cj,int ck);
+		void mask_x_m(int cijk,int ci,int cj,int ck);
+		void mask_y_p(int cijk,int ci,int cj,int ck);
+		void mask_y_m(int cijk,int ci,int cj,int ck);
+		void mask_z_p(int cijk,int ci,int cj,int ck);
+		void mask_z_m(int cijk,int ci,int cj,int ck);
 		friend class facets_loop;
 };
 
