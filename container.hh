@@ -15,6 +15,7 @@
 using namespace std;
 
 class facets_loop;
+class radius_poly;
 class wall;
 
 /** The container class represents the whole simulation region. The
@@ -23,7 +24,8 @@ class wall;
  * particles in a particular area. Routines exist for putting in particles,
  * importing particles from standard input, and carrying out Voronoi
  * calculations. */
-class container {
+template<class r_option>
+class container_base {
 	public:
 		/** This represents a typical length scale for the diameter of
 		 * the particles. It initially takes the default value of 1,
@@ -37,9 +39,8 @@ class container {
 		 * the length scale to the actual separation between particles,
 		 * the faster the cell computation should be. */
 		fpoint length_scale;
-		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi,int isz);
-		container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
-		~container();
+		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
+		~container_base();
 		void dump(char *filename);
 		void import(istream &is);
 		inline void import();
@@ -70,18 +71,12 @@ class container {
 		template<class n_option>
 		void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
+		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
 		void add_wall(wall &w);
 		bool point_inside(fpoint x,fpoint y,fpoint z); 
 		bool point_inside_walls(fpoint x,fpoint y,fpoint z); 
 		void guess_length_scale();
 	protected:
-		/** The amount of memory in the array structure for each
-		 * particle. This is set to 3 when the basic class is
-		 * initialized, so that the array holds (x,y,z) positions. If
-		 * the container class is initialized as part of the derived
-		 * class container_poly, then this is set to 4, to also hold
-		 * the particle radii. */
-		const int sz;
 		/** The minimum x coordinate of the container. */
 		const fpoint ax;
 		/** The maximum x coordinate of the container. */
@@ -160,13 +155,6 @@ class container {
 		 * derived container_poly class, this also holds particle
 		 * radii. */
 		fpoint **p;
-		/** This contains the maximum radius of a particle in the
-		 * container. For the standard container class, where all
-		 * particles are assumed to have the same radius, this number
-		 * does nothing. However, for the derived container_poly class,
-		 * this number is computed each time a particle is added to the
-		 * container. */
-		fpoint max_radius;
 		/** This array holds pointers to any wall objects that have
 		 * been added to the container. */
 		wall **walls;
@@ -174,6 +162,14 @@ class container {
 		int wall_number;
 		/** The current amount of memory allocated for walls. */
 		int current_wall_size;
+		r_option radius;
+		/** The amount of memory in the array structure for each
+		 * particle. This is set to 3 when the basic class is
+		 * initialized, so that the array holds (x,y,z) positions. If
+		 * the container class is initialized as part of the derived
+		 * class container_poly, then this is set to 4, to also hold
+		 * the particle radii. */
+		int sz;
 
 		template<class n_option>
 		inline void print_all(ostream &os,voronoicell_base<n_option> &c);
@@ -203,25 +199,36 @@ class container {
 		inline void mask_z_p(int cijk,int ci,int cj,int ck);
 		inline void mask_z_m(int cijk,int ci,int cj,int ck);
 		friend class facets_loop;
+		friend class radius_poly;
 };
 
-/** This is a derived version of the container class for handling polydisperse
- * particles via a radical Voronoi tessellation. The main difference is that
- * the data structure is changed so that radii are also stored. New versions
- * of the put and import commands are provided to account for this. All other
- * routines in the container class are unaffected. */
-class container_poly : public container {
+class radius_mono {
 	public:
-		/** This constructor calls the constructor for the base class,
-		 * and specifies that sz=4, so that four floating point numbers
-		 * are stored for each particle in the container, for the
-		 * (x,y,z) positions, and also the particle radii. */
-		container_poly(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi) : container(xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi,4) {};
-		void put(int n,fpoint x,fpoint y,fpoint z);
-		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
-		void import(istream &is);
-		inline void import();
-		inline void import(char *filename);
+		container_base<radius_mono> *cc;
+		const int mem_size;
+		radius_mono(container_base<radius_mono> *icc) : cc(icc), mem_size(3) {};
+		inline void import(istream &is);
+		inline void store_radius(int i,int j,fpoint r) {};
+		inline void clear_max() {};
+		inline void init(int s,int i) {};
+		inline fpoint cutoff(fpoint lrs);
+		inline fpoint scale(fpoint rs,int t,int q);
+		inline void print(ostream &os,int ijk,int q) {};
+};
+
+class radius_poly {
+	public:
+		container_base<radius_poly> *cc;
+		const int mem_size;
+		fpoint max_radius,crad,mul;
+		radius_poly(container_base<radius_poly> *icc) : cc(icc), mem_size(4) {};
+		inline void import(istream &is);
+		inline void store_radius(int i,int j,fpoint r);
+		inline void clear_max();
+		inline void init(int s,int i);
+		inline fpoint cutoff(fpoint lrs);
+		inline fpoint scale(fpoint rs,int t,int q);
+		inline void print(ostream &os,int ijk,int q);
 };
 
 /** Many of the container routines require scanning over a rectangular sub-grid
@@ -233,7 +240,8 @@ class container_poly : public container {
  */
 class facets_loop {
 	public:
-		facets_loop(container *q);
+		template<class r_option>
+		facets_loop(container_base<r_option> *q);
 		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
 		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
 		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
@@ -257,4 +265,10 @@ class wall {
 		virtual void cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) = 0;
 		virtual void cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) = 0;
 };
+
+/** The basic container class. */
+typedef container_base<radius_mono> container;
+
+/** The polydisperse container class. */
+typedef container_base<radius_poly> container_poly;
 #endif

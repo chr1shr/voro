@@ -15,11 +15,11 @@ const fpoint z_min=-1,z_max=1;
 
 // Set up the number of blocks that the container is divided
 // into.
-const int n_x=12,n_y=12,n_z=12;
+const int n_x=NNN,n_y=NNN,n_z=NNN;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=1000;
+const int particles=100000;
 
 // This function returns a random fpoint between 0 and 1;
 fpoint rnd() {return fpoint(rand())/RAND_MAX;}
@@ -35,9 +35,9 @@ int main() {
 	// 16 particles within each computational block
 	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
 			false,false,false,8);
-	wall_plane pl(1,-1,1,0.6);con.add_wall(pl);
-	wall_plane pl2(1,1,-1,0.6);con.add_wall(pl2);
-	wall_plane pl3(-1,-1,-1,0.6);con.add_wall(pl3);
+//	wall_plane pl(1,-1,1,0.6);con.add_wall(pl);
+//	wall_plane pl2(1,1,-1,0.6);con.add_wall(pl2);
+//	wall_plane pl3(-1,-1,-1,0.6);con.add_wall(pl3);
 //	wall_plane pl4(-1,1,1,0.6);con.add_wall(pl4);
 
 	//Randomly add particles into the container
@@ -53,9 +53,9 @@ int main() {
 	con.guess_length_scale();
 
 	con.store_cell_volumes(bb);x=0;
-	for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
+//	for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot
-	con.draw_gnuplot("voronoi_cells");
+//	con.draw_gnuplot("voronoi_cells");
 }

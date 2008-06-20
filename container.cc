@@ -12,13 +12,15 @@
  * grid of blocks, set by the following three arguments. The next three
  * arguments are booleans, which set the periodicity in each direction. The
  * final argument sets the amount of memory allocated to each block. */
-container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi,int isz)
-	: length_scale(1),sz(isz),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
+template<class r_option>
+container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,
+		int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
+	: length_scale(1),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
 	xperiodic(xper),yperiodic(yper),zperiodic(zper),
-	mv(0),max_radius(0),wall_number(0) {
+	mv(0),wall_number(0),radius(this),sz(radius.mem_size) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -30,41 +32,14 @@ container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
 	mask=new unsigned int[hxyz];
 	for(l=0;l<hxyz;l++) mask[l]=0;
-	s_size=30*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
-	sl=new int[s_size];
-	walls=new wall*[current_wall_size];
-}
-
-/** Container constructor. The first six arguments set the corners of the box to
- * be (xa,ya,za) and (xb,yb,zb). The box is then divided into an nx by ny by nz
- * grid of blocks, set by the following three arguments. The next three
- * arguments are booleans, which set the periodicity in each direction. The
- * final argument sets the amount of memory allocated to each block. */
-container::container(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
-	: length_scale(1),sz(3),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
-	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
-	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
-	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
-	xperiodic(xper),yperiodic(yper),zperiodic(zper),
-	mv(0),max_radius(0),wall_number(0),current_wall_size(init_wall_size) {
-	int l;
-	co=new int[nxyz];
-	for(l=0;l<nxyz;l++) co[l]=0;
-	mem=new int[nxyz];
-	for(l=0;l<nxyz;l++) mem[l]=memi;
-	id=new int*[nxyz];
-	for(l=0;l<nxyz;l++) id[l]=new int[memi];
-	p=new fpoint*[nxyz];
-	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
-	mask=new unsigned int[hxyz];
-	for(l=0;l<hxyz;l++) mask[l]=0;
-	s_size=30*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
+	s_size=3*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
 	sl=new int[s_size];
 	walls=new wall*[current_wall_size];
 }
 
 /** Container destructor - free memory. */
-container::~container() {
+template<class r_option>
+container_base<r_option>::~container_base() {
 	int l;
 	for(l=0;l<nxyz;l++) delete [] p[l];
 	for(l=0;l<nxyz;l++) delete [] id[l];
@@ -75,7 +50,8 @@ container::~container() {
 }
 
 /** Dumps all the particle positions and identifies to a file. */
-void container::dump(char *filename) {
+template<class r_option>
+void container_base<r_option>::dump(char *filename) {
 	int c,l,i;
 	ofstream file;
 	file.open(filename,ofstream::out|ofstream::trunc);
@@ -89,7 +65,8 @@ void container::dump(char *filename) {
 }
 
 /** Put a particle into the correct region of the container. */
-void container::put(int n,fpoint x,fpoint y,fpoint z) {
+template<class r_option>
+void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
 	if(x>ax&&y>ay&&z>az) {
 		int i,j,k;
 		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
@@ -97,13 +74,34 @@ void container::put(int n,fpoint x,fpoint y,fpoint z) {
 			i+=nx*j+nxy*k;
 			if(co[i]==mem[i]) add_particle_memory(i);
 			p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
+			radius.store_radius(i,co[i],0.5);
+			id[i][co[i]++]=n;
+		}
+	}
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n The numerical ID of the inserted particle.
+ * \param[in] (x,y,z) The position vector of the inserted particle.
+ * \param[in] r The radius of the particle.*/
+template<class r_option>
+void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
+	if(x>ax&&y>ay&&z>az) {
+		int i,j,k;
+		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
+		if(i<nx&&j<ny&&k<nz) {
+			i+=nx*j+nxy*k;
+			if(co[i]==mem[i]) add_particle_memory(i);
+			p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
+			radius.store_radius(i,co[i],r);
 			id[i][co[i]++]=n;
 		}
 	}
 }
 
 /** Increase memory for a particular region. */
-void container::add_particle_memory(int i) {
+template<class r_option>
+void container_base<r_option>::add_particle_memory(int i) {
 	int *idp;fpoint *pp;
 	int l,nmem=2*mem[i];
 	if (nmem>max_particle_memory) throw fatal_error("Absolute maximum memory allocation exceeded");
@@ -117,7 +115,8 @@ void container::add_particle_memory(int i) {
 }
 
 /** Add list memory. */
-inline void container::add_list_memory() {
+template<class r_option>
+inline void container_base<r_option>::add_list_memory() {
 	cout << "addmem\n";
 	int i,j=0,*ps;
 	s_size*=2;
@@ -134,25 +133,23 @@ inline void container::add_list_memory() {
 }
 
 /** Import a list of particles from standard input. */
-void container::import(istream &is) {
-	int n;fpoint x,y,z;
-	is >> n >> x >> y >> z;
-	while(!is.eof()) {
-		put(n,x,y,z);
-		is >> n >> x >> y >> z;
-	}
+template<class r_option>
+void container_base<r_option>::import(istream &is) {
+	radius.import(is);
 }
 
 /** An overloaded version of the import routine, that reads the standard input.
  */
-inline void container::import() {
+template<class r_option>
+inline void container_base<r_option>::import() {
 	import(cin);
 }
 
 /** An overloaded version of the import routine, that reads in particles from
  * a particular file.
  * \param[in] filename The name of the file to read from. */
-inline void container::import(char *filename) {
+template<class r_option>
+inline void container_base<r_option>::import(char *filename) {
 	ifstream is;
 	is.open(filename,ifstream::in);
 	import(is);
@@ -160,7 +157,8 @@ inline void container::import(char *filename) {
 }
 
 /** Outputs the number of particles within each region. */
-void container::region_count() {
+template<class r_option>
+void container_base<r_option>::region_count() {
 	int i,j,k,ijk=0;
 	for(k=0;k<nz;k++) {
 		for(j=0;j<ny;j++) {
@@ -170,14 +168,16 @@ void container::region_count() {
 }
 
 /** Clears a container of particles. */
-void container::clear() {
+template<class r_option>
+void container_base<r_option>::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
-	max_radius=0;
+	radius.clear_max();
 }
 
 /** Guess length scale by dividing the total volume of the container by the
  * total number of particles, and then taking the cube root. */
-void container::guess_length_scale() {
+template<class r_option>
+void container_base<r_option>::guess_length_scale() {
 	const fpoint third=1/3.0;
 	int sp=0;
 	for(int ijk=0;ijk<nxyz;ijk++) sp+=co[ijk];
@@ -190,7 +190,8 @@ void container::guess_length_scale() {
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot. */
-void container::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+template<class r_option>
+void container_base<r_option>::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
 	int q,s;
@@ -212,14 +213,16 @@ void container::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,
 
 /** If only a filename is supplied to draw_gnuplot(), then assume that we are
  * calculating the entire simulation region. */
-void container::draw_gnuplot(char *filename) {
+template<class r_option>
+void container_base<r_option>::draw_gnuplot(char *filename) {
 	draw_gnuplot(filename,ax,bx,ay,by,az,bz);
 }
 
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot.*/
-void container::draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+template<class r_option>
+void container_base<r_option>::draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
 	int q,s;
@@ -243,14 +246,16 @@ void container::draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoi
 
 /** If only a filename is supplied to draw_pov(), then assume that we are
  * calculating the entire simulation region.*/
-void container::draw_pov(char *filename) {
+template<class r_option>
+void container_base<r_option>::draw_pov(char *filename) {
 	draw_pov(filename,ax,bx,ay,by,az,bz);
 }
 
 
 /** Computes the Voronoi volumes for all the particles, and stores the
  * results according to the particle label in the fpoint array bb.*/
-void container::store_cell_volumes(fpoint *bb) {
+template<class r_option>
+void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
 	int i,j,k,ijk=0,q;
 	for (k=0;k<nz;k++) {
@@ -268,8 +273,9 @@ void container::store_cell_volumes(fpoint *bb) {
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
+template<class r_option>
 template<class n_option>
-inline void container::print_all(ostream &os,voronoicell_base<n_option> &c) {
+inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_option> &c) {
 	fpoint x,y,z;
 	int i,j,k,ijk=0,q;
 	for (k=0;k<nz;k++) {
@@ -279,7 +285,7 @@ inline void container::print_all(ostream &os,voronoicell_base<n_option> &c) {
 					x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
 					compute_cell(c,i,j,k,ijk,q,x,y,z);
 					os << id[ijk][q] << " " << x << " " << y << " " << z;
-					if (sz==4) os << " " << p[ijk][4*q+3];
+					radius.print(os,ijk,q);
 					os << " " << c.volume();
 					c.neighbors(os);		
 					os << endl;
@@ -292,13 +298,15 @@ inline void container::print_all(ostream &os,voronoicell_base<n_option> &c) {
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
-void container::print_all(ostream &os) {
+template<class r_option>
+void container_base<r_option>::print_all(ostream &os) {
 	voronoicell c;
 	print_all(os,c);
 }
 
 /** An overloaded version of print_all(), which just prints to standard output. */
-void container::print_all() {
+template<class r_option>
+void container_base<r_option>::print_all() {
 	voronoicell c;
 	print_all(cout);
 }
@@ -306,7 +314,8 @@ void container::print_all() {
 /** An overloaded version of print_all(), which outputs the result to a particular
  * file.
  * \param[in] filename The name fo the file to write to. */
-inline void container::print_all(char* filename) {
+template<class r_option>
+inline void container_base<r_option>::print_all(char* filename) {
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
@@ -317,14 +326,16 @@ inline void container::print_all(char* filename) {
 /** Prints a list of all particle labels, positions, Voronoi volumes, and a list
  * of neighboring particles to an output stream.
  * \param[in] os The output stream to print to.*/
-void container::print_all_neighbor(ostream &os) {
+template<class r_option>
+void container_base<r_option>::print_all_neighbor(ostream &os) {
 	voronoicell_neighbor c;
 	print_all(os,c);
 }
 
 /** An overloaded version of print_all_neighbor(), which just prints to
  * standard output. */
-void container::print_all_neighbor() {
+template<class r_option>
+void container_base<r_option>::print_all_neighbor() {
 	voronoicell_neighbor c;
 	print_all(cout,c);
 }
@@ -332,7 +343,8 @@ void container::print_all_neighbor() {
 /** An overloaded version of print_all_neighbor(), which outputs the result to a
  * particular file
  * \param[in] filename The name of the file to write to. */
-inline void container::print_all_neighbor(char* filename) {
+template<class r_option>
+inline void container_base<r_option>::print_all_neighbor(char* filename) {
 	voronoicell_neighbor c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
@@ -345,8 +357,9 @@ inline void container::print_all_neighbor(char* filename) {
  * coordinates, the space is equally divided in either direction from the
  * particle's initial position. That makes sense since those boundaries would
  * be made by the neighboring periodic images of this particle. */
+template<class r_option>
 template<class n_option>
-inline void container::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+inline void container_base<r_option>::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,x2,y1,y2,z1,z2;
 	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
@@ -355,12 +368,14 @@ inline void container::initialize_voronoicell(voronoicell_base<n_option> &c,fpoi
 	for(int j=0;j<wall_number;j++) walls[j]->cut_cell(c,x,y,z);
 }
 
-bool container::point_inside(fpoint x,fpoint y,fpoint z) {
+template<class r_option>
+bool container_base<r_option>::point_inside(fpoint x,fpoint y,fpoint z) {
 	if(x<ax||x>bx||y<ay||y>by||z<az||z>bz) return false;
 	return point_inside_walls(x,y,z);
 }
 
-bool container::point_inside_walls(fpoint x,fpoint y,fpoint z) {
+template<class r_option>
+bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
 	for(int j=0;j<wall_number;j++) if (!walls[j]->point_inside(x,y,z)) return false;
 	return true;
 }
@@ -368,8 +383,9 @@ bool container::point_inside_walls(fpoint x,fpoint y,fpoint z) {
 /** Computes a single Voronoi cell in the container. This routine can be run by
  * the user, and it is also called multiple times by the functions vprintall,
  * store_cell_volumes() and draw(). */ 
+template<class r_option>
 template<class n_option>
-void container::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+void container_base<r_option>::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	facets_loop l(this);
@@ -377,60 +393,41 @@ void container::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
-	//
-	// TODO: This initial test, to figure out if this is a polydisperse
-	// case or not, is ugly. It's probably best to recompile using
-	// templates.
-	if (sz==3) {
-		while(lrs<c.maxradsq()) {
-			ur=lr+0.5*length_scale;urs=ur*ur;
-			t=l.init(x,y,z,ur,qx,qy,qz);
-			do {
-				for(q=0;q<co[t];q++) {
-					x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
-					rs=x1*x1+y1*y1+z1*z1;
-					if (lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t))
-						c.nplane(x1,y1,z1,rs,id[t][q]);
-				}
-			} while ((t=l.inc(qx,qy,qz))!=-1);
-			lr=ur;lrs=urs;
-		}
-	} else {
-		fpoint crad=p[s][sz*i+3];
-		const fpoint mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
-		crad*=crad;
-		while(lrs*mul<c.maxradsq()) {
-			ur=lr+0.5*length_scale;urs=ur*ur;
-			t=l.init(x,y,z,ur,qx,qy,qz);
-			do {
-				for(q=0;q<co[t];q++) {
-					x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
-					rs=x1*x1+y1*y1+z1*z1;
-					if (lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t))
-						c.nplane(x1,y1,z1,rs+crad-p[t][sz*q+3]*p[t][sz*q+3],id[t][q]);
-				}
-			} while ((t=l.inc(qx,qy,qz))!=-1);
-			lr=ur;lrs=urs;
-		}
+	radius.init(s,i);
+	while(radius.cutoff(lrs)<c.maxradsq()) {
+		ur=lr+0.5*length_scale;urs=ur*ur;
+		t=l.init(x,y,z,ur,qx,qy,qz);
+		do {
+			for(q=0;q<co[t];q++) {
+				x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
+				rs=x1*x1+y1*y1+z1*z1;
+				if (lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t))
+					c.nplane(x1,y1,z1,radius.scale(rs,t,q),id[t][q]);
+			}
+		} while ((t=l.inc(qx,qy,qz))!=-1);
+		lr=ur;lrs=urs;
 	}
 }
 
 /** A overloaded version of compute_cell_slow, that sets up the x, y, and z variables. */
+template<class r_option>
 template<class n_option>
-inline void container::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline void container_base<r_option>::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
 	compute_cell_slow(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
+template<class r_option>
 template<class n_option>
-inline void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
 	compute_cell(c,i,j,k,ijk,s,x,y,z);
 }
 
+template<class r_option>
 template<class n_option>
-void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
 	const fpoint bxsq=boxx*boxx+boxy*boxy+boxz*boxz;
 	fpoint x1,y1,z1,qx=0,qy=0,qz=0,gx,gy,gz;
@@ -977,32 +974,39 @@ void container::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int
 //	cout << ct1 << " " << ct2 << " " << ct3 << endl;
 }
 
-inline void container::mask_x_p(int cijk,int ci,int cj,int ck) {
+template<class r_option>
+inline void container_base<r_option>::mask_x_p(int cijk,int ci,int cj,int ck) {
 	if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;}
 }
 
-inline void container::mask_x_m(int cijk,int ci,int cj,int ck) {
+template<class r_option>
+inline void container_base<r_option>::mask_x_m(int cijk,int ci,int cj,int ck) {
 	if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;}
 }
 
-inline void container::mask_y_p(int cijk,int ci,int cj,int ck) {
+template<class r_option>
+inline void container_base<r_option>::mask_y_p(int cijk,int ci,int cj,int ck) {
 	if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;}
 }
 
-inline void container::mask_y_m(int cijk,int ci,int cj,int ck) {
+template<class r_option>
+inline void container_base<r_option>::mask_y_m(int cijk,int ci,int cj,int ck) {
 	if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;}
 }
 
-inline void container::mask_z_p(int cijk,int ci,int cj,int ck) {
+template<class r_option>
+inline void container_base<r_option>::mask_z_p(int cijk,int ci,int cj,int ck) {
 	if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;}
 }
 
-inline void container::mask_z_m(int cijk,int ci,int cj,int ck) {
+template<class r_option>
+inline void container_base<r_option>::mask_z_m(int cijk,int ci,int cj,int ck) {
 	if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;}
 }
 
+template<class r_option>
 template<class n_option>
-void container::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+void container_base<r_option>::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
 	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
@@ -1167,8 +1171,9 @@ void container::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,in
 
 
 
+template<class r_option>
 template<class n_option>
-inline bool container::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
+inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
 	if (c.plane_intersects_guess(xh,yl,zl,xl*xh+yl*yl+zl*zl)) return false;
 	if (c.plane_intersects(xh,yh,zl,xl*xh+yl*yh+zl*zl)) return false;
 	if (c.plane_intersects(xl,yh,zl,xl*xl+yl*yh+zl*zl)) return false;
@@ -1178,8 +1183,9 @@ inline bool container::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoin
 	return true;
 }
 
+template<class r_option>
 template<class n_option>
-inline bool container::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
+inline bool container_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
 	if (c.plane_intersects_guess(x0,yl,zh,yl*yl+zl*zh)) return false;
 	if (c.plane_intersects(x1,yl,zh,yl*yl+zl*zh)) return false;
 	if (c.plane_intersects(x1,yl,zl,yl*yl+zl*zl)) return false;
@@ -1189,8 +1195,9 @@ inline bool container::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoin
 	return true;
 }
 
+template<class r_option>
 template<class n_option>
-inline bool container::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
+inline bool container_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
 	if (c.plane_intersects_guess(xl,y0,zh,xl*xl+zl*zh)) return false;
 	if (c.plane_intersects(xl,y1,zh,xl*xl+zl*zh)) return false;
 	if (c.plane_intersects(xl,y1,zl,xl*xl+zl*zl)) return false;
@@ -1200,8 +1207,9 @@ inline bool container::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoin
 	return true;
 }
 
+template<class r_option>
 template<class n_option>
-inline bool container::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
+inline bool container_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
 	if (c.plane_intersects_guess(xl,yh,z0,xl*xl+yl*yh)) return false;
 	if (c.plane_intersects(xl,yh,z1,xl*xl+yl*yh)) return false;
 	if (c.plane_intersects(xl,yl,z1,xl*xl+yl*yl)) return false;
@@ -1211,8 +1219,9 @@ inline bool container::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoin
 	return true;
 }
 
+template<class r_option>
 template<class n_option>
-inline bool container::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
+inline bool container_base<r_option>::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
 	if (c.plane_intersects_guess(xl,y0,z0,xl*xl)) return false;
 	if (c.plane_intersects(xl,y0,z1,xl*xl)) return false;
 	if (c.plane_intersects(xl,y1,z1,xl*xl)) return false;
@@ -1220,8 +1229,9 @@ inline bool container::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoin
 	return true;
 }
 
+template<class r_option>
 template<class n_option>
-inline bool container::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
+inline bool container_base<r_option>::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
 	if (c.plane_intersects_guess(x0,yl,z0,yl*yl)) return false;
 	if (c.plane_intersects(x0,yl,z1,yl*yl)) return false;
 	if (c.plane_intersects(x1,yl,z1,yl*yl)) return false;
@@ -1229,8 +1239,9 @@ inline bool container::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoin
 	return true;
 }
 
+template<class r_option>
 template<class n_option>
-inline bool container::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
+inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
 	if (c.plane_intersects_guess(x0,y0,zl,zl*zl)) return false;
 	if (c.plane_intersects(x0,y1,zl,zl*zl)) return false;
 	if (c.plane_intersects(x1,y1,zl,zl*zl)) return false;
@@ -1239,15 +1250,17 @@ inline bool container::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoin
 }
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
+template<class r_option>
 template<class n_option>
-inline void container::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline void container_base<r_option>::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
 	compute_cell_blocks(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** Creates a facets_loop object, by pulling the necesssary constants about the container
  * geometry from a pointer to the current container class. */
-facets_loop::facets_loop(container *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
+template<class r_option>
+facets_loop::facets_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
 	xsp(q->xsp),ysp(q->ysp),zsp(q->zsp),
 	ax(q->ax),ay(q->ay),az(q->az),
 	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz),
@@ -1355,62 +1368,9 @@ inline int facets_loop::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 }
 
-/** Put a particle into the correct region of the container.
- * \param[in] n The numerical ID of the inserted particle.
- * \param[in] (x,y,z) The position vector of the inserted particle.
- * \param[in] r The radius of the particle.*/
-void container_poly::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
-	if(x>ax&&y>ay&&z>az) {
-		int i,j,k;
-		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
-		if(i<nx&&j<ny&&k<nz) {
-			i+=nx*j+nxy*k;
-			if(co[i]==mem[i]) add_particle_memory(i);
-			p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;p[i][sz*co[i]+3]=r;
-			if (r>max_radius) max_radius=r;
-			id[i][co[i]++]=n;
-		}
-	}
-}
-
-/** If the radius argument is not supplied to the polydisperse put() routine
- * then assume that we're using a particle with a unit diameter.
- * \param[in] n The numerical ID of the inserted particle.
- * \param[in] (x,y,z) The position vector of the inserted particle. */
-void container_poly::put(int n,fpoint x,fpoint y,fpoint z) {
-	put(n,x,y,z,0.5);
-}
-
-/** Import a list of particles.
- * \param[in] is An open input stream to read from. */
-void container_poly::import(istream &is) {
-	int n;fpoint x,y,z;
-	fpoint r;
-	is >> n >> x >> y >> z >> r;
-	while(!is.eof()) {
-		put(n,x,y,z,r);
-		is >> n >> x >> y >> z >> r;
-	}
-}
-
-/** An overloaded version of the import routine, that reads the standard input.
- */
-inline void container_poly::import() {
-	import(cin);
-}
-
-/** An overloaded version of the import routine, that reads in particles from
- * a particular file.
- * \param[in] filename The name of the file to open and import. */
-inline void container_poly::import(char *filename) {
-	ifstream is;
-	is.open(filename,ifstream::in);
-	import(is);
-	is.close();
-}
-
 /** Adds a wall to the container. */
-void container::add_wall(wall& w) {
+template<class r_option>
+void container_base<r_option>::add_wall(wall& w) {
 	if (wall_number==current_wall_size) {
 		current_wall_size*=2;
 		if (current_wall_size>max_wall_size) throw fatal_error("Wall memory allocation exceeded absolute maximum");
@@ -1420,4 +1380,53 @@ void container::add_wall(wall& w) {
 		delete [] walls;walls=pwall;		
 	}
 	walls[wall_number++]=&w;
+}
+
+inline void radius_poly::store_radius(int i,int j,fpoint r) {
+	cc->p[i][4*j+3]=r;
+	if (r>max_radius) max_radius=r;
+}
+
+inline void radius_poly::clear_max() {
+	max_radius=0;
+}
+
+inline void radius_mono::import(istream &is) {
+	int n;fpoint x,y,z;
+	is >> n >> x >> y >> z;
+	while(!is.eof()) {
+		cc->put(n,x,y,z);
+		is >> n >> x >> y >> z;
+	}
+}
+
+inline void radius_poly::import(istream &is) {
+	int n;fpoint x,y,z,r;
+	is >> n >> x >> y >> z >> r;
+	while(!is.eof()) {
+		cc->put(n,x,y,z,r);
+		is >> n >> x >> y >> z >> r;
+	}
+}
+
+inline void radius_poly::init(int s,int i) {
+	crad=cc->p[s][4*i+3];
+	mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
+	crad*=crad;
+}
+
+inline fpoint radius_poly::cutoff(fpoint lrs) {
+	return mul*lrs;
+}
+
+inline fpoint radius_poly::scale(fpoint rs,int t,int q) {
+	return rs+crad-cc->p[t][4*q+3]*cc->p[t][4*q+3];
+}
+
+inline fpoint radius_mono::scale(fpoint rs,int t,int q) {
+	return rs;
+}
+
+inline void radius_poly::print(ostream &os,int ijk,int q) {
+	os << " " << cc->p[ijk][4*q+3];
 }

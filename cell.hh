@@ -132,7 +132,7 @@ class voronoicell_base {
 		 * inside, outside, or on the current cutting plane. */
 		suretest sure;
 		voronoicell_base();
-		virtual ~voronoicell_base();
+		~voronoicell_base();
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void init_octahedron(fpoint l);
 		inline void init_tetrahedron(fpoint x0,fpoint y0,fpoint z0,fpoint x1,fpoint y1,fpoint z1,fpoint x2,fpoint y2,fpoint z2,fpoint x3,fpoint y3,fpoint z3);
