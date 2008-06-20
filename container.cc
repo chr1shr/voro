@@ -347,7 +347,7 @@ inline void container::print_all_neighbor(char* filename) {
  * be made by the neighboring periodic images of this particle. */
 template<class n_option>
 inline void container::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
-	float x1,x2,y1,y2,z1,z2;
+	fpoint x1,x2,y1,y2,z1,z2;
 	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
