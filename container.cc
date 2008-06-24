@@ -35,7 +35,82 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb
 	s_size=3*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
 	sl=new int[s_size];
 	walls=new wall*[current_wall_size];
+	mrad=new fpoint[hgridsq*seq_length];
+	initialize_radii();
 }
+
+template<class r_option>
+void container_base<r_option>::initialize_radii() {
+	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
+	cout << b1 << endl;
+	cout << b2 << endl;
+	cout << b3 << endl;
+	cout << b4 << endl;
+	cout << b5 << endl;
+	cout << b6 << endl;
+	const fpoint xstep=(bx-ax)/nx/fgrid;
+	const fpoint ystep=(by-ay)/ny/fgrid;
+	const fpoint zstep=(bz-az)/nz/fgrid;
+	int i,j,k,lx,ly,lz,l=0,q;
+	unsigned int *e=const_cast<unsigned int*> (wl);
+	fpoint xlo,ylo,zlo,xhi,yhi,zhi,minr;fpoint *radp=mrad;
+	unsigned int f,qq;
+	for(zlo=0,zhi=zstep,lz=0;lz<hgrid;zlo=zhi,zhi+=zstep,lz++) {
+		for(ylo=0,yhi=ystep,ly=0;ly<hgrid;ylo=yhi,yhi+=ystep,ly++) {
+			for(xlo=0,xhi=xstep,lx=0;lx<hgrid;xlo=xhi,xhi+=xstep,l++,lx++) {
+				minr=large;
+				for(q=e[0]+1;q<seq_length;q++) {
+					f=e[q];
+					i=(f&127)-64;
+					j=(f>>7&127)-64;
+					k=(f>>14&127)-64;qq=f>>21;
+					if ((f&b2)==b2) {
+						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i-1,j,k);
+						if((f&b1)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
+					} else if ((f&b1)==b1) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
+					if ((f&b4)==b4) {
+						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j-1,k);
+						if((f&b3)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
+					} else if ((f&b3)==b3) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
+					if ((f&b6)==b6) {
+						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k-1);
+						if((f&b5)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
+					} else if ((f&b5)==b5) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
+				}
+				q--;
+				while(q>0) {
+					radp[q]=minr;
+					f=e[q];
+					i=(f&127)-64;
+					j=(f>>7&127)-64;
+					k=(f>>14&127)-64;
+					compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k);
+					q--;
+				}
+				radp[0]=minr;
+				e+=seq_length;
+				radp+=seq_length;
+			}
+		}
+	}
+}
+
+template<class r_option>
+inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk) {
+	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
+	fpoint radsq,temp;
+	if(ti>0) {temp=boxx*ti-xhi;radsq=temp*temp;}
+	else if (ti<0) {temp=xlo-boxx*(1+ti);radsq=temp*temp;}
+	else radsq=0;
+	
+	if(tj>0) {temp=boxy*tj-yhi;radsq+=temp*temp;}
+	else if (tj<0) {temp=ylo-boxy*(1+tj);radsq+=temp*temp;}
+
+	if(tk>0) {temp=boxz*tk-zhi;radsq+=temp*temp;}
+	else if (tk<0) {temp=zlo-boxz*(1+tk);radsq+=temp*temp;}
+
+	if(radsq<minr) minr=radsq;
+};
 
 /** Container destructor - free memory. */
 template<class r_option>
@@ -263,7 +338,7 @@ void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
 					compute_cell(c,i,j,k,ijk,q);
-					bb[id[ijk][q]]=c.volume();
+				//	bb[id[ijk][q]]=c.volume();
 				}
 				ijk++;
 			}
@@ -1430,3 +1505,5 @@ inline fpoint radius_mono::scale(fpoint rs,int t,int q) {
 inline void radius_poly::print(ostream &os,int ijk,int q) {
 	os << " " << cc->p[ijk][4*q+3];
 }
+
+#include "worklist.cc";

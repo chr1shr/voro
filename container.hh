@@ -170,6 +170,7 @@ class container_base {
 		 * class container_poly, then this is set to 4, to also hold
 		 * the particle radii. */
 		int sz;
+		fpoint *mrad;
 
 		template<class n_option>
 		inline void print_all(ostream &os,voronoicell_base<n_option> &c);
@@ -178,6 +179,7 @@ class container_base {
 		void add_particle_memory(int i);
 		void add_list_memory();
 	private:
+#include "worklist.hh"
 		template<class n_option>
 		inline bool corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
 		template<class n_option>
@@ -198,6 +200,8 @@ class container_base {
 		inline void mask_y_m(int cijk,int ci,int cj,int ck);
 		inline void mask_z_p(int cijk,int ci,int cj,int ck);
 		inline void mask_z_m(int cijk,int ci,int cj,int ck);
+		inline void initialize_radii();
+		inline void compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk);
 		friend class facets_loop;
 		friend class radius_poly;
 };

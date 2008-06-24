@@ -40,5 +40,6 @@ typedef double fpoint;
 const fpoint tolerance=1e-10;
 const fpoint tolerance2=2e-10;
 #endif
+const fpoint large=1e20;
 
 #endif

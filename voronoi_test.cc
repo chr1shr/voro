@@ -36,16 +36,16 @@ int main() {
 			false,false,false,8);
 
 	//Randomly add particles into the container
-	for(i=0;i<particles;i++) {
-		x=x_min+rnd()*(x_max-x_min);
-		y=y_min+rnd()*(y_max-y_min);
-		z=z_min+rnd()*(z_max-z_min);
-		con.put(i,x,y,z);
-	}
+//	for(i=0;i<particles;i++) {
+//		x=x_min+rnd()*(x_max-x_min);
+//		y=y_min+rnd()*(y_max-y_min);
+//		z=z_min+rnd()*(z_max-z_min);
+//		con.put(i,x,y,z);
+//	}
 
-	con.guess_length_scale();
+//	con.guess_length_scale();
 	// Print out a list of the particles, and their Voronoi volumes
-	con.store_cell_volumes(bb);
+//	con.store_cell_volumes(bb);
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot
