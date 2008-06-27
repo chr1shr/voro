@@ -4,6 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : October 19th 2007
 
+//int D1=0,D2=0,D3=0,D4=0,D5=0;
 #include "cell.cc"
 #include "container.cc"
 #include "wall.cc"
@@ -52,8 +53,9 @@ int main() {
 	}
 	con.guess_length_scale();
 
-	con.store_cell_volumes(bb);x=0;
-	for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
+	con.store_cell_volumes(bb);//x=0;
+//	for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
+//	cout << D1 << " " << D2 << " " << D3 << " " << D4 << " " << D5 << " ";
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot

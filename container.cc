@@ -509,8 +509,9 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	initialize_voronoicell(c,x,y,z);
 	fpoint crs=0,mrs;
 
-	int next_count=1,list_index=0,list_size=7;
-	int count_list[]={3,8,16,25,36,49,64};
+	int next_count=2,list_index=0,list_size=8;
+//	int count_list[]={3,8,16,25,36,49,64};
+	int count_list[]={5,12,21,28,36,49,64,75};
 
 	// Test all particles in the particle's local region first
 	for(l=0;l<s;l++) {
@@ -558,9 +559,8 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	e=(const_cast<unsigned int*> (wl))+sijk*seq_length;
 
 	f=e[0];g=0;
-
 	do {
-		if(mrs<mrad[g]) return;
+		if(mrs<radp[g]) return;
 		g++;
 		if (g==next_count) {
 			mrs=c.maxradsq();
@@ -587,6 +587,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		dijk=di+nx*(dj+ny*dk);
 
 		if(mrs>crs) {
+			//D1++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
@@ -595,6 +596,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		} else {
+			//D2++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
@@ -617,7 +619,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	s_start=s_end=0;
 	
 	while(g<seq_length-1) {
-		if(mrs<mrad[g]) return;
+		if(mrs<radp[g]) return;
 		g++;
 		if (g==next_count) {
 			mrs=c.maxradsq();
@@ -646,6 +648,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		dijk=di+nx*(dj+ny*dk);
 
 		if(mrs>crs) {
+//			D3++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
@@ -654,6 +657,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		} else {
+//			D4++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
@@ -664,7 +668,6 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		}
 
 		if(s_end+18>s_size) add_list_memory();
-
 
 		if ((q&b2)==b2) {
 			if(ei>0) if(mask[eijk-1]!=mv) {mask[eijk-1]=mv;sl[s_end++]=ei-1;sl[s_end++]=ej;sl[s_end++]=ek;}
@@ -677,7 +680,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			if((q&b5)==0) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
 		} else if ((q&b5)==b5) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
 	}
-	if(mrs<mrad[g]) return;
+	if(mrs<radp[g]) return;
 
 	// Update the mask counter, and if it has wrapped around, then
 	// reset the mask
@@ -774,6 +777,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
 
 		eijk=ei+nx*(ej+ny*ek);
+		//D5++;
 		for(l=0;l<co[eijk];l++) {
 			x1=p[eijk][sz*l]+qx-x;
 			y1=p[eijk][sz*l+1]+qy-y;
@@ -1239,6 +1243,10 @@ inline void radius_poly::init(int s,int i) {
 
 inline fpoint radius_poly::cutoff(fpoint lrs) {
 	return mul*lrs;
+}
+
+inline fpoint radius_mono::cutoff(fpoint lrs) {
+	return lrs;
 }
 
 inline fpoint radius_poly::scale(fpoint rs,int t,int q) {
