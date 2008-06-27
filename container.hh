@@ -202,6 +202,7 @@ class container_base {
 		inline void mask_z_m(int cijk,int ci,int cj,int ck);
 		inline void initialize_radii();
 		inline void compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk);
+		inline bool compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gx,fpoint gy,fpoint gz,fpoint& crs,fpoint mrs);
 		friend class facets_loop;
 		friend class radius_poly;
 };

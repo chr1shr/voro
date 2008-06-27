@@ -53,7 +53,7 @@ int main() {
 	con.guess_length_scale();
 
 	con.store_cell_volumes(bb);x=0;
-//	for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
+	for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot

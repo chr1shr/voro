@@ -42,12 +42,6 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb
 template<class r_option>
 void container_base<r_option>::initialize_radii() {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
-	cout << b1 << endl;
-	cout << b2 << endl;
-	cout << b3 << endl;
-	cout << b4 << endl;
-	cout << b5 << endl;
-	cout << b6 << endl;
 	const fpoint xstep=(bx-ax)/nx/fgrid;
 	const fpoint ystep=(by-ay)/ny/fgrid;
 	const fpoint zstep=(bz-az)/nz/fgrid;
@@ -110,7 +104,7 @@ inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,f
 	else if (tk<0) {temp=zlo-boxz*(1+tk);radsq+=temp*temp;}
 
 	if(radsq<minr) minr=radsq;
-};
+}
 
 /** Container destructor - free memory. */
 template<class r_option>
@@ -338,7 +332,7 @@ void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
 					compute_cell(c,i,j,k,ijk,q);
-				//	bb[id[ijk][q]]=c.volume();
+					bb[id[ijk][q]]=c.volume();
 				}
 				ijk++;
 			}
@@ -504,34 +498,36 @@ template<class r_option>
 template<class n_option>
 void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
-	const fpoint bxsq=boxx*boxx+boxy*boxy+boxz*boxz;
-	fpoint x1,y1,z1,qx=0,qy=0,qz=0,gx,gy,gz;
+	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
-	int ci,cj,ck,cijk,di,dj,dk,dijk,ei,ej,ek,eijk,q;
+	int ci,cj,ck,di,dj,dk,dijk,ei,ej,ek,eijk,si,sj,sk,sijk;
+	fpoint gxs,gys,gzs,*radp;
+	int f,g,l;unsigned int q,*e;
+	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
 
 	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
-	fpoint crs,mrs;
+	fpoint crs=0,mrs;
 
-	int count=0,next_count=1,list_index=0,list_size=7;
+	int next_count=1,list_index=0,list_size=7;
 	int count_list[]={3,8,16,25,36,49,64};
 
 	// Test all particles in the particle's local region first
-	for(q=0;q<s;q++) {
-		x1=p[ijk][sz*q]-x;
-		y1=p[ijk][sz*q+1]-y;
-		z1=p[ijk][sz*q+2]-z;
+	for(l=0;l<s;l++) {
+		x1=p[ijk][sz*l]-x;
+		y1=p[ijk][sz*l+1]-y;
+		z1=p[ijk][sz*l+2]-z;
 		rs=x1*x1+y1*y1+z1*z1;
-		c.nplane(x1,y1,z1,rs,id[i][j]);
+		c.nplane(x1,y1,z1,rs,id[ijk][l]);
 	}
-	q++;
-	while(q<co[ijk]) {
-		x1=p[ijk][sz*q]-x;
-		y1=p[ijk][sz*q+1]-y;
-		z1=p[ijk][sz*q+2]-z;
+	l++;
+	while(l<co[ijk]) {
+		x1=p[ijk][sz*l]-x;
+		y1=p[ijk][sz*l+1]-y;
+		z1=p[ijk][sz*l+2]-z;
 		rs=x1*x1+y1*y1+z1*z1;
-		c.nplane(x1,y1,z1,rs,id[i][j]);
-		q++;
+		c.nplane(x1,y1,z1,rs,id[ijk][l]);
+		l++;
 	}
 
 	mrs=c.maxradsq();
@@ -547,7 +543,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	if(sj>=hgrid) {
 		gys=fy;
 		m1|=(127<<7)+(3<<24);sj=fgrid-1-sj;m2|=(1<<7)+(1<<24);
-	} else gys=boxy-fy}
+	} else gys=boxy-fy;
 	if(sk>=hgrid) {
 		gzs=fz;
 		m1|=(127<<14)+(3<<27);sk=fgrid-1-sk;m2|=(1<<14)+(1<<27);
@@ -563,14 +559,18 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 
 	f=e[0];g=0;
 
-	while(g<f) {
-		if(crs<mrad[g]) return;
+	do {
+		if(mrs<mrad[g]) return;
 		g++;
+		if (g==next_count) {
+			mrs=c.maxradsq();
+			if(list_index!=list_size) next_count=count_list[list_index++];
+		}		
 		q=e[g];q^=m1;q+=m2;
-		di=q&127;
-		dj=(q>>7)&127;
-		dk=(q>>14)&127;
-
+		di=q&127;di-=64;
+		dj=(q>>7)&127;dj-=64;
+		dk=(q>>14)&127;dk-=64;
+		
 		if(xperiodic) {if(di<-nx) continue;else if(di>nx) continue;}
 		else {if(di<-i) continue;else if(di>=nx-i) continue;}
 		if(yperiodic) {if(dj<-ny) continue;else if(dj>ny) continue;}
@@ -580,25 +580,30 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		
 		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
 		di+=i;dj+=j;dk+=k;
+		
+		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
+		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;dj-=ny;} else qy=0;}
+		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;dk-=nz;} else qz=0;}
+		dijk=di+nx*(dj+ny*dk);
 
 		if(mrs>crs) {
-			for(q=0;q<co[eijk];q++) {
-				x1=p[eijk][sz*q]+qx-x;
-				y1=p[eijk][sz*q+1]+qy-y;
-				z1=p[eijk][sz*q+2]+qz-z;
+			for(l=0;l<co[dijk];l++) {
+				x1=p[dijk][sz*l]+qx-x;
+				y1=p[dijk][sz*l+1]+qy-y;
+				z1=p[dijk][sz*l+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
-				c.nplane(x1,y1,z1,rs,id[dijk][q]);
+				c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		} else {
-			for(q=0;q<co[eijk];q++) {
-				x1=p[eijk][sz*q]+qx-x;
-				y1=p[eijk][sz*q+1]+qy-y;
-				z1=p[eijk][sz*q+2]+qz-z;
+			for(l=0;l<co[dijk];l++) {
+				x1=p[dijk][sz*l]+qx-x;
+				y1=p[dijk][sz*l+1]+qy-y;
+				z1=p[dijk][sz*l+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
-				if (rs<crs) c.nplane(x1,y1,z1,rs,id[dijk][q]);
+				if (rs<crs) c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		}
-	}
+	} while (g<f);
 	
 	ci=xperiodic?nx:i;
 	cj=yperiodic?ny:j;
@@ -606,76 +611,74 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 
 	mv++;
 	if (mv==0) {
-		for(q=0;q<hxyz;q++) mask[q]=0;
+		for(l=0;l<hxyz;l++) mask[l]=0;
 		mv=1;
 	}
-	s_end=0;
+	s_start=s_end=0;
 	
-	while(g<seq_length) {
-		q=e[g++];q^=m1;q+=m2;
-		di=q&127;
-		dj=(q>>7)&127;
-		dk=(q>>14)&127;
-
-		mask[dijk]=mv;
-
-		if(xperiodic) {if(di<-nx) continue;else if(di>nx) continue;}
-		else {if(di<-i) continue;else if(di>=nx-i) continue;}
-		if(yperiodic) {if(dj<-ny) continue;else if(dj>ny) continue;}
-		else {if(dj<-j) continue;else if(dj>=ny-j) continue;}
-		if(zperiodic) {if(dk<-nz) continue;else if(dk>nz) continue;}
-		else {if(dk<-k) continue;else if(dk>=nz-k) continue;}
+	while(g<seq_length-1) {
+		if(mrs<mrad[g]) return;
+		g++;
+		if (g==next_count) {
+			mrs=c.maxradsq();
+			if(list_index!=list_size) next_count=count_list[list_index++];
+		}		
+		q=e[g];q^=m1;q+=m2;
+		di=q&127;di-=64;
+		dj=(q>>7)&127;dj-=64;
+		dk=(q>>14)&127;dk-=64;
 		
-		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gx,gy,gz,mrs)) continue;
+		ei=ci+di;
+		ej=cj+dj;
+		ek=ck+dk;
+		if(ei<0) continue;else if (ei>=hx) continue;
+		if(ej<0) continue;else if (ej>=hy) continue;
+		if(ek<0) continue;else if (ek>=hz) continue;
+		eijk=ei+hx*(ej+hy*ek);
+		mask[eijk]=mv;
+		
+		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
+		di+=i;dj+=j;dk+=k;
 
-		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;ei-=nx;} else qx=0;}
-		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;ej-=ny;} else qy=0;}
-		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;ek-=nz;} else qz=0;}
+		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
+		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;dj-=ny;} else qy=0;}
+		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;dk-=nz;} else qz=0;}
 		dijk=di+nx*(dj+ny*dk);
 
 		if(mrs>crs) {
-			for(q=0;q<co[eijk];q++) {
-				x1=p[eijk][sz*q]+qx-x;
-				y1=p[eijk][sz*q+1]+qy-y;
-				z1=p[eijk][sz*q+2]+qz-z;
+			for(l=0;l<co[dijk];l++) {
+				x1=p[dijk][sz*l]+qx-x;
+				y1=p[dijk][sz*l+1]+qy-y;
+				z1=p[dijk][sz*l+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
-				c.nplane(x1,y1,z1,rs,id[eijk][q]);
+				c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		} else {
-			for(q=0;q<co[eijk];q++) {
-				x1=p[eijk][sz*q]+qx-x;
-				y1=p[eijk][sz*q+1]+qy-y;
-				z1=p[eijk][sz*q+2]+qz-z;
+			for(l=0;l<co[dijk];l++) {
+				x1=p[dijk][sz*l]+qx-x;
+				y1=p[dijk][sz*l+1]+qy-y;
+				z1=p[dijk][sz*l+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
-				if (rs<mrs) c.nplane(x1,y1,z1,rs,id[eijk][q]);
+				if (rs<mrs) c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		}
 
-		if(s_end<18) add_list_memory();
+		if(s_end+18>s_size) add_list_memory();
 
-		cijk=ci+hx*(cj+hy*ck);
 
 		if ((q&b2)==b2) {
-			if(ci>0) if(mask[cijk-1]!=mv) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;}
-			if((q&b1)==0) if(ci<hx-1) if(mask[cijk+1]!=mv) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;}
-		} else if ((q&b1)==b1) {if(ci<hx-1) if(mask[cijk+1]!=mv) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;}}
-		if ((q&b4)==b4) {if(cj>0) if(mask[cijk-hx]!=mv) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;}
-			if((q&b3)==0) if(cj<hy-1) if(mask[cijk+hx]!=mv) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;}
-		} else if ((q&b3)==b3) {if(cj<hy-1) if(mask[cijk+hx]!=mv) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;}} 
-		if ((q&b6)==b6) {if(ck>0) if(mask[cijk-hxy]!=mv) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;}
-			if((q&b5)==0) if(ck<hz-1) if(mask[cijk+hxy]!=mv) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;}
-		} else if ((q&b5)==b5) if(ck<hz-1) if(mask[cijk+hxy]!=mv) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;}
-
-		count++;
-		if (count==next_count) {
-			mrs=c.maxradsq();
-			if(list_index==list_size) {count=0;break;}
-			else next_count=count_list[list_index++];
-		}
+			if(ei>0) if(mask[eijk-1]!=mv) {mask[eijk-1]=mv;sl[s_end++]=ei-1;sl[s_end++]=ej;sl[s_end++]=ek;}
+			if((q&b1)==0) if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}
+		} else if ((q&b1)==b1) {if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}}
+		if ((q&b4)==b4) {if(ej>0) if(mask[eijk-hx]!=mv) {mask[eijk-hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej-1;sl[s_end++]=ek;}
+			if((q&b3)==0) if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}
+		} else if ((q&b3)==b3) {if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}} 
+		if ((q&b6)==b6) {if(ek>0) if(mask[eijk-hxy]!=mv) {mask[eijk-hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek-1;}
+			if((q&b5)==0) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
+		} else if ((q&b5)==b5) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
 	}
+	if(mrs<mrad[g]) return;
 
-	s_start=0;
-	
 	// Update the mask counter, and if it has wrapped around, then
 	// reset the mask
 	fx+=boxx*ci;fy+=boxy*cj;fz+=boxz*ck;
@@ -771,13 +774,13 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
 
 		eijk=ei+nx*(ej+ny*ek);
-		for(q=0;q<co[eijk];q++) {
-			x1=p[eijk][sz*q]+qx-x;
-			y1=p[eijk][sz*q+1]+qy-y;
-			z1=p[eijk][sz*q+2]+qz-z;
+		for(l=0;l<co[eijk];l++) {
+			x1=p[eijk][sz*l]+qx-x;
+			y1=p[eijk][sz*l+1]+qy-y;
+			z1=p[eijk][sz*l+2]+qz-z;
 			rs=x1*x1+y1*y1+z1*z1;
 	//		if (rs<mrs)
-			c.nplane(x1,y1,z1,rs,id[eijk][q]);
+			c.nplane(x1,y1,z1,rs,id[eijk][l]);
 		}
 
 		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
@@ -1251,8 +1254,10 @@ inline void radius_poly::print(ostream &os,int ijk,int q) {
 }
 
 template<class r_option>
-inline bool container_base<class r_option>::compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gx,fpoint gy,fpoint gz,fpoint mrs,fpoint &crs) {
+inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gxs,fpoint gys,fpoint gzs,fpoint &crs,fpoint mrs) {
+	fpoint xlo,ylo,zlo;
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
+	const fpoint bxsq=boxx*boxx+boxy*boxy+boxz*boxz;
 	if(di>0) {
 		xlo=di*boxx-fx;
 		crs=xlo*xlo;
@@ -1304,7 +1309,7 @@ inline bool container_base<class r_option>::compute_min_max_radius(int di,int dj
 	} else if(di<0) {
 		xlo=(di+1)*boxx-fx;
 		crs=xlo*xlo;
-		if(dj>) {
+		if(dj>0) {
 			ylo=dj*boxy-fy;
 			crs+=ylo*ylo;
 			if(dk>0) {
@@ -1350,14 +1355,14 @@ inline bool container_base<class r_option>::compute_min_max_radius(int di,int dj
 			crs+=gys+boxx*(-2*xlo+boxx);
 		}
 	} else {
-		if(dj>cj) {
+		if(dj>0) {
 			ylo=dj*boxy-fy;
 			crs=ylo*ylo;
-			if(dk>ck) {
+			if(dk>0) {
 				zlo=dk*boxz-fz;
 				crs+=zlo*zlo;if(crs>mrs) return true;
 				crs+=boxz*(2*zlo+boxz);
-			} else if(dk<ck) {
+			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
 				crs+=zlo*zlo;if(crs>mrs) return true;
 				crs+=boxz*(-2*zlo+boxz);
@@ -1366,14 +1371,14 @@ inline bool container_base<class r_option>::compute_min_max_radius(int di,int dj
 				crs+=gzs;
 			}
 			crs+=boxy*(2*ylo+boxy);
-		} else if(dj<cj) {
+		} else if(dj<0) {
 			ylo=(dj+1)*boxy-fy;
 			crs=ylo*ylo;
-			if(dk>ck) {
+			if(dk>0) {
 				zlo=dk*boxz-fz;
 				crs+=zlo*zlo;if(crs>mrs) return true;
 				crs+=boxz*(2*zlo+boxz);
-			} else if(dk<ck) {
+			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
 				crs+=zlo*zlo;if(crs>mrs) return true;
 				crs+=boxz*(-2*zlo+boxz);
@@ -1383,10 +1388,10 @@ inline bool container_base<class r_option>::compute_min_max_radius(int di,int dj
 			}
 			crs+=boxy*(-2*ylo+boxy);
 		} else {
-			if(dk>ck) {
+			if(dk>0) {
 				zlo=dk*boxz-fz;crs=zlo*zlo;if(crs>mrs) return true;
 				crs+=boxz*(2*zlo+boxz);
-			} else if(dk<ck) {
+			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;crs=zlo*zlo;if(crs>mrs) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
