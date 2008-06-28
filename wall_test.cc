@@ -4,7 +4,6 @@
 // Email    : chr@alum.mit.edu
 // Date     : October 19th 2007
 
-int D1=0,D2=0,D3=0,D4=0,D5=0,D6=0,D7=0;
 #include "cell.cc"
 #include "container.cc"
 #include "wall.cc"
@@ -17,11 +16,11 @@ const fpoint z_min=-10,z_max=10;
 // Set up the number of blocks that the container is divided
 // into.
 //const int n_x=NNN,n_y=NNN,n_z=NNN;
-const int n_x=10,n_y=10,n_z=10;
+const int n_x=26,n_y=26,n_z=26;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=100000;
+const int particles=10000;
 
 // This function returns a random fpoint between 0 and 1;
 fpoint rnd() {return fpoint(rand())/RAND_MAX;}
@@ -47,21 +46,14 @@ int main() {
 		x=x_min+rnd()*(x_max-x_min);
 		y=y_min+rnd()*(y_max-y_min);
 		z=z_min+rnd()*(z_max-z_min);
-		if (con.point_inside(x,y,z)) {
+		if(con.point_inside(x,y,z)) {
 			con.put(i,x,y,z);
 			i++;
 		}
 	}
-	voronoicell c;
-	i=5;int j=7,k=2;
-	int ijk=i+n_x*(j+n_y*k);
-	con.compute_cell(c,i,j,k,ijk,0);
-	con.compute_cell(c,i+1,j,k,ijk+1,0);
-	con.guess_length_scale();
 
-//	con.store_cell_volumes(bb);//x=0;
-//	for(i=0;i<particles;i++) x+=bb[i];cout << x << endl;
-//	cout << D1 << " " << D2 << " " << D3 << " " << D4 << " " << D5 << " " << D6 << " " << D7 << " ";
+	con.store_cell_volumes(bb);x=0;
+	for(i=0;i<particles;i++) x+=bb[i];cout << x-8000 << endl;
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot

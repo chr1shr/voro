@@ -32,7 +32,7 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
 	mask=new unsigned int[hxyz];
 	for(l=0;l<hxyz;l++) mask[l]=0;
-	s_size=3*(hxy+hz*(hx+hy));if (s_size<18) s_size=18;
+	s_size=3*(hxy+hz*(hx+hy));if(s_size<18) s_size=18;
 	sl=new int[s_size];
 	walls=new wall*[current_wall_size];
 	mrad=new fpoint[hgridsq*seq_length];
@@ -58,18 +58,18 @@ void container_base<r_option>::initialize_radii() {
 					i=(f&127)-64;
 					j=(f>>7&127)-64;
 					k=(f>>14&127)-64;qq=f>>21;
-					if ((f&b2)==b2) {
+					if((f&b2)==b2) {
 						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i-1,j,k);
 						if((f&b1)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
-					} else if ((f&b1)==b1) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
-					if ((f&b4)==b4) {
+					} else if((f&b1)==b1) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
+					if((f&b4)==b4) {
 						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j-1,k);
 						if((f&b3)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
-					} else if ((f&b3)==b3) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
-					if ((f&b6)==b6) {
+					} else if((f&b3)==b3) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
+					if((f&b6)==b6) {
 						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k-1);
 						if((f&b5)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
-					} else if ((f&b5)==b5) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
+					} else if((f&b5)==b5) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
 				}
 				q--;
 				while(q>0) {
@@ -94,14 +94,14 @@ inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,f
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
 	fpoint radsq,temp;
 	if(ti>0) {temp=boxx*ti-xhi;radsq=temp*temp;}
-	else if (ti<0) {temp=xlo-boxx*(1+ti);radsq=temp*temp;}
+	else if(ti<0) {temp=xlo-boxx*(1+ti);radsq=temp*temp;}
 	else radsq=0;
 	
 	if(tj>0) {temp=boxy*tj-yhi;radsq+=temp*temp;}
-	else if (tj<0) {temp=ylo-boxy*(1+tj);radsq+=temp*temp;}
+	else if(tj<0) {temp=ylo-boxy*(1+tj);radsq+=temp*temp;}
 
 	if(tk>0) {temp=boxz*tk-zhi;radsq+=temp*temp;}
-	else if (tk<0) {temp=zlo-boxz*(1+tk);radsq+=temp*temp;}
+	else if(tk<0) {temp=zlo-boxz*(1+tk);radsq+=temp*temp;}
 
 	if(radsq<minr) minr=radsq;
 }
@@ -125,10 +125,11 @@ void container_base<r_option>::dump(char *filename) {
 	ofstream file;
 	file.open(filename,ofstream::out|ofstream::trunc);
 	for(l=0;l<nxyz;l++) {
-		for (c=0;c<co[l];c++)
+		for(c=0;c<co[l];c++) {
 			file << id[l][c];
 			for(i=sz*c;i<sz*(c+1);i++) file << " " << p[l][i];
 			file << endl;
+		}
 	}
 	file.close();
 }
@@ -173,7 +174,7 @@ template<class r_option>
 void container_base<r_option>::add_particle_memory(int i) {
 	int *idp;fpoint *pp;
 	int l,nmem=2*mem[i];
-	if (nmem>max_particle_memory) throw fatal_error("Absolute maximum memory allocation exceeded");
+	if(nmem>max_particle_memory) throw fatal_error("Absolute maximum memory allocation exceeded");
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
 	pp=new fpoint[sz*nmem];
@@ -188,8 +189,7 @@ template<class r_option>
 inline void container_base<r_option>::add_list_memory() {
 	cout << "addmem\n";
 	int i,j=0,*ps;
-	s_size*=2;
-	ps=new int[s_size];
+	ps=new int[s_size*2];
 	if(s_start<=s_end) {
 		for(i=s_start;i<s_end;i++) ps[j++]=sl[i];
 	} else {
@@ -197,6 +197,7 @@ inline void container_base<r_option>::add_list_memory() {
 		for(i=s_start;i<s_size;i++) ps[j++]=sl[i];
 		for(i=0;i<s_end;i++) ps[j++]=sl[i];
 	}
+	s_size*=2;
 	s_start=0;s_end=j;
 	delete [] sl;sl=ps;
 }
@@ -250,7 +251,7 @@ void container_base<r_option>::guess_length_scale() {
 	const fpoint third=1/3.0;
 	int sp=0;
 	for(int ijk=0;ijk<nxyz;ijk++) sp+=co[ijk];
-	if (sp>0) {
+	if(sp>0) {
 		length_scale=(fpoint) sp;
 		length_scale=pow(abs((bx-ax)*(by-ay)*(bz-az)/length_scale),third);
 	}
@@ -276,7 +277,7 @@ void container_base<r_option>::draw_gnuplot(char *filename,fpoint xmin,fpoint xm
 				c.dump_gnuplot(os,x,y,z);
 			}
 		}
-	} while ((s=l1.inc(px,py,pz))!=-1);
+	} while((s=l1.inc(px,py,pz))!=-1);
 	os.close();
 }
 
@@ -308,7 +309,7 @@ void container_base<r_option>::draw_pov(char *filename,fpoint xmin,fpoint xmax,f
 				c.dump_pov(os,x,y,z);
 			}
 		}
-	} while ((s=l1.inc(px,py,pz))!=-1);
+	} while((s=l1.inc(px,py,pz))!=-1);
 	os << "}\n";
 	os.close();
 }
@@ -327,11 +328,11 @@ template<class r_option>
 void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
 	int i,j,k,ijk=0,q;
-	for (k=0;k<nz;k++) {
+	for(k=0;k<nz;k++) {
 		for(j=0;j<ny;j++) {
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
-					compute_cell(c,i,j,k,ijk,q);
+					compute_cell_slow(c,i,j,k,ijk,q);
 					bb[id[ijk][q]]=c.volume();
 				}
 				ijk++;
@@ -347,7 +348,7 @@ template<class n_option>
 inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_option> &c) {
 	fpoint x,y,z;
 	int i,j,k,ijk=0,q;
-	for (k=0;k<nz;k++) {
+	for(k=0;k<nz;k++) {
 		for(j=0;j<ny;j++) {
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
@@ -430,9 +431,9 @@ template<class r_option>
 template<class n_option>
 inline void container_base<r_option>::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,x2,y1,y2,z1,z2;
-	if (xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
-	if (yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
-	if (zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
+	if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
+	if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
+	if(zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
 	c.init(x1,x2,y1,y2,z1,z2);
 	for(int j=0;j<wall_number;j++) walls[j]->cut_cell(c,x,y,z);
 }
@@ -445,7 +446,7 @@ bool container_base<r_option>::point_inside(fpoint x,fpoint y,fpoint z) {
 
 template<class r_option>
 bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
-	for(int j=0;j<wall_number;j++) if (!walls[j]->point_inside(x,y,z)) return false;
+	for(int j=0;j<wall_number;j++) if(!walls[j]->point_inside(x,y,z)) return false;
 	return true;
 }
 
@@ -462,7 +463,7 @@ void container_base<r_option>::compute_cell_slow(voronoicell_base<n_option> &c,i
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
-	radius.init(s,i);
+	radius.init(ijk,s);
 	while(radius.cutoff(lrs)<c.maxradsq()) {
 		ur=lr+0.5*length_scale;urs=ur*ur;
 		t=l.init(x,y,z,ur,qx,qy,qz);
@@ -470,10 +471,10 @@ void container_base<r_option>::compute_cell_slow(voronoicell_base<n_option> &c,i
 			for(q=0;q<co[t];q++) {
 				x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
-				if (lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t))
+				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t))
 					c.nplane(x1,y1,z1,radius.scale(rs,t,q),id[t][q]);
 			}
-		} while ((t=l.inc(qx,qy,qz))!=-1);
+		} while((t=l.inc(qx,qy,qz))!=-1);
 		lr=ur;lrs=urs;
 	}
 }
@@ -505,20 +506,21 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	int f,g,l;unsigned int q,*e;
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
 
+	radius.init(ijk,s);
+
 	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
 	fpoint crs,mrs;
 
-	int next_count=2,list_index=0,list_size=8;
-//	int count_list[]={3,8,16,25,36,49,64};
-	int count_list[]={5,12,21,28,36,49,64,75};
+	int next_count=3,list_index=0,list_size=8;
+	int count_list[]={7,11,15,19,26,35,45,59};
 
 	// Test all particles in the particle's local region first
 	for(l=0;l<s;l++) {
 		x1=p[ijk][sz*l]-x;
 		y1=p[ijk][sz*l+1]-y;
 		z1=p[ijk][sz*l+2]-z;
-		rs=x1*x1+y1*y1+z1*z1;
+		rs=radius.scale(x1*x1+y1*y1+z1*z1,ijk,l);
 		c.nplane(x1,y1,z1,rs,id[ijk][l]);
 	}
 	l++;
@@ -526,19 +528,16 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		x1=p[ijk][sz*l]-x;
 		y1=p[ijk][sz*l+1]-y;
 		z1=p[ijk][sz*l+2]-z;
-		rs=x1*x1+y1*y1+z1*z1;
+		rs=radius.scale(x1*x1+y1*y1+z1*z1,ijk,l);
 		c.nplane(x1,y1,z1,rs,id[ijk][l]);
 		l++;
 	}
 
 	mrs=c.maxradsq();
 
-	cout << "Init mrs " << mrs << endl;
-	
 	unsigned int m1,m2;
 	fpoint fx=x-ax-boxx*i,fy=y-ay-boxy*j,fz=z-az-boxz*k;
 	si=int(fx*xsp*fgrid);sj=int(fy*ysp*fgrid);sk=int(fz*zsp*fgrid);
-	cout << fx << " " << fy << " " << fz << " " << si << " " << sj << " " << sk << " " << x << " " << y << " " << z << " " << i << " " << j << " " << k;
 	if(si>=hgrid) {
 		gxs=fx;
 		m1=127+(3<<21);si=fgrid-1-si;m2=1+(1<<21);
@@ -553,29 +552,22 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	} else gzs=boxz-fz;
 
 	gxs*=gxs;gys*=gys;gzs*=gzs;
-	cout << " " << gxs << " " << gys << " " << gzs << " " << si << " " << sj << " " << sk << endl;
 
 	if(si<0) si=0;if(sj<0) sj=0;if(sk<0) sk=0;
 
 	sijk=si+hgrid*(sj+hgrid*sk);
 
-
 	radp=mrad+sijk*seq_length;
 	e=(const_cast<unsigned int*> (wl))+sijk*seq_length;
 	
-	cout << "worklist " << sijk << endl;
-	cout << e << " " << wl << endl;
-
-	f=e[0];g=0;cout << "free " << e[0] << endl;
+	f=e[0];g=0;
 	do {
-		if (g==next_count) {
+		if(g==next_count) {
 			mrs=c.maxradsq();
 			if(list_index!=list_size) next_count=count_list[list_index++];
-			cout << "recompute mrs=" << mrs << ", next=" << next_count << endl;
 		}
 		
-		cout << "compare mrs=" << mrs << " radp[" << g << "]=" << radp[g] << endl;
-		if(mrs<radp[g]) return;
+		if(mrs<radius.cutoff(radp[g])) return;
 		g++;
 		
 		q=e[g];q^=m1;q+=m2;
@@ -583,8 +575,6 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
 
-		cout << "scan " << di << " " << dj << " " << dk << endl;
-		
 		if(xperiodic) {if(di<-nx) continue;else if(di>nx) continue;}
 		else {if(di<-i) continue;else if(di>=nx-i) continue;}
 		if(yperiodic) {if(dj<-ny) continue;else if(dj>ny) continue;}
@@ -592,10 +582,8 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(zperiodic) {if(dk<-nz) continue;else if(dk>nz) continue;}
 		else {if(dk<-k) continue;else if(dk>=nz-k) continue;}
 		
-		cout << "Inside" << endl;
 
-		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) {D1++;cout << "EXCLUDED mincorner=" << crs << ", mrs=" << mrs << endl;continue;}
-		cout << "included maxcorner=" << crs << " mrs=" << mrs << endl; 
+		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
 		di+=i;dj+=j;dk+=k;
 		
 		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
@@ -603,69 +591,59 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;dk-=nz;} else qz=0;}
 		dijk=di+nx*(dj+ny*dk);
 
-		if(mrs>crs) {
-			cout << "fullcompute " << dijk << endl;
-			D2++;
+		if(mrs>radius.cutoff(crs)) {
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
-				rs=x1*x1+y1*y1+z1*z1;
+				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
 				c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		} else {
-			cout << "partialcompute " << dijk << endl;
-			D3++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
-				rs=x1*x1+y1*y1+z1*z1;
-				if (rs<crs) c.nplane(x1,y1,z1,rs,id[dijk][l]);
+				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
+				if(rs<crs) c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		}
-	} while (g<f);
-	cout << "transition " << g << " " << e[0] << " " << (e[e[0]]>>21) << " " << (e[e[0]+1]>>21) << endl;
+	} while(g<f);
 	ci=xperiodic?nx:i;
 	cj=yperiodic?ny:j;
 	ck=zperiodic?nz:k;
 
 	mv++;
-	if (mv==0) {
+	if(mv==0) {
 		for(l=0;l<hxyz;l++) mask[l]=0;
 		mv=1;
 	}
-	cout << "mask setup mv=" << mv << endl;
 	s_start=s_end=0;
 	
 	while(g<seq_length-1) {
-		if (g==next_count) {
+		if(g==next_count) {
 			mrs=c.maxradsq();
 			if(list_index!=list_size) next_count=count_list[list_index++];
-			cout << "recompute mrs=" << mrs << ", next=" << next_count << endl;
 		}		
 		
-		cout << "check mrs=" << mrs << ", radp[" << g << "]=" << radp[g] << endl;
-		if(mrs<radp[g]) return;
+		if(mrs<radius.cutoff(radp[g])) return;
 		g++;
 		
 		q=e[g];q^=m1;q+=m2;
 		di=q&127;di-=64;
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
-		cout << "scan= " << di << " " << dj << " " << dk << endl;
 		
 		ei=ci+di;
 		ej=cj+dj;
 		ek=ck+dk;
-		if(ei<0) continue;else if (ei>=hx) continue;
-		if(ej<0) continue;else if (ej>=hy) continue;
-		if(ek<0) continue;else if (ek>=hz) continue;
+		if(ei<0) continue;else if(ei>=hx) continue;
+		if(ej<0) continue;else if(ej>=hy) continue;
+		if(ek<0) continue;else if(ek>=hz) continue;
 		eijk=ei+hx*(ej+hy*ek);
 		mask[eijk]=mv;
 		
-		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) {D4++;cout << "EXCLUDED mincorner=" << crs << ", mrs=" << mrs << endl;continue;}
-		cout << "included maxcorner=" << crs << "mrs=" << mrs << endl; 
+		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
 		di+=i;dj+=j;dk+=k;
 
 		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
@@ -673,42 +651,38 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;dk-=nz;} else qz=0;}
 		dijk=di+nx*(dj+ny*dk);
 
-		if(mrs>crs) {
-			cout << "fullcompute " << dijk << endl;
-			D5++;
+		if(mrs>radius.cutoff(crs)) {
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
-				rs=x1*x1+y1*y1+z1*z1;
+				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
 				c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		} else {
-			cout << "partialcompute " << dijk <<endl;
-			D6++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
-				rs=x1*x1+y1*y1+z1*z1;
-				if (rs<mrs) c.nplane(x1,y1,z1,rs,id[dijk][l]);
+				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
+				if(rs<mrs) c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		}
 
 		if(s_end+18>s_size) add_list_memory();
 
-		if ((q&b2)==b2) {
+		if((q&b2)==b2) {
 			if(ei>0) if(mask[eijk-1]!=mv) {mask[eijk-1]=mv;sl[s_end++]=ei-1;sl[s_end++]=ej;sl[s_end++]=ek;}
 			if((q&b1)==0) if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}
-		} else if ((q&b1)==b1) {if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}}
-		if ((q&b4)==b4) {if(ej>0) if(mask[eijk-hx]!=mv) {mask[eijk-hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej-1;sl[s_end++]=ek;}
+		} else if((q&b1)==b1) {if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}}
+		if((q&b4)==b4) {if(ej>0) if(mask[eijk-hx]!=mv) {mask[eijk-hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej-1;sl[s_end++]=ek;}
 			if((q&b3)==0) if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}
-		} else if ((q&b3)==b3) {if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}} 
-		if ((q&b6)==b6) {if(ek>0) if(mask[eijk-hxy]!=mv) {mask[eijk-hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek-1;}
+		} else if((q&b3)==b3) {if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}} 
+		if((q&b6)==b6) {if(ek>0) if(mask[eijk-hxy]!=mv) {mask[eijk-hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek-1;}
 			if((q&b5)==0) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
-		} else if ((q&b5)==b5) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
+		} else if((q&b5)==b5) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
 	}
-	if(mrs<radp[g]) return;
+	if(mrs<radius.cutoff(radp[g])) return;
 
 	// Update the mask counter, and if it has wrapped around, then
 	// reset the mask
@@ -723,95 +697,93 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(di>ci) {
 			if(dj>cj) {
 				if(dk>ck) {
-					if (corner_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+					if(corner_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+					if(corner_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-					if (edge_z_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+					if(edge_z_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				}
 			} else if(dj<cj) {
 				if(dk>ck) {
-					if (corner_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+					if(corner_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
+					if(corner_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
 				} else {
-					if (edge_z_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+					if(edge_z_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-					if (edge_y_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+					if(edge_y_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_y_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+					if(edge_y_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-					if (face_x_test(c,xlo,ylo,zlo,yhi,zhi)) continue;
+					if(face_x_test(c,xlo,ylo,zlo,yhi,zhi)) continue;
 				}
 			}
 		} else if(di<ci) {
 			if(dj>cj) {
 				if(dk>ck) {
-					if (corner_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+					if(corner_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
+					if(corner_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
 				} else {
-					if (edge_z_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+					if(edge_z_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				}
 			} else if(dj<cj) {
 				if(dk>ck) {
-					if (corner_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
+					if(corner_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (corner_test(c,xhi,yhi,zhi,xlo,ylo,zlo)) continue;
+					if(corner_test(c,xhi,yhi,zhi,xlo,ylo,zlo)) continue;
 				} else {
-					if (edge_z_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
+					if(edge_z_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-					if (edge_y_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
+					if(edge_y_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_y_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
+					if(edge_y_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
 				} else {
-					if (face_x_test(c,xhi,ylo,zlo,yhi,zhi)) continue;
+					if(face_x_test(c,xhi,ylo,zlo,yhi,zhi)) continue;
 				}
 			}
 		} else {
 			if(dj>cj) {
 				if(dk>ck) {
-					if (edge_x_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
+					if(edge_x_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_x_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
+					if(edge_x_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
 				} else {
-					if (face_y_test(c,xlo,ylo,zlo,xhi,zhi)) continue;
+					if(face_y_test(c,xlo,ylo,zlo,xhi,zhi)) continue;
 				}
 			} else if(dj<cj) {
 				if(dk>ck) {
-					if (edge_x_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
+					if(edge_x_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
 				} else if(dk<ck) {
-					if (edge_x_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
+					if(edge_x_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
 				} else {
-					if (face_y_test(c,xlo,yhi,zlo,xhi,zhi)) continue;
+					if(face_y_test(c,xlo,yhi,zlo,xhi,zhi)) continue;
 				}
 			} else {
 				if(dk>ck) {
-					if (face_z_test(c,xlo,ylo,zlo,xhi,yhi)) continue;
+					if(face_z_test(c,xlo,ylo,zlo,xhi,yhi)) continue;
 				} else if(dk<ck) {
-					if (face_z_test(c,xlo,ylo,zhi,xhi,yhi)) continue;
+					if(face_z_test(c,xlo,ylo,zhi,xhi,yhi)) continue;
 				} else {
 					cout << "error\n";
 				}
 			}
 		}
 
-		if(xperiodic) {ei=i+di-nx;if (ei<0) {qx=ax-bx;ei+=nx;} else if (ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
-		if(yperiodic) {ej=j+dj-ny;if (ej<0) {qy=ay-by;ej+=ny;} else if (ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
-		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
+		if(xperiodic) {ei=i+di-nx;if(ei<0) {qx=ax-bx;ei+=nx;} else if(ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
+		if(yperiodic) {ej=j+dj-ny;if(ej<0) {qy=ay-by;ej+=ny;} else if(ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
+		if(zperiodic) {ek=k+dk-nz;if(ek<0) {qz=az-bz;ek+=nz;} else if(ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
 
 		eijk=ei+nx*(ej+ny*ek);
-		D7++;
 		for(l=0;l<co[eijk];l++) {
 			x1=p[eijk][sz*l]+qx-x;
 			y1=p[eijk][sz*l+1]+qy-y;
 			z1=p[eijk][sz*l+2]+qz-z;
-			rs=x1*x1+y1*y1+z1*z1;
-	//		if (rs<mrs)
+			rs=radius.scale(x1*x1+y1*y1+z1*z1,eijk,l);
 			c.nplane(x1,y1,z1,rs,id[eijk][l]);
 		}
 
@@ -828,286 +800,81 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 }
 
 template<class r_option>
-inline void container_base<r_option>::mask_x_p(int cijk,int ci,int cj,int ck) {
-	if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;}
-}
-
-template<class r_option>
-inline void container_base<r_option>::mask_x_m(int cijk,int ci,int cj,int ck) {
-	if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;}
-}
-
-template<class r_option>
-inline void container_base<r_option>::mask_y_p(int cijk,int ci,int cj,int ck) {
-	if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;}
-}
-
-template<class r_option>
-inline void container_base<r_option>::mask_y_m(int cijk,int ci,int cj,int ck) {
-	if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;}
-}
-
-template<class r_option>
-inline void container_base<r_option>::mask_z_p(int cijk,int ci,int cj,int ck) {
-	if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;}
-}
-
-template<class r_option>
-inline void container_base<r_option>::mask_z_m(int cijk,int ci,int cj,int ck) {
-	if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;}
-}
-
-template<class r_option>
-template<class n_option>
-void container_base<r_option>::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
-	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
-	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
-	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
-	int ci,cj,ck,cijk,di,dj,dk,dijk,ei,ej,ek,eijk,q;
-	// Initialize the Voronoi cell to fill the entire container
-	initialize_voronoicell(c,x,y,z);
-	int fuc=0;fpoint mrs;
-	// Test all particles in the particle's local region first
-	for(q=0;q<s;q++) {
-		x1=p[ijk][sz*q]-x;
-		y1=p[ijk][sz*q+1]-y;
-		z1=p[ijk][sz*q+2]-z;
-		rs=x1*x1+y1*y1+z1*z1;
-		c.nplane(x1,y1,z1,rs,id[i][j]);
-	}
-	q++;
-	while(q<co[ijk]) {
-		x1=p[ijk][sz*q]-x;
-		y1=p[ijk][sz*q+1]-y;
-		z1=p[ijk][sz*q+2]-z;
-		rs=x1*x1+y1*y1+z1*z1;
-		c.nplane(x1,y1,z1,rs,id[i][j]);
-		q++;
-	}
-
-	mrs=c.maxradsq();
-	// Update the mask counter, and if it has wrapped around, then
-	// reset the mask
-	mv++;
-	if (mv==0) {
-		for(q=0;q<hxyz;q++) mask[q]=0;
-		mv=1;
-	}
-	s_start=s_end=0;
-
-	ci=xperiodic?nx:i;
-	cj=yperiodic?ny:j;
-	ck=zperiodic?nz:k;
-	fpoint fx=x-ax-boxx*(i-ci),fy=y-ay-boxy*(j-cj),fz=z-az-boxz*(k-ck);
-	cijk=ci+hx*(cj+hy*ck);
-	mask[cijk]=mv;
-
-	if (ci>0) {mask[cijk-1]=mv;sl[s_end++]=ci-1;sl[s_end++]=cj;sl[s_end++]=ck;};
-	if (cj>0) {mask[cijk-hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj-1;sl[s_end++]=ck;};
-	if (ck>0) {mask[cijk-hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck-1;};
-	if (ci<hx-1) {mask[cijk+1]=mv;sl[s_end++]=ci+1;sl[s_end++]=cj;sl[s_end++]=ck;};
-	if (cj<hy-1) {mask[cijk+hx]=mv;sl[s_end++]=ci;sl[s_end++]=cj+1;sl[s_end++]=ck;};
-	if (ck<hz-1) {mask[cijk+hxy]=mv;sl[s_end++]=ci;sl[s_end++]=cj;sl[s_end++]=ck+1;};
-	while(s_start!=s_end) {
-		if (++fuc==4) {
-			fuc=0;mrs=c.maxradsq();
-		}
-		if(s_start==s_size) s_start=0;
-		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
-		xlo=di*boxx-fx;xhi=xlo+boxx;
-		ylo=dj*boxy-fy;yhi=ylo+boxy;
-		zlo=dk*boxz-fz;zhi=zlo+boxz;
-		if(di>ci) {
-			if(dj>cj) {
-				if(dk>ck) {
-					if (corner_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
-				} else if(dk<ck) {
-					if (corner_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
-				} else {
-					if (edge_z_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
-				}
-			} else if(dj<cj) {
-				if(dk>ck) {
-					if (corner_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
-				} else if(dk<ck) {
-					if (corner_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
-				} else {
-					if (edge_z_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
-				}
-			} else {
-				if(dk>ck) {
-					if (edge_y_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
-				} else if(dk<ck) {
-					if (edge_y_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
-				} else {
-					if (face_x_test(c,xlo,ylo,zlo,yhi,zhi)) continue;
-				}
-			}
-		} else if(di<ci) {
-			if(dj>cj) {
-				if(dk>ck) {
-					if (corner_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
-				} else if(dk<ck) {
-					if (corner_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
-				} else {
-					if (edge_z_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
-				}
-			} else if(dj<cj) {
-				if(dk>ck) {
-					if (corner_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
-				} else if(dk<ck) {
-					if (corner_test(c,xhi,yhi,zhi,xlo,ylo,zlo)) continue;
-				} else {
-					if (edge_z_test(c,xhi,yhi,zlo,xlo,ylo,zhi)) continue;
-				}
-			} else {
-				if(dk>ck) {
-					if (edge_y_test(c,xhi,ylo,zlo,xlo,yhi,zhi)) continue;
-				} else if(dk<ck) {
-					if (edge_y_test(c,xhi,ylo,zhi,xlo,yhi,zlo)) continue;
-				} else {
-					if (face_x_test(c,xhi,ylo,zlo,yhi,zhi)) continue;
-				}
-			}
-		} else {
-			if(dj>cj) {
-				if(dk>ck) {
-					if (edge_x_test(c,xlo,ylo,zlo,xhi,yhi,zhi)) continue;
-				} else if(dk<ck) {
-					if (edge_x_test(c,xlo,ylo,zhi,xhi,yhi,zlo)) continue;
-				} else {
-					if (face_y_test(c,xlo,ylo,zlo,xhi,zhi)) continue;
-				}
-			} else if(dj<cj) {
-				if(dk>ck) {
-					if (edge_x_test(c,xlo,yhi,zlo,xhi,ylo,zhi)) continue;
-				} else if(dk<ck) {
-					if (edge_x_test(c,xlo,yhi,zhi,xhi,ylo,zlo)) continue;
-				} else {
-					if (face_y_test(c,xlo,yhi,zlo,xhi,zhi)) continue;
-				}
-			} else {
-				if(dk>ck) {
-					if (face_z_test(c,xlo,ylo,zlo,xhi,yhi)) continue;
-				} else if(dk<ck) {
-					if (face_z_test(c,xlo,ylo,zhi,xhi,yhi)) continue;
-				} else {
-					cout << "error\n";
-				}
-			}
-		}
-
-		if(xperiodic) {ei=i+di-nx;if (ei<0) {qx=ax-bx;ei+=nx;} else if (ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
-		if(yperiodic) {ej=j+dj-ny;if (ej<0) {qy=ay-by;ej+=ny;} else if (ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
-		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
-
-		eijk=ei+nx*(ej+ny*ek);
-		for(q=0;q<co[eijk];q++) {
-			x1=p[eijk][sz*q]+qx-x;
-			y1=p[eijk][sz*q+1]+qy-y;
-			z1=p[eijk][sz*q+2]+qz-z;
-			rs=x1*x1+y1*y1+z1*z1;
-			if (rs<mrs) c.nplane(x1,y1,z1,rs,id[eijk][q]);
-		}
-
-		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
-
-		dijk=di+hx*(dj+hy*dk);
-		if(di>0) if(mask[dijk-1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-1]=mv;sl[s_end++]=di-1;sl[s_end++]=dj;sl[s_end++]=dk;}
-		if(dj>0) if(mask[dijk-hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hx]=mv;sl[s_end++]=di;sl[s_end++]=dj-1;sl[s_end++]=dk;}
-		if(dk>0) if(mask[dijk-hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk-1;}
-		if(di<hx-1) if(mask[dijk+1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+1]=mv;sl[s_end++]=di+1;sl[s_end++]=dj;sl[s_end++]=dk;}
-		if(dj<hy-1) if(mask[dijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hx]=mv;sl[s_end++]=di;sl[s_end++]=dj+1;sl[s_end++]=dk;}
-		if(dk<hz-1) if(mask[dijk+hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk+1;}
-	}
-}
-
-
-
-template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
-	if (c.plane_intersects_guess(xh,yl,zl,xl*xh+yl*yl+zl*zl)) return false;
-	if (c.plane_intersects(xh,yh,zl,xl*xh+yl*yh+zl*zl)) return false;
-	if (c.plane_intersects(xl,yh,zl,xl*xl+yl*yh+zl*zl)) return false;
-	if (c.plane_intersects(xl,yh,zh,xl*xl+yl*yh+zl*zh)) return false;
-	if (c.plane_intersects(xl,yl,zh,xl*xl+yl*yl+zl*zh)) return false;
-	if (c.plane_intersects(xh,yl,zh,xl*xh+yl*yl+zl*zh)) return false;
+	if(c.plane_intersects_guess(xh,yl,zl,radius.cutoff(xl*xh+yl*yl+zl*zl))) return false;
+	if(c.plane_intersects(xh,yh,zl,radius.cutoff(xl*xh+yl*yh+zl*zl))) return false;
+	if(c.plane_intersects(xl,yh,zl,radius.cutoff(xl*xl+yl*yh+zl*zl))) return false;
+	if(c.plane_intersects(xl,yh,zh,radius.cutoff(xl*xl+yl*yh+zl*zh))) return false;
+	if(c.plane_intersects(xl,yl,zh,radius.cutoff(xl*xl+yl*yl+zl*zh))) return false;
+	if(c.plane_intersects(xh,yl,zh,radius.cutoff(xl*xh+yl*yl+zl*zh))) return false;
 	return true;
 }
 
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
-	if (c.plane_intersects_guess(x0,yl,zh,yl*yl+zl*zh)) return false;
-	if (c.plane_intersects(x1,yl,zh,yl*yl+zl*zh)) return false;
-	if (c.plane_intersects(x1,yl,zl,yl*yl+zl*zl)) return false;
-	if (c.plane_intersects(x0,yl,zl,yl*yl+zl*zl)) return false;
-	if (c.plane_intersects(x0,yh,zl,yl*yh+zl*zl)) return false;
-	if (c.plane_intersects(x1,yh,zl,yl*yh+zl*zl)) return false;
+	if(c.plane_intersects_guess(x0,yl,zh,radius.cutoff(yl*yl+zl*zh))) return false;
+	if(c.plane_intersects(x1,yl,zh,radius.cutoff(yl*yl+zl*zh))) return false;
+	if(c.plane_intersects(x1,yl,zl,radius.cutoff(yl*yl+zl*zl))) return false;
+	if(c.plane_intersects(x0,yl,zl,radius.cutoff(yl*yl+zl*zl))) return false;
+	if(c.plane_intersects(x0,yh,zl,radius.cutoff(yl*yh+zl*zl))) return false;
+	if(c.plane_intersects(x1,yh,zl,radius.cutoff(yl*yh+zl*zl))) return false;
 	return true;
 }
 
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
-	if (c.plane_intersects_guess(xl,y0,zh,xl*xl+zl*zh)) return false;
-	if (c.plane_intersects(xl,y1,zh,xl*xl+zl*zh)) return false;
-	if (c.plane_intersects(xl,y1,zl,xl*xl+zl*zl)) return false;
-	if (c.plane_intersects(xl,y0,zl,xl*xl+zl*zl)) return false;
-	if (c.plane_intersects(xh,y0,zl,xl*xh+zl*zl)) return false;
-	if (c.plane_intersects(xh,y1,zl,xl*xh+zl*zl)) return false;
+	if(c.plane_intersects_guess(xl,y0,zh,radius.cutoff(xl*xl+zl*zh))) return false;
+	if(c.plane_intersects(xl,y1,zh,radius.cutoff(xl*xl+zl*zh))) return false;
+	if(c.plane_intersects(xl,y1,zl,radius.cutoff(xl*xl+zl*zl))) return false;
+	if(c.plane_intersects(xl,y0,zl,radius.cutoff(xl*xl+zl*zl))) return false;
+	if(c.plane_intersects(xh,y0,zl,radius.cutoff(xl*xh+zl*zl))) return false;
+	if(c.plane_intersects(xh,y1,zl,radius.cutoff(xl*xh+zl*zl))) return false;
 	return true;
 }
 
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
-	if (c.plane_intersects_guess(xl,yh,z0,xl*xl+yl*yh)) return false;
-	if (c.plane_intersects(xl,yh,z1,xl*xl+yl*yh)) return false;
-	if (c.plane_intersects(xl,yl,z1,xl*xl+yl*yl)) return false;
-	if (c.plane_intersects(xl,yl,z0,xl*xl+yl*yl)) return false;
-	if (c.plane_intersects(xh,yl,z0,xl*xh+yl*yl)) return false;
-	if (c.plane_intersects(xh,yl,z1,xl*xh+yl*yl)) return false;
+	if(c.plane_intersects_guess(xl,yh,z0,radius.cutoff(xl*xl+yl*yh))) return false;
+	if(c.plane_intersects(xl,yh,z1,radius.cutoff(xl*xl+yl*yh))) return false;
+	if(c.plane_intersects(xl,yl,z1,radius.cutoff(xl*xl+yl*yl))) return false;
+	if(c.plane_intersects(xl,yl,z0,radius.cutoff(xl*xl+yl*yl))) return false;
+	if(c.plane_intersects(xh,yl,z0,radius.cutoff(xl*xh+yl*yl))) return false;
+	if(c.plane_intersects(xh,yl,z1,radius.cutoff(xl*xh+yl*yl))) return false;
 	return true;
 }
 
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
-	if (c.plane_intersects_guess(xl,y0,z0,xl*xl)) return false;
-	if (c.plane_intersects(xl,y0,z1,xl*xl)) return false;
-	if (c.plane_intersects(xl,y1,z1,xl*xl)) return false;
-	if (c.plane_intersects(xl,y1,z0,xl*xl)) return false;
+	if(c.plane_intersects_guess(xl,y0,z0,radius.cutoff(xl*xl))) return false;
+	if(c.plane_intersects(xl,y0,z1,radius.cutoff(xl*xl))) return false;
+	if(c.plane_intersects(xl,y1,z1,radius.cutoff(xl*xl))) return false;
+	if(c.plane_intersects(xl,y1,z0,radius.cutoff(xl*xl))) return false;
 	return true;
 }
 
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
-	if (c.plane_intersects_guess(x0,yl,z0,yl*yl)) return false;
-	if (c.plane_intersects(x0,yl,z1,yl*yl)) return false;
-	if (c.plane_intersects(x1,yl,z1,yl*yl)) return false;
-	if (c.plane_intersects(x1,yl,z0,yl*yl)) return false;
+	if(c.plane_intersects_guess(x0,yl,z0,radius.cutoff(yl*yl))) return false;
+	if(c.plane_intersects(x0,yl,z1,radius.cutoff(yl*yl))) return false;
+	if(c.plane_intersects(x1,yl,z1,radius.cutoff(yl*yl))) return false;
+	if(c.plane_intersects(x1,yl,z0,radius.cutoff(yl*yl))) return false;
 	return true;
 }
 
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
-	if (c.plane_intersects_guess(x0,y0,zl,zl*zl)) return false;
-	if (c.plane_intersects(x0,y1,zl,zl*zl)) return false;
-	if (c.plane_intersects(x1,y1,zl,zl*zl)) return false;
-	if (c.plane_intersects(x1,y0,zl,zl*zl)) return false;
+	if(c.plane_intersects_guess(x0,y0,zl,radius.cutoff(zl*zl))) return false;
+	if(c.plane_intersects(x0,y1,zl,radius.cutoff(zl*zl))) return false;
+	if(c.plane_intersects(x1,y1,zl,radius.cutoff(zl*zl))) return false;
+	if(c.plane_intersects(x1,y0,zl,radius.cutoff(zl*zl))) return false;
 	return true;
-}
-
-/** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
-template<class r_option>
-template<class n_option>
-inline void container_base<r_option>::compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
-	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
-	compute_cell_blocks(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** Creates a facets_loop object, by pulling the necesssary constants about the container
@@ -1125,21 +892,21 @@ facets_loop::facets_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->b
 inline int facets_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
-	if (!xperiodic) {
-		if(ai<0) {ai=0;if (bi<0) bi=0;}
-		if(bi>=nx) {bi=nx-1;if (ai>=nx) ai=nx-1;} 
+	if(!xperiodic) {
+		if(ai<0) {ai=0;if(bi<0) bi=0;}
+		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;} 
 	}
 	aj=step_int((vy-ay-r)*ysp);
 	bj=step_int((vy-ay+r)*ysp);
-	if (!yperiodic) {
-		if(aj<0) {aj=0;if (bj<0) bj=0;}
-		if(bj>=ny) {bj=ny-1;if (aj>=ny) aj=ny-1;} 
+	if(!yperiodic) {
+		if(aj<0) {aj=0;if(bj<0) bj=0;}
+		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;} 
 	}
 	ak=step_int((vz-az-r)*zsp);
 	bk=step_int((vz-az+r)*zsp);
-	if (!zperiodic) {
-		if(ak<0) {ak=0;if (bk<0) bk=0;}
-		if(bk>=nz) {bk=nz-1;if (ak>=nz) ak=nz-1;} 
+	if(!zperiodic) {
+		if(ak<0) {ak=0;if(bk<0) bk=0;}
+		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;} 
 	}
 	i=ai;j=aj;k=ak;
 	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
@@ -1159,21 +926,21 @@ inline int facets_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,f
 inline int facets_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
-	if (!xperiodic) {
-		if(ai<0) {ai=0;if (bi<0) bi=0;}
-		if(bi>=nx) {bi=nx-1;if (ai>=nx) ai=nx-1;} 
+	if(!xperiodic) {
+		if(ai<0) {ai=0;if(bi<0) bi=0;}
+		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;} 
 	}
 	aj=step_int((ymin-ay)*ysp);
 	bj=step_int((ymax-ay)*ysp);
-	if (!yperiodic) {
-		if(aj<0) {aj=0;if (bj<0) bj=0;}
-		if(bj>=ny) {bj=ny-1;if (aj>=ny) aj=ny-1;} 
+	if(!yperiodic) {
+		if(aj<0) {aj=0;if(bj<0) bj=0;}
+		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;} 
 	}
 	ak=step_int((zmin-az)*zsp);
 	bk=step_int((zmax-az)*zsp);
-	if (!zperiodic) {
-		if(ak<0) {ak=0;if (bk<0) bk=0;}
-		if(bk>=nz) {bk=nz-1;if (ak>=nz) ak=nz-1;} 
+	if(!zperiodic) {
+		if(ak<0) {ak=0;if(bk<0) bk=0;}
+		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;} 
 	}
 	i=ai;j=aj;k=ak;
 	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
@@ -1189,17 +956,17 @@ inline int facets_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpo
 /** Returns the next block to be tested in a loop, and updates the periodicity
  * vector if necessary. */
 inline int facets_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
-	if (i<bi) {
+	if(i<bi) {
 		i++;
-		if (ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}
+		if(ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}
 		return s;
-	} else if (j<bj) {
+	} else if(j<bj) {
 		i=ai;ip=aip;px=apx;j++;
-		if (jp<ny-1) {jp++;s+=inc1;} else {jp=0;s+=inc1-nxy;py+=sy;}
+		if(jp<ny-1) {jp++;s+=inc1;} else {jp=0;s+=inc1-nxy;py+=sy;}
 		return s;
-	} else if (k<bk) {
+	} else if(k<bk) {
 		i=ai;ip=aip;j=aj;jp=ajp;px=apx;py=apy;k++;
-		if (kp<nz-1) {kp++;s+=inc2;} else {kp=0;s+=inc2-nxyz;pz+=sz;}
+		if(kp<nz-1) {kp++;s+=inc2;} else {kp=0;s+=inc2-nxyz;pz+=sz;}
 		return s;
 	} else return -1;
 }
@@ -1224,9 +991,9 @@ inline int facets_loop::step_div(int a,int b) {
 /** Adds a wall to the container. */
 template<class r_option>
 void container_base<r_option>::add_wall(wall& w) {
-	if (wall_number==current_wall_size) {
+	if(wall_number==current_wall_size) {
 		current_wall_size*=2;
-		if (current_wall_size>max_wall_size) throw fatal_error("Wall memory allocation exceeded absolute maximum");
+		if(current_wall_size>max_wall_size) throw fatal_error("Wall memory allocation exceeded absolute maximum");
 		wall **pwall;
 		pwall=new wall*[current_wall_size];
 		for(int i=0;i<wall_number;i++) pwall[i]=walls[i];
@@ -1237,7 +1004,7 @@ void container_base<r_option>::add_wall(wall& w) {
 
 inline void radius_poly::store_radius(int i,int j,fpoint r) {
 	cc->p[i][4*j+3]=r;
-	if (r>max_radius) max_radius=r;
+	if(r>max_radius) max_radius=r;
 }
 
 inline void radius_poly::clear_max() {
@@ -1262,8 +1029,8 @@ inline void radius_poly::import(istream &is) {
 	}
 }
 
-inline void radius_poly::init(int s,int i) {
-	crad=cc->p[s][4*i+3];
+inline void radius_poly::init(int ijk,int s) {
+	crad=cc->p[ijk][4*s+3];
 	mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
 	crad*=crad;
 }
@@ -1301,14 +1068,14 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 			crs+=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=bxsq+2*(boxx*xlo+boxy*ylo+boxz*zlo);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=bxsq+2*(boxx*xlo+boxy*ylo-boxz*zlo);
 			} else {
-				if(crs>mrs) return true;
+				if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxx*(2*xlo+boxx)+boxy*(2*ylo+boxy)+gzs;
 			}
 		} else if(dj<0) {
@@ -1316,27 +1083,27 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 			crs+=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=bxsq+2*(boxx*xlo-boxy*ylo+boxz*zlo);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=bxsq+2*(boxx*xlo-boxy*ylo-boxz*zlo);
 			} else {
-				if(crs>mrs) return true;
+				if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxx*(2*xlo+boxx)+boxy*(-2*ylo+boxy)+gzs;
 			}
 		} else {
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
-				if(crs>mrs) return true;
+				if(radius.cutoff(crs)>mrs) return true;
 				crs+=gzs;
 			}
 			crs+=gys+boxx*(2*xlo+boxx);
@@ -1349,14 +1116,14 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 			crs+=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=bxsq+2*(-boxx*xlo+boxy*ylo+boxz*zlo);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=bxsq+2*(-boxx*xlo+boxy*ylo-boxz*zlo);
 			} else {
-				if(crs>mrs) return true;
+				if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxx*(-2*xlo+boxx)+boxy*(2*ylo+boxy)+gzs;
 			}
 		} else if(dj<0) {
@@ -1364,27 +1131,27 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 			crs+=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=bxsq+2*(-boxx*xlo-boxy*ylo+boxz*zlo);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=bxsq+2*(-boxx*xlo-boxy*ylo-boxz*zlo);
 			} else {
-				if(crs>mrs) return true;
+				if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxx*(-2*xlo+boxx)+boxy*(-2*ylo+boxy)+gzs;
 			}
 		} else {
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
-				if(crs>mrs) return true;
+				if(radius.cutoff(crs)>mrs) return true;
 				crs+=gzs;
 			}
 			crs+=gys+boxx*(-2*xlo+boxx);
@@ -1395,14 +1162,14 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 			crs=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
-				if(crs>mrs) return true;
+				if(radius.cutoff(crs)>mrs) return true;
 				crs+=gzs;
 			}
 			crs+=boxy*(2*ylo+boxy);
@@ -1411,23 +1178,23 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 			crs=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(crs>mrs) return true;
+				crs+=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
-				if(crs>mrs) return true;
+				if(radius.cutoff(crs)>mrs) return true;
 				crs+=gzs;
 			}
 			crs+=boxy*(-2*ylo+boxy);
 		} else {
 			if(dk>0) {
-				zlo=dk*boxz-fz;crs=zlo*zlo;if(crs>mrs) return true;
+				zlo=dk*boxz-fz;crs=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;crs=zlo*zlo;if(crs>mrs) return true;
+				zlo=(dk+1)*boxz-fz;crs=zlo*zlo;if(radius.cutoff(crs)>mrs) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
 				crs=0;

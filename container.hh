@@ -63,10 +63,6 @@ class container_base {
 		template<class n_option>
 		void compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		template<class n_option>
-		inline void compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
-		template<class n_option>
-		void compute_cell_blocks(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
-		template<class n_option>
 		inline void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
 		void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
@@ -194,12 +190,6 @@ class container_base {
 		inline bool face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1);
 		template<class n_option>
 		inline bool face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1);
-		inline void mask_x_p(int cijk,int ci,int cj,int ck);
-		inline void mask_x_m(int cijk,int ci,int cj,int ck);
-		inline void mask_y_p(int cijk,int ci,int cj,int ck);
-		inline void mask_y_m(int cijk,int ci,int cj,int ck);
-		inline void mask_z_p(int cijk,int ci,int cj,int ck);
-		inline void mask_z_m(int cijk,int ci,int cj,int ck);
 		inline void initialize_radii();
 		inline void compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk);
 		inline bool compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gx,fpoint gy,fpoint gz,fpoint& crs,fpoint mrs);
@@ -230,7 +220,7 @@ class radius_poly {
 		inline void import(istream &is);
 		inline void store_radius(int i,int j,fpoint r);
 		inline void clear_max();
-		inline void init(int s,int i);
+		inline void init(int ijk,int s);
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q);

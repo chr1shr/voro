@@ -1,7 +1,7 @@
 #!/usr/bin/perl
-$hr=5;
+$hr=4;
 $r=$hr*2;
-$ls=80;
+$ls=63;
 $d=8;
 use Math::Trig;
 
@@ -44,7 +44,7 @@ sub worklist {
 		foreach (0..$ac-1) {
 			$xt=@a[3*$_];$yt=@a[3*$_+1];$zt=@a[3*$_+2];
 #			$wei=dis($x,$y,$z,$xt,$yt,$zt)+1*acos(($xt*$xp+$yt*$yp+$zt*$zp)/($xt*$xt+$yt*$yt+$zt*$zt)*($xp*$xp+$yp*$yp+$zp*$zp));
-			$wei=adis($x,$y,$z,$xt,$yt,$zt);#+0.1*sqrt(($xt-$xp)**2+($yt-$yp)**2+($zt-$zp)**2);
+			$wei=adis($x,$y,$z,$xt,$yt,$zt)+0.02*sqrt(($xt-$xp)**2+($yt-$yp)**2+($zt-$zp)**2);
 			$nx=$_,$minwei=$wei if $wei<$minwei;
 		}
 		$xp=@a[3*$nx];$yp=@a[3*$nx+1];$zp=@a[3*$nx+2];
