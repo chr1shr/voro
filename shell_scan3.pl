@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-$hr=4;
+$hr=5;
 $r=$hr*2;
 $ls=80;
 $d=8;
@@ -44,12 +44,13 @@ sub worklist {
 		foreach (0..$ac-1) {
 			$xt=@a[3*$_];$yt=@a[3*$_+1];$zt=@a[3*$_+2];
 #			$wei=dis($x,$y,$z,$xt,$yt,$zt)+1*acos(($xt*$xp+$yt*$yp+$zt*$zp)/($xt*$xt+$yt*$yt+$zt*$zt)*($xp*$xp+$yp*$yp+$zp*$zp));
-			$wei=dis($x,$y,$z,$xt,$yt,$zt)+0.1*sqrt(($xt-$xp)**2+($yt-$yp)**2+($zt-$zp)**2);
+			$wei=adis($x,$y,$z,$xt,$yt,$zt);#+0.1*sqrt(($xt-$xp)**2+($yt-$yp)**2+($zt-$zp)**2);
 			$nx=$_,$minwei=$wei if $wei<$minwei;
 		}
 		$xp=@a[3*$nx];$yp=@a[3*$nx+1];$zp=@a[3*$nx+2];
 		add($xp+1,$yp,$zp);add($xp,$yp+1,$zp);add($xp,$yp,$zp+1);
 		add($xp-1,$yp,$zp);add($xp,$yp-1,$zp);add($xp,$yp,$zp-1);
+		print "=> $l $xp $yp $zp\n" if $l<4; 
 		push @b,(splice @a,3*$nx,3);$ac--;
 	}
 	$v++;
@@ -107,11 +108,12 @@ sub dis {
 }
 
 sub adis {
-	$xl=@_[3]-@_[0];$xh=@_[3]+1-@_[0];
-	$yl=@_[4]-@_[1];$yh=@_[4]+1-@_[1];
-	$zl=@_[5]-@_[2];$zh=@_[5]+1-@_[2];
-	$dis=(abs($xl)<abs($xh)?$xl:$xh)**2
-		+(abs($yl)<abs($yh)?$yl:$yh)**2
-		+(abs($zl)<abs($zh)?$zl:$zh)**2;
-	return sqrt $dis;
+	$xco=$yco=$zco=0;
+	$xco=@_[0]-@_[3] if @_[3]>0;
+	$xco=@_[0]-@_[3]-1 if @_[3]<0;
+	$yco=@_[1]-@_[4] if @_[4]>0;
+	$yco=@_[1]-@_[4]-1 if @_[4]<0;
+	$zco=@_[2]-@_[5] if @_[5]>0;
+	$zco=@_[2]-@_[5]-1 if @_[5]<0;
+	return sqrt $xco*$xco+$yco*$yco+$zco*$zco;
 }

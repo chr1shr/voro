@@ -1,6 +1,6 @@
 @source=("worklist.cc","worklist.hh","wall_test.cc","wall.cc","cell.cc","container.cc","container.hh","config.hh","cell.hh","wall.hh");
 @range=(10..40);
-$tries=3;
+$tries=1;
 $compile='g++ -o wall_test -O3 wall_test.cc -pedantic -Winline --param large-function-growth=600 --param max-inline-insns-single=1000 -fast -Wall';
 $executable="./wall_test";
 

@@ -507,7 +507,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 
 	// Initialize the Voronoi cell to fill the entire container
 	initialize_voronoicell(c,x,y,z);
-	fpoint crs=0,mrs;
+	fpoint crs,mrs;
 
 	int next_count=2,list_index=0,list_size=8;
 //	int count_list[]={3,8,16,25,36,49,64};
@@ -533,10 +533,12 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 
 	mrs=c.maxradsq();
 
+	cout << "Init mrs " << mrs << endl;
+	
 	unsigned int m1,m2;
 	fpoint fx=x-ax-boxx*i,fy=y-ay-boxy*j,fz=z-az-boxz*k;
 	si=int(fx*xsp*fgrid);sj=int(fy*ysp*fgrid);sk=int(fz*zsp*fgrid);
-
+	cout << fx << " " << fy << " " << fz << " " << si << " " << sj << " " << sk << " " << x << " " << y << " " << z << " " << i << " " << j << " " << k;
 	if(si>=hgrid) {
 		gxs=fx;
 		m1=127+(3<<21);si=fgrid-1-si;m2=1+(1<<21);
@@ -551,25 +553,37 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	} else gzs=boxz-fz;
 
 	gxs*=gxs;gys*=gys;gzs*=gzs;
+	cout << " " << gxs << " " << gys << " " << gzs << " " << si << " " << sj << " " << sk << endl;
 
 	if(si<0) si=0;if(sj<0) sj=0;if(sk<0) sk=0;
 
 	sijk=si+hgrid*(sj+hgrid*sk);
+
+
 	radp=mrad+sijk*seq_length;
 	e=(const_cast<unsigned int*> (wl))+sijk*seq_length;
+	
+	cout << "worklist " << sijk << endl;
+	cout << e << " " << wl << endl;
 
-	f=e[0];g=0;
+	f=e[0];g=0;cout << "free " << e[0] << endl;
 	do {
-		if(mrs<radp[g]) return;
-		g++;
 		if (g==next_count) {
 			mrs=c.maxradsq();
 			if(list_index!=list_size) next_count=count_list[list_index++];
-		}		
+			cout << "recompute mrs=" << mrs << ", next=" << next_count << endl;
+		}
+		
+		cout << "compare mrs=" << mrs << " radp[" << g << "]=" << radp[g] << endl;
+		if(mrs<radp[g]) return;
+		g++;
+		
 		q=e[g];q^=m1;q+=m2;
 		di=q&127;di-=64;
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
+
+		cout << "scan " << di << " " << dj << " " << dk << endl;
 		
 		if(xperiodic) {if(di<-nx) continue;else if(di>nx) continue;}
 		else {if(di<-i) continue;else if(di>=nx-i) continue;}
@@ -578,7 +592,10 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(zperiodic) {if(dk<-nz) continue;else if(dk>nz) continue;}
 		else {if(dk<-k) continue;else if(dk>=nz-k) continue;}
 		
-		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
+		cout << "Inside" << endl;
+
+		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) {D1++;cout << "EXCLUDED mincorner=" << crs << ", mrs=" << mrs << endl;continue;}
+		cout << "included maxcorner=" << crs << " mrs=" << mrs << endl; 
 		di+=i;dj+=j;dk+=k;
 		
 		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
@@ -587,7 +604,8 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		dijk=di+nx*(dj+ny*dk);
 
 		if(mrs>crs) {
-			//D1++;
+			cout << "fullcompute " << dijk << endl;
+			D2++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
@@ -596,7 +614,8 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		} else {
-			//D2++;
+			cout << "partialcompute " << dijk << endl;
+			D3++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
@@ -606,7 +625,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			}
 		}
 	} while (g<f);
-	
+	cout << "transition " << g << " " << e[0] << " " << (e[e[0]]>>21) << " " << (e[e[0]+1]>>21) << endl;
 	ci=xperiodic?nx:i;
 	cj=yperiodic?ny:j;
 	ck=zperiodic?nz:k;
@@ -616,19 +635,25 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		for(l=0;l<hxyz;l++) mask[l]=0;
 		mv=1;
 	}
+	cout << "mask setup mv=" << mv << endl;
 	s_start=s_end=0;
 	
 	while(g<seq_length-1) {
-		if(mrs<radp[g]) return;
-		g++;
 		if (g==next_count) {
 			mrs=c.maxradsq();
 			if(list_index!=list_size) next_count=count_list[list_index++];
+			cout << "recompute mrs=" << mrs << ", next=" << next_count << endl;
 		}		
+		
+		cout << "check mrs=" << mrs << ", radp[" << g << "]=" << radp[g] << endl;
+		if(mrs<radp[g]) return;
+		g++;
+		
 		q=e[g];q^=m1;q+=m2;
 		di=q&127;di-=64;
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
+		cout << "scan= " << di << " " << dj << " " << dk << endl;
 		
 		ei=ci+di;
 		ej=cj+dj;
@@ -639,7 +664,8 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		eijk=ei+hx*(ej+hy*ek);
 		mask[eijk]=mv;
 		
-		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
+		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) {D4++;cout << "EXCLUDED mincorner=" << crs << ", mrs=" << mrs << endl;continue;}
+		cout << "included maxcorner=" << crs << "mrs=" << mrs << endl; 
 		di+=i;dj+=j;dk+=k;
 
 		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
@@ -648,7 +674,8 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		dijk=di+nx*(dj+ny*dk);
 
 		if(mrs>crs) {
-//			D3++;
+			cout << "fullcompute " << dijk << endl;
+			D5++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
@@ -657,7 +684,8 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				c.nplane(x1,y1,z1,rs,id[dijk][l]);
 			}
 		} else {
-//			D4++;
+			cout << "partialcompute " << dijk <<endl;
+			D6++;
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
 				y1=p[dijk][sz*l+1]+qy-y;
@@ -777,7 +805,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(zperiodic) {ek=k+dk-nz;if (ek<0) {qz=az-bz;ek+=nz;} else if (ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
 
 		eijk=ei+nx*(ej+ny*ek);
-		//D5++;
+		D7++;
 		for(l=0;l<co[eijk];l++) {
 			x1=p[eijk][sz*l]+qx-x;
 			y1=p[eijk][sz*l+1]+qy-y;
@@ -796,7 +824,6 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(di<hx-1) if(mask[dijk+1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+1]=mv;sl[s_end++]=di+1;sl[s_end++]=dj;sl[s_end++]=dk;}
 		if(dj<hy-1) if(mask[dijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hx]=mv;sl[s_end++]=di;sl[s_end++]=dj+1;sl[s_end++]=dk;}
 		if(dk<hz-1) if(mask[dijk+hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk+1;}
-		//if (count>=4) {count=0;mrs=c.maxradsq();}
 	}
 }
 
