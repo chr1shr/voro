@@ -639,7 +639,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		// routine, we just test every edge to find one straddling
 		// the plane.
 		cerr << "Bailed out of convex calculation\n";
-		qw=1;
+		qw=1;lw=0;
 		for(qp=0;qp<p;qp++) {
 			qw=sure.test(qp,q);
 			if (qw==1) {

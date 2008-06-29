@@ -6,7 +6,7 @@
 
 #include "cell.cc"
 #include "container.cc"
-#include "wall.cc"
+//#include "wall.cc"
 
 // Set up constants for the container geometry
 const fpoint x_min=-10,x_max=10;
@@ -15,12 +15,12 @@ const fpoint z_min=-10,z_max=10;
 
 // Set up the number of blocks that the container is divided
 // into.
-//const int n_x=NNN,n_y=NNN,n_z=NNN;
-const int n_x=26,n_y=26,n_z=26;
+const int n_x=NNN,n_y=NNN,n_z=NNN;
+//const int n_x=26,n_y=26,n_z=26;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=10000;
+const int particles=100000;
 
 // This function returns a random fpoint between 0 and 1;
 fpoint rnd() {return fpoint(rand())/RAND_MAX;}
@@ -52,8 +52,8 @@ int main() {
 		}
 	}
 
-	con.store_cell_volumes(bb);x=0;
-	for(i=0;i<particles;i++) x+=bb[i];cout << x-8000 << endl;
+	con.store_cell_volumes(bb);//x=0;
+//	for(i=0;i<particles;i++) x+=bb[i];cout << x-8000 << endl;
 
 	// Save the Voronoi network of all the particles to a text file
 	// in a format ready for plotting by gnuplot

@@ -20,7 +20,8 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
 	xperiodic(xper),yperiodic(yper),zperiodic(zper),
-	mv(0),wall_number(0),radius(this),sz(radius.mem_size) {
+	mv(0),wall_number(0),current_wall_size(init_wall_size),
+	radius(this),sz(radius.mem_size) {
 	int l;
 	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
@@ -332,7 +333,7 @@ void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 		for(j=0;j<ny;j++) {
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
-					compute_cell_slow(c,i,j,k,ijk,q);
+					compute_cell(c,i,j,k,ijk,q);
 					bb[id[ijk][q]]=c.volume();
 				}
 				ijk++;
@@ -533,11 +534,26 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		l++;
 	}
 
+	// Now compute the maximum distance squared from the cell
+	// center to a vertex. This is used to cut off the calculation
+	// since we only need to test out to twice this range.
 	mrs=c.maxradsq();
 
+	// Now compute the fractional position of the particle within
+	// its region and store it in (fx,fy,fz). We use this to
+	// compute an index (si,sj,sk) of which subregion the particle
+	// is within.
 	unsigned int m1,m2;
 	fpoint fx=x-ax-boxx*i,fy=y-ay-boxy*j,fz=z-az-boxz*k;
 	si=int(fx*xsp*fgrid);sj=int(fy*ysp*fgrid);sk=int(fz*zsp*fgrid);
+
+	// The indices (si,sj,sk) tell us which worklist to use, to test the
+	// blocks in the optimal order. But we only store worklists for the
+	// eigth of the region where si, sj, and sk are all less than half the
+	// full grid. The rest of the cases ard handled by symmetry. In this
+	// section, we detect for these cases, by reflecting high values of si,
+	// sj, and sk. For these cases, a mask is constructed in m1 and m2
+	// which is used to flip the worklist information when it is loaded.
 	if(si>=hgrid) {
 		gxs=fx;
 		m1=127+(3<<21);si=fgrid-1-si;m2=1+(1<<21);
@@ -550,31 +566,45 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		gzs=fz;
 		m1|=(127<<14)+(3<<27);sk=fgrid-1-sk;m2|=(1<<14)+(1<<27);
 	} else gzs=boxz-fz;
-
 	gxs*=gxs;gys*=gys;gzs*=gzs;
 
+	// It's possible that a problem with the int() function could lead to
+	// spurious values with particles lying on the boundaries of the regions.
+	// In this section we correct for that.
 	if(si<0) si=0;if(sj<0) sj=0;if(sk<0) sk=0;
 
+	// Now compute which worklist we are going to use, and set radp and e to
+	// point at the right offsets
 	sijk=si+hgrid*(sj+hgrid*sk);
-
 	radp=mrad+sijk*seq_length;
 	e=(const_cast<unsigned int*> (wl))+sijk*seq_length;
 	
+	// Read in how many items in the worklist can be tested without having to
+	// worry about writing to the mask
 	f=e[0];g=0;
 	do {
+
+		// At the intervals specified by count_list, we recompute the
+		// maximum radius squared
 		if(g==next_count) {
 			mrs=c.maxradsq();
 			if(list_index!=list_size) next_count=count_list[list_index++];
 		}
 		
+		// If mrs is less than the minimum distance to any untested
+		// block, then we are done.
 		if(mrs<radius.cutoff(radp[g])) return;
 		g++;
 		
+		// Load in a block off the worklist, permute it with the
+		// symmetry mask, and decode its position. These are all
+		// integer bit operations so they should run very fast.
 		q=e[g];q^=m1;q+=m2;
 		di=q&127;di-=64;
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
 
+		// Check that the worklist position is in range
 		if(xperiodic) {if(di<-nx) continue;else if(di>nx) continue;}
 		else {if(di<-i) continue;else if(di>=nx-i) continue;}
 		if(yperiodic) {if(dj<-ny) continue;else if(dj>ny) continue;}
@@ -582,15 +612,25 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(zperiodic) {if(dk<-nz) continue;else if(dk>nz) continue;}
 		else {if(dk<-k) continue;else if(dk>=nz-k) continue;}
 		
-
+		// Call the compute_min_max_radius() function. This returns
+		// true if the minimum distance to the block is bigger than the
+		// current mrs, in which case we skip this block and move on.
+		// Otherwise, it computes the maximum distance to the block and
+		// returns it in crs.
 		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
-		di+=i;dj+=j;dk+=k;
 		
+		// Now compute which region we are going to loop over, adding a
+		// displacement for the periodic cases.
+		di+=i;dj+=j;dk+=k;
 		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
 		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;dj-=ny;} else qy=0;}
 		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;dk-=nz;} else qz=0;}
 		dijk=di+nx*(dj+ny*dk);
 
+		// If mrs is bigger than the maximum distance to the block,
+		// then we have to test all particles in the block for
+		// intersections. Otherwise, we do additional checks and skip
+		// those particles which can't possibly intersect the block.
 		if(mrs>radius.cutoff(crs)) {
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
@@ -609,31 +649,55 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			}
 		}
 	} while(g<f);
+
+	// If we reach here, we were unable to compute the entire cell using
+	// the first part of the worklist. This section of the algorithm
+	// continues the worklist, but it now starts preparing the mask that we
+	// need if we end up going block by block. We do the same as before,
+	// but we put a mark down on the mask for every block that's tested.
+	// The worklist also contains information about which neighbors of each
+	// block are not also on the worklist, and we start storing those
+	// points in a list in case we have to go block by block.
 	ci=xperiodic?nx:i;
 	cj=yperiodic?ny:j;
 	ck=zperiodic?nz:k;
 
+	// Update the mask counter, and if it wraps around then reset the
+	// whole mask; that will only happen once every 2^32 tries
 	mv++;
 	if(mv==0) {
 		for(l=0;l<hxyz;l++) mask[l]=0;
 		mv=1;
 	}
+
+	// Reset the block by block counters
 	s_start=s_end=0;
 	
 	while(g<seq_length-1) {
+
+		// At the intervals specified by count_list, we recompute the
+		// maximum radius squared
 		if(g==next_count) {
 			mrs=c.maxradsq();
 			if(list_index!=list_size) next_count=count_list[list_index++];
 		}		
 		
+		// If mrs is less than the minimum distance to any untested
+		// block, then we are done.
 		if(mrs<radius.cutoff(radp[g])) return;
 		g++;
 		
+		// Load in a block off the worklist, permute it with the
+		// symmetry mask, and decode its position. These are all
+		// integer bit operations so they should run very fast.
 		q=e[g];q^=m1;q+=m2;
 		di=q&127;di-=64;
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
 		
+		// Compute the position in the mask of the current block. If
+		// this lies outside the mask, then skip it. Otherwise, mark
+		// it.
 		ei=ci+di;
 		ej=cj+dj;
 		ek=ck+dk;
@@ -643,14 +707,25 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		eijk=ei+hx*(ej+hy*ek);
 		mask[eijk]=mv;
 		
+		// Call the compute_min_max_radius() function. This returns
+		// true if the minimum distance to the block is bigger than the
+		// current mrs, in which case we skip this block and move on.
+		// Otherwise, it computes the maximum distance to the block and
+		// returns it in crs.
 		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
+		
+		// Now compute which region we are going to loop over, adding a
+		// displacement for the periodic cases.
 		di+=i;dj+=j;dk+=k;
-
 		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
 		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;dj-=ny;} else qy=0;}
 		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;dk-=nz;} else qz=0;}
 		dijk=di+nx*(dj+ny*dk);
 
+		// If mrs is bigger than the maximum distance to the block,
+		// then we have to test all particles in the block for
+		// intersections. Otherwise, we do additional checks and skip
+		// those particles which can't possibly intersect the block.
 		if(mrs>radius.cutoff(crs)) {
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
@@ -669,8 +744,13 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			}
 		}
 
+		// If there might not be enough memory on the list for these
+		// additions, then add more
 		if(s_end+18>s_size) add_list_memory();
 
+		// Test the parts of the worklist element which tell us what
+		// neighbors of this block are not on the worklist. Store them
+		// on the block list, and mark the mask.
 		if((q&b2)==b2) {
 			if(ei>0) if(mask[eijk-1]!=mv) {mask[eijk-1]=mv;sl[s_end++]=ei-1;sl[s_end++]=ej;sl[s_end++]=ek;}
 			if((q&b1)==0) if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}
@@ -682,18 +762,31 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			if((q&b5)==0) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
 		} else if((q&b5)==b5) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
 	}
+
+	// Do a check to see if we've reach the radius cutoff
 	if(mrs<radius.cutoff(radp[g])) return;
 
 	// Update the mask counter, and if it has wrapped around, then
 	// reset the mask
 	fx+=boxx*ci;fy+=boxy*cj;fz+=boxz*ck;
 
+	// We were unable to completely compute the cell based on the blocks in
+	// the worklist, so now we have to go block by block, reading in items
+	// off the list
 	while(s_start!=s_end) {
+
+		// If we reached the end of the list memory loop back to the start
 		if(s_start==s_size) s_start=0;
+
+		// Read in a block off the list, and compute the upper and lower
+		// coordinates in each of the three dimensions
 		di=sl[s_start++];dj=sl[s_start++];dk=sl[s_start++];
 		xlo=di*boxx-fx;xhi=xlo+boxx;
 		ylo=dj*boxy-fy;yhi=ylo+boxy;
 		zlo=dk*boxz-fz;zhi=zlo+boxz;
+
+		// Carry out plane tests to see if any particle in this block
+		// could possibly intersect the cell 
 		if(di>ci) {
 			if(dj>cj) {
 				if(dk>ck) {
@@ -769,16 +862,21 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				} else if(dk<ck) {
 					if(face_z_test(c,xlo,ylo,zhi,xhi,yhi)) continue;
 				} else {
-					cout << "error\n";
+					cout << "Can't happen ... happened\n";
 				}
 			}
 		}
 
+		// Now compute the region that we are going to test over, and
+		// set a displacement vector for the periodic cases.
 		if(xperiodic) {ei=i+di-nx;if(ei<0) {qx=ax-bx;ei+=nx;} else if(ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
 		if(yperiodic) {ej=j+dj-ny;if(ej<0) {qy=ay-by;ej+=ny;} else if(ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
 		if(zperiodic) {ek=k+dk-nz;if(ek<0) {qz=az-bz;ek+=nz;} else if(ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
-
 		eijk=ei+nx*(ej+ny*ek);
+
+		// Loop over all the elements in the block to test for cuts.
+		// It would be possible to exclude some of these cases by testing
+		// against mrs, but I am not convinced that this will save time.
 		for(l=0;l<co[eijk];l++) {
 			x1=p[eijk][sz*l]+qx-x;
 			y1=p[eijk][sz*l+1]+qy-y;
@@ -787,8 +885,11 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			c.nplane(x1,y1,z1,rs,id[eijk][l]);
 		}
 
+		// If there's not much memory on the block list then add more
 		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
 
+		// Test the neighbors of the current block, and add them to the
+		// block list if they haven't already been tested.
 		dijk=di+hx*(dj+hy*dk);
 		if(di>0) if(mask[dijk-1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-1]=mv;sl[s_end++]=di-1;sl[s_end++]=dj;sl[s_end++]=dk;}
 		if(dj>0) if(mask[dijk-hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hx]=mv;sl[s_end++]=di;sl[s_end++]=dj-1;sl[s_end++]=dk;}
@@ -1207,4 +1308,4 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 	return false;
 }
 
-#include "worklist.cc";
+#include "worklist.cc"
