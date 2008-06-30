@@ -40,6 +40,12 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb
 	initialize_radii();
 }
 
+/** This function is called during container construction. The routine scans
+ * all of the worklists in the wl[] array. For a given worklist of blocks
+ * labeled \f$w_1\f$ to \f$w_n\f$, it computes a sequence \f$r_0\f$ to
+ * \f$r_n\f$ so that $r_i$ is the minimum distance to all the
+ * blocks \f$w_{j}\f$ where \f$j>i\f$.
+ */
 template<class r_option>
 void container_base<r_option>::initialize_radii() {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
@@ -443,12 +449,23 @@ inline void container_base<r_option>::initialize_voronoicell(voronoicell_base<n_
 	for(int j=0;j<wall_number;j++) walls[j]->cut_cell(c,x,y,z);
 }
 
+/** This function tests to see if a given vector lies within the container
+ * bounds and any walls.
+ * \param[in] (x,y,z) The position vector to be tested.
+ * \return True if the point is inside the container, false if the point is
+ * outside. */
 template<class r_option>
 bool container_base<r_option>::point_inside(fpoint x,fpoint y,fpoint z) {
 	if(x<ax||x>bx||y<ay||y>by||z<az||z>bz) return false;
 	return point_inside_walls(x,y,z);
 }
 
+/** This function tests to see if a give vector lies within the walls that have
+ * been added to the container, but does not specifically check whether the
+ * vector lies within the container bounds.
+ * \param[in] (x,y,z) The position vector to be tested.
+ * \return True if the point is inside the container, false if the point is
+ * outside. */
 template<class r_option>
 bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
 	for(int j=0;j<wall_number;j++) if(!walls[j]->point_inside(x,y,z)) return false;
@@ -465,6 +482,7 @@ void container_base<r_option>::compute_cell_slow(voronoicell_base<n_option> &c,i
 	int q,t;
 	facets_loop l(this);
 	initialize_voronoicell(c,x,y,z);
+
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
