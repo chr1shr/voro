@@ -15,8 +15,8 @@ const fpoint z_min=-10,z_max=10;
 
 // Set up the number of blocks that the container is divided
 // into.
-const int n_x=NNN,n_y=NNN,n_z=NNN;
-//const int n_x=26,n_y=26,n_z=26;
+//const int n_x=NNN,n_y=NNN,n_z=NNN;
+const int n_x=26,n_y=26,n_z=26;
 
 // Set the number of particles that are going to be randomly
 // introduced
@@ -45,7 +45,7 @@ int main() {
 	while(i<particles) {
 		x=x_min+rnd()*(x_max-x_min);
 		y=y_min+rnd()*(y_max-y_min);
-		z=z_min+rnd()*(z_max-z_min);
+		z=z_min+0.9*rnd()*(z_max-z_min);
 		if(con.point_inside(x,y,z)) {
 			con.put(i,x,y,z);
 			i++;
