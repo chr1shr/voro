@@ -116,7 +116,11 @@ container_base<r_option>::~container_base() {
 	delete [] p;
 	delete [] id;
 	delete [] mem;
-	delete [] co;	
+	delete [] co;
+	delete [] mask;
+	delete [] sl;
+	delete [] walls;
+	delete [] mrad;
 }
 
 /** Dumps all the particle positions and identifies to a file. */
