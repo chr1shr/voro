@@ -1,8 +1,8 @@
-// Voronoi calculation header file
+// Voro++, a 3D cell-based Voronoi library
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : February 27th 2008
+// Date     : July 1st 2008
 
 #ifndef FACETS_CONTAINER_HH
 #define FACETS_CONTAINER_HH
@@ -59,9 +59,9 @@ class container_base {
 		void print_all_neighbor();
 		void print_all_neighbor(char *filename);
 		template<class n_option>
-		inline void compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
+		inline void compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
-		void compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
+		void compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		template<class n_option>
 		inline void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
@@ -143,10 +143,20 @@ class container_base {
 		int **id;
 		/** This array is used as a mask. */
 		unsigned int *mask;
+		/** This array is used to store the list of blocks to test during
+		 * the Voronoi cell computation. */
 		int *sl;
+		/** This sets the current value being used to mark tested blocks
+		 * in the mask. */
 		unsigned int mv;
+		/** The position of the first element on the search list to be
+		 * considered. */
+		int s_start;
+		/** The position of the last element on the search list to be
+		 * considered. */
+		int s_end;
 		/** The current size of the search list. */
-		int s_start,s_end,s_size;
+		int s_size;
 		/** A two dimensional array holding particle positions. For the
 		 * derived container_poly class, this also holds particle
 		 * radii. */
@@ -158,6 +168,15 @@ class container_base {
 		int wall_number;
 		/** The current amount of memory allocated for walls. */
 		int current_wall_size;
+		/** This object contains all the functions for handling how
+		 * the particle radii should be treated. If the template is
+		 * instantiated with the radius_none class, then this object
+		 * contains mostly blank routines that do nothing to the
+		 * cell computation, to compute the basic Voronoi diagram.
+		 * If the template is instantiated with the radius_poly calls,
+		 * then this object provides routines for modifying the
+		 * Voronoi cell computation in order to create the radical
+		 * Voronoi tessellation. */
 		r_option radius;
 		/** The amount of memory in the array structure for each
 		 * particle. This is set to 3 when the basic class is
@@ -166,6 +185,9 @@ class container_base {
 		 * class container_poly, then this is set to 4, to also hold
 		 * the particle radii. */
 		int sz;
+		/** An array to hold the minimum distances associated with the
+		 * worklists. This array is initialized during container
+		 * construction, by the initialize_radii() routine. */
 		fpoint *mrad;
 
 		template<class n_option>

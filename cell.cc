@@ -1,8 +1,8 @@
-// Voronoi calculation code
+// Voro++, a 3D cell-based Voronoi library
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : February 27th 2008
+// Date     : July 1st 2008
 
 #include "cell.hh"
 
@@ -52,7 +52,7 @@ voronoicell_base<n_option>::~voronoicell_base() {
 }
 
 /** Increases the memory storage for a particular vertex order, by increasing
- * the size of the of the mep and mne <em>(Neighbor version only)</em> arrays.
+ * the size of the of the mep and mne <em>(neighbor option only)</em> arrays.
  * If the arrays already exist, their size is doubled; if they don't exist,
  * then new ones of size init_n_vertices are allocated. The routine also ensures
  * that the pointers in the ed array are updated, by making use of the back
@@ -103,7 +103,7 @@ void voronoicell_base<n_option>::add_memory(int i) {
 }
 
 /** Doubles the maximum number of vertices allowed, by reallocating the ed, nu,
- * pts, and ne <em>(Neighbor version only)</em> arrays. If the allocation
+ * pts, and ne <em>(neighbor option only)</em> arrays. If the allocation
  * exceeds the absolute maximum set in max_vertices, then the routine throws a
  * fatal error. */
 template<class n_option>
@@ -126,7 +126,7 @@ void voronoicell_base<n_option>::add_memory_vertices() {
 }
 
 /** Doubles the maximum allowed vertex order, by reallocating mem, mep, mec,
- * and mnu <em>(Neighbor version only)</em> arrays. If the allocation exceeds
+ * and mnu <em>(neighbor option only)</em> arrays. If the allocation exceeds
  * the absolute maximum set in max_vertex_order, then the routine causes a fatal
  * error. */
 template<class n_option>
@@ -1517,10 +1517,10 @@ void voronoicell_base<n_option>::dump_pov(ostream &os,fpoint x,fpoint y,fpoint z
 	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
-		os << "sphere{<" << ux << "," << uy << "," << uz << ">,r}" << endl;
+		os << "sphere{<" << ux << "," << uy << "," << uz << ">,r}\n";
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (k<i) os << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}" << endl;
+			if (k<i) os << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}\n";
 		}
 	}
 }
@@ -1558,7 +1558,7 @@ void voronoicell_base<n_option>::dump_gnuplot(ostream &os,fpoint x,fpoint y,fpoi
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (ed[i][j]<i) os << ux << " " << uy << " " << uz << endl << x+0.5*pts[3*k] << " " << y+0.5*pts[3*k+1] << " " << z+0.5*pts[3*k+2] << endl << endl << endl;
+			if (ed[i][j]<i) os << ux << " " << uy << " " << uz << "\n" << x+0.5*pts[3*k] << " " << y+0.5*pts[3*k+1] << " " << z+0.5*pts[3*k+2] << "\n\n\n";
 		}
 	}
 }
@@ -1597,11 +1597,11 @@ inline void voronoicell_base<n_option>::dump_gnuplot(fpoint x,fpoint y,fpoint z)
 template<class n_option>
 inline void voronoicell_base<n_option>::dump_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k,l,m,n;
-	os << "mesh2 {" << endl << "vertex_vectors {" << endl << p << "," << endl;
+	os << "mesh2 {\nvertex_vectors {\n" << p << ",\n";
 	for(i=0;i<p;i++) {
-		os << "<" << x+0.5*pts[3*i] << "," << y+0.5*pts[3*i+1] << "," << z+0.5*pts[3*i+2] << ">," << endl;
+		os << "<" << x+0.5*pts[3*i] << "," << y+0.5*pts[3*i+1] << "," << z+0.5*pts[3*i+2] << ">,\n";
 	}
-	os << "}" << endl << "face_indices {" << endl << 2*(p-2) << "," << endl;
+	os << "}\nface_indices {\n" << 2*(p-2) << ",\n";
 	for(i=1;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
@@ -1611,7 +1611,7 @@ inline void voronoicell_base<n_option>::dump_pov_mesh(ostream &os,fpoint x,fpoin
 				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
 					n=cycle_up(ed[k][nu[k]+l],m);
-					os << "<" << i << "," << k << "," << m << ">" << endl;
+					os << "<" << i << "," << k << "," << m << ">\n";
 					k=m;l=n;
 					m=ed[k][l];ed[k][l]=-1-m;
 				}
@@ -1624,7 +1624,7 @@ inline void voronoicell_base<n_option>::dump_pov_mesh(ostream &os,fpoint x,fpoin
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-	os << "}" << endl << "inside_vector <0,0,1>" << endl << "}" << endl;
+	os << "}\ninside_vector <0,0,1>\n}\n";
 }
 
 /** An overloaded version of the dump_pov_mesh routine, that writes directly to a
@@ -1869,8 +1869,12 @@ void voronoicell_base<n_option>::check_facets() {
 	neighbor.check_facets();
 }
 
-/** This routine tests to see whether the cell intersects a plane, given an initial
- * starting vertex. */
+/** This routine tests to see whether the cell intersects a plane by starting
+ * from the guess point up. If up intersects, then it immediately returns true.
+ * Otherwise, it calls the plane_intersect_track() routine.
+ * \param[in] (x,y,z) The normal vector to the plane.
+ * \param[in] rsq The distance along this vector of the plane.
+ * \return false if the plane does not intersect the plane, true if it does.*/
 template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	fpoint g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
@@ -1878,6 +1882,13 @@ bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpo
 	return true;
 }
 
+/* This routine tests to see if a cell intersects a plane. It first tests a random
+ * sample of approximately sqrt(p)/4 points. If any of those are intersect, then it
+ * immediately returns true. Otherwise, it takes the closest point and passes that
+ * to plane_intersect_track() routine.
+ * \param[in] (x,y,z) The normal vector to the plane.
+ * \param[in] rsq The distance along this vector of the plane.
+ * \return false if the plane does not intersect the plane, true if it does.*/
 template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	up=0;
@@ -1898,6 +1909,13 @@ bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint
 	return true;
 }
 
+/* This routine tests to see if a cell intersects a plane, by tracing over the cell from
+ * vertex to vertex, starting at up. It is meant to be called either by plane_intersects()
+ * or plane_intersects_track(), when those routines cannot immediately resolve the case.
+ * \param[in] (x,y,z) The normal vector to the plane.
+ * \param[in] rsq The distance along this vector of the plane.
+ * \param[in] g The distance of up from the plane.
+ * \return false if the plane does not intersect the plane, true if it does.*/
 template<class n_option>
 inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rsq,fpoint g) {
 	int count=0,ls,us,tp;
@@ -1911,7 +1929,7 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 			up=tp;
 			while (t<rsq) {
 				if (++count>=p) {
-					cerr << "Err bailed\n";
+					cerr << "Bailed out of convex calculation" << endl;
 					for(tp=0;tp<p;tp++) if (x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) return true;
 					return false;
 				}
@@ -2147,7 +2165,8 @@ void neighbor_track::check_facets() {
 	}
 }
 
-/** This routine provides a list of plane IDs. */
+/** This routine provides a list of plane IDs.
+ * \param[in] &os An output stream to write to. */
 void neighbor_track::neighbors(ostream &os) {
 	int **edp,*nup;edp=vc->ed;nup=vc->nu;
 	int i,j,k,l,m;

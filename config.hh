@@ -1,8 +1,8 @@
-// Voronoi calculation code
+// Voro++, a 3D cell-based Voronoi library
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : February 27th 2008
+// Date     : July 1st 2008
 
 #ifndef FACETS_CONFIG_HH
 #define FACETS_CONFIG_HH

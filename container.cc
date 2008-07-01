@@ -1,8 +1,8 @@
-// Voronoi calculation code
+// Voro++, a 3D cell-based Voronoi library
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : February 27th 2008
+// Date     : July 1st 2008
 
 #include "cell.hh"
 #include "container.hh"
@@ -43,8 +43,11 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb
 /** This function is called during container construction. The routine scans
  * all of the worklists in the wl[] array. For a given worklist of blocks
  * labeled \f$w_1\f$ to \f$w_n\f$, it computes a sequence \f$r_0\f$ to
- * \f$r_n\f$ so that $r_i$ is the minimum distance to all the
- * blocks \f$w_{j}\f$ where \f$j>i\f$.
+ * \f$r_n\f$ so that $r_i$ is the minimum distance to all the blocks
+ * \f$w_{j}\f$ where \f$j>i\f$ and all blocks outside the worklist. The values
+ * of \f$r_n\f$ is calculated first, as the minimum distance to any block in
+ * the shell surrounding the worklist. The \f$r_i\f$ are then computed in
+ * reverse order by considering the distance to \f$w_{i+1}\f$.
  */
 template<class r_option>
 void container_base<r_option>::initialize_radii() {
@@ -96,6 +99,16 @@ void container_base<r_option>::initialize_radii() {
 	}
 }
 
+/** Computes the minimum distance from a subregion to a given block. If this distance
+ * is smaller than the value of minr, then it passes
+ * \param[in] &minr a pointer to the current minimum distance. If distance
+ * computed in this function is smaller, then this distance is set to the new
+ * one.
+ * \param[in] (&xlo,&ylo,&zlo) the lower coordinates of the subregion being
+ * considered.
+ * \param[in] (&xhi,&yhi,&zhi) the upper coordinates of the subregion being
+ * considered.
+ * \param[in] (ti,tj,tk) the coordinates of the block. */
 template<class r_option>
 inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk) {
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
@@ -139,7 +152,7 @@ void container_base<r_option>::dump(char *filename) {
 		for(c=0;c<co[l];c++) {
 			file << id[l][c];
 			for(i=sz*c;i<sz*(c+1);i++) file << " " << p[l][i];
-			file << endl;
+			file << "\n";
 		}
 	}
 	file.close();
@@ -204,7 +217,6 @@ inline void container_base<r_option>::add_list_memory() {
 	if(s_start<=s_end) {
 		for(i=s_start;i<s_end;i++) ps[j++]=sl[i];
 	} else {
-		cout << s_start << " " << s_end << " " << s_size << endl;
 		for(i=s_start;i<s_size;i++) ps[j++]=sl[i];
 		for(i=0;i<s_end;i++) ps[j++]=sl[i];
 	}
@@ -369,7 +381,7 @@ inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_o
 					radius.print(os,ijk,q);
 					os << " " << c.volume();
 					c.neighbors(os);		
-					os << endl;
+					os << "\n";
 				}
 				ijk++;
 			}
@@ -472,12 +484,23 @@ bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
 	return true;
 }
 
-/** Computes a single Voronoi cell in the container. This routine can be run by
- * the user, and it is also called multiple times by the functions vprintall,
- * store_cell_volumes() and draw(). */ 
+/** This routine is a simpler alternative to compute_cell(), that constructs
+ * the cell by testing over successively larger spherical shells of particles.
+ * For a container that is homogeneously filled with particles, this routine
+ * runs as fast as compute_cell(). However, it rapidly becomes inefficient
+ * for cases when the particles are not homogeneously distributed, or where
+ * parts of the container might not be filled. In that case, the spheres may
+ * grow very large before being cut off, leading to poor efficiency.
+ * \param[in] &c a reference to a voronoicell object.
+ * \param[in] (i,j,k) the coordinates of the block that the test particle is
+ * in.
+ * \param[in] ijk the index of the block that the test particle is in, set to
+ * i+nx*(j+ny*k).
+ * \param[in] s the index of the particle within the test block.
+ * \param[in] (x,y,z) The coordinates of the particle. */
 template<class r_option>
 template<class n_option>
-void container_base<r_option>::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+void container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	facets_loop l(this);
@@ -502,15 +525,30 @@ void container_base<r_option>::compute_cell_slow(voronoicell_base<n_option> &c,i
 	}
 }
 
-/** A overloaded version of compute_cell_slow, that sets up the x, y, and z variables. */
+/** A overloaded version of compute_cell_sphere(), that sets up the x, y, and z
+ * variables.
+ * \param[in] &c a reference to a voronoicell object.
+ * \param[in] (i,j,k) the coordinates of the block that the test particle is
+ * in.
+ * \param[in] ijk the index of the block that the test particle is in, set to
+ * i+nx*(j+ny*k).
+ * \param[in] s the index of the particle within the test block. */
 template<class r_option>
 template<class n_option>
-inline void container_base<r_option>::compute_cell_slow(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline void container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
-	compute_cell_slow(c,i,j,k,ijk,s,x,y,z);
+	compute_cell_sphere(c,i,j,k,ijk,s,x,y,z);
 }
 
-/** A overloaded version of compute_cell, that sets up the x, y, and z variables. */
+/** A overloaded version of compute_cell, that sets up the x, y, and z variables.
+ * It can be run by the user, and it is also called multiple times by the
+ * functions print_all(), store_cell_volumes(), and the output routines.
+ * \param[in] &c a reference to a voronoicell object.
+ * \param[in] (i,j,k) the coordinates of the block that the test particle is
+ * in.
+ * \param[in] ijk the index of the block that the test particle is in, set to
+ * i+nx*(j+ny*k).
+ * \param[in] s the index of the particle within the test block. */
 template<class r_option>
 template<class n_option>
 inline void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
@@ -518,6 +556,30 @@ inline void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c
 	compute_cell(c,i,j,k,ijk,s,x,y,z);
 }
 
+/** This routine computes a Voronoi cell for a single particle in the
+ * container. It can be called by the user, but is also forms the core part of
+ * several of the main functions, such as store_cell_volumes(), print_all(),
+ * and the drawing routines. The algorithm constructs the cell by testing over
+ * the neighbors of the particle, working outwards until it reaches those
+ * particles which could not possibly intersect the cell. For maximum
+ * efficiency, this algorithm is divided into three parts. In the first
+ * section, the algorithm tests over the blocks which are in the immediate
+ * vicinity of the particle, by making use of one of the precomputed worklists.
+ * The code then continues to test blocks on the worklist, but also begins to
+ * construct a list of neighboring blocks outside the worklist which may need
+ * to be test. In the third section, the routine starts testing these
+ * neighboring blocks, evaluating whether or not a particle in them could
+ * possibly intersect the cell. For blocks that intersect the cell, it tests
+ * the particles in that block, and then adds the block neighbors to the list
+ * of potential places to consider.
+ * \param[in] &c a reference to a voronoicell object.
+ * \param[in] (i,j,k) the coordinates of the block that the test particle is
+ * in.
+ * \param[in] ijk the index of the block that the test particle is in, set to
+ * i+nx*(j+ny*k).
+ * \param[in] s the index of the particle within the test block.
+ * \param[in] (x,y,z) The coordinates of the particle.
+ * \param[in] s the index of the particle within the test block. */
 template<class r_option>
 template<class n_option>
 void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
@@ -922,6 +984,15 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	}
 }
 
+/** This function checks to see whether a particular block can possibly have
+ * any intersection with a Voronoi cell, for the case when the closest point
+ * from the cell center to the block is at a corner.
+ * \param[in] &c a reference to a Voronoi cell.
+ * \param[in] (xl,yl,zl) the relative coordinates of the corner of the block closest to
+ * the cell center.
+ * \param[in] (xh,yh,zh) the relative coordinates of the corner of the block furthest
+ * away from the cell center.
+ * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
@@ -934,6 +1005,17 @@ inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
+/** This function checks to see whether a particular block can possibly have
+ * any intersection with a Voronoi cell, for the case when the closest point
+ * from the cell center to the block is on an edge which points along the x
+ * direction.
+ * \param[in] &c a reference to a Voronoi cell.
+ * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the block.
+ * \param[in] (yl,zl) the relative y and z coordinates of the corner of the block closest to
+ * the cell center.
+ * \param[in] (yh,zh) the relative y and z coordinates of the corner of the block furthest
+ * away from the cell center.
+ * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
@@ -946,6 +1028,17 @@ inline bool container_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
+/** This function checks to see whether a particular block can possibly have
+ * any intersection with a Voronoi cell, for the case when the closest point
+ * from the cell center to the block is on an edge which points along the y
+ * direction.
+ * \param[in] &c a reference to a Voronoi cell.
+ * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the block.
+ * \param[in] (xl,zl) the relative x and z coordinates of the corner of the block closest to
+ * the cell center.
+ * \param[in] (xh,zh) the relative x and z coordinates of the corner of the block furthest
+ * away from the cell center.
+ * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
@@ -958,6 +1051,17 @@ inline bool container_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
+/** This function checks to see whether a particular block can possibly have
+ * any intersection with a Voronoi cell, for the case when the closest point
+ * from the cell center to the block is on an edge which points along the z
+ * direction.
+ * \param[in] &c a reference to a Voronoi cell.
+ * \param[in] (z0,z1) the minimum and maximum relative z coordinates of the block.
+ * \param[in] (xl,yl) the relative x and y coordinates of the corner of the block closest to
+ * the cell center.
+ * \param[in] (xh,yh) the relative x and y coordinates of the corner of the block furthest
+ * away from the cell center.
+ * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
@@ -970,6 +1074,14 @@ inline bool container_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
+/** This function checks to see whether a particular block can possibly have
+ * any intersection with a Voronoi cell, for the case when the closest point
+ * from the cell center to the block is on a face aligned with the x direction.
+ * \param[in] &c a reference to a Voronoi cell.
+ * \param[in] xl the minimum distance from the cell center to the face.
+ * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the block.
+ * \param[in] (z0,z1) the minimum and maximum relative z coordinates of the block.
+ * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
@@ -980,6 +1092,14 @@ inline bool container_base<r_option>::face_x_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
+/** This function checks to see whether a particular block can possibly have
+ * any intersection with a Voronoi cell, for the case when the closest point
+ * from the cell center to the block is on a face aligned with the y direction.
+ * \param[in] &c a reference to a Voronoi cell.
+ * \param[in] yl the minimum distance from the cell center to the face.
+ * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the block.
+ * \param[in] (z0,z1) the minimum and maximum relative z coordinates of the block.
+ * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
@@ -990,6 +1110,14 @@ inline bool container_base<r_option>::face_y_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
+/** This function checks to see whether a particular block can possibly have
+ * any intersection with a Voronoi cell, for the case when the closest point
+ * from the cell center to the block is on a face aligned with the z direction.
+ * \param[in] &c a reference to a Voronoi cell.
+ * \param[in] zl the minimum distance from the cell center to the face.
+ * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the block.
+ * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the block.
+ * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {

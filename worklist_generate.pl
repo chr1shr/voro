@@ -6,7 +6,7 @@ $d=8;
 use Math::Trig;
 
 open W,">worklist.hh";
-print W <<EOF
+print W <<EOF;
 // Voronoi calculation code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
@@ -24,7 +24,7 @@ printf W "static const unsigned int wl[%d];\n",($ls+1)*$hr*$hr*$hr;
 close W;
 
 open W,">worklist.cc";
-print W <<EOF
+print W <<EOF;
 // Voronoi calculation code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
