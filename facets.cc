@@ -12,6 +12,7 @@ const int memory=8;
 
 // A maximum allowed number of regions, to prevent enormous amounts of memory
 // being allocated
+const int max_regions=16777216;
 
 // This message gets displayed if the command line arguments are incorrect
 // or if the user requests the help flag
@@ -19,8 +20,8 @@ void help_message() {
 	cout << "Syntax: facets [opts] <length_scale> <x_min> <x_max> <y_min>\n";
 	cout << "                      <y_max> <z_min> <z_max> <filename>\n\n";
 	cout << "<length_scale> should be set to a typical particle diameter,\n";
-	cout << "or distance between particles, and is used to configure the grid\n";
-	cout << "size for maximum efficiency\n\n";
+	cout << "or typical distance between particles. It is used to configure\n";
+	cout << "the code for maximum efficiency.\n\n";
 	cout << "Available options:\n";
 	cout << " -g         : Turn on the gnuplot output to <filename.gnu>\n";
 	cout << " -h/--help  : Print this information\n";
@@ -93,11 +94,11 @@ int main(int argc,char **argv) {
 
 	// Check that the length scale is positive and reasonably large
 	if (ls<tolerance) {
-		if (ls<) {
+		if (ls<0) {
 			cerr << "The length scale must be positive" << endl;
 			return 0;
 		} else {
-			cerr << "The length scale is smaller than the safe limit of " << tolerence << ".\n";
+			cerr << "The length scale is smaller than the safe limit of " << tolerance << ".\n";
 			cerr << "Either increase the particle length scale, or recompile with a\n";
 			cerr << "different limit." << endl;
 		}
