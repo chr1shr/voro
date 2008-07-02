@@ -551,7 +551,6 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			} while (us<nu[up]);
 
 			if(us==nu[up]) {
-				cerr << "Failed to find intersection" << endl;
 				return false;
 			}
 			
@@ -573,7 +572,6 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 						us++;
 					}
 					if(us==nu[up]) {
-						cerr << "Failed to find intersection" << endl;
 						return false;
 					}
 				}

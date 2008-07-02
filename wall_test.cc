@@ -14,21 +14,20 @@ const fpoint y_min=-6.5,y_max=6.5;
 const fpoint z_min=0,z_max=18.5;
 
 // Set up the number of blocks that the container is divided
-// into.
-//const int n_x=NNN,n_y=NNN,n_z=NNN;
+// into
 const int n_x=7,n_y=7,n_z=14;
 
 // Set the number of particles that are going to be randomly
 // introduced
 const int particles=100000;
 
-// This function returns a random fpoint between 0 and 1;
+// This function returns a random fpoint between 0 and 1
 fpoint rnd() {return fpoint(rand())/RAND_MAX;}
 
 int main() {
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
-	// 16 particles within each computational block
+	// 8 particles within each computational block.
 	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
 			false,false,false,8);
 

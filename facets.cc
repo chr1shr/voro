@@ -24,7 +24,6 @@ void help_message() {
 	cout << "Available options:\n";
 	cout << " -g         : Turn on the gnuplot output to <filename.gnu>\n";
 	cout << " -h/--help  : Print this information\n";
-	cout << " -l <value> : Pick a typical particle diameter length scale\n";
 	cout << " -n         : Turn on the neighbor tracking procedure\n";
 	cout << " -p         : Make container periodic in all three directions\n";
 	cout << " -px        : Make container periodic in the x direction\n";

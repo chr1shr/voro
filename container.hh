@@ -27,18 +27,6 @@ class wall;
 template<class r_option>
 class container_base {
 	public:
-		/** This represents a typical length scale for the diameter of
-		 * the particles. It initially takes the default value of 1,
-		 * but its value can be overwritten by the user. There is also
-		 * a function guess_length_scale(), which picks a value based
-		 * on the total number of particles in the container.
-		 *
-		 * The Voronoi cell calculation works by evaluating all
-		 * particles in concentric spherical shells. The length scale
-		 * is used to set how big these shells should be. The closer
-		 * the length scale to the actual separation between particles,
-		 * the faster the cell computation should be. */
-		fpoint length_scale;
 		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container_base();
 		void dump(char *filename);
@@ -64,19 +52,18 @@ class container_base {
 		void print_all_neighbor();
 		void print_all_neighbor(char *filename);
 		template<class n_option>
-		inline void compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
+		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
-		void compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
+		bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		template<class n_option>
-		inline void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
+		inline bool compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
-		void compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
+		bool compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
 		void add_wall(wall &w);
 		bool point_inside(fpoint x,fpoint y,fpoint z); 
 		bool point_inside_walls(fpoint x,fpoint y,fpoint z); 
-		void guess_length_scale();
 	protected:
 		/** The minimum x coordinate of the container. */
 		const fpoint ax;
@@ -198,7 +185,7 @@ class container_base {
 		template<class n_option>
 		inline void print_all(ostream &os,voronoicell_base<n_option> &c);
 		template<class n_option>
-		inline void initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
+		inline bool initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		void add_particle_memory(int i);
 		void add_list_memory();
 	private:
@@ -286,8 +273,8 @@ class wall {
 	public:
 		virtual ~wall() {};
 		virtual bool point_inside(fpoint x,fpoint y,fpoint z) = 0;
-		virtual void cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) = 0;
-		virtual void cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) = 0;
+		virtual bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) = 0;
+		virtual bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) = 0;
 };
 
 /** The basic container class. */

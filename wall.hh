@@ -16,9 +16,9 @@ struct wall_sphere : public wall {
 		: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), rc(irc) {};
 	bool point_inside(fpoint x,fpoint y,fpoint z);
 	template<class n_option>
-	inline void cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
-	void cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {cut_cell_base(c,x,y,z);}
-	void cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {cut_cell_base(c,x,y,z);}
+	inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
+	bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+	bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 };
 
 struct wall_plane : public wall {
@@ -30,9 +30,9 @@ struct wall_plane : public wall {
 		: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), ac(iac) {};
 	bool point_inside(fpoint x,fpoint y,fpoint z);
 	template<class n_option>
-	inline void cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
-	void cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {cut_cell_base(c,x,y,z);}
-	void cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {cut_cell_base(c,x,y,z);}
+	inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
+	bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+	bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 };
 
 struct wall_cylinder : public wall {
@@ -46,9 +46,9 @@ struct wall_cylinder : public wall {
 		asi(1/(ixa*ixa+iya*iya+iza*iza)), rc(irc) {};
 	bool point_inside(fpoint x,fpoint y,fpoint z);
 	template<class n_option>
-	inline void cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
-	void cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {cut_cell_base(c,x,y,z);}
-	void cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {cut_cell_base(c,x,y,z);}
+	inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
+	bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+	bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 };
 
 #endif

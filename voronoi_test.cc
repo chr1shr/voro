@@ -6,6 +6,7 @@
 
 #include "cell.cc"
 #include "container.cc"
+#include "wall.cc"
 
 // Set up constants for the container geometry
 const fpoint x_min=-1,x_max=1;
@@ -14,11 +15,11 @@ const fpoint z_min=-1,z_max=1;
 
 // Set up the number of blocks that the container is divided
 // into.
-const int n_x=20,n_y=20,n_z=20;
+const int n_x=6,n_y=6,n_z=6;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=20000;
+const int particles=20;
 
 // This function returns a random fpoint between 0 and 1;
 fpoint rnd() {return fpoint(rand())/RAND_MAX;}
@@ -32,16 +33,18 @@ int main() {
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
 	// 16 particles within each computational block
-	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
+	container_poly con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
 			false,false,false,8);
 
 	//Randomly add particles into the container
-//	for(i=0;i<particles;i++) {
-//		x=x_min+rnd()*(x_max-x_min);
-//		y=y_min+rnd()*(y_max-y_min);
-//		z=z_min+rnd()*(z_max-z_min);
-//		con.put(i,x,y,z);
-//	}
+	for(i=0;i<particles;i++) {
+		x=x_min+rnd()*(x_max-x_min);
+		y=y_min+rnd()*(y_max-y_min);
+		z=z_min+rnd()*(z_max-z_min);
+		con.put(i,x,y,z,0.1);
+	}
+	
+	con.draw_gnuplot("vtest3");
 
 //	con.guess_length_scale();
 	// Print out a list of the particles, and their Voronoi volumes

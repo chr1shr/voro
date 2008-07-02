@@ -15,7 +15,7 @@
 template<class r_option>
 container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,
 		int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
-	: length_scale(1),ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
+	: ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
 	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
@@ -258,7 +258,6 @@ void container_base<r_option>::add_particle_memory(int i) {
 /** Add list memory. */
 template<class r_option>
 inline void container_base<r_option>::add_list_memory() {
-	cout << "addmem\n";
 	int i,j=0,*ps;
 	ps=new int[s_size*2];
 	if(s_start<=s_end) {
@@ -314,19 +313,6 @@ void container_base<r_option>::clear() {
 	radius.clear_max();
 }
 
-/** Guess length scale by dividing the total volume of the container by the
- * total number of particles, and then taking the cube root. */
-template<class r_option>
-void container_base<r_option>::guess_length_scale() {
-	const fpoint third=1/3.0;
-	int sp=0;
-	for(int ijk=0;ijk<nxyz;ijk++) sp+=co[ijk];
-	if(sp>0) {
-		length_scale=(fpoint) sp;
-		length_scale=pow(abs((bx-ax)*(by-ay)*(bz-az)/length_scale),third);
-	}
-}
-
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot. */
@@ -343,8 +329,7 @@ void container_base<r_option>::draw_gnuplot(char *filename,fpoint xmin,fpoint xm
 		for(q=0;q<co[s];q++) {
 			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z);
-				c.dump_gnuplot(os,x,y,z);
+				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.dump_gnuplot(os,x,y,z);
 			}
 		}
 	} while((s=l1.inc(px,py,pz))!=-1);
@@ -375,8 +360,7 @@ void container_base<r_option>::draw_pov(char *filename,fpoint xmin,fpoint xmax,f
 		for(q=0;q<co[s];q++) {
 			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z);
-				c.dump_pov(os,x,y,z);
+				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.dump_pov(os,x,y,z);
 			}
 		}
 	} while((s=l1.inc(px,py,pz))!=-1);
@@ -402,8 +386,11 @@ void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 		for(j=0;j<ny;j++) {
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
-					compute_cell(c,i,j,k,ijk,q);
-					bb[id[ijk][q]]=c.volume();
+					if (compute_cell(c,i,j,k,ijk,q)) {
+						bb[id[ijk][q]]=c.volume();
+					} else {
+						bb[id[ijk][q]]=0;
+					}
 				}
 				ijk++;
 			}
@@ -423,12 +410,15 @@ inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_o
 			for(i=0;i<nx;i++) {
 				for(q=0;q<co[ijk];q++) {
 					x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
-					compute_cell(c,i,j,k,ijk,q,x,y,z);
 					os << id[ijk][q] << " " << x << " " << y << " " << z;
 					radius.print(os,ijk,q);
-					os << " " << c.volume();
-					c.neighbors(os);		
-					os << "\n";
+					if (compute_cell(c,i,j,k,ijk,q,x,y,z)) {
+						os << " " << c.volume();
+						c.neighbors(os);		
+						os << "\n";
+					} else {
+						os << " 0\n";
+					}
 				}
 				ijk++;
 			}
@@ -499,13 +489,16 @@ inline void container_base<r_option>::print_all_neighbor(char* filename) {
  * be made by the neighboring periodic images of this particle. */
 template<class r_option>
 template<class n_option>
-inline void container_base<r_option>::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+inline bool container_base<r_option>::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,x2,y1,y2,z1,z2;
 	if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 	if(zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
 	c.init(x1,x2,y1,y2,z1,z2);
-	for(int j=0;j<wall_number;j++) walls[j]->cut_cell(c,x,y,z);
+	for(int j=0;j<wall_number;j++) {
+		if (!(walls[j]->cut_cell(c,x,y,z))) return false;
+	}
+	return true;
 }
 
 /** This function tests to see if a given vector lies within the container
@@ -547,11 +540,15 @@ bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
  * \param[in] (x,y,z) The coordinates of the particle. */
 template<class r_option>
 template<class n_option>
-void container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+
+	// This length scale determines how large the spherical shells should
+	// be, and it should be set to approximately the particle diameter
+	const fpoint length_scale=1;
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	facets_loop l(this);
-	initialize_voronoicell(c,x,y,z);
+	if (!initialize_voronoicell(c,x,y,z)) return false;
 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
@@ -564,12 +561,14 @@ void container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 			for(q=0;q<co[t];q++) {
 				x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
-				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t))
-					c.nplane(x1,y1,z1,radius.scale(rs,t,q),id[t][q]);
+				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t)) {
+					if (!c.nplane(x1,y1,z1,radius.scale(rs,t,q),id[t][q])) return false;
+				}
 			}
 		} while((t=l.inc(qx,qy,qz))!=-1);
 		lr=ur;lrs=urs;
 	}
+	return true;
 }
 
 /** A overloaded version of compute_cell_sphere(), that sets up the x, y, and z
@@ -582,9 +581,9 @@ void container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
  * \param[in] s the index of the particle within the test block. */
 template<class r_option>
 template<class n_option>
-inline void container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
-	compute_cell_sphere(c,i,j,k,ijk,s,x,y,z);
+	return compute_cell_sphere(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables.
@@ -598,9 +597,9 @@ inline void container_base<r_option>::compute_cell_sphere(voronoicell_base<n_opt
  * \param[in] s the index of the particle within the test block. */
 template<class r_option>
 template<class n_option>
-inline void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
-	compute_cell(c,i,j,k,ijk,s,x,y,z);
+	return  compute_cell(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** This routine computes a Voronoi cell for a single particle in the
@@ -629,7 +628,7 @@ inline void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c
  * \param[in] s the index of the particle within the test block. */
 template<class r_option>
 template<class n_option>
-void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
 	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
@@ -641,7 +640,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	radius.init(ijk,s);
 
 	// Initialize the Voronoi cell to fill the entire container
-	initialize_voronoicell(c,x,y,z);
+	if (!initialize_voronoicell(c,x,y,z)) return false;
 	fpoint crs,mrs;
 
 	int next_count=3,list_index=0,list_size=8;
@@ -653,7 +652,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		y1=p[ijk][sz*l+1]-y;
 		z1=p[ijk][sz*l+2]-z;
 		rs=radius.scale(x1*x1+y1*y1+z1*z1,ijk,l);
-		c.nplane(x1,y1,z1,rs,id[ijk][l]);
+		if (!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
 	}
 	l++;
 	while(l<co[ijk]) {
@@ -661,7 +660,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		y1=p[ijk][sz*l+1]-y;
 		z1=p[ijk][sz*l+2]-z;
 		rs=radius.scale(x1*x1+y1*y1+z1*z1,ijk,l);
-		c.nplane(x1,y1,z1,rs,id[ijk][l]);
+		if (!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
 		l++;
 	}
 
@@ -724,7 +723,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done.
-		if(mrs<radius.cutoff(radp[g])) return;
+		if(mrs<radius.cutoff(radp[g])) return true;
 		g++;
 		
 		// Load in a block off the worklist, permute it with the
@@ -768,7 +767,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
-				c.nplane(x1,y1,z1,rs,id[dijk][l]);
+				if (!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
 			}
 		} else {
 			for(l=0;l<co[dijk];l++) {
@@ -776,7 +775,9 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
-				if(rs<crs) c.nplane(x1,y1,z1,rs,id[dijk][l]);
+				if(rs<mrs) {
+					if (!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
+				}
 			}
 		}
 	} while(g<f);
@@ -815,7 +816,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done.
-		if(mrs<radius.cutoff(radp[g])) return;
+		if(mrs<radius.cutoff(radp[g])) return true;
 		g++;
 		
 		// Load in a block off the worklist, permute it with the
@@ -863,7 +864,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
-				c.nplane(x1,y1,z1,rs,id[dijk][l]);
+				if (!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
 			}
 		} else {
 			for(l=0;l<co[dijk];l++) {
@@ -871,7 +872,9 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
-				if(rs<mrs) c.nplane(x1,y1,z1,rs,id[dijk][l]);
+				if(rs<mrs) {
+					if(!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
+				}
 			}
 		}
 
@@ -895,7 +898,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	}
 
 	// Do a check to see if we've reach the radius cutoff
-	if(mrs<radius.cutoff(radp[g])) return;
+	if(mrs<radius.cutoff(radp[g])) return true;
 
 	// Update the mask counter, and if it has wrapped around, then
 	// reset the mask
@@ -1013,7 +1016,7 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			y1=p[eijk][sz*l+1]+qy-y;
 			z1=p[eijk][sz*l+2]+qz-z;
 			rs=radius.scale(x1*x1+y1*y1+z1*z1,eijk,l);
-			c.nplane(x1,y1,z1,rs,id[eijk][l]);
+			if (!c.nplane(x1,y1,z1,rs,id[eijk][l])) return false;
 		}
 
 		// If there's not much memory on the block list then add more
@@ -1029,6 +1032,8 @@ void container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(dj<hy-1) if(mask[dijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hx]=mv;sl[s_end++]=di;sl[s_end++]=dj+1;sl[s_end++]=dk;}
 		if(dk<hz-1) if(mask[dijk+hxy]!=mv) {if(s_end==s_size) s_end=0;mask[dijk+hxy]=mv;sl[s_end++]=di;sl[s_end++]=dj;sl[s_end++]=dk+1;}
 	}
+
+	return true;
 }
 
 /** This function checks to see whether a particular block can possibly have
