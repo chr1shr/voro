@@ -1,0 +1,85 @@
+// Platonic solids example code
+//
+// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Email    : chr@alum.mit.edu
+// Date     : February 27th 2008
+
+#include "cell.cc"
+
+// Golden ratio constants
+const double Phi=0.5*(1+sqrt(5.0));
+const double phi=0.5*(1-sqrt(5.0));
+
+int main() {
+	voronoicell v;
+
+	// Create a tetrahedron
+	v.init(-2,2,-2,2,-2,2);
+	v.plane(1,1,1);
+	v.plane(1,-1,-1);
+	v.plane(-1,1,-1);
+	v.plane(-1,-1,1);
+
+	v.dump_gnuplot("tetrahedron",0,0,0);
+
+	// Create a cube. Since this is the default shape
+	// we don't need to do any plane cutting. 
+	v.init(-1,1,-1,1,-1,1);
+	v.dump_gnuplot("cube",0,0,0);
+	
+	// Create an octahedron
+	v.init(-2,2,-2,2,-2,2);
+	v.plane(1,1,1);
+	v.plane(-1,1,1);
+	v.plane(1,-1,1);
+	v.plane(-1,-1,1);
+	v.plane(1,1,-1);
+	v.plane(-1,1,-1);
+	v.plane(1,-1,-1);
+	v.plane(-1,-1,-1);
+
+	v.dump_gnuplot("octahedron",0,0,0);
+
+	// Create a dodecahedron
+	v.init(-2,2,-2,2,-2,2);
+	v.plane(0,Phi,1);
+	v.plane(0,-Phi,1);
+	v.plane(0,Phi,-1);
+	v.plane(0,-Phi,-1);
+	v.plane(1,0,Phi);
+	v.plane(-1,0,Phi);
+	v.plane(1,0,-Phi);
+	v.plane(-1,0,-Phi);
+	v.plane(Phi,1,0);
+	v.plane(-Phi,1,0);
+	v.plane(Phi,-1,0);
+	v.plane(-Phi,-1,0);
+
+	v.dump_gnuplot("dodecahedron",0,0,0);
+
+	// Create an icosahedron
+	v.init(-2,2,-2,2,-2,2);
+	v.plane(1,1,1);
+	v.plane(-1,1,1);
+	v.plane(1,-1,1);
+	v.plane(-1,-1,1);
+	v.plane(1,1,-1);
+	v.plane(-1,1,-1);
+	v.plane(1,-1,-1);
+	v.plane(-1,-1,-1);
+	v.plane(0,phi,Phi);	
+	v.plane(0,phi,-Phi);	
+	v.plane(0,-phi,Phi);	
+	v.plane(0,-phi,-Phi);
+	v.plane(Phi,0,phi);
+	v.plane(Phi,0,-phi);
+	v.plane(-Phi,0,phi);
+	v.plane(-Phi,0,-phi);
+	v.plane(phi,Phi,0);
+	v.plane(phi,-Phi,0);
+	v.plane(-phi,Phi,0);
+	v.plane(-phi,-Phi,0);
+
+	v.dump_gnuplot("icosahedron",0,0,0);
+
+}
