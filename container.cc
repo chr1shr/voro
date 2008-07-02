@@ -144,18 +144,65 @@ container_base<r_option>::~container_base() {
 
 /** Dumps all the particle positions and identifies to a file. */
 template<class r_option>
-void container_base<r_option>::dump(char *filename) {
+void container_base<r_option>::dump(ostream &os) {
 	int c,l,i;
-	ofstream file;
-	file.open(filename,ofstream::out|ofstream::trunc);
 	for(l=0;l<nxyz;l++) {
 		for(c=0;c<co[l];c++) {
-			file << id[l][c];
-			for(i=sz*c;i<sz*(c+1);i++) file << " " << p[l][i];
-			file << "\n";
+			os << id[l][c];
+			for(i=sz*c;i<sz*(c+1);i++) os << " " << p[l][i];
+			os << "\n";
 		}
 	}
-	file.close();
+}
+
+/** An overloaded version of the dump() routine, that just prints
+ * to standard output. */
+template<class r_option>
+void container_base<r_option>::dump() {
+	dump(cin);
+}
+
+/** An overloaded version of the dump() routine, that outputs
+ * the particle positions to a file.
+ * \param[in] filename the file to write to. */
+template<class r_option>
+void container_base<r_option>::dump(char *filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	dump(os);
+	os.close();
+}
+
+/** Dumps all the particle positions in the POV-Ray format. */
+template<class r_option>
+void container_base<r_option>::dump_pov(ostream &os) {
+	int l,c;
+	os << "#declare particles=union{\n";
+	for(l=0;l<nxyz;l++) {
+		for(c=0;c<co[l];c++) {
+			os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
+			   << p[l][sz*c+2] << ">," << radius.rad(l,c) << "}\n";
+		}
+	}
+	os << "}" << endl;
+}
+
+/** An overloaded version of the dump_pov() routine, that just prints
+ * to standard output. */
+template<class r_option>
+void container_base<r_option>::dump_pov() {
+	dump_pov(cin);
+}
+
+/** An overloaded version of the dump_pov() routine, that outputs
+ * the particle positions to a file.
+ * \param[in] filename the file to write to. */
+template<class r_option>
+void container_base<r_option>::dump_pov(char *filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	dump_pov(os);
+	os.close();
 }
 
 /** Put a particle into the correct region of the container. */
@@ -1292,6 +1339,14 @@ inline fpoint radius_poly::cutoff(fpoint lrs) {
 
 inline fpoint radius_mono::cutoff(fpoint lrs) {
 	return lrs;
+}
+
+inline fpoint radius_mono::rad(int l,int c) {
+	return 0.5;
+}
+
+inline fpoint radius_poly::rad(int l,int c) {
+	return cc->p[l][4*c];
 }
 
 inline fpoint radius_poly::scale(fpoint rs,int t,int q) {

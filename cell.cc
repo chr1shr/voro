@@ -1676,10 +1676,10 @@ inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 /** */
 inline int suretest::test(int n,fpoint &ans) {
 	ans=px*p[3*n]+py*p[3*n+1]+pz*p[3*n+2]-prsq;
-	if(ans>tolerance2) {
-		return 1;
-	} else if(ans<-tolerance2) {
+	if(ans<-tolerance2) {
 		return -1;
+	} else if(ans>tolerance2) {
+		return 1;
 	}
 	return check_marginal(n,ans);
 }

@@ -42,6 +42,11 @@ class container_base {
 		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container_base();
 		void dump(char *filename);
+		void dump();
+		void dump(ostream &os);
+		void dump_pov(char *filename);
+		void dump_pov();
+		void dump_pov(ostream &os);
 		void import(istream &is);
 		inline void import();
 		inline void import(char *filename);
@@ -170,7 +175,7 @@ class container_base {
 		int current_wall_size;
 		/** This object contains all the functions for handling how
 		 * the particle radii should be treated. If the template is
-		 * instantiated with the radius_none class, then this object
+		 * instantiated with the radius_mono class, then this object
 		 * contains mostly blank routines that do nothing to the
 		 * cell computation, to compute the basic Voronoi diagram.
 		 * If the template is instantiated with the radius_poly calls,
@@ -231,6 +236,7 @@ class radius_mono {
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q) {};
+		inline fpoint rad(int l,int c);
 };
 
 class radius_poly {
@@ -246,6 +252,7 @@ class radius_poly {
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q);
+		inline fpoint rad(int l,int c);
 };
 
 /** Many of the container routines require scanning over a rectangular sub-grid

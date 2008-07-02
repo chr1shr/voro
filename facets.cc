@@ -7,23 +7,29 @@
 #include "cell.cc"
 #include "container.cc"
 
-// A guess for the memory allocation; should be bigger than 27/(diameter^3).
-const int memory=32;
+// A guess for the memory allocation per region.
+const int memory=8;
+
+// A maximum allowed number of regions, to prevent enormous amounts of memory
+// being allocated
 
 // This message gets displayed if the command line arguments are incorrect
 // or if the user requests the help flag
 void help_message() {
-	cout << "Syntax: facets [opts] <x_min> <x_max> <y_min> <y_max> <z_min> <z_max> <filename>" << endl;
-	cout << endl;
-	cout << "Available options:" << endl;
-	cout << " -g         : Turn on the gnuplot output to <filename.gnu>" << endl;
-	cout << " -h/--help  : Print this information" << endl;
-	cout << " -l <value> : Pick a typical particle diameter length scale" << endl;
-	cout << " -n         : Turn on the neighbor tracking procedure" << endl;
-	cout << " -p         : Make container periodic in all three directions" << endl;
-	cout << " -px        : Make container periodic in the x direction" << endl;
-	cout << " -py        : Make container periodic in the y direction" << endl;
-	cout << " -pz        : Make container periodic in the z direction" << endl;
+	cout << "Syntax: facets [opts] <length_scale> <x_min> <x_max> <y_min>\n";
+	cout << "                      <y_max> <z_min> <z_max> <filename>\n\n";
+	cout << "<length_scale> should be set to a typical particle diameter,\n";
+	cout << "or distance between particles, and is used to configure the grid\n";
+	cout << "size for maximum efficiency\n\n";
+	cout << "Available options:\n";
+	cout << " -g         : Turn on the gnuplot output to <filename.gnu>\n";
+	cout << " -h/--help  : Print this information\n";
+	cout << " -l <value> : Pick a typical particle diameter length scale\n";
+	cout << " -n         : Turn on the neighbor tracking procedure\n";
+	cout << " -p         : Make container periodic in all three directions\n";
+	cout << " -px        : Make container periodic in the x direction\n";
+	cout << " -py        : Make container periodic in the y direction\n";
+	cout << " -pz        : Make container periodic in the z direction\n";
 	cout << " -r         : Assume the input file has an extra coordinate for radii" << endl;
 }
 
@@ -33,10 +39,8 @@ void error_message() {
 }
 
 int main(int argc,char **argv) {
-	double ls=1,ils=1/3.0;
 	int i=1;
-	bool spec_length=false,gnuplot_output=false;
-	bool neighbor_track=false,polydisperse=false;
+	bool gnuplot_output=false,neighbor_track=false,polydisperse=false;
 	bool xperiodic=false,yperiodic=false,zperiodic=false;
 	char buffer[256];
 	
@@ -52,22 +56,17 @@ int main(int argc,char **argv) {
 	
 	// If there aren't enough command line arguments, then bail out
 	// with an error.
-	if (argc<8) {
+	if (argc<9) {
 	       error_message();return 1;
 	}
 
 	// We have enough arguments. Now start searching for command line
 	// options.
-	while(i+7<argc) {
+	while(i+8<argc) {
 		if (strcmp(argv[i],"-g")==0) {
 			gnuplot_output=true;
 		} else if (strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0) {
 			help_message();return 0;
-		} else if (strcmp(argv[i],"-l")==0) {
-			i++;
-			spec_length=true;
-			ls=atof(argv[i]);
-			ils=1/(3.0*ls);
 		} else if (strcmp(argv[i],"-n")==0) {
 			neighbor_track=true;
 		} else if (strcmp(argv[i],"-p")==0) {
@@ -88,40 +87,57 @@ int main(int argc,char **argv) {
 
 	// Read in the dimensions of the test box, and estimate the number of
 	// boxes to divide the region up into
-	fpoint xmin=atof(argv[i]),xmax=atof(argv[i+1]);
-	fpoint ymin=atof(argv[i+2]),ymax=atof(argv[i+3]);
-	fpoint zmin=atof(argv[i+4]),zmax=atof(argv[i+5]);
+	fpoint ls=atof(argv[i]);
+	fpoint xmin=atof(argv[i+1]),xmax=atof(argv[i+2]);
+	fpoint ymin=atof(argv[i+3]),ymax=atof(argv[i+4]);
+	fpoint zmin=atof(argv[i+5]),zmax=atof(argv[i+6]);
 
-	int nx=int((xmax-xmin)*ils)+1;
-	int ny=int((ymax-ymin)*ils)+1;
-	int nz=int((zmax-zmin)*ils)+1;
+	// Check that the length scale is positive and reasonably large
+	if (ls<tolerance) {
+		if (ls<) {
+			cerr << "The length scale must be positive" << endl;
+			return 0;
+		} else {
+			cerr << "The length scale is smaller than the safe limit of " << tolerence << ".\n";
+			cerr << "Either increase the particle length scale, or recompile with a\n";
+			cerr << "different limit." << endl;
+		}
+	}
+	ls=1.8/ls;
+
+	// Compute the number regions based on the length scale provided. If
+	// the total number exceeds a cutoff then bail out, to prevent making
+	// a massive memory allocation.
+	int nx=int((xmax-xmin)*ls)+1;
+	int ny=int((ymax-ymin)*ls)+1;
+	int nz=int((zmax-zmin)*ls)+1;
+	int nxyz=nx*ny*nz;
+	if (nx*ny*nz>max_regions) {
+		cerr << "Number of computational blocks (" << nxyz << ") exceeds the maximum\n";
+		cerr << "allowed of " << max_regions << ". Either increase the particle\n";
+		cerr << "length scale, or recompile with an increased maximum." << endl;
+	}
 
 	// Prepare output filename
-	sprintf(buffer,"%s.vol",argv[i+6]);
+	sprintf(buffer,"%s.vol",argv[i+7]);
 
 	// Now switch depending on whether polydispersity was enabled
 	if (polydisperse) {
 		container_poly con(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,
 			      xperiodic,yperiodic,zperiodic,memory);
-		con.import(argv[i+6]);
-
-		if (spec_length) con.length_scale=ls;
-		else con.guess_length_scale();
+		con.import(argv[i+7]);
 
 		if (neighbor_track) con.print_all_neighbor(buffer);
 		else con.print_all(buffer);
 
 		if (gnuplot_output) {
-			sprintf(buffer,"%s.gnu",argv[i+6]);
+			sprintf(buffer,"%s.gnu",argv[i+7]);
 			con.draw_gnuplot(buffer);
 		}
 	} else {
 		container con(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,
 			      xperiodic,yperiodic,zperiodic,memory);
 		con.import(argv[i+6]);
-
-		if (spec_length) con.length_scale=ls;
-		else con.guess_length_scale();
 
 		if (neighbor_track) con.print_all_neighbor(buffer);
 		else con.print_all(buffer);
