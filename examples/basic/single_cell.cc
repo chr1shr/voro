@@ -2,9 +2,12 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : February 27th 2008
+// Date     : July 1st 2008
 
-#include "cell.cc"
+#include "../../src/voro++.cc"
+
+// This function returns a random floating point number between 0 and 1
+double rnd() {return double(rand())/RAND_MAX;}
 
 int main() {
 	double x,y,z,rsq,r;
@@ -17,9 +20,9 @@ int main() {
 	// Cut the cell by 250 random planes which are all a distance 1 away
 	// from the origin, to make an approximation to a sphere
 	for(int i=0;i<250;i++) {
-		x=double(2*rand()-1)/RAND_MAX;
-		y=double(2*rand()-1)/RAND_MAX;
-		z=double(2*rand()-1)/RAND_MAX;
+		x=2*rnd()-1;
+		y=2*rnd()-1;
+		z=2*rnd()-1;
 		rsq=x*x+y*y+z*z;
 		if(rsq>0.01&&rsq<1) {
 			r=1/sqrt(rsq);x*=r;y*=r;z*=r;
@@ -28,5 +31,5 @@ int main() {
 	}
 	
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.dump_gnuplot("test",0,0,0);
+	v.draw_gnuplot("single_cell.gnu",0,0,0);
 }
