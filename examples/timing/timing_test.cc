@@ -8,6 +8,10 @@
 #include <ctime>
 using namespace std;
 
+#ifndef NNN
+#define NNN=26
+#endif
+
 // Set up constants for the container geometry
 const double x_min=-1,x_max=1;
 const double y_min=-1,y_max=1;
@@ -15,7 +19,7 @@ const double z_min=-1,z_max=1;
 
 // Set up the number of blocks that the container is divided
 // into.
-const int n_x=26,n_y=26,n_z=26;
+const int n_x=NNN,n_y=NNN,n_z=NNN;
 
 // Set the number of particles that are going to be randomly
 // introduced
