@@ -17,13 +17,16 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/voro++.hh
 
 # List of executables
-EXECUTABLES=cut_region
+EXECUTABLES=cut_region box_test
 
 # Makefile rules
-all: cut_region
+all: cut_region box_test
 
 cut_region: $(SOURCE) cut_region.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o cut_region cut_region.cc
+
+box_test: $(SOURCE) box_test.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o box_test box_test.cc
 
 clean:
 	rm $(EXECUTABLES)
