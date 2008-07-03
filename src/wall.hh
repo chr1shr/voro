@@ -1,11 +1,11 @@
-// Voronoi calculation example code
+// Voro++, a 3D cell-based Voronoi library
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : October 19th 2007
+// Date     : July 1st 2008
 
-#ifndef FACETS_WALL_HH
-#define FACETS_WALL_HH
+#ifndef VOROPP_WALL_HH
+#define VOROPP_WALL_HH
 
 struct wall_sphere : public wall {
 	const int w_id;

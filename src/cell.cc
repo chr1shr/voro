@@ -1511,7 +1511,7 @@ fpoint voronoicell_base<n_option>::maxradsq() {
  * \param[in] os A output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position. */
 template<class n_option>
-void voronoicell_base<n_option>::dump_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
+void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
@@ -1523,26 +1523,26 @@ void voronoicell_base<n_option>::dump_pov(ostream &os,fpoint x,fpoint y,fpoint z
 	}
 }
 
-/** An overloaded version of the dump_pov routine, that outputs the edges of
+/** An overloaded version of the draw_pov routine, that outputs the edges of
  * the Voronoi cell (in POV-Ray format) to a file.
  * \param[in] filename The file to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::dump_pov(char *filename,fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_base<n_option>::draw_pov(char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	dump_pov(os,x,y,z);
+	draw_pov(os,x,y,z);
 	os.close();
 }
 
-/** An overloaded version of the dump_pov routine, that outputs the edges of the
+/** An overloaded version of the draw_pov routine, that outputs the edges of the
  * Voronoi cell (in POV-Ray format) to standard output.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::dump_pov(fpoint x,fpoint y,fpoint z) {
-	dump_pov(cout,x,y,z);
+inline void voronoicell_base<n_option>::draw_pov(fpoint x,fpoint y,fpoint z) {
+	draw_pov(cout,x,y,z);
 }
 
 /** Outputs the edges of the Voronoi cell (in gnuplot format) to an output stream.
@@ -1550,7 +1550,7 @@ inline void voronoicell_base<n_option>::dump_pov(fpoint x,fpoint y,fpoint z) {
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-void voronoicell_base<n_option>::dump_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
+void voronoicell_base<n_option>::draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
@@ -1561,26 +1561,26 @@ void voronoicell_base<n_option>::dump_gnuplot(ostream &os,fpoint x,fpoint y,fpoi
 	}
 }
 
-/** An overloaded version of the dump_gnuplot routine that writes directly to
+/** An overloaded version of the draw_gnuplot routine that writes directly to
  * a file.
  * \param[in] filename The name of the file to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::dump_gnuplot(char *filename,fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_base<n_option>::draw_gnuplot(char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	dump_gnuplot(os,x,y,z);
+	draw_gnuplot(os,x,y,z);
 	os.close();
 }
 
-/** An overloaded version of the dump_gnuplot routine, that prints to the
+/** An overloaded version of the draw_gnuplot routine, that prints to the
  * standard output.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::dump_gnuplot(fpoint x,fpoint y,fpoint z) {
-	dump_gnuplot(cout,x,y,z);
+inline void voronoicell_base<n_option>::draw_gnuplot(fpoint x,fpoint y,fpoint z) {
+	draw_gnuplot(cout,x,y,z);
 }
 
 /** Outputs the Voronoi cell in the POV mesh2 format, described in section
@@ -1593,7 +1593,7 @@ inline void voronoicell_base<n_option>::dump_gnuplot(fpoint x,fpoint y,fpoint z)
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::dump_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_base<n_option>::draw_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k,l,m,n;
 	os << "mesh2 {\nvertex_vectors {\n" << p << ",\n";
 	for(i=0;i<p;i++) {
@@ -1625,26 +1625,26 @@ inline void voronoicell_base<n_option>::dump_pov_mesh(ostream &os,fpoint x,fpoin
 	os << "}\ninside_vector <0,0,1>\n}\n";
 }
 
-/** An overloaded version of the dump_pov_mesh routine, that writes directly to a
+/** An overloaded version of the draw_pov_mesh routine, that writes directly to a
  * file.
  * \param[in] filename A filename to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::dump_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_base<n_option>::draw_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	dump_pov_mesh(os,x,y,z);
+	draw_pov_mesh(os,x,y,z);
 	os.close();
 }
 
-/** An overloaded version of the dump_pov_mesh routine, that prints to the
+/** An overloaded version of the draw_pov_mesh routine, that prints to the
  * standard output.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::dump_pov_mesh(fpoint x,fpoint y,fpoint z) {
-	dump_pov_mesh(cout,x,y,z);
+inline void voronoicell_base<n_option>::draw_pov_mesh(fpoint x,fpoint y,fpoint z) {
+	draw_pov_mesh(cout,x,y,z);
 }
 
 /** Randomly perturbs the points in the Voronoi cell by an amount r. */
@@ -1869,7 +1869,7 @@ void voronoicell_base<n_option>::check_facets() {
 
 /** This routine tests to see whether the cell intersects a plane by starting
  * from the guess point up. If up intersects, then it immediately returns true.
- * Otherwise, it calls the plane_intersect_track() routine.
+ * Otherwise, it calls the plane_intersects_track() routine.
  * \param[in] (x,y,z) The normal vector to the plane.
  * \param[in] rsq The distance along this vector of the plane.
  * \return false if the plane does not intersect the plane, true if it does.*/
@@ -1938,18 +1938,19 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 				for(us=0;us<ls;us++) {
 					tp=ed[up][us];
 					g=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
-					if(g>t) {ls=ed[up][nu[up]+us];up=tp;t=g;break;}
+					if(g>t) break;
 				}
 				if (us==ls) {
 					us++;
 					while(us<nu[up]) {
 						tp=ed[up][us];
 						g=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
-						if(g>t) {ls=ed[up][nu[up]+us];up=tp;t=g;break;}
+						if(g>t) break;
 						us++;
 					}
 					if (us==nu[up]) return false;
 				}
+				ls=ed[up][nu[up]+us];up=tp;t=g;
 			}
 			return true;
 		}

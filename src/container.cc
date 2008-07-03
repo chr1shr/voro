@@ -62,7 +62,7 @@ void container_base<r_option>::initialize_radii() {
 	for(zlo=0,zhi=zstep,lz=0;lz<hgrid;zlo=zhi,zhi+=zstep,lz++) {
 		for(ylo=0,yhi=ystep,ly=0;ly<hgrid;ylo=yhi,yhi+=ystep,ly++) {
 			for(xlo=0,xhi=xstep,lx=0;lx<hgrid;xlo=xhi,xhi+=xstep,l++,lx++) {
-				minr=large;
+				minr=large_number;
 				for(q=e[0]+1;q<seq_length;q++) {
 					f=e[q];
 					i=(f&127)-64;
@@ -144,7 +144,7 @@ container_base<r_option>::~container_base() {
 
 /** Dumps all the particle positions and identifies to a file. */
 template<class r_option>
-void container_base<r_option>::dump(ostream &os) {
+void container_base<r_option>::draw_particles(ostream &os) {
 	int c,l,i;
 	for(l=0;l<nxyz;l++) {
 		for(c=0;c<co[l];c++) {
@@ -155,27 +155,27 @@ void container_base<r_option>::dump(ostream &os) {
 	}
 }
 
-/** An overloaded version of the dump() routine, that just prints
+/** An overloaded version of the draw_particles() routine, that just prints
  * to standard output. */
 template<class r_option>
-void container_base<r_option>::dump() {
-	dump(cin);
+void container_base<r_option>::draw_particles() {
+	draw_particles(cin);
 }
 
-/** An overloaded version of the dump() routine, that outputs
+/** An overloaded version of the draw_particles() routine, that outputs
  * the particle positions to a file.
  * \param[in] filename the file to write to. */
 template<class r_option>
-void container_base<r_option>::dump(char *filename) {
+void container_base<r_option>::draw_particles(char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	dump(os);
+	draw_particles(os);
 	os.close();
 }
 
 /** Dumps all the particle positions in the POV-Ray format. */
 template<class r_option>
-void container_base<r_option>::dump_pov(ostream &os) {
+void container_base<r_option>::draw_particles_pov(ostream &os) {
 	int l,c;
 	os << "#declare particles=union{\n";
 	for(l=0;l<nxyz;l++) {
@@ -187,21 +187,21 @@ void container_base<r_option>::dump_pov(ostream &os) {
 	os << "}" << endl;
 }
 
-/** An overloaded version of the dump_pov() routine, that just prints
+/** An overloaded version of the draw_particles_pov() routine, that just prints
  * to standard output. */
 template<class r_option>
-void container_base<r_option>::dump_pov() {
-	dump_pov(cin);
+void container_base<r_option>::draw_particles_pov() {
+	draw_particles_pov(cin);
 }
 
-/** An overloaded version of the dump_pov() routine, that outputs
+/** An overloaded version of the draw_particles_pov() routine, that outputs
  * the particle positions to a file.
  * \param[in] filename the file to write to. */
 template<class r_option>
-void container_base<r_option>::dump_pov(char *filename) {
+void container_base<r_option>::draw_particles_pov(char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	dump_pov(os);
+	draw_particles_pov(os);
 	os.close();
 }
 
@@ -317,7 +317,7 @@ void container_base<r_option>::clear() {
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot. */
 template<class r_option>
-void container_base<r_option>::draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void container_base<r_option>::draw_cells_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
 	int q,s;
@@ -329,25 +329,25 @@ void container_base<r_option>::draw_gnuplot(char *filename,fpoint xmin,fpoint xm
 		for(q=0;q<co[s];q++) {
 			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.dump_gnuplot(os,x,y,z);
+				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_gnuplot(os,x,y,z);
 			}
 		}
 	} while((s=l1.inc(px,py,pz))!=-1);
 	os.close();
 }
 
-/** If only a filename is supplied to draw_gnuplot(), then assume that we are
+/** If only a filename is supplied to draw_cells_gnuplot(), then assume that we are
  * calculating the entire simulation region. */
 template<class r_option>
-void container_base<r_option>::draw_gnuplot(char *filename) {
-	draw_gnuplot(filename,ax,bx,ay,by,az,bz);
+void container_base<r_option>::draw_cells_gnuplot(char *filename) {
+	draw_cells_gnuplot(filename,ax,bx,ay,by,az,bz);
 }
 
 /** Computes the Voronoi cells for all particles within a box with corners
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot.*/
 template<class r_option>
-void container_base<r_option>::draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void container_base<r_option>::draw_cells_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
 	int q,s;
@@ -360,7 +360,7 @@ void container_base<r_option>::draw_pov(char *filename,fpoint xmin,fpoint xmax,f
 		for(q=0;q<co[s];q++) {
 			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.dump_pov(os,x,y,z);
+				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_pov(os,x,y,z);
 			}
 		}
 	} while((s=l1.inc(px,py,pz))!=-1);
@@ -368,11 +368,11 @@ void container_base<r_option>::draw_pov(char *filename,fpoint xmin,fpoint xmax,f
 	os.close();
 }
 
-/** If only a filename is supplied to draw_pov(), then assume that we are
+/** If only a filename is supplied to draw_cells_pov(), then assume that we are
  * calculating the entire simulation region.*/
 template<class r_option>
-void container_base<r_option>::draw_pov(char *filename) {
-	draw_pov(filename,ax,bx,ay,by,az,bz);
+void container_base<r_option>::draw_cells_pov(char *filename) {
+	draw_cells_pov(filename,ax,bx,ay,by,az,bz);
 }
 
 

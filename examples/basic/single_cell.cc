@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#include "../../src/voro++.cc"
+#include "voro++.cc"
 
 // This function returns a random floating point number between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -13,8 +13,8 @@ int main() {
 	double x,y,z,rsq,r;
 	voronoicell v;
 	
-	// Initialize the Voronoi cell to be a cube of side length 2, centered on
-	// the origin
+	// Initialize the Voronoi cell to be a cube of side length 2, centered
+	// on the origin
 	v.init(-1,1,-1,1,-1,1);
 
 	// Cut the cell by 250 random planes which are all a distance 1 away

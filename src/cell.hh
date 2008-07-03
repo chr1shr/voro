@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#ifndef FACETS_CELL_HH
-#define FACETS_CELL_HH
+#ifndef VOROPP_CELL_HH
+#define VOROPP_CELL_HH
 
 #include "config.hh"
 #include <cstdio>
@@ -148,15 +148,15 @@ class voronoicell_base {
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e);
-		void dump_pov(ostream &os,fpoint x,fpoint y,fpoint z);
-		inline void dump_pov(char *filename,fpoint x,fpoint y,fpoint z);
-		inline void dump_pov(fpoint x,fpoint y,fpoint z);
-		void dump_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z);		
-		inline void dump_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z);
-		inline void dump_pov_mesh(fpoint x,fpoint y,fpoint z);
-		void dump_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
-		inline void dump_gnuplot(char *filename,fpoint x,fpoint y,fpoint z);
-		inline void dump_gnuplot(fpoint x,fpoint y,fpoint z);
+		void draw_pov(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov(fpoint x,fpoint y,fpoint z);
+		void draw_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z);		
+		inline void draw_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov_mesh(fpoint x,fpoint y,fpoint z);
+		void draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void draw_gnuplot(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_gnuplot(fpoint x,fpoint y,fpoint z);
 		inline void check_relations();
 		inline void check_duplicates();
 		inline void construct_relations();

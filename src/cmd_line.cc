@@ -1,13 +1,13 @@
-// Voronoi calculation example code
+// Voro++, a 3D cell-based Voronoi library
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : January 21st 2008
+// Date     : July 1st 2008
 
 #include "cell.cc"
 #include "container.cc"
 
-// A guess for the memory allocation per region.
+// A guess for the memory allocation per region
 const int memory=8;
 
 // A maximum allowed number of regions, to prevent enormous amounts of memory
@@ -17,7 +17,7 @@ const int max_regions=16777216;
 // This message gets displayed if the command line arguments are incorrect
 // or if the user requests the help flag
 void help_message() {
-	cout << "Syntax: facets [opts] <length_scale> <x_min> <x_max> <y_min>\n";
+	cout << "Syntax: voro++ [opts] <length_scale> <x_min> <x_max> <y_min>\n";
 	cout << "                      <y_max> <z_min> <z_max> <filename>\n\n";
 	cout << "<length_scale> should be set to a typical particle diameter,\n";
 	cout << "or typical distance between particles. It is used to configure\n";
@@ -132,7 +132,7 @@ int main(int argc,char **argv) {
 
 		if (gnuplot_output) {
 			sprintf(buffer,"%s.gnu",argv[i+7]);
-			con.draw_gnuplot(buffer);
+			con.draw_cells_gnuplot(buffer);
 		}
 	} else {
 		container con(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,
@@ -144,7 +144,7 @@ int main(int argc,char **argv) {
 
 		if (gnuplot_output) {
 			sprintf(buffer,"%s.gnu",argv[i+6]);
-			con.draw_gnuplot(buffer);
+			con.draw_cells_gnuplot(buffer);
 		}
 	}
 	return 0;

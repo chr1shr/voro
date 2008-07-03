@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#ifndef FACETS_CONTAINER_HH
-#define FACETS_CONTAINER_HH
+#ifndef VOROPP_CONTAINER_HH
+#define VOROPP_CONTAINER_HH
 
 #include "config.hh"
 #include <cstdio>
@@ -29,21 +29,21 @@ class container_base {
 	public:
 		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container_base();
-		void dump(char *filename);
-		void dump();
-		void dump(ostream &os);
-		void dump_pov(char *filename);
-		void dump_pov();
-		void dump_pov(ostream &os);
+		void draw_particles(char *filename);
+		void draw_particles();
+		void draw_particles(ostream &os);
+		void draw_particles_pov(char *filename);
+		void draw_particles_pov();
+		void draw_particles_pov(ostream &os);
 		void import(istream &is);
 		inline void import();
 		inline void import(char *filename);
 		void region_count();
 		void clear();
-		void draw_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
-		inline void draw_gnuplot(char *filename);
-		void draw_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
-		inline void draw_pov(char *filename);
+		void draw_cells_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		inline void draw_cells_gnuplot(char *filename);
+		void draw_cells_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		inline void draw_cells_pov(char *filename);
 		void store_cell_volumes(fpoint *bb);
 		void print_all(ostream &os);
 		void print_all();

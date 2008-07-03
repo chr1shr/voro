@@ -2,9 +2,9 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : February 27th 2008
+// Date     : July 1st 2008
 
-#include "cell.cc"
+#include "voro++.cc"
 
 // Golden ratio constants
 const double Phi=0.5*(1+sqrt(5.0));
