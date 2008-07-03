@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : October 19th 2007
+// Date     : July 1st 2008
 
 #include "cell.cc"
 
@@ -19,9 +19,6 @@ int main() {
 	// the origin
 	v.init(-1,1,-1,1,-1,1);
 
-	// Output the initial cell	
-	v.dump_gnuplot("intest",0,0,0);
-	
 	// Plane cutting
 	for(phi=0;phi<2*pi-0.5*step;phi+=step) {
 		x=cos(theta);y=cos(phi)*sin(theta);z=sin(phi)*sin(theta);
@@ -31,9 +28,13 @@ int main() {
 		v.plane(y,-x,z,1);
 		v.plane(y,z,x,1);
 		v.plane(y,z,-x,1);
-//		v.check_relations();
 	}
 
+	// Check that the relation table is correct, and that there are no
+	// duplicate edges
+	v.check_relations();
+	v.check_duplicates();
+
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.dump_gnuplot("test",0,0,0);
+	v.draw_gnuplot("degenerate.gnu",0,0,0);
 }

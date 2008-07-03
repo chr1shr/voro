@@ -9,9 +9,9 @@
 #include "wall.cc"
 
 // Set up constants for the container geometry
-const fpoint x_min=-6.5,x_max=6.5;
-const fpoint y_min=-6.5,y_max=6.5;
-const fpoint z_min=0,z_max=18.5;
+const double x_min=-2,x_max=2;
+const double y_min=-2,y_max=2;
+const double z_min=-2,z_max=2;
 
 // Set up the number of blocks that the container is divided
 // into
@@ -19,12 +19,15 @@ const int n_x=7,n_y=7,n_z=14;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=100000;
+const int particles=100;
 
-// This function returns a random fpoint between 0 and 1
-fpoint rnd() {return fpoint(rand())/RAND_MAX;}
+// This function returns a random double between 0 and 1
+double rnd() {return double(rand())/RAND_MAX;}
 
 int main() {
+	int i=0;
+	double x,y,z;
+
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
 	// 8 particles within each computational block.
@@ -32,15 +35,21 @@ int main() {
 			false,false,false,8);
 
 	// Add a cylindrical wall to the container
-	wall_cylinder cyl(0,0,0,0,0,1,6);
-	con.add_wall(cyl);
+	wall_plane p1(1,1,1,1);con.add_wall(p1);
+	wall_plane p2(-1,-1,1,1);con.add_wall(p2);
+	wall_plane p3(1,-1,-1,1);con.add_wall(p3);
+	wall_plane p4(-1,1,-1,1);con.add_wall(p4);
 
-	// Import the particles from a file
-	con.import("pack_small_cylinder");
+	while(i<particles) {
+		x=x_min+rnd()*(x_max-x_min);
+		y=y_min+rnd()*(y_max-y_min);
+		z=z_min+rnd()*(z_max-z_min);
+		if (con.point_inside(x,y,z)) {
+			con.put(i,x,y,z);i++;
+		}
+	}
 
-	// Save the Voronoi network of all the particles to a text file
-	// in a format ready for plotting by gnuplot
-	con.draw_pov("voronoi_cells.pov");
-
-	con.dump_pov("particles.pov");
+	// Output the particle positions and the Voronoi cells
+	con.draw_particles("tetrahedron_p.gnu");
+	con.draw_cells_gnuplot("tetrahedron_v.gnu");
 }
