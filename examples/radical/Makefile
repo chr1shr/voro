@@ -26,4 +26,4 @@ radical_test: $(SOURCE) radical_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o radical_test radical_test.cc
 
 clean:
-	rm $(EXECUTABLES)
+	rm -f $(EXECUTABLES)

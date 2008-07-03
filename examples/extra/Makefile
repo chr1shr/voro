@@ -29,4 +29,4 @@ box_cut: $(SOURCE) box_cut.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o box_cut box_cut.cc
 
 clean:
-	rm $(EXECUTABLES)
+	rm -f $(EXECUTABLES)

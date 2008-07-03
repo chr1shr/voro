@@ -35,4 +35,4 @@ import: $(SOURCE) import.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o import import.cc
 
 clean:
-	rm $(EXECUTABLES)
+	rm -f $(EXECUTABLES)
