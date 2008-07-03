@@ -1,4 +1,8 @@
 #!/usr/bin/perl
+# This script can be used to generate random lists of particles in the unit
+# box 0<x<1, 0<y<1, 0<z<1, that can be used as test input to voro++. The -r
+# switch adds extra radial information for use with the Voronoi radical
+# tessellation.
 use Getopt::Std;
 getopts("hr:");
 

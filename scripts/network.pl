@@ -1,3 +1,7 @@
+#!/usr/bin/perl
+# This script takes a .vol file that has neighbor information, and creates a
+# map of the network, by drawing a line between all particles which are
+# neighbors
 open A,"@ARGV[0].vol" or die "Can't open input file";
 open B,">@ARGV[0].net" or die "Can't open output file";
 
