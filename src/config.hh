@@ -31,7 +31,7 @@ const int max_wall_size=2048;
 
 // This sets the numerical tolerance. Below these values, the plane cutting
 // snaps to existing vertices rather than creating new ones.
-#ifdef VORO++_SINGLE_PRECISION
+#ifdef VOROPP_SINGLE_PRECISION
 typedef float fpoint;
 const fpoint tolerance=1e-5;
 const fpoint tolerance2=2e-5;

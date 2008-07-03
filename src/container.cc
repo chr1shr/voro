@@ -375,6 +375,20 @@ void container_base<r_option>::draw_cells_pov(char *filename) {
 	draw_cells_pov(filename,ax,bx,ay,by,az,bz);
 }
 
+/** This function computes all the cells in the container, but does nothing
+ * with the output. It is useful for measuring the pure computation time
+ * of the Voronoi algorithm, without any extraneous calculations, such as
+ * volume evaluation or cell output. */
+template<class r_option>
+void container_base<r_option>::compute_all_cells() {
+	voronoicell c;
+	int i,j,k,ijk=0,q;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++) {
+		for(q=0;q<co[ijk];q++) compute_cell(c,i,j,k,ijk,q);
+		ijk++;
+	}
+}
+
 
 /** Computes the Voronoi volumes for all the particles, and stores the
  * results according to the particle label in the fpoint array bb.*/
