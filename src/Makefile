@@ -20,7 +20,7 @@ voropp: $(SOURCE) cmd_line.cc
 	$(CC) $(CFLAGS) -o ../bin/voro++ cmd_line.cc
 
 clean:
-	rm $(EXECUTABLES)
+	rm -f $(EXECUTABLES)
 
 doc: Doxyfile $(SOURCE)
 	doxygen Doxyfile

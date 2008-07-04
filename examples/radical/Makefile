@@ -17,13 +17,13 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/voro++.hh
 
 # List of executables
-EXECUTABLES=radical_test
+EXECUTABLES=radical
 
 # Makefile rules
-all: radical_test
+all: radical
 
-radical_test: $(SOURCE) radical_test.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o radical_test radical_test.cc
+radical: $(SOURCE) radical.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o radical radical.cc
 
 clean:
 	rm -f $(EXECUTABLES)

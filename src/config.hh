@@ -29,6 +29,15 @@ const int max_delete2_size=16777216;
 const int max_particle_memory=16777216;
 const int max_wall_size=2048;
 
+// Voro++ can print a number of different status and debugging messages to
+// notify the user of special behavior, and this macro sets the amount which
+// are displayed. At level 0, no messages are printed. At level 1, messages
+// about unusual cases during cell construction are printed, such as when the
+// plane routine bails out due to floating point problems. At level 2, general
+// messages about memory expansion are printed. At level 3, technical details
+// about memory management are printed.
+#define VOROPP_VERBOSE 0
+
 // This sets the numerical tolerance. Below these values, the plane cutting
 // snaps to existing vertices rather than creating new ones.
 #ifdef VOROPP_SINGLE_PRECISION

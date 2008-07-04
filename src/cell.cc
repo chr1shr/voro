@@ -67,12 +67,16 @@ void voronoicell_base<n_option>::add_memory(int i) {
 		neighbor.allocate(i,init_n_vertices);
 		mep[i]=new int[init_n_vertices*s];
 		mem[i]=init_n_vertices;
+#if VOROPP_VERBOSE >=2
 		cerr << "Order " << i << " vertex memory created " << endl;
+#endif
 	} else {
 		int j=0,k,*l;
 		mem[i]*=2;
 		if (mem[i]>max_n_vertices) throw fatal_error("Point memory allocation exceeded absolute maximum");
+#if VOROPP_VERBOSE >=2
 		cerr << "Order " << i << " vertex memory scaled up to " << mem[i] << endl;
+#endif
 		l=new int[s*mem[i]];
 		int m=0;
 		neighbor.allocate_aux1(i);
@@ -91,7 +95,9 @@ void voronoicell_base<n_option>::add_memory(int i) {
 					}
 				}
 				if(o==stack2) throw fatal_error("Couldn't relocate dangling pointer");
+#if VOROPP_VERBOSE >=3
 				cerr << "Relocated dangling pointer" << endl;
+#endif
 			}
 			for(k=0;k<s;k++,j++) l[j]=mep[i][j];
 			for(k=0;k<i;k++,m++) neighbor.copy_to_aux1(i,m);
@@ -110,7 +116,9 @@ template<class n_option>
 void voronoicell_base<n_option>::add_memory_vertices() {
 	int i=2*current_vertices,j,**pp,*pnu;
 	if (i>max_vertices) throw fatal_error("Vertex memory allocation exceeded absolute maximum");
+#if VOROPP_VERBOSE >=2
 	cerr << "Vertex memory scaled up to " << i << endl;
+#endif
 	fpoint *ppts;
 	pp=new int*[i];
 	for(j=0;j<current_vertices;j++) pp[j]=ed[j];
@@ -133,7 +141,9 @@ template<class n_option>
 void voronoicell_base<n_option>::add_memory_vorder() {
 	int i=2*current_vertex_order,j,*p1,**p2;
 	if (i>max_vertex_order) throw fatal_error("Vertex order memory allocation exceeded absolute maximum");
+#if VOROPP_VERBOSE >=2
 	cerr << "Vertex order memory scaled up to " << i << endl;
+#endif
 	p1=new int[i];
 	for(j=0;j<current_vertex_order;j++) p1[j]=mem[j];while(j<i) p1[j++]=0;
 	delete [] mem;mem=p1;
@@ -154,7 +164,9 @@ template<class n_option>
 void voronoicell_base<n_option>::add_memory_ds() {
 	int i=2*current_delete_size,j,*pds;
 	if (i>max_delete_size) throw fatal_error("Delete stack 1 memory allocation exceeded absolute maximum");
+#if VOROPP_VERBOSE >=2
 	cerr << "Delete stack 1 memory scaled up to " << i << endl;
+#endif
 	pds=new int[i];
 	for(j=0;j<current_delete_size;j++) pds[j]=ds[j];
 	delete [] ds;ds=pds;
@@ -168,7 +180,9 @@ template<class n_option>
 void voronoicell_base<n_option>::add_memory_ds2() {
 	int i=2*current_delete2_size,j,*pds2;
 	if (i>max_delete2_size) throw fatal_error("Delete stack 2 memory allocation exceeded absolute maximum");
+#if VOROPP_VERBOSE >=2
 	cerr << "Delete stack 2 memory scaled up to " << i << endl;
+#endif
 	pds2=new int[i];
 	for(j=0;j<current_delete2_size;j++) pds2[j]=ds2[j];
 	delete [] ds2;ds2=pds2;
@@ -636,7 +650,9 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		// cause the usual search routine to fail. In the fall-back
 		// routine, we just test every edge to find one straddling
 		// the plane.
+#if VOROPP_VERBOSE >=1
 		cerr << "Bailed out of convex calculation\n";
+#endif
 		qw=1;lw=0;
 		for(qp=0;qp<p;qp++) {
 			qw=sure.test(qp,q);
@@ -1273,7 +1289,9 @@ inline bool voronoicell_base<n_option>::collapse_order2() {
 		i=--mec[2];
 		j=mep[2][5*i];k=mep[2][5*i+1];
 		if (j==k) {
+#if VOROPP_VERBOSE >=1			
 			cerr << "Order two vertex joins itself" << endl;
+#endif			
 			return false;
 		}
 
@@ -1327,7 +1345,9 @@ inline bool voronoicell_base<n_option>::collapse_order1() {
 	int i,j,k;
 	while(mec[1]>0) {
 		up=0;
+#if VOROPP_VERBOSE >=1		
 		cerr << "Order one collapse" << endl;
+#endif
 		i=--mec[1];
 		j=mep[1][3*i];k=mep[1][3*i+1];
 		i=mep[1][3*i+2];
@@ -1688,7 +1708,9 @@ int suretest::check_marginal(int n,fpoint &ans) {
 	if (sc==2*current_marginal) {
 		i=2*current_marginal;
 		if (i>max_marginal) throw fatal_error("Marginal case buffer allocation exceeded absolute maximum");
+#if VOROPP_VERBOSE >=2
 		cerr << "Marginal cases buffer scaled up to " << i << endl;
+#endif
 		int *psn=new int[2*i];
 		for(int j=0;j<2*current_marginal;j++) psn[j]=sn[j];
 		delete [] sn;sn=psn;
@@ -1927,7 +1949,9 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 			up=tp;
 			while (t<rsq) {
 				if (++count>=p) {
+#if VOROPP_VERBOSE >=1
 					cerr << "Bailed out of convex calculation" << endl;
+#endif
 					for(tp=0;tp<p;tp++) if (x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) return true;
 					return false;
 				}

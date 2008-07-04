@@ -245,6 +245,9 @@ template<class r_option>
 void container_base<r_option>::add_particle_memory(int i) {
 	int *idp;fpoint *pp;
 	int l,nmem=2*mem[i];
+#if VOROPP_VERBOSE >=3
+	cerr << "Particle memory in region " << i << " scaled up to " << nmem << endl;
+#endif
 	if(nmem>max_particle_memory) throw fatal_error("Absolute maximum memory allocation exceeded");
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
@@ -260,6 +263,9 @@ template<class r_option>
 inline void container_base<r_option>::add_list_memory() {
 	int i,j=0,*ps;
 	ps=new int[s_size*2];
+#if VOROPP_VERBOSE >=2
+	cerr << "List memory scaled up to " << s_size*2 << endl;
+#endif
 	if(s_start<=s_end) {
 		for(i=s_start;i<s_end;i++) ps[j++]=sl[i];
 	} else {
@@ -383,9 +389,8 @@ template<class r_option>
 void container_base<r_option>::compute_all_cells() {
 	voronoicell c;
 	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++) {
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
 		for(q=0;q<co[ijk];q++) compute_cell(c,i,j,k,ijk,q);
-		ijk++;
 	}
 }
 
@@ -396,20 +401,27 @@ template<class r_option>
 void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
 	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) {
-		for(j=0;j<ny;j++) {
-			for(i=0;i<nx;i++) {
-				for(q=0;q<co[ijk];q++) {
-					if (compute_cell(c,i,j,k,ijk,q)) {
-						bb[id[ijk][q]]=c.volume();
-					} else {
-						bb[id[ijk][q]]=0;
-					}
-				}
-				ijk++;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(q=0;q<co[ijk];q++) {
+			if (compute_cell(c,i,j,k,ijk,q)) {
+				bb[id[ijk][q]]=c.volume();
+			} else {
+				bb[id[ijk][q]]=0;
 			}
 		}
 	}
+}
+
+/** Computes the Voronoi volumes for all the particles, and stores the
+ * results according to the particle label in the fpoint array bb.*/
+template<class r_option>
+fpoint container_base<r_option>::sum_cell_volumes() {
+	voronoicell c;
+	int i,j,k,ijk=0,q;fpoint vol=0;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(q=0;q<co[ijk];q++) if (compute_cell(c,i,j,k,ijk,q)) vol+=c.volume();
+	}
+	return vol;
 }
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
@@ -419,22 +431,17 @@ template<class n_option>
 inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_option> &c) {
 	fpoint x,y,z;
 	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) {
-		for(j=0;j<ny;j++) {
-			for(i=0;i<nx;i++) {
-				for(q=0;q<co[ijk];q++) {
-					x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
-					os << id[ijk][q] << " " << x << " " << y << " " << z;
-					radius.print(os,ijk,q);
-					if (compute_cell(c,i,j,k,ijk,q,x,y,z)) {
-						os << " " << c.volume();
-						c.neighbors(os);		
-						os << "\n";
-					} else {
-						os << " 0\n";
-					}
-				}
-				ijk++;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(q=0;q<co[ijk];q++) {
+			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
+			os << id[ijk][q] << " " << x << " " << y << " " << z;
+			radius.print(os,ijk,q);
+			if (compute_cell(c,i,j,k,ijk,q,x,y,z)) {
+				os << " " << c.volume();
+				c.neighbors(os);		
+				os << "\n";
+			} else {
+				os << " 0\n";
 			}
 		}
 	}

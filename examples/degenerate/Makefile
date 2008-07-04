@@ -29,4 +29,4 @@ degenerate2: $(SOURCE) degenerate2.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o degenerate2 degenerate2.cc
 
 clean:
-	rm $(EXECUTABLES)
+	rm -f $(EXECUTABLES)

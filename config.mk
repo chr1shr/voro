@@ -11,11 +11,11 @@
 #switch the code from using double floating point arithmetic to just single.
 #See config.hh for more details.
 CC=g++
-CFLAGS=-Wall -pedantic -O3
+CFLAGS=-Wall -ansi -pedantic -O3
 
 #These optional compiler flags for the GNU C++ compiler force more function
 #inlining to take place. Since the code makes heavy use of inlined functions,
 #this can result in marginally better performance. On Apple systems, including
 #the "-fast" option can also create marginal improvements, but this option
 #will break on some Linux and Cygwin systems.
-CFLAGS=-Wall -pedantic -O3 --param large-function-growth=1000 --param max-inline-insns-single=2000 -Winline
+#CFLAGS=-Wall -pedantic -O3 --param large-function-growth=1000 --param max-inline-insns-single=2000 -Winline

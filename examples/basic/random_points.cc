@@ -25,9 +25,7 @@ double rnd() {return double(rand())/RAND_MAX;}
 
 int main() {
 	int i;
-	double *bb;
-	bb=new double[particles];
-	double v=0,x,y,z;
+	double x,y,z;
 
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
@@ -42,20 +40,16 @@ int main() {
 		z=z_min+rnd()*(z_max-z_min);
 		con.put(i,x,y,z);
 	}
+
+	// Sum up the volumes, and check that this matches the container volume
+	double vvol=con.sum_cell_volumes();
+	cout << "Container volume : " << cvol << "\n";
+	cout << "Voronoi volume   : " << vvol << "\n";
+	cout << "Difference       : " << vvol-cvol << endl;
 	
 	// Output the particle positions in gnuplot format
 	con.draw_particles("random_points.gnu");
 	
 	// Output the Voronoi cells in gnuplot format
 	con.draw_cells_gnuplot("random_points2.gnu");
-
-	// Compute the volumes of all the Voronoi cells, and store them in the
-	// bb[] array
-	con.store_cell_volumes(bb);
-
-	// Sum up the volumes, and check that this matches the container volume
-	for(i=0;i<particles;i++) v+=bb[i];
-	cout << "Container volume : " << cvol << "\n";
-	cout << "Voronoi volume   : " << v << "\n";
-	cout << "Difference       : " << v-cvol << endl;
 }

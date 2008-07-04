@@ -45,6 +45,7 @@ class container_base {
 		void draw_cells_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void draw_cells_pov(char *filename);
 		void store_cell_volumes(fpoint *bb);
+		fpoint sum_cell_volumes();
 		void compute_all_cells();
 		void print_all(ostream &os);
 		void print_all();

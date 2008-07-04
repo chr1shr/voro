@@ -9,7 +9,7 @@
 using namespace std;
 
 #ifndef NNN
-#define NNN=26
+#define NNN 26
 #endif
 
 // Set up constants for the container geometry

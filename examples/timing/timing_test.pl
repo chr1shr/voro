@@ -1,5 +1,5 @@
 @range=(10..40);
-$tries=3;
+$tries=1;
 
 foreach $r (@range) {
 	system "g++ -I../../src -DNNN=$r -o timing_test -O3 -pedantic -Wall timing_test.cc";

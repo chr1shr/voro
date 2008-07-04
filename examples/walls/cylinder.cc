@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : October 19th 2007
+// Date     : July 1st 2008
 
 #include "voro++.cc"
 
@@ -10,6 +10,8 @@
 const fpoint x_min=-6.5,x_max=6.5;
 const fpoint y_min=-6.5,y_max=6.5;
 const fpoint z_min=0,z_max=18.5;
+
+// Set the computational grid size
 const int n_x=7,n_y=7,n_z=14;
 
 int main() {
