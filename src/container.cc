@@ -180,6 +180,7 @@ void container_base<r_option>::draw_particles_pov(ostream &os) {
 	os << "#declare particles=union{\n";
 	for(l=0;l<nxyz;l++) {
 		for(c=0;c<co[l];c++) {
+			os << "// id " << id[l][c] << "\n";
 			os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
 			   << p[l][sz*c+2] << ">," << radius.rad(l,c) << "}\n";
 		}
@@ -364,6 +365,7 @@ void container_base<r_option>::draw_cells_pov(char *filename,fpoint xmin,fpoint 
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(q=0;q<co[s];q++) {
+			os << "// cell " << id[s][q] << "\n";
 			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_pov(os,x,y,z);
