@@ -17,10 +17,13 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/voro++.hh
 
 # List of executables
-EXECUTABLES=cut_region box_cut
+EXECUTABLES=cut_region box_cut superellipsoid
 
 # Makefile rules
-all: cut_region box_cut
+all: cut_region box_cut superellipsoid
+
+superellipsoid: $(SOURCE) superellipsoid.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o superellipsoid superellipsoid.cc
 
 cut_region: $(SOURCE) cut_region.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o cut_region cut_region.cc
