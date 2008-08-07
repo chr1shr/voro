@@ -1314,7 +1314,8 @@ inline int facets_loop::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 }
 
-/** Adds a wall to the container. */
+/** Adds a wall to the container.
+ * \param[in] &w a wall object to be added.*/
 template<class r_option>
 void container_base<r_option>::add_wall(wall& w) {
 	if(wall_number==current_wall_size) {
@@ -1328,15 +1329,23 @@ void container_base<r_option>::add_wall(wall& w) {
 	walls[wall_number++]=&w;
 }
 
+/** Sets the radius of the jth particle in region i to r, and updates the maximum particle radius.
+ * \param[in] i the region of the particle to consider.
+ * \param[in] j the number of the particle within the region.
+ * \param[in] r the radius to set. */
 inline void radius_poly::store_radius(int i,int j,fpoint r) {
 	cc->p[i][4*j+3]=r;
 	if(r>max_radius) max_radius=r;
 }
 
+/** Clears the stored maximum radius. */
 inline void radius_poly::clear_max() {
 	max_radius=0;
 }
 
+/** Imports a list of particles from an input stream for the monodisperse case
+ * where no radius information is expected.
+ * \param[in] &is an input stream to read from. */
 inline void radius_mono::import(istream &is) {
 	int n;fpoint x,y,z;
 	is >> n >> x >> y >> z;
@@ -1346,6 +1355,9 @@ inline void radius_mono::import(istream &is) {
 	}
 }
 
+/** Imports a list of particles from an input stream for the polydisperse case,
+ * where both positions and particle radii are both stored.
+ * \param[in] &is an input stream to read from. */
 inline void radius_poly::import(istream &is) {
 	int n;fpoint x,y,z,r;
 	is >> n >> x >> y >> z >> r;
@@ -1355,40 +1367,92 @@ inline void radius_poly::import(istream &is) {
 	}
 }
 
+/** Initializes the radius_poly class for a new Voronoi cell calculation,
+ * by computing the radial cut-off value, based on the current particle's
+ * radius and the maximum radius of any particle in the packing.
+ * \param[in] ijk the region to consider.
+ * \param[in] s the number of the particle within the region. */
 inline void radius_poly::init(int ijk,int s) {
 	crad=cc->p[ijk][4*s+3];
 	mul=1+(crad*crad-max_radius*max_radius)/((max_radius+crad)*(max_radius+crad));
 	crad*=crad;
 }
 
+/** This routine is called when deciding when to terminate the computation
+ * of a Voronoi cell. For the Voronoi radical tessellation for a polydisperse
+ * case, this routine multiplies the cutoff value by the scaling factor that
+ * was precomputed in the init() routine.
+ * \param[in] lrs a cutoff radius for the cell computation.
+ * \return The value scaled by the factor mul. */
 inline fpoint radius_poly::cutoff(fpoint lrs) {
 	return mul*lrs;
 }
 
+/** This routine is called when deciding when to terminate the computation
+ * of a Voronoi cell. For the monodisperse case, this routine just returns
+ * the same value that is passed to it.
+ * \param[in] lrs a cutoff radius for the cell computation.
+ * \return The same value passed to it. */
 inline fpoint radius_mono::cutoff(fpoint lrs) {
 	return lrs;
 }
 
+/** Returns radius of particle, by just supplying a generic value of 0.5.
+ * \param[in] l the region to consider.
+ * \param[in] c the number of the particle within the region.
+ * \return A value of 0.5.*/
 inline fpoint radius_mono::rad(int l,int c) {
 	return 0.5;
 }
 
+/** Returns the radius of a particle.
+ * \param[in] l the region to consider.
+ * \param[in] c the number of the particle within the region.
+ * \return The particle radius.*/
 inline fpoint radius_poly::rad(int l,int c) {
 	return cc->p[l][4*c];
 }
 
+/** Scales the position of a plane according to the relative sizes
+ * of the particle radii.
+ * \param[in] rs the distance between the Voronoi cell and the cutting plane.
+ * \param[in] t the region to consider
+ * \param[in] q the number of the particle within the region.
+ * \return The scaled position. */
 inline fpoint radius_poly::scale(fpoint rs,int t,int q) {
 	return rs+crad-cc->p[t][4*q+3]*cc->p[t][4*q+3];
 }
 
+/** Applies a blank scaling to the position of a cutting plane.
+ * \param[in] rs the distance between the Voronoi cell and the cutting plane.
+ * \param[in] t the region to consider
+ * \param[in] q the number of the particle within the region.
+ * \return The scaled position, which for this case, is equal to rs. */
 inline fpoint radius_mono::scale(fpoint rs,int t,int q) {
 	return rs;
 }
 
+/** Prints the radius of a particle to an open file stream.
+ * \param[in] &os an open file stream.
+ * \param[in] ijk the region to consider.
+ * \param[in] q the number of the particle within the region. */
 inline void radius_poly::print(ostream &os,int ijk,int q) {
 	os << " " << cc->p[ijk][4*q+3];
 }
 
+/** This routine checks to see whether a point is within a particular distance
+ * of a nearby region. If the point is within the distance of the region, then
+ * the routine returns true, and computes the maximum distance from the point
+ * to the region. Otherwise, the routine returns false.
+ * \param[in] (di,dj,dk) The position of the nearby region to be tested,
+ * relative to the region that the point is in. 
+ * \param[in] (fx,fy,fz) The displacement of the point within its region.
+ * \param[in] (gxs,gys,gzs) The minimum squared distances from the point to the
+ * sides of its region.
+ * \param[in] &crs A reference in which to return the maximum distance to the
+ * region (only computed if the routine returns positive).
+ * \param[in] mrs The distance to be tested.
+ * \return False if the region is further away than mrs, true if the region in within mrs.*/
 template<class r_option>
 inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gxs,fpoint gys,fpoint gzs,fpoint &crs,fpoint mrs) {
 	fpoint xlo,ylo,zlo;

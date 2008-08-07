@@ -19,14 +19,15 @@ int main() {
 
 	// Cut the cell by 1200 random planes which are all a distance 1 away
 	// from the origin, to make an approximation to a sphere
-	for(int i=0;i<1200;i++) {
+	for(int i=0;i<2500;i++) {
 		x=2*rnd()-1;
 		y=2*rnd()-1;
 		z=2*rnd()-1;
 		rsq=x*x*x*x+y*y*y*y+z*z*z*z;
 		if(rsq>0.01&&rsq<1) {
-			r=sqrt(1/(x*x+y*y+z*z));x*=r;y*=r;z*=r;
-			v.plane(x,y,z,sqrt(sqrt(rsq)));
+			r=1/sqrt(sqrt(rsq));
+			x*=r;y*=r;z*=r;
+			v.plane(x*x*x,y*y*y,z*z*z,x*x*x*x+y*y*y*y+z*z*z*z);
 		}
 	}
 	

@@ -218,7 +218,7 @@ void voronoicell_base<n_option>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint
 }
 
 /** Initializes a Voronoi cell as a regular octahedron.
- * \param l The distance from the octahedron center to a vertex. Six vertices
+ * \param[in] l The distance from the octahedron center to a vertex. Six vertices
  * are initialized at (-l,0,0), (l,0,0), (0,-l,0), (0,l,0), (0,0,-l), and (0,0,l).*/
 template<class n_option>
 inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
@@ -1902,10 +1902,10 @@ bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpo
 	return true;
 }
 
-/* This routine tests to see if a cell intersects a plane. It first tests a random
- * sample of approximately sqrt(p)/4 points. If any of those are intersect, then it
- * immediately returns true. Otherwise, it takes the closest point and passes that
- * to plane_intersect_track() routine.
+/** This routine tests to see if a cell intersects a plane. It first tests a
+ * random sample of approximately sqrt(p)/4 points. If any of those are
+ * intersect, then it immediately returns true. Otherwise, it takes the closest
+ * point and passes that to plane_intersect_track() routine.
  * \param[in] (x,y,z) The normal vector to the plane.
  * \param[in] rsq The distance along this vector of the plane.
  * \return false if the plane does not intersect the plane, true if it does.*/
@@ -2045,7 +2045,8 @@ inline void neighbor_track::init() {
 	ne[4]=q+12;ne[5]=q+15;ne[6]=q+18;ne[7]=q+21;
 }
 
-/** This initializes the neighbor information for an octahedron. */
+/** This initializes the neighbor information for an octahedron. The eight
+ * initial faces are assigned ID numbers from -1 to -8. */
 inline void neighbor_track::init_octahedron() {
 	int *q;
 	q=mne[4];
@@ -2058,7 +2059,8 @@ inline void neighbor_track::init_octahedron() {
 	ne[0]=q;ne[1]=q+4;ne[2]=q+8;ne[3]=q+12;ne[4]=q+16;ne[5]=q+20;
 }
 
-/** This initializes the neighbor information for an octahedron. */
+/** This initializes the neighbor information for an tetrahedron. The four
+ * initial faces are assigned ID numbers from -1 to -4.*/
 inline void neighbor_track::init_tetrahedron() {
 	int *q;
 	q=mne[3];

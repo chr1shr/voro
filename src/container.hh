@@ -213,27 +213,51 @@ class container_base {
 		friend class radius_poly;
 };
 
+/** This class encapsulates all the routines that are required for carrying out
+ * a standard Voronoi tessellation that would be appropriate for a monodisperse
+ * system. When the container class is instantiated using this class, all
+ * information about particle radii is switched off. Since all these functions
+ * are declared inline, there should be no loss of speed. */
 class radius_mono {
 	public:
-		container_base<radius_mono> *cc;
+		/** The number of floating point numbers allocated for each
+		 * particle in the container, set to 3 for this case for the x,
+		 * y, and z positions. */
 		const int mem_size;
-		radius_mono(container_base<radius_mono> *icc) : cc(icc), mem_size(3) {};
+		/** This constructor sets a pointer back to the container class
+		 * that created it, and initializes the mem_size constant to 3.
+		 */
+		radius_mono(container_base<radius_mono> *icc) : mem_size(3), cc(icc) {};
 		inline void import(istream &is);
+		/** This is a blank placeholder function that does nothing. */
 		inline void store_radius(int i,int j,fpoint r) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void clear_max() {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void init(int s,int i) {};
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
+		/** This is a blank placeholder function that does nothing. */
 		inline void print(ostream &os,int ijk,int q) {};
 		inline fpoint rad(int l,int c);
+	private:	
+		container_base<radius_mono> *cc;
 };
 
+/** This class encapsulates all the routines that are required for carrying out
+ * the radical Voronoi tessellation that is appropriate for polydisperse sphere.
+ * When the container class is instantiated with this class, information about particle
+ * radii is switched on. */
 class radius_poly {
 	public:
-		container_base<radius_poly> *cc;
+		/** The number of floating point numbers allocated for each
+		 * particle in the container, set to 4 for this case for the x,
+		 * y, and z positions, plus the radius. */
 		const int mem_size;
-		fpoint max_radius,crad,mul;
-		radius_poly(container_base<radius_poly> *icc) : cc(icc), mem_size(4) {};
+		/** This constructor sets a pointer back to the container class
+		 * that created it, and initializes the mem_size constant to 4.
+		 */
+		radius_poly(container_base<radius_poly> *icc) : mem_size(4), cc(icc) {};
 		inline void import(istream &is);
 		inline void store_radius(int i,int j,fpoint r);
 		inline void clear_max();
@@ -242,6 +266,9 @@ class radius_poly {
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q);
 		inline fpoint rad(int l,int c);
+	private:	
+		container_base<radius_poly> *cc;
+		fpoint max_radius,crad,mul;
 };
 
 /** Many of the container routines require scanning over a rectangular sub-grid
@@ -258,7 +285,15 @@ class facets_loop {
 		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
 		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
 		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
-		int ip,jp,kp;
+		/** The current block index in the x direction, referencing a
+		 * real cell in the range 0 to nx-1. */
+		int ip;
+		/** The current block index in the y direction, referencing a
+		 * real cell in the range 0 to ny-1. */
+		int jp;
+		/** The current block index in the z direction, referencing a
+		 * real cell in the range 0 to nz-1. */
+		int kp;
 	private:
 		int i,j,k,ai,bi,aj,bj,ak,bk,s;
 		int aip,ajp,akp,inc1,inc2;
@@ -271,11 +306,20 @@ class facets_loop {
 		const bool xperiodic,yperiodic,zperiodic;
 };
 
+/** This is a pure virtual class for a generic wall object. A wall object
+ * can be specified by deriving a new class from this and specifying the
+ * functions.*/
 class wall {
 	public:
 		virtual ~wall() {};
+		/** A pure virtual function for testing whether a point is
+		 * inside the wall object. */
 		virtual bool point_inside(fpoint x,fpoint y,fpoint z) = 0;
+		/** A pure virutal function for cutting a cell without
+		 * neighbor-tracking with a wall. */
 		virtual bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) = 0;
+		/** A pure virutal function for cutting a cell with
+		 * neighbor-tracking enabled with a wall. */
 		virtual bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) = 0;
 };
 

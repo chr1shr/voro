@@ -6,10 +6,20 @@
 
 #include "wall.hh"
 
+/** Tests to see whether a point is inside the sphere wall object.
+ * \param[in] (x,y,z) the vector to test.
+ * \return true if the point is inside, false if the point is outside. */ 
 bool wall_sphere::point_inside(fpoint x,fpoint y,fpoint z) {
 	return (x-xc)*(x-xc)+(y-yc)*(y-yc)+(z-zc)*(z-zc)<rc*rc;
 }
 
+/** Cuts a cell by the sphere wall object. The spherical wall is approximated by
+ * a single plane applied at the point on the sphere which is closest to the center
+ * of the cell. This works well for particle arrangements that are packed against
+ * the wall, but loses accuracy for sparse particle distributions.
+ * \param[in] &c the Voronoi cell to be cut.
+ * \param[in] (x,y,z) the location of the Voronoi cell.
+ * \return true if the cell still exists, false if the cell is deleted. */
 template<class n_option>
 inline bool wall_sphere::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint xd=x-xc,yd=y-yc,zd=z-zc,dq;
@@ -21,16 +31,26 @@ inline bool wall_sphere::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fp
 	return true;
 }
 
+/** Tests to see whether a point is inside the plane wall object.
+ * \param[in] (x,y,z) the vector to test.
+ * \return true if the point is inside, false if the point is outside. */ 
 bool wall_plane::point_inside(fpoint x,fpoint y,fpoint z) {
 	return x*xc+y*yc+z*zc<ac;
 }
 
+/** Cuts a cell by the plane wall object.
+ * \param[in] &c the Voronoi cell to be cut.
+ * \param[in] (x,y,z) the location of the Voronoi cell.
+ * \return true if the cell still exists, false if the cell is deleted. */
 template<class n_option>
 inline bool wall_plane::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint dq=2*(ac-x*xc-y*yc-z*zc);
 	return c.nplane(xc,yc,zc,dq,w_id);
 }
 
+/** Tests to see whether a point is inside the cylindrical wall object.
+ * \param[in] (x,y,z) the vector to test.
+ * \return true if the point is inside, false if the point is outside. */ 
 bool wall_cylinder::point_inside(fpoint x,fpoint y,fpoint z) {
 	fpoint xd=x-xc,yd=y-yc,zd=z-zc;
 	fpoint pa=(xd*xa+yd*ya+zd*za)*asi;
@@ -38,6 +58,14 @@ bool wall_cylinder::point_inside(fpoint x,fpoint y,fpoint z) {
 	return xd*xd+yd*yd+zd*zd<rc*rc;
 }
 
+/** Cuts a cell by the cylindrical wall object. The cylindrical wall is
+ * approximated by a single plane applied at the point on the cylinder which is
+ * closest to the center of the cell. This works well for particle arrangements
+ * that are packed against the wall, but loses accuracy for sparse particle
+ * distributions.
+ * \param[in] &c the Voronoi cell to be cut.
+ * \param[in] (x,y,z) the location of the Voronoi cell.
+ * \return true if the cell still exists, false if the cell is deleted. */
 template<class n_option>
 inline bool wall_cylinder::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint xd=x-xc,yd=y-yc,zd=z-zc;

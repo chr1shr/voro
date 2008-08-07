@@ -44,17 +44,13 @@ struct fatal_error {
  * are close to the plane are stored and tested, so this routine should create
  * minimal computational overhead.
  */
-class suretest {
-	public:
+class suretest { public:
 		/** This is a pointer to the array in the voronoicell class
 		 * which holds the vertex coordinates.*/
-		fpoint *p;		
-		suretest();
-		~suretest();
-		inline void init(fpoint x,fpoint y,fpoint z,fpoint rsq);
-		inline int test(int n,fpoint &ans);
-	private:
-		int check_marginal(int n,fpoint &ans);
+		fpoint *p;		suretest(); ~suretest(); inline void
+			init(fpoint x,fpoint y,fpoint z,fpoint rsq); inline int
+			test(int n,fpoint &ans); private: int
+			check_marginal(int n,fpoint &ans);
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
 		int current_marginal;
@@ -71,40 +67,46 @@ class suretest {
 		/** The z coordinate of the normal vector to the test plane. */
 		fpoint pz;
 		/** The magnitude of the normal vector to the test plane. */
-		fpoint prsq;
-};
+		fpoint prsq; };
 
 class neighbor_track;
 
 /** This class encapsulates all the routines for storing and calculating a
  * single Voronoi cell. The cell can first be initialized by the init() function
  * to be a rectangular box. The box can then be successively cut by planes
- * using the plane function.  Other routines exist for outputting the cell,
+ * using the plane function. Other routines exist for outputting the cell,
  * computing its volume, or finding the largest distance of a vertex from the
  * cell center.  The cell is described by two arrays. pts[] is a floating point
  * array which holds the vertex positions. ed[] holds the table of edges, and
  * also a relation table that determines how two vertices are connected to one
  * another. The relation table is redundant, but helps speed up the
- * computation. The function relation_check() checks that the relational table
+ * computation. The function check_relations() checks that the relational table
  * is valid. */
 template <class n_option>
 class voronoicell_base {
 	public:
-		/** */
-		int *mem;
-		/** */
-		int **mep;
-		/** */
-		int *mec;
-		/** */
+		/** This is a two dimensional array that holds information about
+		 * the edge connections of the vertices that make up the cell.
+		 * The two dimensional array is not allocated in the usual method.
+		 * To account for the fact the different vertices have different
+		 * orders, and thus require different amounts of storage, the 
+		 * elementss of ed[i] point to one-dimensional arrays in the mep[]
+		 * array of different sizes.
+		 *
+		 * More specifically, if vertex i has order m, then ed[i]
+		 * points to a one-dimensional array in mep[m] that has 2*m+1
+		 * entries. The first m elements hold the neighboring edges, so
+		 * that the jth edge of vertex i is held in ed[i][j]. The next
+		 * m elements hold a table of relations which is redundant but
+		 * helps speed up the computation. It satisfies the relation
+		 * ed[ed[i][j]][ed[i][m+j]]=i. The final entry holds a back
+		 * pointer, so that ed[i+2*m]=i. These are used when
+		 * rearranging the memory. */
 		int **ed;
-		/** */
+		/** This array holds the order of the vertices in the Voronoi cell.
+		 * This array is dynamically allocated, with its current size
+		 * held by current_vertices. */
 		int *nu;
-		/** */
-		int *ds;
-		/** This is the auxiliary delete stack, which has size set by
-		 * current_delete2_size.*/
-		int *ds2;
 		/** This holds the current size of the arrays ed and nu, which
 		 * hold the vertex information. If more vertices are created
 		 * than can fit in this array, then it is dynamically extended
@@ -180,14 +182,38 @@ class voronoicell_base {
 		void neighbors(ostream &os);
 		void check_facets();
 	private:
-		/** This holds the number of points currently on the auxiliary delete stack. */
+		/** This a one dimensional array that holds the current sizes
+		 * of the memory allocations for them mep array.*/
+		int *mem;
+		/** This is a two dimensional array for holding the information
+		 * about the edges of the Voronoi cell. mep[p] is a
+		 * one-dimensional array for holding the edge information about
+		 * all vertices of order p, with each vertex holding 2*p+1
+		 * integers of information. The total number of vertices held
+		 * on mep[p] is stored in mem[p]. If the space runs out, the
+		 * code allocates more using the add_memory() routine. */
+		int **mep;
+		/** This is a one dimensional array that holds the current
+		 * number of vertices of order p that are stored in the mep[p]
+		 * array. */
+		int *mec;
+		/** This is the delete stack, used to store the vertices which
+		 * are going to be deleted during the plane cutting procedure.
+		 */
+		int *ds;
+		/** This is the auxiliary delete stack, which has size set by
+		 * current_delete2_size. */
+		int *ds2;
+		/** This holds the number of points currently on the auxiliary
+		 * delete stack. */
 		int stack2;
-		/** This object contains all the functions required to carry out the neighbor
-		 * computation. If the neighbor_none class is used for n_option, then all these
-		 * functions are blank. If the neighbor_track class is used, then the neighbor
-		 * tracking is enabled. All the functions for the n_option classes are declared
-		 * inline, so that they should all be completely integrated into the routine
-		 * during compilation. */
+		/** This object contains all the functions required to carry
+		 * out the neighbor computation. If the neighbor_none class is
+		 * used for n_option, then all these functions are blank. If
+		 * the neighbor_track class is used, then the neighbor tracking
+		 * is enabled. All the functions for the n_option classes are
+		 * declared inline, so that they should all be completely
+		 * integrated into the routine during compilation. */
 		n_option neighbor;
 		inline int cycle_up(int a,int p);
 		inline int cycle_down(int a,int p);
@@ -272,15 +298,23 @@ class neighbor_none {
  * call overhead. */
 class neighbor_track {
 	public:
-		/** */
+		/** This two dimensional array holds the neighbor information
+		 * associated with each vertex. mne[p] is a one dimensional
+		 * array which holds all of the neighbor informations for
+		 * vertices of order p. */
 		int **mne;
-		/** */ 
+		/** This is a two dimensional array that holds the neighbor
+		 * information associated with each vertex. ne[i] points to a
+		 * one-dimensional array in mne[nu[i]]. ne[i][j] holds the
+		 * neighbor information associated with the jth edge of vertex
+		 * i. It is set to the ID number of the plane that made the
+		 * face that is clockwise from the jth edge. */
 		int **ne;
 		neighbor_track(voronoicell_base<neighbor_track> *ivc);
 		~neighbor_track();
-		/** This is a pointer back to the voronoicell class which created
-		 * this class. It is used to reference the members of that
-		 * class in computations. */
+		/** This is a pointer back to the voronoicell class which
+		 * created this class. It is used to reference the members of
+		 * that class in computations. */
 		voronoicell_base<neighbor_track> *vc;
 		inline void allocate(int i,int m);
 		inline void add_memory_vertices(int i);
