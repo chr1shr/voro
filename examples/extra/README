@@ -14,3 +14,6 @@ region of space which can possibly influence it and saves an outline of it
 to "cell_cut_region.gnu". These can be visualized in gnuplot using:
 
 splot 'cell.gnu' with lines, 'cell_cut_region.gnu' with dots
+
+superellipsoid.cc - this creates a cell in the shape of a superellipsoid (satisfying the equation x^4+y^4+z^4=1) and outputs the results in gnuplot format
+to "superellipsoid.gnu".

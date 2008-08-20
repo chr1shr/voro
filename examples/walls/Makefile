@@ -17,16 +17,19 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/voro++.hh
 
 # List of executables
-EXECUTABLES=cylinder tetrahedron
+EXECUTABLES=cylinder tetrahedron frustum
 
 # Makefile rules
-all: cylinder tetrahedron
+all: cylinder tetrahedron frustum
 
 cylinder: $(SOURCE) cylinder.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o cylinder cylinder.cc
 
 tetrahedron: $(SOURCE) tetrahedron.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o tetrahedron tetrahedron.cc
+
+frustum: $(SOURCE) frustum.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o frustum frustum.cc
 
 clean:
 	rm -f $(EXECUTABLES)

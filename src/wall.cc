@@ -78,3 +78,47 @@ inline bool wall_cylinder::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,
 	}
 	return true;
 }
+
+/** Tests to see whether a point is inside the cone wall object.
+ * \param[in] (x,y,z) the vector to test.
+ * \return true if the point is inside, false if the point is outside. */ 
+bool wall_cone::point_inside(fpoint x,fpoint y,fpoint z) {
+	fpoint xd=x-xc,yd=y-yc,zd=z-zc;
+	fpoint pa=(xd*xa+yd*ya+zd*za)*asi;
+	xd-=xa*pa;yd-=ya*pa;zd-=za*pa;
+	pa*=gra;
+	if (pa<0) return false;
+	pa*=pa;
+	return xd*xd+yd*yd+zd*zd<pa;
+}
+
+/** Cuts a cell by the cone wall object. The conical wall is
+ * approximated by a single plane applied at the point on the cone which is
+ * closest to the center of the cell. This works well for particle arrangements
+ * that are packed against the wall, but loses accuracy for sparse particle
+ * distributions.
+ * \param[in] &c the Voronoi cell to be cut.
+ * \param[in] (x,y,z) the location of the Voronoi cell.
+ * \return true if the cell still exists, false if the cell is deleted. */
+template<class n_option>
+inline bool wall_cone::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+	fpoint xd=x-xc,yd=y-yc,zd=z-zc;
+	fpoint xf,yf,zf,imoda;
+	fpoint pa=(xd*xa+yd*ya+zd*za)*asi;
+	xd-=xa*pa;yd-=ya*pa;zd-=za*pa;
+	pa=xd*xd+yd*yd+zd*zd;
+	if(pa>1e-5) {
+		pa=1/sqrt(pa);
+		imoda=sqrt(asi);
+		xf=sang*imoda*xa-cang*pa*xd;
+		yf=sang*imoda*ya-cang*pa*yd;
+		zf=sang*imoda*za-cang*pa*zd;
+		pa=xf*(x-xc)+yf*(y-yc)+zf*(z-zc);
+		xf*=-pa;
+		yf*=-pa;
+		zf*=-pa;
+		pa=2*(xf*xf+yf*yf+zf*zf);
+		return c.nplane(xf,yf,zf,pa,w_id);
+	}
+	return true;
+}
