@@ -4,9 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#include "cell.cc"
-#include "container.cc"
-#include "wall.cc"
+#include "voro++.cc"
 
 // Set up constants for the container geometry
 const double x_min=-1,x_max=1;

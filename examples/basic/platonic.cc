@@ -19,13 +19,13 @@ int main() {
 	v.plane(1,-1,-1);
 	v.plane(-1,1,-1);
 	v.plane(-1,-1,1);
-
-	v.draw_gnuplot("tetrahedron",0,0,0);
+	
+	v.draw_gnuplot("tetrahedron.gnu",0,0,0);
 
 	// Create a cube. Since this is the default shape
 	// we don't need to do any plane cutting. 
 	v.init(-1,1,-1,1,-1,1);
-	v.draw_gnuplot("cube",0,0,0);
+	v.draw_gnuplot("cube.gnu",0,0,0);
 	
 	// Create an octahedron
 	v.init(-2,2,-2,2,-2,2);
@@ -38,7 +38,7 @@ int main() {
 	v.plane(1,-1,-1);
 	v.plane(-1,-1,-1);
 
-	v.draw_gnuplot("octahedron",0,0,0);
+	v.draw_gnuplot("octahedron.gnu",0,0,0);
 
 	// Create a dodecahedron
 	v.init(-2,2,-2,2,-2,2);
@@ -55,7 +55,7 @@ int main() {
 	v.plane(Phi,-1,0);
 	v.plane(-Phi,-1,0);
 
-	v.draw_gnuplot("dodecahedron",0,0,0);
+	v.draw_gnuplot("dodecahedron.gnu",0,0,0);
 
 	// Create an icosahedron
 	v.init(-2,2,-2,2,-2,2);
@@ -80,6 +80,6 @@ int main() {
 	v.plane(-phi,Phi,0);
 	v.plane(-phi,-Phi,0);
 
-	v.draw_gnuplot("icosahedron",0,0,0);
+	v.draw_gnuplot("icosahedron.gnu",0,0,0);
 
 }
