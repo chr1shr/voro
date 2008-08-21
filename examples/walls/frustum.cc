@@ -37,15 +37,16 @@ int main() {
 		}
 	}*/
 
-	for(z=-0.95;z<1;z+=0.2) for(y=-0.95;y<1;y+=0.2) for(x=-0.95;x<1;x+=0.2) {
+	for(z=0.1;z<1;z+=0.2) for(y=-0.95;y<1;y+=0.2) for(x=-0.95;x<1;x+=0.2) {
 		if (con.point_inside(x,y,z)) {
 			con.put(i,x,y,z);i++;
 		}
 	}
 
 	// Output the particle positions in POV-Ray format
-	con.draw_particles("frustum_p.pov");
+	con.draw_particles_pov("frustum_p.pov");
 
 	// Output the Voronoi cells in POV-Ray format
-	con.draw_cells_gnuplot("frustum_v.pov");
+	con.draw_cells_pov("frustum_v.pov");
+
 }

@@ -46,8 +46,8 @@ int main() {
 	cout << "Difference       : " << vvol-cvol << endl;
 	
 	// Output the particle positions in gnuplot format
-	con.draw_particles("random_points.gnu");
+	con.draw_particles("random_points_p.gnu");
 	
 	// Output the Voronoi cells in gnuplot format
-	con.draw_cells_gnuplot("random_points2.gnu");
+	con.draw_cells_gnuplot("random_points_v.gnu");
 }
