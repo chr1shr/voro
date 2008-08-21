@@ -1410,7 +1410,7 @@ inline fpoint radius_mono::rad(int l,int c) {
  * \param[in] c the number of the particle within the region.
  * \return The particle radius.*/
 inline fpoint radius_poly::rad(int l,int c) {
-	return cc->p[l][4*c];
+	return cc->p[l][4*c+3];
 }
 
 /** Scales the position of a plane according to the relative sizes

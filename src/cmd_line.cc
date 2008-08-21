@@ -35,7 +35,7 @@ void help_message() {
 
 // 
 void error_message() {
-	cerr << "Unrecognized command line options; type \"facets -h\" for more information." << endl;
+	cerr << "Unrecognized command line options; type \"voro++ -h\" for more information." << endl;
 }
 
 int main(int argc,char **argv) {
