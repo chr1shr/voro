@@ -239,7 +239,7 @@ class radius_mono {
 		inline fpoint scale(fpoint rs,int t,int q);
 		/** This is a blank placeholder function that does nothing. */
 		inline void print(ostream &os,int ijk,int q) {};
-		inline fpoint rad(int l,int c);
+		inline void rad(ostream &os,int l,int c);
 	private:	
 		container_base<radius_mono> *cc;
 };
@@ -265,7 +265,7 @@ class radius_poly {
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q);
-		inline fpoint rad(int l,int c);
+		inline void rad(ostream &os,int l,int c);
 	private:	
 		container_base<radius_poly> *cc;
 		fpoint max_radius,crad,mul;

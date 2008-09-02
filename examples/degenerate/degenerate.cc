@@ -7,16 +7,20 @@
 #include "voro++.cc"
 
 const double pi=3.1415926535897932384626433832795;
+
+// The number of planes to be cut around each coordinate axis 
 const int n=32;
-const double theta=pi/4-0.25;
 const double step=2*pi/n;
+
+// The angle (in radians) of the cutting planes from horizontal
+const double theta=pi/4-0.25;
 
 int main() {
 	double x,y,z,phi;
 	voronoicell v;
 
-	// Initialize the Voronoi cell to be a cube of side length 2, centered on
-	// the origin
+	// Initialize the Voronoi cell to be a cube of side length 2, centered
+	// on the origin
 	v.init(-1,1,-1,1,-1,1);
 
 	// Plane cutting

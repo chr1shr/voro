@@ -36,7 +36,9 @@ const int max_wall_size=2048;
 // plane routine bails out due to floating point problems. At level 2, general
 // messages about memory expansion are printed. At level 3, technical details
 // about memory management are printed.
+#ifndef VOROPP_VERBOSE
 #define VOROPP_VERBOSE 0
+#endif
 
 // This sets the numerical tolerance. Below these values, the plane cutting
 // snaps to existing vertices rather than creating new ones.

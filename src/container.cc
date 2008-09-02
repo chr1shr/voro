@@ -177,15 +177,15 @@ void container_base<r_option>::draw_particles(char *filename) {
 template<class r_option>
 void container_base<r_option>::draw_particles_pov(ostream &os) {
 	int l,c;
-	os << "#declare particles=union{\n";
 	for(l=0;l<nxyz;l++) {
 		for(c=0;c<co[l];c++) {
 			os << "// id " << id[l][c] << "\n";
 			os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
-			   << p[l][sz*c+2] << ">," << radius.rad(l,c) << "}\n";
+			   << p[l][sz*c+2] << ">,";
+			radius.rad(os,l,c);
+			os << "}\n";
 		}
 	}
-	os << "}" << endl;
 }
 
 /** An overloaded version of the draw_particles_pov() routine, that just prints
@@ -361,7 +361,6 @@ void container_base<r_option>::draw_cells_pov(char *filename,fpoint xmin,fpoint 
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	os << "#declare voronoi=union{\n";
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
 	do {
 		for(q=0;q<co[s];q++) {
@@ -372,7 +371,6 @@ void container_base<r_option>::draw_cells_pov(char *filename,fpoint xmin,fpoint 
 			}
 		}
 	} while((s=l1.inc(px,py,pz))!=-1);
-	os << "}\n";
 	os.close();
 }
 
@@ -1397,20 +1395,20 @@ inline fpoint radius_mono::cutoff(fpoint lrs) {
 	return lrs;
 }
 
-/** Returns radius of particle, by just supplying a generic value of 0.5.
+/** Prints the radius of particle, by just supplying a generic value of "s".
+ * \param[in] &os the output stream to write to.
  * \param[in] l the region to consider.
- * \param[in] c the number of the particle within the region.
- * \return A value of 0.5.*/
-inline fpoint radius_mono::rad(int l,int c) {
-	return 0.5;
+ * \param[in] c the number of the particle within the region. */
+inline void radius_mono::rad(ostream &os,int l,int c) {
+	os << "s";
 }
 
-/** Returns the radius of a particle.
+/** Prints the radius of a particle to an open output stream.
+ * \param[in] &os the output stream to write to.
  * \param[in] l the region to consider.
- * \param[in] c the number of the particle within the region.
- * \return The particle radius.*/
-inline fpoint radius_poly::rad(int l,int c) {
-	return cc->p[l][4*c+3];
+ * \param[in] c the number of the particle within the region. */
+inline void radius_poly::rad(ostream &os,int l,int c) {
+	os << cc->p[l][4*c+3];
 }
 
 /** Scales the position of a plane according to the relative sizes

@@ -4,9 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : October 19th 2007
 
-#include "cell.cc"
-#include "container.cc"
-#include "wall.cc"
+#include "voro++.cc"
 
 // Set up constants for the container geometry
 const double x_min=-2,x_max=2;
@@ -19,7 +17,7 @@ const int n_x=7,n_y=7,n_z=14;
 
 // Set the number of particles that are going to be randomly
 // introduced
-const int particles=100;
+const int particles=64;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -49,7 +47,10 @@ int main() {
 		}
 	}
 
-	// Output the particle positions and the Voronoi cells
+	// Output the particle positions and the Voronoi cells in Gnuplot and
+	// POV-Ray formats
 	con.draw_particles("tetrahedron_p.gnu");
 	con.draw_cells_gnuplot("tetrahedron_v.gnu");
+	con.draw_particles_pov("tetrahedron_p.pov");
+	con.draw_cells_pov("tetrahedron_v.pov");
 }

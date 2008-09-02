@@ -7,7 +7,11 @@
 #include "cell.cc"
 
 const double pi=3.1415926535897932384626433832795;
+
+// This constant sets the tolerance in the bisection search algorithm
 const double tolwidth=1e-7;
+
+// This constant determines the density of points to test
 const double theta_step=pi/200;
 
 int main() {

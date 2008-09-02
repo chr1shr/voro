@@ -17,9 +17,9 @@ int main() {
 	// on the origin
 	v.init(-1,1,-1,1,-1,1);
 
-	// Cut the cell by 1200 random planes which are all a distance 1 away
-	// from the origin, to make an approximation to a sphere
-	for(int i=0;i<2500;i++) {
+	// Cut the cell by 5000 random planes that are scaled to create a
+	// superellipsoid
+	for(int i=0;i<5000;i++) {
 		x=2*rnd()-1;
 		y=2*rnd()-1;
 		z=2*rnd()-1;
@@ -33,4 +33,8 @@ int main() {
 	
 	// Output the Voronoi cell to a file, in the gnuplot format
 	v.draw_gnuplot("superellipsoid.gnu",0,0,0);
+	
+	// Output the Voronoi cell to a file in POV-Ray formats
+	v.draw_pov("superellipsoid_v.pov",0,0,0);
+	v.draw_pov_mesh("superellipsoid_m.pov",0,0,0);
 }
