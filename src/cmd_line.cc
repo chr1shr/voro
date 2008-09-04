@@ -4,8 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#include "cell.cc"
-#include "container.cc"
+#include "voro++.cc"
 
 // A guess for the memory allocation per region
 const int memory=8;
@@ -43,6 +42,7 @@ int main(int argc,char **argv) {
 	bool gnuplot_output=false,neighbor_track=false,polydisperse=false;
 	bool xperiodic=false,yperiodic=false,zperiodic=false;
 	char buffer[256];
+	wall *wall_pointer;
 	
 	// If there's one argument, check to see if it's requesting help.
 	// Otherwise, bail out with an error.
@@ -79,6 +79,16 @@ int main(int argc,char **argv) {
 			zperiodic=true;
 		} else if (strcmp(argv[i],"-r")==0) {
 			polydisperse=true;
+		} else if (strcmp(argv[i],"-ws")==) {
+			fpoint 
+			wp=new wall_sphere();
+			con.add_wall(wp);
+		} else if (strcmp(argv[i],"-wc")==) {
+		
+		} else if (strcmp(argv[i],"-wo")==) {
+
+		} else if (strcmp(argv[i],"-wp")==) {
+
 		} else {
 			error_message();return 1;
 		}
