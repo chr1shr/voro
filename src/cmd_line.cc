@@ -37,12 +37,36 @@ void error_message() {
 	cerr << "Unrecognized command line options; type \"voro++ -h\" for more information." << endl;
 }
 
+// Global variables to set the wall memory allocation, and the
+// current number of allocated walls
+int wall_mem=init_wall_size,wall_count=0;
+
+// A pointer to the wall pointer array
+wall *wp;
+
+// A routine to double up the wall memory allocation if needed
+void add_wall_memory() {
+	wall *nwp;
+	wall_mem*=2;
+	if (wall_mem>max_wall_size) cerr << "Too many walls allocated. Try recompiling by boosting the value of max_wall_size in config.hh" << endl;
+	nwp=new double wall*[wall_mem]
+	for(int i=0;i<wall_count;i++) nwp[i]=wp[i];
+	delete [] wp;
+	wp=nwp;
+}
+
+// A routine to deallocate the dynamically created wall objects
+void wall_dellocate() {
+	for(int i=0;i<wall_count;i++) delete wp[i];
+	delete [] wp;
+}
+
 int main(int argc,char **argv) {
 	int i=1;
 	bool gnuplot_output=false,neighbor_track=false,polydisperse=false;
 	bool xperiodic=false,yperiodic=false,zperiodic=false;
 	char buffer[256];
-	wall *wall_pointer;
+	wp=new double[init_wall_size];
 	
 	// If there's one argument, check to see if it's requesting help.
 	// Otherwise, bail out with an error.
@@ -79,16 +103,34 @@ int main(int argc,char **argv) {
 			zperiodic=true;
 		} else if (strcmp(argv[i],"-r")==0) {
 			polydisperse=true;
-		} else if (strcmp(argv[i],"-ws")==) {
-			fpoint 
-			wp=new wall_sphere();
-			con.add_wall(wp);
-		} else if (strcmp(argv[i],"-wc")==) {
-		
-		} else if (strcmp(argv[i],"-wo")==) {
-
-		} else if (strcmp(argv[i],"-wp")==) {
-
+		} else if (strcmp(argv[i],"-ws")==0) {
+			i++;
+			fpoint w0=atof(argv[i++]),w1=atof(argv[i++]);
+			fpoint w2=atof(argv[i++]),w3=atof(argv[i]);
+			wp[wall_count++]=new wall_sphere(w0,w1,w2,w3,w_id);
+			add_wall(wp);w_id--;
+		} else if (strcmp(argv[i],"-wp")==0) {
+			i++;
+			fpoint w0=atof(argv[i++]),w1=atof(argv[i++]);
+			fpoint w2=atof(argv[i++]),w3=atof(argv[i]);
+			wp[wall_count++]=new wall_plane(w0,w1,w2,w3,w_id);
+			add_wall(wp);w_id--;
+		} else if (strcmp(argv[i],"-wc")==0) {
+			i++;
+			fpoint w0=atof(argv[i++]),w1=atof(argv[i++]);
+			fpoint w2=atof(argv[i++]),w3=atof(argv[i++]);
+			fpoint w4=atof(argv[i++]),w5=atof(argv[i++]);
+			fpoint w6=atof(argv[i]);
+			wp[wall_count++]=new wall_cylinder(w0,w1,w2,w3,w4,w5,w6,w_id);
+			add_wall(wp);w_id--;
+		} else if (strcmp(argv[i],"-wo")==0) {
+			i++;
+			fpoint w0=atof(argv[i++]),w1=atof(argv[i++]);
+			fpoint w2=atof(argv[i++]),w3=atof(argv[i++]);
+			fpoint w4=atof(argv[i++]),w5=atof(argv[i++]);
+			fpoint w6=atof(argv[i]);
+			wp[wall_count++]=new wall_cone(w0,w1,w2,w3,w4,w5,w6,w_id);
+			add_wall(wp);w_id--;
 		} else {
 			error_message();return 1;
 		}
@@ -106,12 +148,13 @@ int main(int argc,char **argv) {
 	if (ls<tolerance) {
 		if (ls<0) {
 			cerr << "The length scale must be positive" << endl;
-			return 0;
 		} else {
 			cerr << "The length scale is smaller than the safe limit of " << tolerance << ".\n";
 			cerr << "Either increase the particle length scale, or recompile with a\n";
 			cerr << "different limit." << endl;
 		}
+		wall_deallocate();
+		return 0;
 	}
 	ls=1.8/ls;
 

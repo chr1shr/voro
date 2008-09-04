@@ -39,15 +39,10 @@ struct wall_plane : public wall {
 	public:
 		/** Constructs a plane wall object
 		 * \param[in] (ixc,iyc,izc) a normal vector to the plane.
-		 * \param[in] iac a displacement along the normal vector. */
-		wall_plane(fpoint ixc,fpoint iyc,fpoint izc,fpoint iac)
-			: w_id(-99), xc(ixc), yc(iyc), zc(izc), ac(iac) {};
-		/** Constructs a plane wall object
+		 * \param[in] iac a displacement along the normal vector. 
 		 * \param[in] iw_id an ID number to associate with the wall for
-		 * neighbor tracking. 
-		 * \param[in] (ixc,iyc,izc) a normal vector to the plane.
-		 * \param[in] iac a displacement along the normal vector. */
-		wall_plane(int iw_id,fpoint ixc,fpoint iyc,fpoint izc,fpoint iac)
+		 * neighbor tracking. */
+		wall_plane(fpoint ixc,fpoint iyc,fpoint izc,fpoint iac,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), ac(iac) {};
 		bool point_inside(fpoint x,fpoint y,fpoint z);
 		template<class n_option>
@@ -67,19 +62,10 @@ struct wall_cylinder : public wall {
 		 * cylinder.
 		 * \param[in] (ixa,iya,iza) a vector pointing along the
 		 * direction of the cylinder.
-		 * \param[in] irc the radius of the cylinder */
-		wall_cylinder(fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint irc)
-			: w_id(-99), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
-			asi(1/(ixa*ixa+iya*iya+iza*iza)), rc(irc) {};
-		/** Constructs a cylinder wall object.
+		 * \param[in] irc the radius of the cylinder 
 		 * \param[in] iw_id an ID number to associate with the wall for
-		 * neighbor tracking. 
-		 * \param[in] (ixc,iyc,izc) a point on the axis of the
-		 * cylinder.
-		 * \param[in] (ixa,iya,iza) a vector pointing along the
-		 * direction of the cylinder.
-		 * \param[in] irc the radius of the cylinder */
-		wall_cylinder(int iw_id,fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint irc)
+		 * neighbor tracking. */
+		wall_cylinder(fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint irc,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
 			asi(1/(ixa*ixa+iya*iya+iza*iza)), rc(irc) {};
 		bool point_inside(fpoint x,fpoint y,fpoint z);
@@ -101,20 +87,10 @@ struct wall_cone : public wall {
 		 * \param[in] (ixa,iya,iza) a vector pointing along the axis of
 		 * the cone.
 		 * \param[in] ang the angle (in radians) of the cone, measured
-		 * from the axis. */
-		wall_cone(fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint ang)
-			: w_id(-99), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
-			asi(1/(ixa*ixa+iya*iya+iza*iza)),
-			gra(tan(ang)), sang(sin(ang)), cang(cos(ang)) {};
-		/** Constructs a cone wall object.
+		 * from the axis.
 		 * \param[in] iw_id an ID number to associate with the wall for
-		 * neighbor tracking. 
-		 * \param[in] (ixc,iyc,izc) the apex of the cone.
-		 * \param[in] (ixa,iya,iza) a vector pointing along the axis of
-		 * the cone.
-		 * \param[in] ang the angle (in radians) of the cone, measured
-		 * from the axis. */
-		wall_cone(int iw_id,fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint ang)
+		 * neighbor tracking. */ 
+		wall_cone(fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint ang,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
 			asi(1/(ixa*ixa+iya*iya+iza*iza)),
 			gra(tan(ang)), sang(sin(ang)), cang(cos(ang)) {};
