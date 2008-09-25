@@ -83,6 +83,7 @@ inline bool wall_cylinder::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,
  * \param[in] (x,y,z) the vector to test.
  * \return true if the point is inside, false if the point is outside. */ 
 bool wall_cone::point_inside(fpoint x,fpoint y,fpoint z) {
+	cout << x << y << z << endl;
 	fpoint xd=x-xc,yd=y-yc,zd=z-zc;
 	fpoint pa=(xd*xa+yd*ya+zd*za)*asi;
 	xd-=xa*pa;yd-=ya*pa;zd-=za*pa;
@@ -110,14 +111,10 @@ inline bool wall_cone::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoi
 	if(pa>1e-5) {
 		pa=1/sqrt(pa);
 		imoda=sqrt(asi);
-		xf=sang*imoda*xa-cang*pa*xd;
-		yf=sang*imoda*ya-cang*pa*yd;
-		zf=sang*imoda*za-cang*pa*zd;
-		pa=xf*(x-xc)+yf*(y-yc)+zf*(z-zc);
-		xf*=-pa;
-		yf*=-pa;
-		zf*=-pa;
-		pa=2*(xf*xf+yf*yf+zf*zf);
+		xf=-sang*imoda*xa+cang*pa*xd;
+		yf=-sang*imoda*ya+cang*pa*yd;
+		zf=-sang*imoda*za+cang*pa*zd;
+		pa=2*(xf*(xc-x)+yf*(yc-y)+zf*(zc-z));
 		return c.nplane(xf,yf,zf,pa,w_id);
 	}
 	return true;

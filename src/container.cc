@@ -412,6 +412,60 @@ void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 	}
 }
 
+/** Computes the local packing fraction at a point, by summing the volumes
+ * of all particles within test sphere, and dividing by the sum of their
+ * Voronoi volumes that were previous computed using the store_cell_volumes()
+ * function.
+ * \param[in] *bb an array holding the Voronoi volumes of the particles.
+ * \param[in] (sx,sy,sz) the center of the test sphere.
+ * \param[in] r the radius of the test sphere. */
+template<class r_option>
+fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r) {
+	facets_loop l1(this);
+	fpoint px,py,pz,x,y,z,rsq=r*r,pvol=0,vvol=0;
+	int q,s;
+	s=l1.init(cx,cy,cz,r,px,py,pz);
+	do {
+		for(q=0;q<co[s];q++) {
+			x=p[s][sz*q]+px-cx;
+			y=p[s][sz*q+1]+py-cy;
+			z=p[s][sz*q+2]+pz-cz;
+			if (x*x+y*y+z*z<rsq) {
+				pvol+=radius.volume(s,q);
+				vvol+=bb[id[s][q]];
+			}
+		}
+	} while((s=l1.inc(px,py,pz))!=-1);
+	return vvol>tolerance?pvol/vvol*4.1887902047863909846168578443726:0;
+}
+
+/** Computes the local packing fraction at a point, by summing the volumes
+ * of all particles within test sphere, and dividing by the sum of their
+ * Voronoi volumes that were previous computed using the store_cell_volumes()
+ * function.
+ * \param[in] *bb an array holding the Voronoi volumes of the particles.
+ * \param[in] (x,y,z) the center of the test sphere.
+ * \param[in] r the radius of the test sphere. */
+template<class r_option>
+fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+	facets_loop l1(this);
+	fpoint x,y,z,px,py,pz,pvol=0,vvol=0;
+	int q,s;
+	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
+	do {
+		for(q=0;q<co[s];q++) {
+			x=p[s][sz*q]+px;
+			y=p[s][sz*q+1]+py;
+			z=p[s][sz*q+2]+pz;
+			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
+				pvol+=radius.volume(s,q);
+				vvol+=bb[id[s][q]];
+			}
+		}
+	} while((s=l1.inc(px,py,pz))!=-1);
+	return vvol>tolerance?pvol/vvol*4.1887902047863909846168578443726:0;
+}
+
 /** Computes the Voronoi volumes for all the particles, and stores the
  * results according to the particle label in the fpoint array bb.*/
 template<class r_option>
@@ -1409,6 +1463,26 @@ inline void radius_mono::rad(ostream &os,int l,int c) {
  * \param[in] c the number of the particle within the region. */
 inline void radius_poly::rad(ostream &os,int l,int c) {
 	os << cc->p[l][4*c+3];
+}
+
+/** Returns the scaled volume of a particle, which is always set
+ * to 0.125 for the monodisperse case where particles are taken
+ * to have unit diameter.
+ * \param[in] l the region to consider.
+ * \param[in] c the number of the particle within the region.
+ * \return The cube of the radius of the particle which is 0.125
+ * in this case. */
+inline fpoint radius_mono::volume(int ijk,int s) {
+	return 0.125;
+}
+
+/** Returns the scaled volume of a particle.
+ * \param[in] l the region to consider.
+ * \param[in] c the number of the particle within the region.
+ * \return The cube of the radius of the particle. */
+inline fpoint radius_poly::volume(int ijk,int s) {
+	fpoint a=cc->p[ijk][4*s+3];
+	return a*a*a;
 }
 
 /** Scales the position of a plane according to the relative sizes

@@ -29,7 +29,15 @@ void help_message() {
 	cout << " -px        : Make container periodic in the x direction\n";
 	cout << " -py        : Make container periodic in the y direction\n";
 	cout << " -pz        : Make container periodic in the z direction\n";
-	cout << " -r         : Assume the input file has an extra coordinate for radii" << endl;
+	cout << " -r         : Assume the input file has an extra coordinate for radii\n";
+	cout << " -wc [7]    : Add a cylinder wall object, centered on (x1,x2,x3),\n";
+	cout << "              pointing in (x4,x5,x6), radius x7\n";
+	cout << " -wo [7]    : Add a conical wall object, apex at (x1,x2,x3), axis\n";
+	cout << "              along (x4,x5,x6), angle x7 in radians\n";
+	cout << " -ws [4]    : Add a sphere wall object, centered on (x1,x2,x3),\n";
+	cout << "              with radius x4\n";
+	cout << " -wp [4]    : Add a plane wall object, with normal (x1,x2,x3),\n";
+	cout << "              and displacement x4" << endl;
 }
 
 // 
@@ -42,31 +50,31 @@ void error_message() {
 int wall_mem=init_wall_size,wall_count=0;
 
 // A pointer to the wall pointer array
-wall *wp;
+wall **wp;
 
 // A routine to double up the wall memory allocation if needed
 void add_wall_memory() {
-	wall *nwp;
+	wall **nwp;
 	wall_mem*=2;
 	if (wall_mem>max_wall_size) cerr << "Too many walls allocated. Try recompiling by boosting the value of max_wall_size in config.hh" << endl;
-	nwp=new double wall*[wall_mem]
+	nwp=new wall*[wall_mem];
 	for(int i=0;i<wall_count;i++) nwp[i]=wp[i];
 	delete [] wp;
 	wp=nwp;
 }
 
 // A routine to deallocate the dynamically created wall objects
-void wall_dellocate() {
+void wall_deallocate() {
 	for(int i=0;i<wall_count;i++) delete wp[i];
 	delete [] wp;
 }
 
 int main(int argc,char **argv) {
-	int i=1;
+	int i=1,j=-7;
 	bool gnuplot_output=false,neighbor_track=false,polydisperse=false;
 	bool xperiodic=false,yperiodic=false,zperiodic=false;
 	char buffer[256];
-	wp=new double[init_wall_size];
+	wp=new wall*[init_wall_size];
 	
 	// If there's one argument, check to see if it's requesting help.
 	// Otherwise, bail out with an error.
@@ -104,33 +112,38 @@ int main(int argc,char **argv) {
 		} else if (strcmp(argv[i],"-r")==0) {
 			polydisperse=true;
 		} else if (strcmp(argv[i],"-ws")==0) {
+			if (wall_count==wall_mem) add_wall_memory();
 			i++;
 			fpoint w0=atof(argv[i++]),w1=atof(argv[i++]);
 			fpoint w2=atof(argv[i++]),w3=atof(argv[i]);
-			wp[wall_count++]=new wall_sphere(w0,w1,w2,w3,w_id);
-			add_wall(wp);w_id--;
+			wp[wall_count++]=new wall_sphere(w0,w1,w2,w3,j);
+			cout << "Sphere" << w0 << " " << w1 << " " << w2 << " " << w3 << endl;
+			j--;
 		} else if (strcmp(argv[i],"-wp")==0) {
+			if (wall_count==wall_mem) add_wall_memory();
 			i++;
 			fpoint w0=atof(argv[i++]),w1=atof(argv[i++]);
 			fpoint w2=atof(argv[i++]),w3=atof(argv[i]);
-			wp[wall_count++]=new wall_plane(w0,w1,w2,w3,w_id);
-			add_wall(wp);w_id--;
+			wp[wall_count++]=new wall_plane(w0,w1,w2,w3,j);
+			j--;
 		} else if (strcmp(argv[i],"-wc")==0) {
+			if (wall_count==wall_mem) add_wall_memory();
 			i++;
 			fpoint w0=atof(argv[i++]),w1=atof(argv[i++]);
 			fpoint w2=atof(argv[i++]),w3=atof(argv[i++]);
 			fpoint w4=atof(argv[i++]),w5=atof(argv[i++]);
 			fpoint w6=atof(argv[i]);
-			wp[wall_count++]=new wall_cylinder(w0,w1,w2,w3,w4,w5,w6,w_id);
-			add_wall(wp);w_id--;
+			wp[wall_count++]=new wall_cylinder(w0,w1,w2,w3,w4,w5,w6,j);
+			j--;
 		} else if (strcmp(argv[i],"-wo")==0) {
+			if (wall_count==wall_mem) add_wall_memory();
 			i++;
 			fpoint w0=atof(argv[i++]),w1=atof(argv[i++]);
 			fpoint w2=atof(argv[i++]),w3=atof(argv[i++]);
 			fpoint w4=atof(argv[i++]),w5=atof(argv[i++]);
 			fpoint w6=atof(argv[i]);
-			wp[wall_count++]=new wall_cone(w0,w1,w2,w3,w4,w5,w6,w_id);
-			add_wall(wp);w_id--;
+			wp[wall_count++]=new wall_cone(w0,w1,w2,w3,w4,w5,w6,j);
+			j--;
 		} else {
 			error_message();return 1;
 		}
@@ -169,6 +182,8 @@ int main(int argc,char **argv) {
 		cerr << "Number of computational blocks (" << nxyz << ") exceeds the maximum\n";
 		cerr << "allowed of " << max_regions << ". Either increase the particle\n";
 		cerr << "length scale, or recompile with an increased maximum." << endl;
+		wall_deallocate();
+		return 0;
 	}
 
 	// Prepare output filename
@@ -178,6 +193,7 @@ int main(int argc,char **argv) {
 	if (polydisperse) {
 		container_poly con(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,
 			      xperiodic,yperiodic,zperiodic,memory);
+		for(j=0;j<wall_count;j++) con.add_wall(*wp[j]);
 		con.import(argv[i+7]);
 
 		if (neighbor_track) con.print_all_neighbor(buffer);
@@ -190,13 +206,14 @@ int main(int argc,char **argv) {
 	} else {
 		container con(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,
 			      xperiodic,yperiodic,zperiodic,memory);
-		con.import(argv[i+6]);
+		for(j=0;j<wall_count;j++) con.add_wall(*wp[j]);
+		con.import(argv[i+7]);
 
 		if (neighbor_track) con.print_all_neighbor(buffer);
 		else con.print_all(buffer);
 
 		if (gnuplot_output) {
-			sprintf(buffer,"%s.gnu",argv[i+6]);
+			sprintf(buffer,"%s.gnu",argv[i+7]);
 			con.draw_cells_gnuplot(buffer);
 		}
 	}

@@ -11,18 +11,12 @@
 struct wall_sphere : public wall {
 	public:
 		/** Constructs a spherical wall object.
-		 * \param[in] (ixc,iyc,izc) a position vector for the sphere's
-		 * center.
-		 * \param[in] irc the radius of the sphere. */
-		wall_sphere(fpoint ixc,fpoint iyc,fpoint izc,fpoint irc)
-			: w_id(-99), xc(ixc), yc(iyc), zc(izc), rc(irc) {};
-		/** Constructs a spherical wall object.
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. 
 		 * \param[in] (ixc,iyc,izc) a position vector for the sphere's
 		 * center.
 		 * \param[in] irc the radius of the sphere. */
-		wall_sphere(int iw_id,fpoint ixc,fpoint iyc,fpoint izc,fpoint irc)
+		wall_sphere(fpoint ixc,fpoint iyc,fpoint izc,fpoint irc,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), rc(irc) {};
 		bool point_inside(fpoint x,fpoint y,fpoint z);
 		template<class n_option>

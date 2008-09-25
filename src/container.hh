@@ -45,6 +45,8 @@ class container_base {
 		void draw_cells_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void draw_cells_pov(char *filename);
 		void store_cell_volumes(fpoint *bb);
+		fpoint packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r);
+		fpoint packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		fpoint sum_cell_volumes();
 		void compute_all_cells();
 		void print_all(ostream &os);
@@ -235,6 +237,7 @@ class radius_mono {
 		inline void clear_max() {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void init(int s,int i) {};
+		inline fpoint volume(int ijk,int s);
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		/** This is a blank placeholder function that does nothing. */
@@ -262,6 +265,7 @@ class radius_poly {
 		inline void store_radius(int i,int j,fpoint r);
 		inline void clear_max();
 		inline void init(int ijk,int s);
+		inline fpoint volume(int ijk,int s);
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q);
