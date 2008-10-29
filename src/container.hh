@@ -29,21 +29,21 @@ class container_base {
 	public:
 		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container_base();
-		void draw_particles(char *filename);
+		void draw_particles(const char *filename);
 		void draw_particles();
 		void draw_particles(ostream &os);
-		void draw_particles_pov(char *filename);
+		void draw_particles_pov(const char *filename);
 		void draw_particles_pov();
 		void draw_particles_pov(ostream &os);
 		void import(istream &is);
 		inline void import();
-		inline void import(char *filename);
+		inline void import(const char *filename);
 		void region_count();
 		void clear();
-		void draw_cells_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
-		inline void draw_cells_gnuplot(char *filename);
-		void draw_cells_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
-		inline void draw_cells_pov(char *filename);
+		void draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		inline void draw_cells_gnuplot(const char *filename);
+		void draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		inline void draw_cells_pov(const char *filename);
 		void store_cell_volumes(fpoint *bb);
 		fpoint packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r);
 		fpoint packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
@@ -51,10 +51,10 @@ class container_base {
 		void compute_all_cells();
 		void print_all(ostream &os);
 		void print_all();
-		void print_all(char *filename);
+		void print_all(const char *filename);
 		void print_all_neighbor(ostream &os);
 		void print_all_neighbor();
-		void print_all_neighbor(char *filename);
+		void print_all_neighbor(const char *filename);
 		template<class n_option>
 		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>

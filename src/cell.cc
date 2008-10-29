@@ -1549,7 +1549,7 @@ void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::draw_pov(char *filename,fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_base<n_option>::draw_pov(const char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_pov(os,x,y,z);
@@ -1587,7 +1587,7 @@ void voronoicell_base<n_option>::draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoi
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::draw_gnuplot(char *filename,fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_base<n_option>::draw_gnuplot(const char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_gnuplot(os,x,y,z);
@@ -1651,7 +1651,7 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(ostream &os,fpoint x,fpoin
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
-inline void voronoicell_base<n_option>::draw_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_base<n_option>::draw_pov_mesh(const char *filename,fpoint x,fpoint y,fpoint z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_pov_mesh(os,x,y,z);
@@ -1790,7 +1790,7 @@ inline void voronoicell_base<n_option>::facets() {
 /** An overloaded version of facets(), which outputs the results to a file.
  * \param[in] filename The name of the file to write to. */
 template<class n_option>
-inline void voronoicell_base<n_option>::facets(char *filename) {
+inline void voronoicell_base<n_option>::facets(const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	facets(os);
@@ -1855,7 +1855,7 @@ inline void voronoicell_base<n_option>::facet_statistics() {
  * a file.
  * \param[in] filename The name of the file to write to. */
 template<class n_option>
-inline void voronoicell_base<n_option>::facet_statistics(char *filename) {
+inline void voronoicell_base<n_option>::facet_statistics(const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	facet_statistics(os);

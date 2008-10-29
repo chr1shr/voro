@@ -166,7 +166,7 @@ void container_base<r_option>::draw_particles() {
  * the particle positions to a file.
  * \param[in] filename the file to write to. */
 template<class r_option>
-void container_base<r_option>::draw_particles(char *filename) {
+void container_base<r_option>::draw_particles(const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_particles(os);
@@ -199,7 +199,7 @@ void container_base<r_option>::draw_particles_pov() {
  * the particle positions to a file.
  * \param[in] filename the file to write to. */
 template<class r_option>
-void container_base<r_option>::draw_particles_pov(char *filename) {
+void container_base<r_option>::draw_particles_pov(const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_particles_pov(os);
@@ -295,7 +295,7 @@ inline void container_base<r_option>::import() {
  * a particular file.
  * \param[in] filename The name of the file to read from. */
 template<class r_option>
-inline void container_base<r_option>::import(char *filename) {
+inline void container_base<r_option>::import(const char *filename) {
 	ifstream is;
 	is.open(filename,ifstream::in);
 	import(is);
@@ -324,7 +324,7 @@ void container_base<r_option>::clear() {
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot. */
 template<class r_option>
-void container_base<r_option>::draw_cells_gnuplot(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
 	int q,s;
@@ -346,7 +346,7 @@ void container_base<r_option>::draw_cells_gnuplot(char *filename,fpoint xmin,fpo
 /** If only a filename is supplied to draw_cells_gnuplot(), then assume that we are
  * calculating the entire simulation region. */
 template<class r_option>
-void container_base<r_option>::draw_cells_gnuplot(char *filename) {
+void container_base<r_option>::draw_cells_gnuplot(const char *filename) {
 	draw_cells_gnuplot(filename,ax,bx,ay,by,az,bz);
 }
 
@@ -354,7 +354,7 @@ void container_base<r_option>::draw_cells_gnuplot(char *filename) {
  * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
  * that can be read by gnuplot.*/
 template<class r_option>
-void container_base<r_option>::draw_cells_pov(char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	facets_loop l1(this);
 	int q,s;
@@ -377,7 +377,7 @@ void container_base<r_option>::draw_cells_pov(char *filename,fpoint xmin,fpoint 
 /** If only a filename is supplied to draw_cells_pov(), then assume that we are
  * calculating the entire simulation region.*/
 template<class r_option>
-void container_base<r_option>::draw_cells_pov(char *filename) {
+void container_base<r_option>::draw_cells_pov(const char *filename) {
 	draw_cells_pov(filename,ax,bx,ay,by,az,bz);
 }
 
@@ -520,7 +520,7 @@ void container_base<r_option>::print_all() {
  * file.
  * \param[in] filename The name fo the file to write to. */
 template<class r_option>
-inline void container_base<r_option>::print_all(char* filename) {
+inline void container_base<r_option>::print_all(const char* filename) {
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
@@ -549,7 +549,7 @@ void container_base<r_option>::print_all_neighbor() {
  * particular file
  * \param[in] filename The name of the file to write to. */
 template<class r_option>
-inline void container_base<r_option>::print_all_neighbor(char* filename) {
+inline void container_base<r_option>::print_all_neighbor(const char* filename) {
 	voronoicell_neighbor c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);

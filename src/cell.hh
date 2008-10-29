@@ -18,7 +18,7 @@ using namespace std;
 struct fatal_error {
 	/** This routine prints an error message to the standard error.
 	 * \param[in] p The message to print. */
-	fatal_error(char *p) {cerr << p << endl;}
+	fatal_error(const char *p) {cerr << p << endl;}
 };
 
 /** Floating point comparisons can be unreliable on some processor
@@ -151,13 +151,13 @@ class voronoicell_base {
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d);
 		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e);
 		void draw_pov(ostream &os,fpoint x,fpoint y,fpoint z);
-		inline void draw_pov(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov(const char *filename,fpoint x,fpoint y,fpoint z);
 		inline void draw_pov(fpoint x,fpoint y,fpoint z);
 		void draw_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z);		
-		inline void draw_pov_mesh(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov_mesh(const char *filename,fpoint x,fpoint y,fpoint z);
 		inline void draw_pov_mesh(fpoint x,fpoint y,fpoint z);
 		void draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
-		inline void draw_gnuplot(char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_gnuplot(const char *filename,fpoint x,fpoint y,fpoint z);
 		inline void draw_gnuplot(fpoint x,fpoint y,fpoint z);
 		inline void check_relations();
 		inline void check_duplicates();
@@ -168,10 +168,10 @@ class voronoicell_base {
 		inline void perturb(fpoint r);
 		void facets(ostream &os);
 		inline void facets();
-		inline void facets(char *filename);
+		inline void facets(const char *filename);
 		void facet_statistics(ostream &os);
 		inline void facet_statistics();
-		inline void facet_statistics(char *filename);
+		inline void facet_statistics(const char *filename);
 		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
 		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
 		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
