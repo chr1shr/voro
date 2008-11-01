@@ -5,10 +5,10 @@ tessellation using a cell-by-cell construction.
 
 Compilation
 ===========
-The code is written in ANSI C++, and it should compile on many system architectures.
-The compilation is configured in "config.mk" and is currently set to the GNU C++
-compiler, g++. The command-line utility and example scripts can be compiled by
-typing "make" in the top-level directory.
+The code is written in ANSI C++, and it should compile on many system
+architectures. The compilation is configured in "config.mk" and is currently
+set to the GNU C++ compiler, g++. The command-line utility and example scripts
+can be compiled by typing "make" in the top-level directory.
 
 Contents
 ========
