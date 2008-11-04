@@ -14,14 +14,19 @@
 #include <cmath>
 using namespace std;
 
-/** Structure for printing fatal error messages and exiting */
+/** \brief Structure for printing fatal error messages and exiting.
+ *
+ * Structure for printing fatal error messages and exiting. */
 struct fatal_error {
 	/** This routine prints an error message to the standard error.
 	 * \param[in] p The message to print. */
 	fatal_error(const char *p) {cerr << p << endl;}
 };
 
-/** Floating point comparisons can be unreliable on some processor
+/** \brief A class to reliably carry out floating point comparisons, storing
+ * marginal cases for future reference.
+ *
+ * Floating point comparisons can be unreliable on some processor
  * architectures, and can produce unpredictable results. On a number of popular
  * Intel processors, floating point numbers are held to higher precision when
  * in registers than when in memory. When a register is swapped from a register
@@ -71,7 +76,10 @@ class suretest { public:
 
 class neighbor_track;
 
-/** This class encapsulates all the routines for storing and calculating a
+/** \brief A class encapsulating all the routines for storing and calculating
+ * a single Voronoi cell.
+ *
+ * This class encapsulates all the routines for storing and calculating a
  * single Voronoi cell. The cell can first be initialized by the init() function
  * to be a rectangular box. The box can then be successively cut by planes
  * using the plane function. Other routines exist for outputting the cell,
@@ -229,7 +237,10 @@ class voronoicell_base {
 		friend class neighbor_track;
 };
 
-/** This is a class full of empty routines for neighbor computation. If the
+/** \brief A class passed to the voronoicell_base template to switch off
+ * neighbor computation.
+ *
+ * This is a class full of empty routines for neighbor computation. If the
  * voronoicell_base template is instantiated with this class, then it
  * has the effect of switching off all neighbor computation. Since all these
  * routines are declared inline, it should have the effect of a zero speed
@@ -290,8 +301,11 @@ class neighbor_none {
 		inline void check_facets() {};
 };
 
-/** This class encapsulates all the routines which are required to carry out
- * the neighbor tracking. If the voronoicell_base template is instantiated with
+/** \brief A class passed to the voronoicell_base template to switch on the
+ * neighbor computation.
+ *
+ * This class encapsulates all the routines which are required to carry out the
+ * neighbor tracking. If the voronoicell_base template is instantiated with
  * this class, then the neighbor computation is enabled. All these routines are
  * simple and declared inline, so they should be directly integrated into the
  * functions in the voronoicell class during compilation, without zero function

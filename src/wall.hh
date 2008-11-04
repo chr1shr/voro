@@ -7,7 +7,9 @@
 #ifndef VOROPP_WALL_HH
 #define VOROPP_WALL_HH
 
-/** This class represents a spherical wall object. */
+/** \brief A class representing a spherical wall object.
+ *
+ * This class represents a spherical wall object. */
 struct wall_sphere : public wall {
 	public:
 		/** Constructs a spherical wall object.
@@ -28,7 +30,9 @@ struct wall_sphere : public wall {
 		const fpoint xc,yc,zc,rc;
 };
 
-/** This class represents a single plane wall object. */
+/** \brief A class representing a plane wall object.
+ *
+ * This class represents a single plane wall object. */
 struct wall_plane : public wall {
 	public:
 		/** Constructs a plane wall object
@@ -48,7 +52,9 @@ struct wall_plane : public wall {
 		const fpoint xc,yc,zc,ac;
 };
 
-/** This class respresents a open cylinder wall object. */
+/** \brief A class representing a cylindrical wall object.
+ *
+ * This class respresents a open cylinder wall object. */
 struct wall_cylinder : public wall {
 	public:
 		/** Constructs a cylinder wall object.
@@ -73,7 +79,9 @@ struct wall_cylinder : public wall {
 };
 
 
-/** This class respresents a cone wall object. */
+/** \brief A class representing a conical wall object. 
+ *
+ * This class respresents a cone wall object. */
 struct wall_cone : public wall {
 	public:
 		/** Constructs a cone wall object.

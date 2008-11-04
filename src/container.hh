@@ -18,7 +18,9 @@ class facets_loop;
 class radius_poly;
 class wall;
 
-/** The container class represents the whole simulation region. The
+/** \brief A class representing the whole simulation region.
+ *
+ * The container class represents the whole simulation region. The
  * container constructor sets up the geometry and periodicity, and divides
  * the geometry into rectangular grid of blocks, each of which handles the
  * particles in a particular area. Routines exist for putting in particles,
@@ -215,7 +217,10 @@ class container_base {
 		friend class radius_poly;
 };
 
-/** This class encapsulates all the routines that are required for carrying out
+/** \brief A class encapsulating all routines specifically needed in
+ * the standard Voronoi tessellation.
+ *
+ * This class encapsulates all the routines that are required for carrying out
  * a standard Voronoi tessellation that would be appropriate for a monodisperse
  * system. When the container class is instantiated using this class, all
  * information about particle radii is switched off. Since all these functions
@@ -247,7 +252,10 @@ class radius_mono {
 		container_base<radius_mono> *cc;
 };
 
-/** This class encapsulates all the routines that are required for carrying out
+/** \brief A class encapsulating all routines specifically needed in the
+ * Voronoi radical tessellation.
+ *
+ * This class encapsulates all the routines that are required for carrying out
  * the radical Voronoi tessellation that is appropriate for polydisperse sphere.
  * When the container class is instantiated with this class, information about particle
  * radii is switched on. */
@@ -275,7 +283,10 @@ class radius_poly {
 		fpoint max_radius,crad,mul;
 };
 
-/** Many of the container routines require scanning over a rectangular sub-grid
+/** \brief A class to handle loops on regions of the container handling
+ * non-periodic and periodic boundary conditions. 
+ *
+ * Many of the container routines require scanning over a rectangular sub-grid
  * of blocks, and the routines for handling this are stored in the facets_loop
  * class. A facets_loop class can first be initialized to either calculate the
  * subgrid which is within a distance r of a vector (vx,vy,vz), or a subgrid
@@ -310,7 +321,9 @@ class facets_loop {
 		const bool xperiodic,yperiodic,zperiodic;
 };
 
-/** This is a pure virtual class for a generic wall object. A wall object
+/** \brief Pure virtual class from which wall objects are derived.
+ *
+ * This is a pure virtual class for a generic wall object. A wall object
  * can be specified by deriving a new class from this and specifying the
  * functions.*/
 class wall {
