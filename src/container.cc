@@ -413,11 +413,11 @@ void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 }
 
 /** Computes the local packing fraction at a point, by summing the volumes
- * of all particles within test sphere, and dividing by the sum of their
+ * of all particles within a test sphere, and dividing by the sum of their
  * Voronoi volumes that were previous computed using the store_cell_volumes()
  * function.
  * \param[in] *bb an array holding the Voronoi volumes of the particles.
- * \param[in] (sx,sy,sz) the center of the test sphere.
+ * \param[in] (cx,cy,cz) the center of the test sphere.
  * \param[in] r the radius of the test sphere. */
 template<class r_option>
 fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r) {
@@ -440,12 +440,12 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy
 }
 
 /** Computes the local packing fraction at a point, by summing the volumes
- * of all particles within test sphere, and dividing by the sum of their
+ * of all particles within test box, and dividing by the sum of their
  * Voronoi volumes that were previous computed using the store_cell_volumes()
  * function.
  * \param[in] *bb an array holding the Voronoi volumes of the particles.
- * \param[in] (x,y,z) the center of the test sphere.
- * \param[in] r the radius of the test sphere. */
+ * \param[in] (xmin,ymin,zmin) the minimum coordinates of the box.
+ * \param[in] (xmax,ymax,zmax) the maximum coordinates of the box. */
 template<class r_option>
 fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	facets_loop l1(this);
@@ -1468,17 +1468,17 @@ inline void radius_poly::rad(ostream &os,int l,int c) {
 /** Returns the scaled volume of a particle, which is always set
  * to 0.125 for the monodisperse case where particles are taken
  * to have unit diameter.
- * \param[in] l the region to consider.
- * \param[in] c the number of the particle within the region.
- * \return The cube of the radius of the particle which is 0.125
+ * \param[in] ijk the region to consider.
+ * \param[in] s the number of the particle within the region.
+ * \return The cube of the radius of the particle, which is 0.125
  * in this case. */
 inline fpoint radius_mono::volume(int ijk,int s) {
 	return 0.125;
 }
 
 /** Returns the scaled volume of a particle.
- * \param[in] l the region to consider.
- * \param[in] c the number of the particle within the region.
+ * \param[in] ijk the region to consider.
+ * \param[in] s the number of the particle within the region.
  * \return The cube of the radius of the particle. */
 inline fpoint radius_poly::volume(int ijk,int s) {
 	fpoint a=cc->p[ijk][4*s+3];

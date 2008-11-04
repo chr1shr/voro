@@ -16,6 +16,7 @@ const int max_regions=16777216;
 // This message gets displayed if the command line arguments are incorrect
 // or if the user requests the help flag
 void help_message() {
+	cout << "Voro++ version 0.2, by Chris H. Rycroft (UC Berkeley/LBL)\n\n";
 	cout << "Syntax: voro++ [opts] <length_scale> <x_min> <x_max> <y_min>\n";
 	cout << "                      <y_max> <z_min> <z_max> <filename>\n\n";
 	cout << "<length_scale> should be set to a typical particle diameter,\n";
@@ -40,13 +41,14 @@ void help_message() {
 	cout << "              and displacement x4" << endl;
 }
 
-// 
+// Prints an error message. This is called when the program is unable to make
+// sense of the command line options.
 void error_message() {
 	cerr << "Unrecognized command line options; type \"voro++ -h\" for more information." << endl;
 }
 
-// Global variables to set the wall memory allocation, and the
-// current number of allocated walls
+// Global variables to set the wall memory allocation, and the current number
+// of allocated walls
 int wall_mem=init_wall_size,wall_count=0;
 
 // A pointer to the wall pointer array
