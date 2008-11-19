@@ -28,7 +28,7 @@ be useful:
   high-quality renderings of the program output.
 
 - The reference manual is generated from comments in the source code using
-  DOxygen (available at www.doxygen.org). This package is only required if the
+  Doxygen (available at www.doxygen.org). This package is only required if the
   library files are being developed and the reference manuals need to be
   regenerated. The complete reference manual to the current code is available
   online at http://math.lbl.gov/voro++/doc/refman/
