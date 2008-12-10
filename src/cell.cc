@@ -1771,6 +1771,36 @@ void voronoicell_base<n_option>::facets(ostream &os) {
 	}
 }
 
+/** Returns the number of faces of a computed Voronoi cell.
+ * \return The number of faces. */
+template<class n_option>
+int voronoicell_base<n_option>::number_of_faces() {
+	int i,j,k,l,m,s=0;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				s++;
+				ed[i][j]=-1-k;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				do {
+					m=ed[k][l];
+					ed[k][l]=-1-m;
+					l=cycle_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+			}
+		}
+	}
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			if(ed[i][j]>=0) throw fatal_error("Face evaluation routine didn't look everywhere");
+			ed[i][j]=-1-ed[i][j];
+		}
+	}
+	return s;
+}
+
 /** This routine is a placeholder which just prints the ID of a
  * vertex.
  * \param[in] os The output stream to write to.

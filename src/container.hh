@@ -14,7 +14,7 @@
 #include <cmath>
 using namespace std;
 
-class facets_loop;
+class voropp_loop;
 class radius_poly;
 class wall;
 
@@ -51,6 +51,9 @@ class container_base {
 		fpoint packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		fpoint sum_cell_volumes();
 		void compute_all_cells();
+		void count_all_faces(ostream &os);
+		void count_all_faces();
+		void count_all_faces(const char *filename);
 		void print_all(ostream &os);
 		void print_all();
 		void print_all(const char *filename);
@@ -213,7 +216,7 @@ class container_base {
 		inline void initialize_radii();
 		inline void compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk);
 		inline bool compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gx,fpoint gy,fpoint gz,fpoint& crs,fpoint mrs);
-		friend class facets_loop;
+		friend class voropp_loop;
 		friend class radius_poly;
 };
 
@@ -287,16 +290,16 @@ class radius_poly {
  * non-periodic and periodic boundary conditions. 
  *
  * Many of the container routines require scanning over a rectangular sub-grid
- * of blocks, and the routines for handling this are stored in the facets_loop
- * class. A facets_loop class can first be initialized to either calculate the
+ * of blocks, and the routines for handling this are stored in the voropp_loop
+ * class. A voropp_loop class can first be initialized to either calculate the
  * subgrid which is within a distance r of a vector (vx,vy,vz), or a subgrid
  * corresponding to a rectangular box. The routine inc() can then be
  * successively called to step through all the blocks within this subgrid. 
  */
-class facets_loop {
+class voropp_loop {
 	public:
 		template<class r_option>
-		facets_loop(container_base<r_option> *q);
+		voropp_loop(container_base<r_option> *q);
 		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
 		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
 		inline int inc(fpoint &px,fpoint &py,fpoint &pz);

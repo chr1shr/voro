@@ -172,6 +172,7 @@ class voronoicell_base {
 		inline void construct_relations();
 		fpoint volume();
 		fpoint maxradsq();
+		int number_of_faces();
 		void print_edges();
 		inline void perturb(fpoint r);
 		void facets(ostream &os);

@@ -326,7 +326,7 @@ void container_base<r_option>::clear() {
 template<class r_option>
 void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
-	facets_loop l1(this);
+	voropp_loop l1(this);
 	int q,s;
 	voronoicell c;
 	ofstream os;
@@ -356,7 +356,7 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename) {
 template<class r_option>
 void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
-	facets_loop l1(this);
+	voropp_loop l1(this);
 	int q,s;
 	voronoicell c;
 	ofstream os;
@@ -421,7 +421,7 @@ void container_base<r_option>::store_cell_volumes(fpoint *bb) {
  * \param[in] r the radius of the test sphere. */
 template<class r_option>
 fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r) {
-	facets_loop l1(this);
+	voropp_loop l1(this);
 	fpoint px,py,pz,x,y,z,rsq=r*r,pvol=0,vvol=0;
 	int q,s;
 	s=l1.init(cx,cy,cz,r,px,py,pz);
@@ -448,7 +448,7 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy
  * \param[in] (xmax,ymax,zmax) the maximum coordinates of the box. */
 template<class r_option>
 fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
-	facets_loop l1(this);
+	voropp_loop l1(this);
 	fpoint x,y,z,px,py,pz,pvol=0,vvol=0;
 	int q,s;
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
@@ -478,6 +478,43 @@ fpoint container_base<r_option>::sum_cell_volumes() {
 	return vol;
 }
 
+/** Prints a list of all particle labels, positions, and the number of faces to
+ * the standard output. */
+template<class r_option>
+inline void container_base<r_option>::count_all_faces(ostream &os) {
+	voronoicell c;
+	fpoint x,y,z;
+	int i,j,k,ijk=0,q;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(q=0;q<co[ijk];q++) {
+			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
+			os << id[ijk][q] << " " << x << " " << y << " " << z;
+			radius.print(os,ijk,q);
+			if (compute_cell(c,i,j,k,ijk,q,x,y,z)) {
+				os << " " << c.number_of_faces() << "\n";
+			} else os << " 0\n";
+		}
+	}
+}
+
+/** Prints a list of all particle labels, positions, and the number of faces to
+ * the standard output. */
+template<class r_option>
+void container_base<r_option>::count_all_faces() {
+	count_all_faces(cout);
+}
+
+/** An overloaded version of count_all_faces(), which outputs the result to a
+ * particular file.
+ * \param[in] filename The name fo the file to write to. */
+template<class r_option>
+void container_base<r_option>::count_all_faces(const char* filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	count_all_faces(os);
+	os.close();	
+}
+
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output. */
 template<class r_option>
@@ -494,9 +531,7 @@ inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_o
 				os << " " << c.volume();
 				c.neighbors(os);		
 				os << "\n";
-			} else {
-				os << " 0\n";
-			}
+			} else os << " 0\n";
 		}
 	}
 }
@@ -513,7 +548,7 @@ void container_base<r_option>::print_all(ostream &os) {
 template<class r_option>
 void container_base<r_option>::print_all() {
 	voronoicell c;
-	print_all(cout);
+	print_all(cout,c);
 }
 
 /** An overloaded version of print_all(), which outputs the result to a particular
@@ -622,7 +657,7 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 	const fpoint length_scale=1;
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
-	facets_loop l(this);
+	voropp_loop l(this);
 	if (!initialize_voronoicell(c,x,y,z)) return false;
 
 	// Now the cell is cut by testing neighboring particles in concentric
@@ -1255,19 +1290,19 @@ inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
-/** Creates a facets_loop object, by pulling the necesssary constants about the container
+/** Creates a voropp_loop object, by pulling the necesssary constants about the container
  * geometry from a pointer to the current container class. */
 template<class r_option>
-facets_loop::facets_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
+voropp_loop::voropp_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
 	xsp(q->xsp),ysp(q->ysp),zsp(q->zsp),
 	ax(q->ax),ay(q->ay),az(q->az),
 	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz),
 	xperiodic(q->xperiodic),yperiodic(q->yperiodic),zperiodic(q->zperiodic) {}
 
-/** Initializes a facets_loop object, by finding all blocks which are within a distance
+/** Initializes a voropp_loop object, by finding all blocks which are within a distance
  * r of the vector (vx,vy,vz). It returns the first block which is to be
  * tested, and sets the periodic displacement vector (px,py,pz) accordingly. */
-inline int facets_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
+inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
 	if(!xperiodic) {
@@ -1297,11 +1332,11 @@ inline int facets_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,f
 	return s;
 }
 
-/** Initializes a facets_loop object, by finding all blocks which overlap the box with
+/** Initializes a voropp_loop object, by finding all blocks which overlap the box with
  * corners (xmin,ymin,zmin) and (xmax,ymax,zmax). It returns the first block
  * which is to be tested, and sets the periodic displacement vector (px,py,pz)
  * accordingly. */
-inline int facets_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
+inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
 	if(!xperiodic) {
@@ -1333,7 +1368,7 @@ inline int facets_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpo
 
 /** Returns the next block to be tested in a loop, and updates the periodicity
  * vector if necessary. */
-inline int facets_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
+inline int voropp_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 	if(i<bi) {
 		i++;
 		if(ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}
@@ -1352,17 +1387,17 @@ inline int facets_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 /** Custom int function, that gives consistent stepping for negative numbers.
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
  * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/
-inline int facets_loop::step_int(fpoint a) {
+inline int voropp_loop::step_int(fpoint a) {
 	return a<0?int(a)-1:int(a);
 }
 
 /** Custom mod function, that gives consistent stepping for negative numbers. */
-inline int facets_loop::step_mod(int a,int b) {
+inline int voropp_loop::step_mod(int a,int b) {
 	return a>=0?a%b:b-1-(b-1-a)%b;
 }
 
 /** Custom div function, that gives consistent stepping for negative numbers. */
-inline int facets_loop::step_div(int a,int b) {
+inline int voropp_loop::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 }
 
