@@ -62,7 +62,7 @@ void container_base<r_option>::initialize_radii() {
 	int i,j,k,lx,ly,lz,l=0,q;
 	unsigned int *e=const_cast<unsigned int*> (wl);
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,minr;fpoint *radp=mrad;
-	unsigned int f,qq;
+	unsigned int f;
 	for(zlo=0,zhi=zstep,lz=0;lz<hgrid;zlo=zhi,zhi+=zstep,lz++) {
 		for(ylo=0,yhi=ystep,ly=0;ly<hgrid;ylo=yhi,yhi+=ystep,ly++) {
 			for(xlo=0,xhi=xstep,lx=0;lx<hgrid;xlo=xhi,xhi+=xstep,l++,lx++) {
@@ -71,7 +71,7 @@ void container_base<r_option>::initialize_radii() {
 					f=e[q];
 					i=(f&127)-64;
 					j=(f>>7&127)-64;
-					k=(f>>14&127)-64;qq=f>>21;
+					k=(f>>14&127)-64;
 					if((f&b2)==b2) {
 						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i-1,j,k);
 						if((f&b1)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
