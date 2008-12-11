@@ -4,6 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+/** \file container.hh
+ * \brief Header file for the container_base template and related classes. */
+
 #ifndef VOROPP_CONTAINER_HH
 #define VOROPP_CONTAINER_HH
 

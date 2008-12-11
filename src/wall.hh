@@ -4,6 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+/** \file wall.hh
+ * \brief Header file for the derived wall classes. */
+
 #ifndef VOROPP_WALL_HH
 #define VOROPP_WALL_HH
 

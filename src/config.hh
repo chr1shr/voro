@@ -4,6 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+/** \file config.hh
+ * \brief Master configuration file for setting various compile-time options. */
+
 #ifndef VOROPP_CONFIG_HH
 #define VOROPP_CONFIG_HH
 

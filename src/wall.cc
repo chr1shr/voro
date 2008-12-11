@@ -4,6 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+/** \file wall.cc
+ * \brief Function implemenations for the derived wall classes. */
+
 #include "wall.hh"
 
 /** Tests to see whether a point is inside the sphere wall object.

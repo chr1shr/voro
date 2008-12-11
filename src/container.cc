@@ -4,6 +4,10 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+/** \file container.cc
+ * \brief Function implementations for the container_base template and related
+ * classes. */
+
 #include "cell.hh"
 #include "container.hh"
 

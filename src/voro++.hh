@@ -4,6 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+/** \file voro++.hh
+ * \brief A file that loads all of the Voro++ header files. */
+
 /** \mainpage Voro++ class reference manual
  * \section intro Introduction
  * Voro++ is a software library for carrying out 3D cell-based calculations of

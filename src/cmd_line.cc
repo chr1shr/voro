@@ -4,6 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+/** \file cmd_line.cc
+ * \brief Source code for the command line utility. */
+
 #include "voro++.cc"
 
 // A guess for the memory allocation per region

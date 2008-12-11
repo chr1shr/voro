@@ -4,6 +4,10 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+/** \file cell.cc
+ * \brief Function implementations for the voronoicell_base template and
+ * related classes. */
+
 #include "cell.hh"
 
 /** Constructs a Voronoi cell and sets up the initial memory. */

@@ -9,7 +9,9 @@
 
 #Compiler location and compiler switches. Add "-DFACETS_SINGLE_PRECISION" to
 #switch the code from using double floating point arithmetic to just single.
-#See config.hh for more details.
+#On a slower computer, it may be worth lowering the level of optimization to
+#"-O2" or switching it off completely, to speed up the compilation. See
+#config.hh for more details.
 CC=g++
 CFLAGS=-Wall -ansi -pedantic -O3
 
