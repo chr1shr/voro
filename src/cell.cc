@@ -1532,7 +1532,7 @@ fpoint voronoicell_base<n_option>::maxradsq() {
 
 /** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
  * stream, displacing the cell by an amount (x,y,z).
- * \param[in] os A output stream to write to.
+ * \param[in] &os A output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position. */
 template<class n_option>
 void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
@@ -1570,7 +1570,7 @@ inline void voronoicell_base<n_option>::draw_pov(fpoint x,fpoint y,fpoint z) {
 }
 
 /** Outputs the edges of the Voronoi cell (in gnuplot format) to an output stream.
- * \param[in] os A reference to an output stream to write to.
+ * \param[in] &os A reference to an output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
@@ -1613,7 +1613,7 @@ inline void voronoicell_base<n_option>::draw_gnuplot(fpoint x,fpoint y,fpoint z)
  * makes use of the optional inside_vector specification, which makes the mesh
  * object solid, so the the POV-Ray Constructive Solid Geometry (CSG) can be
  * applied.
- * \param[in] os An output stream to write to.
+ * \param[in] &os An output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
  */
 template<class n_option>
@@ -1807,7 +1807,7 @@ int voronoicell_base<n_option>::number_of_faces() {
 
 /** This routine is a placeholder which just prints the ID of a
  * vertex.
- * \param[in] os The output stream to write to.
+ * \param[in] &os The output stream to write to.
  * \param[in] i The ID of a vertex.
  * \param[in] j The particular plane of interest (ignored in this routine). */ 
 void neighbor_none::print(ostream &os,int i,int j) {
@@ -1833,7 +1833,7 @@ inline void voronoicell_base<n_option>::facets(const char *filename) {
 
 /** Examines all the facets, and evaluates them by the number of vertices that
  * they have.
- * \param[in] os An open output stream to write to. */
+ * \param[in] &os An open output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::facet_statistics(ostream &os) {
 	int *stat,*pstat,current_facet_size=init_facet_size,newc,maxf=0;
@@ -1907,7 +1907,7 @@ void voronoicell_base<n_option>::label_facets() {
 /** If the template is instantiated with the neighbor tracking turned on, then
  * this routine will print out a list of all the neighbors of a given cell.
  * Otherwise, this routine does nothing.
- * \param[in] os An open output stream to write to. */
+ * \param[in] &os An open output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::neighbors(ostream &os) {
 	neighbor.neighbors(os);
@@ -2062,7 +2062,7 @@ inline void neighbor_track::add_memory_vorder(int i) {
 }
 
 /** This initializes the neighbor information for a rectangular box
- * and is called during the initiailization routine for the voronoicell
+ * and is called during the initialization routine for the voronoicell
  * class. */
 inline void neighbor_track::init() {
 	int *q;
@@ -2152,12 +2152,12 @@ inline void neighbor_track::copy_pointer(int a,int b) {
 	ne[a]=ne[b];
 }
 
-/** This sets ne[j] to the first auxilliary pointer. */
+/** This sets ne[j] to the first auxiliary pointer. */
 inline void neighbor_track::set_to_aux1(int j) {
 	ne[j]=paux1;
 }
 
-/** This sets ne[j] to the second auxilliary pointer. */
+/** This sets ne[j] to the second auxiliary pointer. */
 inline void neighbor_track::set_to_aux2(int j) {
 	ne[j]=paux2;
 }
@@ -2170,26 +2170,26 @@ inline void neighbor_track::print_edges(int i) {
 	}
 }
 
-/** This allocates a new array and sets the auxilliary pointer
+/** This allocates a new array and sets the auxiliary pointer
  * to it. */
 inline void neighbor_track::allocate_aux1(int i) {
 	paux1=new int[i*vc->mem[i]];
 }
 
 /** This deletes a particular neighbor array and switches the
- * pointer to the auxilliary pointer. */
+ * pointer to the auxiliary pointer. */
 inline void neighbor_track::switch_to_aux1(int i) {
 	delete [] mne[i];
 	mne[i]=paux1;
 }
 
 /** This routine copies neighbor information into the
- * auxilliary pointer. */
+ * auxiliary pointer. */
 inline void neighbor_track::copy_to_aux1(int i,int m) {
 	paux1[m]=mne[i][m];
 }
 
-/** This sets ne[k] to the auxillary pointer with an offset. */
+/** This sets ne[k] to the auxiliary pointer with an offset. */
 inline void neighbor_track::set_to_aux1_offset(int k,int m) {
 	ne[k]=paux1+m;
 }
@@ -2285,7 +2285,7 @@ void neighbor_track::label_facets() {
 
 /** This routine prints out a bracketed pair showing a vertex number, and the
  * corresponding neighbor information.
- * \param[in] os The output stream to write to.
+ * \param[in] &os The output stream to write to.
  * \param[in] i The vertex number to print.
  * \param[in] j The index of the neighbor information to print. */
 void neighbor_track::print(ostream &os,int i,int j) {

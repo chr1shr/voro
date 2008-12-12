@@ -50,7 +50,7 @@ int main() {
 			while (v.plane_intersects(x,y,z,rmax)) rmax*=2;
 
 			// We now know that the distance is somewhere between
-			// rmin and rmax. Test the point halfway inbetween
+			// rmin and rmax. Test the point halfway in-between
 			// these two. If it intersects, then move rmin to this
 			// point; otherwise, move rmax there. At each stage the
 			// bounding interval is divided by two. Exit when the

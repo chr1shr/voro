@@ -5,7 +5,7 @@
 // Date     : July 1st 2008
 
 /** \file wall.cc
- * \brief Function implemenations for the derived wall classes. */
+ * \brief Function implementations for the derived wall classes. */
 
 #include "wall.hh"
 

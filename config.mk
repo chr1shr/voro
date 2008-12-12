@@ -4,7 +4,7 @@
 #Email  : chr@alum.mit.edu
 #Date   : July 1st 2008
 
-#This a common configuration file that includes definitioins used by all
+#This a common configuration file that includes definitions used by all
 #the Makefiles.
 
 #Compiler location and compiler switches. Add "-DFACETS_SINGLE_PRECISION" to

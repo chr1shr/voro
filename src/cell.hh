@@ -101,7 +101,7 @@ class voronoicell_base {
 		 * The two dimensional array is not allocated in the usual method.
 		 * To account for the fact the different vertices have different
 		 * orders, and thus require different amounts of storage, the 
-		 * elementss of ed[i] point to one-dimensional arrays in the mep[]
+		 * elements of ed[i] point to one-dimensional arrays in the mep[]
 		 * array of different sizes.
 		 *
 		 * More specifically, if vertex i has order m, then ed[i]
@@ -318,7 +318,7 @@ class neighbor_track {
 	public:
 		/** This two dimensional array holds the neighbor information
 		 * associated with each vertex. mne[p] is a one dimensional
-		 * array which holds all of the neighbor informations for
+		 * array which holds all of the neighbor information for
 		 * vertices of order p. */
 		int **mne;
 		/** This is a two dimensional array that holds the neighbor
@@ -360,10 +360,10 @@ class neighbor_track {
 		inline void neighbors(ostream &os);
 		inline void check_facets();
 	private:
-		/** This is an auxilliary pointer which is used in some of the
+		/** This is an auxiliary pointer which is used in some of the
 		 * low level neighbor operations. */
 		int *paux1;
-		/** This is a second auxilliary pointer which is used in some
+		/** This is a second auxiliary pointer which is used in some
 		 * of the low level neighbor operations. */
 		int *paux2;
 };

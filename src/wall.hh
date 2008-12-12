@@ -57,7 +57,7 @@ struct wall_plane : public wall {
 
 /** \brief A class representing a cylindrical wall object.
  *
- * This class respresents a open cylinder wall object. */
+ * This class represents a open cylinder wall object. */
 struct wall_cylinder : public wall {
 	public:
 		/** Constructs a cylinder wall object.
@@ -84,7 +84,7 @@ struct wall_cylinder : public wall {
 
 /** \brief A class representing a conical wall object. 
  *
- * This class respresents a cone wall object. */
+ * This class represents a cone wall object. */
 struct wall_cone : public wall {
 	public:
 		/** Constructs a cone wall object.

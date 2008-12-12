@@ -338,10 +338,10 @@ class wall {
 		/** A pure virtual function for testing whether a point is
 		 * inside the wall object. */
 		virtual bool point_inside(fpoint x,fpoint y,fpoint z) = 0;
-		/** A pure virutal function for cutting a cell without
+		/** A pure virtual function for cutting a cell without
 		 * neighbor-tracking with a wall. */
 		virtual bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) = 0;
-		/** A pure virutal function for cutting a cell with
+		/** A pure virtual function for cutting a cell with
 		 * neighbor-tracking enabled with a wall. */
 		virtual bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) = 0;
 };

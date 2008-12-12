@@ -510,7 +510,7 @@ void container_base<r_option>::count_all_faces() {
 
 /** An overloaded version of count_all_faces(), which outputs the result to a
  * particular file.
- * \param[in] filename The name fo the file to write to. */
+ * \param[in] filename The name of the file to write to. */
 template<class r_option>
 void container_base<r_option>::count_all_faces(const char* filename) {
 	ofstream os;
@@ -557,7 +557,7 @@ void container_base<r_option>::print_all() {
 
 /** An overloaded version of print_all(), which outputs the result to a particular
  * file.
- * \param[in] filename The name fo the file to write to. */
+ * \param[in] filename The name of the file to write to. */
 template<class r_option>
 inline void container_base<r_option>::print_all(const char* filename) {
 	voronoicell c;
@@ -793,8 +793,8 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 
 	// The indices (si,sj,sk) tell us which worklist to use, to test the
 	// blocks in the optimal order. But we only store worklists for the
-	// eigth of the region where si, sj, and sk are all less than half the
-	// full grid. The rest of the cases ard handled by symmetry. In this
+	// eighth of the region where si, sj, and sk are all less than half the
+	// full grid. The rest of the cases are handled by symmetry. In this
 	// section, we detect for these cases, by reflecting high values of si,
 	// sj, and sk. For these cases, a mask is constructed in m1 and m2
 	// which is used to flip the worklist information when it is loaded.
@@ -1294,7 +1294,7 @@ inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
-/** Creates a voropp_loop object, by pulling the necesssary constants about the container
+/** Creates a voropp_loop object, by pulling the necessary constants about the container
  * geometry from a pointer to the current container class. */
 template<class r_option>
 voropp_loop::voropp_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
