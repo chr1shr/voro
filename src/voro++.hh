@@ -144,13 +144,13 @@
  * far away to possibly influence cell's shape. The code makes use of two
  * possible methods for working out when a cell computation is complete:
  * 
- * - Radius test -- if the maximum distance of a Voronoi cell
+ * - Radius test: if the maximum distance of a Voronoi cell
  *   vertex from the cell center is R, then no particles more than a distance
  *   2R away can possibly influence the cell. This a very fast computation to
  *   do, but it has no directionality: if the cell extends a long way in one
  *   direction then particles a long distance in other directions will still
  *   need to be tested.
- * - Region test -- it is possible to test whether a specific region can
+ * - Region test: it is possible to test whether a specific region can
  *   possibly influence the cell by applying a series of plane tests at the
  *   point on the region which is closest to the Voronoi cell center. This is a
  *   slower computation to do, but it has directionality.
@@ -237,7 +237,7 @@
  * are then created from the template:
  * 
  * - voronoicell: an instance of voronoicell_base with the neighbor_none class.
- * - voronoicell_neighbor -- an instance of voronoicell_base with the
+ * - voronoicell_neighbor: an instance of voronoicell_base with the
  *   neighbor_track class.
  * 
  * The two classes will be the same, except that the second will get all of the
@@ -245,7 +245,7 @@
  * neighbor_track class. Since the two instances of the template are created
  * during the compilation, and since all of the functions in neighbor_none and
  * neighbor_track are inlined, there should be no speed overhead with this
- * construction -- it should have the same efficiency as writing two completely
+ * construction; it should have the same efficiency as writing two completely
  * separate classes. C++ has other methods for achieving similar results, such
  * as virtual functions and class inheritance, but these are more focused on
  * dynamic polymorphism, switching between functionality at run-time, resulting
