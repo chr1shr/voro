@@ -22,6 +22,6 @@ all: $(EXECUTABLES)
 clean:
 	rm -f $(EXECUTABLES)
 
-doc: Doxyfile $(SOURCE)
+help: Doxyfile $(SOURCE)
 	doxygen Doxyfile
 	cd ../latex && make

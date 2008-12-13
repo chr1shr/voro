@@ -23,7 +23,7 @@ determine whether the points are within the walls. It outputs the particles to
 tetrahedron_p.gnu, and the Voronoi cells to tetrahedron_v.pov. These can be
 visualized in gnuplot using:
 
-splot 'tetrahedron_p.gnu' with points, 'tetrahedron_v.pov' with lines
+splot 'tetrahedron_p.gnu' with points, 'tetrahedron_v.gnu' with lines
 
 Currently, the curved walls are made by a single approximating plane cut. This
 provides good results when particles are pressed against the walls, but is

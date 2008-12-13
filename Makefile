@@ -9,8 +9,8 @@ all:
 	cd examples && make
 	cd src && make
 
-doc:
-	cd src && make doc
+help:
+	cd src && make help
 
 clean:
 	cd examples && make clean
