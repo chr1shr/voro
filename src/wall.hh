@@ -28,6 +28,7 @@ struct wall_sphere : public wall {
 		inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		void min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz);
 	private:
 		const int w_id;
 		const fpoint xc,yc,zc,rc;
@@ -50,6 +51,7 @@ struct wall_plane : public wall {
 		inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		void min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz);
 	private:
 		const int w_id; 
 		const fpoint xc,yc,zc,ac;
@@ -76,6 +78,7 @@ struct wall_cylinder : public wall {
 		inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		void min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz);
 	private:
 		const int w_id;
 		const fpoint xc,yc,zc,xa,ya,za,asi,rc;
@@ -104,6 +107,7 @@ struct wall_cone : public wall {
 		inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		void min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz);
 	private:
 		const int w_id;
 		const fpoint xc,yc,zc,xa,ya,za,asi,gra,sang,cang;

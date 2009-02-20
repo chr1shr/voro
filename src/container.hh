@@ -344,6 +344,10 @@ class wall {
 		/** A pure virtual function for cutting a cell with
 		 * neighbor-tracking enabled with a wall. */
 		virtual bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) = 0;
+		/** A pure virtual function for returning the minimum distance
+		 * vector from a position to the wall, used in the dynamic
+		 * relaxation calculations. */
+		virtual void min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz) = 0;
 };
 
 /** The basic container class. */

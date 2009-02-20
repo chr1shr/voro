@@ -27,11 +27,25 @@ template<class n_option>
 inline bool wall_sphere::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint xd=x-xc,yd=y-yc,zd=z-zc,dq;
 	dq=xd*xd+yd*yd+zd*zd;
-	if (dq>1e-5) {
+	if (dq>tolerance) {
 		dq=2*(sqrt(dq)*rc-dq);
 		return c.nplane(xd,yd,zd,dq,w_id);
 	}
 	return true;
+}
+
+/** Finds the vector of minimum distance from a given position vector to the
+ * sphere wall object.
+ * \param[in] (x,y,z) the vector to test.
+ * \param[in] (&dx,&dy,&dz) the vector of minimum distance to the wall. */ 
+void wall_sphere::min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz) {
+	fpoint rad=sqrt(x*x+y*y+z*z);
+	if(rad>tolerance) {
+		rad=rc/rad-1;
+		dx=x*rad;dy=y*rad;dz=z*rad;
+	} else {
+		dx=rc;dy=dz=0;
+	}
 }
 
 /** Tests to see whether a point is inside the plane wall object.
@@ -49,6 +63,18 @@ template<class n_option>
 inline bool wall_plane::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint dq=2*(ac-x*xc-y*yc-z*zc);
 	return c.nplane(xc,yc,zc,dq,w_id);
+}
+
+/** Finds the vector of minimum distance from a given position vector to the
+ * plane wall object.
+ * \param[in] (x,y,z) the vector to test.
+ * \param[in] (&dx,&dy,&dz) the vector of minimum distance to the wall. */ 
+void wall_plane::min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz) {
+	const fpoint mag=1/(xc*xc+yc*yc+zc*zc);
+	fpoint dq=(ac-x*xc-y*yc-z*zc)*mag;
+	dx=xc*dq;
+	dy=yc*dq;
+	dz=zc*dq;
 }
 
 /** Tests to see whether a point is inside the cylindrical wall object.
@@ -80,6 +106,21 @@ inline bool wall_cylinder::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,
 		return c.nplane(xd,yd,zd,pa,w_id);
 	}
 	return true;
+}
+
+void wall_cylinder::min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz) {
+	fpoint xd=x-xc,yd=y-yc,zd=z-zc;
+	fpoint pa=(xd*xa+yd*ya+zd*za)*asi;
+	xd-=xa*pa;yd-=ya*pa;zd-=za*pa;
+	pa=xd*xd+yd*yd+zd*zd;
+	if(pa>1e-5) {
+		pa=(sqrt(pa)*rc-pa);
+		dx=xd*pa*pa;
+		dy=yd*pa*pa;
+		dz=zd*pa*pa;
+	} else {
+		dx=dy=dz=0;
+	}
 }
 
 /** Tests to see whether a point is inside the cone wall object.
@@ -121,4 +162,8 @@ inline bool wall_cone::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoi
 		return c.nplane(xf,yf,zf,pa,w_id);
 	}
 	return true;
+}
+
+void wall_cone::min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz) {
+
 }
