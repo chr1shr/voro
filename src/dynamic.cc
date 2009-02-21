@@ -68,7 +68,6 @@ void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 	
 	for(ijk=k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
 		for(l=0;l<co[ijk];l++) {
-			cout << ijk << " " << l << endl;
 			cx=p[ijk][sz*l];
 			cy=p[ijk][sz*l+1];
 			cz=p[ijk][sz*l+2];

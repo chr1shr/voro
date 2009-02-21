@@ -38,6 +38,19 @@ class velocity_brownian {
 		inline fpoint rnd() {return fpoint(rand())/RAND_MAX;}
 };
 
+class velocity_twist {
+	public:
+		velocity_twist() : track_ve(false), mag(0.005) {}; 
+		inline void vel(int ijk,int q,fpoint &x,fpoint &y,fpoint &z) {
+			x+=-mag*y*z;
+			y+=mag*x*z;
+		}
+		const bool track_ve;
+	private:
+		const fpoint mag;
+		inline fpoint rnd() {return fpoint(rand())/RAND_MAX;}
+};
+
 template<class r_option>
 class container_dynamic_base : public container_base<r_option> {
 	public:

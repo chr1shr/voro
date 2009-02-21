@@ -8,15 +8,15 @@
 #include "dynamic.cc"
 
 // Set up constants for the container geometry
-const fpoint x_min=-4,x_max=4;
-const fpoint y_min=-4,y_max=4;
-const fpoint z_min=-4,z_max=4;
+const fpoint x_min=-6,x_max=6;
+const fpoint y_min=-6,y_max=6;
+const fpoint z_min=-6,z_max=6;
 
 // Set the computational grid size
 const int n_x=6,n_y=6,n_z=6;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=325;
+const int particles=635;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -32,7 +32,7 @@ int main() {
 			false,false,false,8);
 
 	// Add a cylindrical wall to the container
-	wall_sphere sph(0,0,0,4);
+	wall_sphere sph(0,0,0,5);
 	con.add_wall(sph);
 	
 	// Randomly add particles into the container
@@ -44,11 +44,11 @@ int main() {
 	}
 
 	for(i=0;i<100;i++) {
-		con.move<velocity_brownian>();
+		con.move<velocity_twist>();
 		con.full_relax(0.8);
-		con.draw_particles_pov("temp.pov");
-		con.draw_cells_pov("temp2.pov");
-		sprintf(q,"povray +H400 +W400 +A0.3 -J -D +Ofr_%04d.png dyn_master.pov",i);
-		system(q);
+		sprintf(q,"output/%04d_p.pov",i);con.draw_particles_pov(q);
+		sprintf(q,"gzip -9 output/%04d_p.pov",i);system(q);
+		sprintf(q,"output/%04d_v.pov",i);con.draw_cells_pov(q);
+		sprintf(q,"gzip -9 output/%04d_v.pov",i);system(q);
 	}
 }

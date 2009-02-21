@@ -7,44 +7,43 @@ $h=0;
 $dir="output";
 
 foreach $g (0..200) {
-	$p=$g*4;
+	$ng=sprintf("%04d",$g);
+
 	open T,">rtemp.pov";
-	open A,"cylinder.pov";
+
+	open A,"dyn_master.pov";
 	while (<A>) {
-		last if m/INCLUDE/;
+		last if m/\#include "temp.pov"/;
 		print T;
 	}
-	$o=1;
-	open B,"cylinder_p.pov";
-	while (<B>) {
-		if (m/id (\d*)/) {
-			$o=$1<$p?1:0;next;
-		}
-		print T if $o;
-	}
-	print T "}\n" unless $o;
-	close B;
-	$o=1;
-	open B,"cylinder_v.pov";
-	while (<B>) {
-		if (m/cell (\d*)/) {
-			$o=$1<$p?1:0;next;
-		}
-		print T if $o;
-	}
-	print T "}\n" unless $o;
-	close B;
+	
+	$fn="$dir/${ng}_p.pov";
+	system "gunzip $fn.gz";
+
+	open B,"$fn";
+	print T while <B>;
+	close B;system "rm $fn";
+	
 	while (<A>) {
-		$ty=$g/2;
-		s/ROT/$ty/g;
+		last if m/\#include "temp2.pov"/;
 		print T;
 	}
-	close T;
+
+	$fn="$dir/${ng}_v.pov";
+	system "gunzip $fn.gz";
+
+	open B,"$fn";
+	print T while <B>;
+	close B;system "rm $fn";
+	
+	print T while (<A>);
+	close A;close T;
+
 	print "Rendering movie frames\n";
 	print "Frame $f, timestep $ts to $nodes[$h]\n";
 	`rsync -z rtemp.pov $nodes[$h]:cgran/rtemp$h.pov`;
 	$nice=(@nodes[$h]=~m/yuba/)?"nice -n 19":"nice +19";
-	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$g.png +W200 +H320 +A0.0001 +R9 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$g.png . ; ssh @nodes[$h] \"rm cgran/fr_$g.png\"\n" if (($pid[$h]=fork)==0);
+	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W512 +H512 +A0.0001 +R9 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png . ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
 	if ($queue) {
 		print "Waiting...\n";
 		$piddone=wait;$h=0;
@@ -57,3 +56,5 @@ foreach $g (0..200) {
 }
 
 wait foreach 1..$#nodes;
+
+system "qt_export --sequencerate=15 output/fr_0000.png --loadsettings=/Users/chr/misc/qtprefs/qt --replacefile ${e}_$ARGV[1].mov";
