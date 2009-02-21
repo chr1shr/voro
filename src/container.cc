@@ -1388,6 +1388,10 @@ inline int voropp_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 	} else return -1;
 }
 
+inline bool voropp_loop::reached(int ri,int rj,int rk) {
+	return rk==k&&rj==j&&ri==i;
+}
+
 /** Custom int function, that gives consistent stepping for negative numbers.
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
  * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/

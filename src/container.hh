@@ -33,7 +33,7 @@ template<class r_option>
 class container_base {
 	public:
 		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
-		~container_base();
+		virtual ~container_base();
 		void draw_particles(const char *filename);
 		void draw_particles();
 		void draw_particles(ostream &os);
@@ -198,7 +198,7 @@ class container_base {
 		inline void print_all(ostream &os,voronoicell_base<n_option> &c);
 		template<class n_option>
 		inline bool initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
-		void add_particle_memory(int i);
+		virtual void add_particle_memory(int i);
 		void add_list_memory();
 	private:
 #include "worklist.hh"
@@ -306,6 +306,7 @@ class voropp_loop {
 		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
 		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
 		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
+		inline bool reached(int ri,int rj,int rk);
 		/** The current block index in the x direction, referencing a
 		 * real cell in the range 0 to nx-1. */
 		int ip;
