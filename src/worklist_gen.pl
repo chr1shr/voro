@@ -5,13 +5,13 @@
 # Email    : chr@alum.mit.edu
 # Date     : July 1st 2008
 #
-# worklist_gen.pl - this perl script is used to automatically generate the worklists
-# of blocks that are stored in worklist.cc, that are used by the compute_cell()
-# routine to ensure maximum efficiency
+# worklist_gen.pl - this perl script is used to automatically generate the
+# worklists of blocks that are stored in worklist.cc, that are used by the
+# compute_cell() routine to ensure maximum efficiency
 
-# Each region is divided into a grid of subregions, and a worklist is constructed
-# for each. This parameter sets is set to half the number of subregions that the
-# block is divided into.
+# Each region is divided into a grid of subregions, and a worklist is
+# constructed for each. This parameter sets is set to half the number of
+# subregions that the block is divided into.
 $hr=4;
 
 # This parameter is automatically set to the the number of subregions that the
@@ -21,9 +21,9 @@ $r=$hr*2;
 # This parameter sets the total number of block entries in each worklist
 $ls=63;
 
-# When the worklists are being constructed, a 3D array is made use of.
-# To prevent the creation of array elements with negative indices, this
-# parameter sets an arbitrary displacement.
+# When the worklists are being constructed, a 3D array is made use of. To
+# prevent the creation of array elements with negative indices, this parameter
+# sets an arbitrary displacement.
 $d=8;
 
 use Math::Trig;

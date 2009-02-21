@@ -483,6 +483,18 @@ fpoint container_base<r_option>::sum_cell_volumes() {
 	return vol;
 }
 
+template<class r_option>
+void container_base<r_option>::print_facet_information() {
+	voronoicell c;
+	int i,j,k,ijk=0,q;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(q=0;q<co[ijk];q++) if (compute_cell(c,i,j,k,ijk,q)) {
+			cout << "Particle " << id[ijk][q] << ":\n";
+			c.facets(cout);
+		}
+	}
+}
+
 /** Prints a list of all particle labels, positions, and the number of faces to
  * the standard output. */
 template<class r_option>

@@ -29,7 +29,9 @@ int main() {
 			v.plane(x,y,z,1);
 		}
 	}
-	
+
+	v.facets(cout);
+
 	// Output the Voronoi cell to a file, in the gnuplot format
 	v.draw_gnuplot("single_cell.gnu",0,0,0);
 }
