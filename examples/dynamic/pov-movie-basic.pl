@@ -6,7 +6,7 @@ $h=0;
 
 $dir="output";
 
-foreach $g (0..200) {
+foreach $g (0..99) {
 	$ng=sprintf("%04d",$g);
 
 	open T,">rtemp.pov";
@@ -43,7 +43,7 @@ foreach $g (0..200) {
 	print "Frame $f, timestep $ts to $nodes[$h]\n";
 	`rsync -z rtemp.pov $nodes[$h]:cgran/rtemp$h.pov`;
 	$nice=(@nodes[$h]=~m/yuba/)?"nice -n 19":"nice +19";
-	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W512 +H512 +A0.0001 +R9 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png . ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
+	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W512 +H512 +A0.3 +R3 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png output ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
 	if ($queue) {
 		print "Waiting...\n";
 		$piddone=wait;$h=0;
@@ -57,4 +57,5 @@ foreach $g (0..200) {
 
 wait foreach 1..$#nodes;
 
-system "qt_export --sequencerate=15 output/fr_0000.png --loadsettings=/Users/chr/misc/qtprefs/qt --replacefile ${e}_$ARGV[1].mov";
+system "qt_export --sequencerate=15 output/fr_0000.png --loadsettings=/Users/chr/misc/qtprefs/qt --replacefile $ARGV[0]";
+system "rm output/fr_????.png";
