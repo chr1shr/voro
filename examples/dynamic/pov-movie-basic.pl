@@ -6,7 +6,7 @@ $h=0;
 
 $dir="output";
 
-foreach $g (0..99) {
+foreach $g (0..200) {
 	$ng=sprintf("%04d",$g);
 
 	open T,">rtemp.pov";

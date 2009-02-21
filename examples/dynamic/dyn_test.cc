@@ -8,15 +8,15 @@
 #include "dynamic.cc"
 
 // Set up constants for the container geometry
-const fpoint x_min=-6,x_max=6;
-const fpoint y_min=-6,y_max=6;
-const fpoint z_min=-6,z_max=6;
+const fpoint x_min=-8,x_max=8;
+const fpoint y_min=-8,y_max=8;
+const fpoint z_min=-8,z_max=8;
 
 // Set the computational grid size
-const int n_x=6,n_y=6,n_z=6;
+const int n_x=8,n_y=8,n_z=8;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=635;
+const int particles=1751;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -32,7 +32,7 @@ int main() {
 			false,false,false,8);
 
 	// Add a cylindrical wall to the container
-	wall_sphere sph(0,0,0,5);
+	wall_sphere sph(0,0,0,7);
 	con.add_wall(sph);
 	
 	// Randomly add particles into the container
@@ -40,10 +40,10 @@ int main() {
 		x=x_min+rnd()*(x_max-x_min);
 		y=y_min+rnd()*(y_max-y_min);
 		z=z_min+rnd()*(z_max-z_min);
-		if (x*x+y*y+z*z<3*3) {con.put(i,x,y,z);i++;}
+		if (x*x+y*y+z*z<4*4) {con.put(i,x,y,z);i++;}
 	}
 
-	for(i=0;i<100;i++) {
+	for(i=0;i<=200;i++) {
 		con.move<velocity_twist>();
 		con.full_relax(0.8);
 		sprintf(q,"output/%04d_p.pov",i);con.draw_particles_pov(q);

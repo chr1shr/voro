@@ -40,14 +40,15 @@ class velocity_brownian {
 
 class velocity_twist {
 	public:
-		velocity_twist() : track_ve(false), mag(0.005) {}; 
+		velocity_twist() : track_ve(false), ang(0.005) {}; 
 		inline void vel(int ijk,int q,fpoint &x,fpoint &y,fpoint &z) {
-			x+=-mag*y*z;
-			y+=mag*x*z;
+			double px=x;
+			x=x*cos(ang*z)+y*sin(ang*z);
+			y=y*cos(ang*z)-px*sin(ang*z);
 		}
 		const bool track_ve;
 	private:
-		const fpoint mag;
+		const fpoint ang;
 		inline fpoint rnd() {return fpoint(rand())/RAND_MAX;}
 };
 

@@ -187,7 +187,10 @@ void container_dynamic_base<r_option>::move(v_class *vcl) {
 					ni+=nx*(nj+ny*nk);
 					if(co[ni]==mem[ni]) add_particle_memory(ni);
 					id[ni][co[ni]]=id[ijk][l];
-					for(ll=0;ll<sz;ll++) p[ni][co[ni]*sz+ll]=p[ijk][l*sz+ll];
+					p[ni][co[ni]*sz]=x;
+					p[ni][co[ni]*sz+1]=y;
+					p[ni][co[ni]*sz+2]=z;
+					if(sz==4) p[ni][co[ni]*sz+3]=p[ijk][l*sz+3];
 					co[ni]++;
 				}
 				co[ijk]--;
