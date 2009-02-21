@@ -302,6 +302,7 @@ template<class r_option>
 inline void container_base<r_option>::import(const char *filename) {
 	ifstream is;
 	is.open(filename,ifstream::in);
+	if(is.fail()) throw fatal_error("Unable to open file for import");
 	import(is);
 	is.close();
 }
