@@ -16,7 +16,7 @@ const fpoint z_min=-8,z_max=8;
 const int n_x=8,n_y=8,n_z=8;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=1751;
+const int particles=1800;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -47,8 +47,8 @@ int main() {
 		con.move<velocity_twist>();
 		con.full_relax(0.8);
 		sprintf(q,"output/%04d_p.pov",i);con.draw_particles_pov(q);
-		sprintf(q,"gzip -9 output/%04d_p.pov",i);system(q);
+		sprintf(q,"gzip -f -9 output/%04d_p.pov",i);system(q);
 		sprintf(q,"output/%04d_v.pov",i);con.draw_cells_pov(q);
-		sprintf(q,"gzip -9 output/%04d_v.pov",i);system(q);
+		sprintf(q,"gzip -f -9 output/%04d_v.pov",i);system(q);
 	}
 }

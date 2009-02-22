@@ -1,18 +1,18 @@
 #!/usr/bin/perl 
 
-@nodes=("yuba.dhcp.lbl.gov","yuba.dhcp.lbl.gov","jordan.lbl.gov","tigris.lbl.gov","jordan.lbl.gov","ganges.lbl.gov","volga.lbl.gov","jordan.lbl.gov","volga.lbl.gov","volga.lbl.gov","tigris.lbl.gov","yuba.dhcp.lbl.gov","yuba.dhcp.lbl.gov","mekong.lbl.gov","mekong.lbl.gov");
+@nodes=("yuba.dhcp.lbl.gov","yuba.dhcp.lbl.gov","jordan.lbl.gov","tigris.lbl.gov","jordan.lbl.gov","ganges.lbl.gov","volga.lbl.gov","jordan.lbl.gov","volga.lbl.gov","volga.lbl.gov","tigris.lbl.gov","yuba.dhcp.lbl.gov","yuba.dhcp.lbl.gov","mekong.lbl.gov","mekong.lbl.gov","ganges.lbl.gov");
 
 $h=0;
 
 $dir="output";
 
-$g=0;$ng="0000"
+$g=0;$ng="0000";
 
-while (-e "$dir/${ng}_p.pov") {
+while (-e "$dir/${ng}_p.pov.gz") {
 
 	open T,">rtemp.pov";
 
-	open A,"square_master.pov";
+	open A,"dyn_master.pov";
 	while (<A>) {
 		last if m/\#include "temp.pov"/;
 		print T;
@@ -44,11 +44,10 @@ while (-e "$dir/${ng}_p.pov") {
 	print T while (<A>);
 	close A;close T;
 
-	print "Rendering movie frames\n";
-	print "Frame $f, timestep $ts to $nodes[$h]\n";
+	print "Frame $g to $nodes[$h]\n";
 	`rsync -z rtemp.pov $nodes[$h]:cgran/rtemp$h.pov`;
 	$nice=(@nodes[$h]=~m/yuba/)?"nice -n 19":"nice +19";
-	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W512 +H512 +A0.3 +R3 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png output ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
+	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W640 +H640 +A0.001 +R4 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png output ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
 	if ($queue) {
 		print "Waiting...\n";
 		$piddone=wait;$h=0;
