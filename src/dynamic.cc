@@ -59,6 +59,241 @@ int container_dynamic_base<r_option>::count(fpoint x,fpoint y,fpoint z,fpoint r)
 }
 
 template<class r_option>
+void container_dynamic_base<r_option>::spot(fpoint cx,fpoint cy,fpoint cz,fpoint dx,fpoint dy,fpoint dz,fpoint rad) {
+	velocity_constant vcl(dx,dy,dz);
+	local_move(vcl,cx,cy,cz,rad);
+}
+
+template<class r_option>
+void container_dynamic_base<r_option>::gauss_spot(fpoint cx,fpoint cy,fpoint cz,fpoint dx,fpoint dy,fpoint dz,fpoint dec,fpoint rad) {
+	velocity_gaussian vcl(cx,cy,cz,dx,dy,dz,dec);
+	local_move(vcl,cx,cy,cz,rad);
+}
+
+template<class r_option>
+template<class v_class>
+void container_dynamic_base<r_option>::local_move(v_class &vcl,fpoint cx,fpoint cy,fpoint cz,fpoint rad) {
+	int l,ll,s,ni,nj,nk;
+	fpoint x,y,z,ex,ey,ez,px,py,pz;
+	voropp_loop l1(this);
+	s=l1.init(cx,cy,cz,rad,px,py,pz);rad*=rad;
+	do {gh[s]=co[s];} while ((s=l1.inc(px,py,pz))!=-1);
+
+	s=l1.reset(px,py,pz);
+	do {
+		l=0;
+		while(l<gh[s]) {
+			x=p[s][sz*l]+px;ex=x-cx;
+			y=p[s][sz*l+1]+py;ey=y-cy;
+			z=p[s][sz*l+2]+pz;ez=z-cz;
+			if(ex*ex+ey*ey+ez*ez>=rad) {l++;continue;}
+			vcl.vel(s,l,x,y,z);
+
+			ni=step_int((x-ax)*xsp);
+			nj=step_int((y-ay)*ysp);
+			nk=step_int((z-az)*zsp);
+
+			if(ni==l1.ip&&nj==l1.jp&&nk==l1.kp) {
+				p[s][sz*l]=x;
+				p[s][sz*l+1]=y;
+				p[s][sz*l+2]=z;
+				l++;
+			} else {
+				if((xperiodic||(ni>=0&&ni<nx))
+				 &&(yperiodic||(nj>=0&&nj<ny))
+				 &&(zperiodic||(nk>=0&&nk<nz))) {
+					if(xperiodic) {x-=step_div(ni,nx)*(bx-ax);ni=step_mod(ni,nx);}
+					if(yperiodic) {y-=step_div(nj,ny)*(by-ay);nj=step_mod(nj,ny);}
+					if(zperiodic) {z-=step_div(nk,nz)*(bz-az);nk=step_mod(nk,nz);}
+					ni+=nx*(nj+ny*nk);
+					if(co[ni]==mem[ni]) add_particle_memory(ni);
+					id[ni][co[ni]]=id[s][l];
+					p[ni][co[ni]*sz]=x;
+					p[ni][co[ni]*sz+1]=y;
+					p[ni][co[ni]*sz+2]=z;
+					if(sz==4) p[ni][co[ni]*sz+3]=p[s][l*sz+3];
+					co[ni]++;
+				}
+				co[s]--;
+				id[s][l]=id[s][co[s]];
+				for(ll=0;ll<sz;ll++) p[s][sz*l+ll]=p[s][sz*co[s]+ll];
+				if(co[s]+1==gh[s]) {
+					if (vcl.track_ve) {
+						ve[s][3*l]=ve[s][3*co[s]];
+						ve[s][3*l+1]=ve[s][3*co[s]+1];
+						ve[s][3*l+2]=ve[s][3*co[s]+2];
+					}
+					gh[s]--;
+				} else l++;
+			}
+		}
+	} while ((s=l1.inc(px,py,pz))!=-1);
+}
+
+template<class r_option>
+void container_dynamic_base<r_option>::relax(fpoint cx,fpoint cy,fpoint cz,fpoint rad,fpoint alpha) {
+	int l,q,s1,s2;
+	fpoint x,y,z,ox,oy,oz,px,py,pz,ex,ey,ez;
+	fpoint dx,dy,dz,dd,rr,radsq=rad*rad;
+	voropp_loop l1(this),l2(this);
+	s1=l1.init(cx,cy,cz,rad,ox,oy,oz);
+	do {
+		for(l=0;l<3*co[s1];l++) ve[s1][l]=0;
+	} while ((s1=l1.inc(ox,oy,oz))!=-1);
+
+	s1=l1.reset(ox,oy,oz);
+	do {
+		for(l=0;l<co[s1];l++) {
+			ex=p[s1][sz*l]+ox;dx=ex-cx;
+			ey=p[s1][sz*l+1]+oy;dy=ey-cy;
+			ez=p[s1][sz*l+2]+oz;dz=ez-cz;
+			dd=dx*dx+dy*dy+dz*dz;
+			if(dd>=radsq) {l++;continue;}
+
+			s2=l2.init(ex,ey,ez,1,px,py,pz);
+			while(!l2.reached(l1.i,l1.j,l1.k)) {
+				for(q=0;q<co[s2];q++) {
+					x=p[s2][sz*q]+px-ex;
+					y=p[s2][sz*q+1]+py-ey;
+					z=p[s2][sz*q+2]+pz-ez;
+					rr=x*x+y*y+z*z;
+					if (rr<1) {
+						if(dd+rr+2*(dx*x+dy*y+dz*z)<radsq) {
+							rr=alpha*(0.5-0.5/sqrt(rr));
+							ve[s2][3*q]-=x*rr;
+							ve[s2][3*q+1]-=y*rr;
+							ve[s2][3*q+2]-=z*rr;
+						} else rr=alpha*(1-1/sqrt(rr));
+						ve[s1][3*l]+=x*rr;
+						ve[s1][3*l+1]+=y*rr;
+						ve[s1][3*l+2]+=z*rr;
+					}
+				}
+				s2=l2.inc(px,py,pz);
+			}
+			for(q=0;q<l;q++) {
+				x=p[s2][sz*q]+px-ex;
+				y=p[s2][sz*q+1]+py-ey;
+				z=p[s2][sz*q+2]+pz-ez;
+				rr=x*x+y*y+z*z;
+				if (rr<1) {
+					if(dd+rr+2*(dx*x+dy*y+dz*z)<radsq) {
+						rr=alpha*(0.5-0.5/sqrt(rr));
+						ve[s2][3*q]-=x*rr;
+						ve[s2][3*q+1]-=y*rr;
+						ve[s2][3*q+2]-=z*rr;
+					} else rr=alpha*(1-1/sqrt(rr));
+					ve[s1][3*l]+=x*rr;
+					ve[s1][3*l+1]+=y*rr;
+					ve[s1][3*l+2]+=z*rr;
+				}
+			}
+			q++;
+			while(q<co[s2]) {
+				x=p[s2][sz*q]+px-ex;
+				y=p[s2][sz*q+1]+py-ey;
+				z=p[s2][sz*q+2]+pz-ez;
+				rr=x*x+y*y+z*z;
+				if (rr<1) {
+					if(dd+rr+2*(dx*x+dy*y+dz*z)>=radsq) {
+						rr=alpha*(1-1/sqrt(rr));
+						ve[s1][3*l]+=x*rr;
+						ve[s1][3*l+1]+=y*rr;
+						ve[s1][3*l+2]+=z*rr;
+					}
+				}
+				q++;
+			}
+			while((s2=l2.inc(px,py,pz))!=-1) {
+				for(q=0;q<co[s2];q++) {
+					x=p[s2][sz*q]+px-ex;
+					y=p[s2][sz*q+1]+py-ey;
+					z=p[s2][sz*q+2]+pz-ez;
+					rr=x*x+y*y+z*z;
+					if (rr<1) {
+						if(dd+rr+2*(dx*x+dy*y+dz*z)>=radsq) {
+							rr=alpha*(1-1/sqrt(rr));
+							ve[s1][3*l]+=x*rr;
+							ve[s1][3*l+1]+=y*rr;
+							ve[s1][3*l+2]+=z*rr;
+						}
+					}
+				}
+			}
+			wall_contribution(s1,l,ex,ey,ez,alpha);
+		}
+	} while ((s1=l1.inc(ox,oy,oz))!=-1);
+
+	local_move(v_inter,cx,cy,cz,rad);
+}
+
+template<class r_option>
+inline void container_dynamic_base<r_option>::wall_contribution(int s,int l,fpoint cx,fpoint cy,fpoint cz,fpoint alpha) {
+	fpoint x,y,z,rr;
+	for(int q=0;q<wall_number;q++) {
+		walls[q]->min_distance(cx,cy,cz,x,y,z);
+		rr=x*x+y*y+z*z;
+		if (rr<0.25) {
+			rr=0.5*alpha*(1-0.5/sqrt(rr));
+			ve[s][3*l]+=x*rr;
+			ve[s][3*l+1]+=y*rr;
+			ve[s][3*l+2]+=z*rr;
+		}
+	}
+#ifdef VOROPP_AUTO_X_WALL
+	if(!xperiodic) {
+		if(cx-ax<0.5) ve[s][3*l]+=alpha*(0.5+ax-cx);
+		if(bx-cx<0.5) ve[s][3*l]+=alpha*(bx-cx-0.5);
+	}
+#endif
+#ifdef VOROPP_AUTO_Y_WALL
+	if(!yperiodic) {
+		if(cy-ay<0.5) ve[s][3*l+1]+=alpha*(0.5+ay-cy);
+		if(by-cy<0.5) ve[s][3*l+1]+=alpha*(by-cy-0.5);
+	}
+#endif
+#ifdef VOROPP_AUTO_Z_WALL
+	if(!zperiodic) {
+		if(cz-az<0.5) ve[s][3*l+2]+=alpha*(0.5+az-cz);
+		if(bz-cz<0.5) ve[s][3*l+2]+=alpha*(bz-cz-0.5);
+	}
+#endif	
+}
+
+template<class r_option>
+void container_dynamic_base<r_option>::neighbor_distribution(int *bb,fpoint dr,int max) {
+	int i,j,k,ijk,l,s,q,ll;
+	voropp_loop l1(this);
+	fpoint maxr=dr*max,maxrsq=maxr*maxr;
+	fpoint x,y,z,px,py,pz,cx,cy,cz,rr;
+	for(ijk=k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(l=0;l<co[ijk];l++) {
+			cx=p[ijk][sz*l];
+			cy=p[ijk][sz*l+1];
+			cz=p[ijk][sz*l+2];
+			s=l1.init(cx,cy,cz,maxr,px,py,pz);
+			while(!l1.reached(i,j,k)) {
+				for(q=0;q<co[s];q++) {
+					x=p[s][sz*q]+px-cx;
+					y=p[s][sz*q+1]+py-cy;
+					z=p[s][sz*q+2]+pz-cz;
+					rr=x*x+y*y+z*z;
+					if(rr<maxrsq) {ll=int(sqrt(rr));if(ll<max) bb[max]++;}
+				}
+				s=l1.inc(px,py,pz);
+			}
+			for(q=0;q<l;q++) {
+				x=p[s][sz*q]+px-cx;
+				y=p[s][sz*q+1]+py-cy;
+				z=p[s][sz*q+2]+pz-cz;
+				rr=x*x+y*y+z*z;
+				if(rr<maxrsq) {ll=int(sqrt(rr));if(ll<max) bb[max]++;}
+			}
+		}
+	}
+}
+
+template<class r_option>
 void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 	int i,j,k,ijk,l,q,s;
 	fpoint x,y,z,px,py,pz,cx,cy,cz,rr;
@@ -106,20 +341,11 @@ void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 					ve[s][3*q+2]-=z*rr;
 				}
 			}
-			for(q=0;q<wall_number;q++) {
-				walls[q]->min_distance(cx,cy,cz,x,y,z);
-				rr=x*x+y*y+z*z;
-				if (x*x+y*y+z*z<0.25) {
-					rr=0.5*alpha*(1-0.5/sqrt(rr));
-					ve[ijk][3*l]+=x*rr;
-					ve[ijk][3*l+1]+=y*rr;
-					ve[ijk][3*l+2]+=z*rr;
-				}
-			}
+			wall_contribution(ijk,l,cx,cy,cz,alpha);
 		}
 	}
 
-	move(&v_inter);
+	move(v_inter);
 }
 
 /** Increase memory for a particular region. */
@@ -157,21 +383,25 @@ inline int container_dynamic_base<r_option>::step_mod(int a,int b) {
 	return a>=0?a%b:b-1-(b-1-a)%b;
 }
 
+/** Custom div function, that gives consistent stepping for negative numbers. */
+template<class r_option>
+inline int container_dynamic_base<r_option>::step_div(int a,int b) {
+	return a>=0?a/b:-1+(a+1)/b;
+}
+
 template<class r_option>
 template<class v_class>
-void container_dynamic_base<r_option>::move(v_class *vcl) {
+void container_dynamic_base<r_option>::move(v_class &vcl) {
 	int i,j,k,ijk,l,ll,ni,nj,nk;
 	fpoint x,y,z;
 
-	for(ijk=0;ijk<nxyz;ijk++) {
-		gh[ijk]=co[ijk];
-	}
+	for(ijk=0;ijk<nxyz;ijk++) gh[ijk]=co[ijk];
 
 	for(ijk=k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
 		l=0;
 		while(l<gh[ijk]) {
 			x=p[ijk][sz*l];y=p[ijk][sz*l+1];z=p[ijk][sz*l+2];
-			vcl->vel(ijk,l,x,y,z);
+			vcl.vel(ijk,l,x,y,z);
 			ni=step_int((x-ax)*xsp);
 			nj=step_int((y-ay)*ysp);
 			nk=step_int((z-az)*zsp);
@@ -180,10 +410,10 @@ void container_dynamic_base<r_option>::move(v_class *vcl) {
 				p[ijk][sz*l+1]=y;
 				p[ijk][sz*l+2]=z;l++;
 			} else {
-				if(xperiodic) ni=step_mod(ni,nx);
-				if(yperiodic) nj=step_mod(nj,ny);
-				if(zperiodic) nk=step_mod(nk,nz);
 				if((xperiodic||(ni>=0&&ni<nx))&&(yperiodic||(nj>=0&&nj<ny))&&(zperiodic||(nk>=0&&nk<nz))) {
+					if(xperiodic) {x-=step_div(ni,nx)*(bx-ax);ni=step_mod(ni,nx);}
+					if(yperiodic) {y-=step_div(nj,ny)*(by-ay);nj=step_mod(nj,ny);}
+					if(zperiodic) {z-=step_div(nk,nz)*(bz-az);nk=step_mod(nk,nz);}
 					ni+=nx*(nj+ny*nk);
 					if(co[ni]==mem[ni]) add_particle_memory(ni);
 					id[ni][co[ni]]=id[ijk][l];
@@ -198,7 +428,7 @@ void container_dynamic_base<r_option>::move(v_class *vcl) {
 				for(ll=0;ll<sz;ll++) p[ijk][sz*l+ll]=p[ijk][sz*co[ijk]+ll];
 				if(co[ijk]+1==gh[ijk]) {
 					gh[ijk]--;
-					if (vcl->track_ve) {
+					if (vcl.track_ve) {
 						ve[ijk][3*l]=ve[ijk][3*co[ijk]];
 						ve[ijk][3*l+1]=ve[ijk][3*co[ijk]+1];
 						ve[ijk][3*l+2]=ve[ijk][3*co[ijk]+2];

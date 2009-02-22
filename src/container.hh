@@ -306,6 +306,7 @@ class voropp_loop {
 		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
 		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
 		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
+		inline int reset(fpoint &px,fpoint &py,fpoint &pz);
 		inline bool reached(int ri,int rj,int rk);
 		/** The current block index in the x direction, referencing a
 		 * real cell in the range 0 to nx-1. */
@@ -316,8 +317,17 @@ class voropp_loop {
 		/** The current block index in the z direction, referencing a
 		 * real cell in the range 0 to nz-1. */
 		int kp;
+		/** The current block index in the x direction, possibly refering
+		 * to an image block outside the normal range of 0 to nx-1. */
+		int i;
+		/** The current block index in the y direction, possibly refering
+		 * to an image block outside the normal range of 0 to ny-1. */
+		int j;
+		/** The current block index in the z direction, possibly refering
+		 * to an image block outside the normal range of 0 to nz-1. */
+		int k;
 	private:
-		int i,j,k,ai,bi,aj,bj,ak,bk,s;
+		int ai,bi,aj,bj,ak,bk,s;
 		int aip,ajp,akp,inc1,inc2;
 		inline int step_mod(int a,int b);
 		inline int step_div(int a,int b);

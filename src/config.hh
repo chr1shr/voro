@@ -91,6 +91,10 @@ const fpoint tolerance2=2e-5;
 const fpoint tolerance2=2e-10;
 #endif
 
+#define VOROPP_AUTO_X_WALL
+#define VOROPP_AUTO_Y_WALL
+#define VOROPP_AUTO_Z_WALL
+
 /** A large number that is used in the computation. */
 const fpoint large_number=1e30;
 

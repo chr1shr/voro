@@ -38,6 +38,34 @@ class velocity_brownian {
 		inline fpoint rnd() {return fpoint(rand())/RAND_MAX;}
 };
 
+class velocity_constant {
+	public:
+		velocity_constant(fpoint idx,fpoint idy,fpoint idz) : track_ve(false),
+       			dx(idx), dy(idy), dz(idz) {};
+		inline void vel(int ijk,int q,fpoint &x,fpoint &y,fpoint &z) {
+			x+=dx;y+=dy;z+=dz;
+		}
+		const bool track_ve;
+	private:
+		const fpoint dx,dy,dz;
+};
+
+class velocity_gaussian {
+	public:
+		velocity_gaussian(fpoint icx,fpoint icy,fpoint icz,fpoint idx,fpoint idy,fpoint idz,fpoint idec)
+			: track_ve(false), cx(idx), cy(idy), cz(idz), dx(idx), dy(idy), dz(idz), dec(idec) {};
+		inline void vel(int ijk,int q,fpoint &x,fpoint &y,fpoint &z) {
+			fpoint ex=x-cx,ey=y-cy,ez=z-cz;
+			ex=exp(-dec*(ex*ex+ey*ey+ez*ez));
+			x+=ex*dx;y+=ex*dy;z+=ex*dz;
+		}
+		const bool track_ve;
+	private:
+		const fpoint cx,cy,cz;
+		const fpoint dx,dy,dz;
+		const fpoint dec;
+};
+
 class velocity_twist {
 	public:
 		velocity_twist() : track_ve(false), ang(0.005) {}; 
@@ -55,7 +83,8 @@ class velocity_twist {
 template<class r_option>
 class container_dynamic_base : public container_base<r_option> {
 	public:
-		container_dynamic_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
+		container_dynamic_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,
+				fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container_dynamic_base();
 		using container_base<r_option>::xperiodic;
 		using container_base<r_option>::yperiodic;
@@ -63,6 +92,9 @@ class container_dynamic_base : public container_base<r_option> {
 		using container_base<r_option>::ax;
 		using container_base<r_option>::ay;
 		using container_base<r_option>::az;
+		using container_base<r_option>::bx;
+		using container_base<r_option>::by;
+		using container_base<r_option>::bz;
 		using container_base<r_option>::nx;
 		using container_base<r_option>::ny;
 		using container_base<r_option>::nz;
@@ -80,14 +112,17 @@ class container_dynamic_base : public container_base<r_option> {
 		using container_base<r_option>::mem;
 		void wall_diagnostic();
 		int count(fpoint x,fpoint y,fpoint z,fpoint r);
-		void spot() {};
-		void gauss_spot() {};
-		void relax() {};
+		void spot(fpoint cx,fpoint cy,fpoint cz,fpoint dx,fpoint dy,fpoint dz,fpoint rad);
+		void gauss_spot(fpoint cx,fpoint cy,fpoint cz,fpoint dx,fpoint dy,fpoint dz,fpoint dec,fpoint rad);
+		void relax(fpoint cx,fpoint cy,fpoint cz,fpoint rad,fpoint alpha);
+		void neighbor_distribution(int *bb,fpoint dr,int max); 
 		void full_relax(fpoint alpha);
 		template<class v_class>
-		inline void move() {v_class vcl;move(&vcl);}
+		void local_move(v_class &vcl,fpoint cx,fpoint cy,fpoint cz,fpoint rad); 
 		template<class v_class>
-		void move(v_class *vcl);
+		inline void move() {v_class vcl;move(vcl);}
+		template<class v_class>
+		void move(v_class &vcl);
 		void add_particle_memory(int i);
 	protected:
 		int *gh;
@@ -95,7 +130,9 @@ class container_dynamic_base : public container_base<r_option> {
 		velocity_internal v_inter;
 	private:
 		inline int step_mod(int a,int b);
+		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);
+		inline void wall_contribution(int s,int l,fpoint cx,fpoint cy,fpoint cz,fpoint alpha);
 };
 
 /** The basic dynamic container class. */

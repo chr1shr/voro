@@ -1359,13 +1359,19 @@ inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpo
 		if(ak<0) {ak=0;if(bk<0) bk=0;}
 		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;} 
 	}
-	i=ai;j=aj;k=ak;
-	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
-	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
-	akp=kp=step_mod(k,nz);apz=pz=step_div(k,nz)*sz;
+	aip=step_mod(ai,nx);apx=step_div(ai,nx)*sx;
+	ajp=step_mod(aj,ny);apy=step_div(aj,ny)*sy;
+	akp=step_mod(ak,nz);apz=step_div(ak,nz)*sz;
 	inc1=aip-step_mod(bi,nx);
 	inc2=nx*(ny+ajp-step_mod(bj,ny))+inc1;
 	inc1+=nx;
+	return reset(px,py,pz);
+}
+
+inline int voropp_loop::reset(fpoint &px,fpoint &py,fpoint &pz) {
+	i=ai;j=aj;k=ak;
+	ip=aip;jp=ajp;kp=akp;
+	px=apx;py=apy;pz=apz;
 	s=aip+nx*(ajp+ny*akp);
 	return s;
 }

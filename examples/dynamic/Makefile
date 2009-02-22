@@ -20,10 +20,13 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
 EXECUTABLES=dyn_test
 
 # Makefile rules
-all: dyn_test
+all: dyn_test square_test
 
 dyn_test: $(SOURCE) dyn_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o dyn_test dyn_test.cc
+
+square_test: $(SOURCE) square_test.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o square_test square_test.cc
 
 clean:
 	rm -f $(EXECUTABLES)
