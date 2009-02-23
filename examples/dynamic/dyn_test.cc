@@ -36,7 +36,7 @@ class velocity_twist {
 
 int main() {
 	int i=0,j,k;
-	fpoint x,y,z;char q[256];
+	fpoint x,y,z;//char q[256];
 	int *u[201];
 
 	for(j=0;j<=200;j++) {

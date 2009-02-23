@@ -20,7 +20,7 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
 EXECUTABLES=dyn_test
 
 # Makefile rules
-all: dyn_test square_test packing_gen
+all: dyn_test square_test packing_gen best_gen
 
 dyn_test: $(SOURCE) dyn_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o dyn_test dyn_test.cc
@@ -30,6 +30,9 @@ square_test: $(SOURCE) square_test.cc
 
 packing_gen: $(SOURCE) packing_gen.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o packing_gen packing_gen.cc
+
+best_gen: $(SOURCE) best_gen.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o best_gen best_gen.cc
 
 clean:
 	rm -f $(EXECUTABLES)
