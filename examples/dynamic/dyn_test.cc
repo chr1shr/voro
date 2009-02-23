@@ -16,14 +16,33 @@ const fpoint z_min=-8,z_max=8;
 const int n_x=8,n_y=8,n_z=8;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=1800;
+const int particles=1750;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
 
+class velocity_twist {
+	public:
+		velocity_twist() : track_ve(false), ang(0.005) {}; 
+		inline void vel(int ijk,int q,fpoint &x,fpoint &y,fpoint &z) {
+			double px=x;
+			x=x*cos(ang*z)+y*sin(ang*z);
+			y=y*cos(ang*z)-px*sin(ang*z);
+		}
+		const bool track_ve;
+	private:
+		const fpoint ang;
+};
+
 int main() {
-	int i=0;
+	int i=0,j,k;
 	fpoint x,y,z;char q[256];
+	int *u[201];
+
+	for(j=0;j<=200;j++) {
+		u[j]=new int[400];
+		for(k=0;k<400;k++) u[j][k]=0;
+	}
 
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
@@ -44,11 +63,27 @@ int main() {
 	}
 
 	for(i=0;i<=200;i++) {
+		con.neighbor_distribution<cond_all>(u[i],0.02,400);
 		con.move<velocity_twist>();
+		con.full_relax(1.6);
+		con.full_relax(1.6);
+		con.full_relax(1.6);
+		con.full_relax(1.2);
+		con.full_relax(1.2);
+		con.full_relax(1.0);
 		con.full_relax(0.8);
-		sprintf(q,"output/%04d_p.pov",i);con.draw_particles_pov(q);
+		con.full_relax(0.6);
+		con.full_relax(0.4);
+		con.full_relax(0.2);
+	/*	sprintf(q,"output/%04d_p.pov",i);con.draw_particles_pov(q);
 		sprintf(q,"gzip -f -9 output/%04d_p.pov",i);system(q);
 		sprintf(q,"output/%04d_v.pov",i);con.draw_cells_pov(q);
-		sprintf(q,"gzip -f -9 output/%04d_v.pov",i);system(q);
+		sprintf(q,"gzip -f -9 output/%04d_v.pov",i);system(q);*/
+	}
+
+	for(k=0;k<400;k++) {
+		cout << (double(k)+0.5)*0.02;
+		for(i=0;i<=200;i++) cout << " " << u[i][k];
+		cout << "\n";
 	}
 }

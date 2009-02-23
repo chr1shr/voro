@@ -12,7 +12,7 @@ $g=0;$ng="0000";
 while (-e "$dir/${ng}_p.pov.gz") {
 	open T,">rtemp$h.pov";
 
-	open A,"square_master.pov";
+	open A,"packing_master.pov";
 	while (<A>) {
 		last if m/\#include "temp.pov"/;
 		print T;
@@ -25,28 +25,28 @@ while (-e "$dir/${ng}_p.pov.gz") {
 	print T while <B>;
 	close B;system "rm $fn";
 	
-	while (<A>) {
-		last if m/\#include "temp2.pov"/;
-		print T;
-	}
-
-	$fn="$dir/${ng}_v.pov";
-	system "gunzip $fn.gz";
-	
-	$a=0;
-	open B,"$fn";
-	while(<B>) {
-		m/^cylinder{<([-\.\d]+),([-\.\d]+),([-\.\d]+)>,<\1,\2,\3>,r}/?$a++:(print T);
-	}
-	close B;system "rm $fn";
-	print "$a degenerate cylinders stripped\n" if $a>0;
+#	while (<A>) {
+#		last if m/\#include "temp2.pov"/;
+#		print T;
+#	}
+#
+#	$fn="$dir/${ng}_v.pov";
+#	system "gunzip $fn.gz";
+#	
+#	$a=0;
+#	open B,"$fn";
+#	while(<B>) {
+#		m/^cylinder{<([-\.\d]+),([-\.\d]+),([-\.\d]+)>,<\1,\2,\3>,r}/?$a++:(print T);
+#	}
+#	close B;system "rm $fn";
+#	print "$a degenerate cylinders stripped\n" if $a>0;
 
 	print T while (<A>);
 	close A;close T;
 
 	print "Rendering movie frames\n";
 	print "Frame $g, timestep $ts to $h\n";
-	exec "povray +SU +Ofr_$ng.png +W512 +H512 +A0.3 +R3 -J rtemp$h.pov $verb; mv fr_$ng.png output" if (($pid[$h]=fork)==0);
+	exec "povray +SU +Ofr_$ng.png +W400 +H750 +A0.3 +R3 -J rtemp$h.pov $verb; mv fr_$ng.png output" if (($pid[$h]=fork)==0);
 	if ($queue) {
 		print "Waiting...\n";
 		$piddone=wait;$h=0;
