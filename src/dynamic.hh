@@ -11,6 +11,11 @@
 #ifndef VOROPP_DYNAMIC_HH
 #define VOROPP_DYNAMIC_HH
 
+class cond_all {
+	public:
+		inline bool test(fpoint cx,fpoint cy,fpoint cz) {return true;}
+};
+
 class velocity_internal {
 	public:
 		velocity_internal(fpoint **&ive) : track_ve(true), ve(ive) {};
@@ -66,20 +71,6 @@ class velocity_gaussian {
 		const fpoint dec;
 };
 
-class velocity_twist {
-	public:
-		velocity_twist() : track_ve(false), ang(0.005) {}; 
-		inline void vel(int ijk,int q,fpoint &x,fpoint &y,fpoint &z) {
-			double px=x;
-			x=x*cos(ang*z)+y*sin(ang*z);
-			y=y*cos(ang*z)-px*sin(ang*z);
-		}
-		const bool track_ve;
-	private:
-		const fpoint ang;
-		inline fpoint rnd() {return fpoint(rand())/RAND_MAX;}
-};
-
 template<class r_option>
 class container_dynamic_base : public container_base<r_option> {
 	public:
@@ -115,7 +106,10 @@ class container_dynamic_base : public container_base<r_option> {
 		void spot(fpoint cx,fpoint cy,fpoint cz,fpoint dx,fpoint dy,fpoint dz,fpoint rad);
 		void gauss_spot(fpoint cx,fpoint cy,fpoint cz,fpoint dx,fpoint dy,fpoint dz,fpoint dec,fpoint rad);
 		void relax(fpoint cx,fpoint cy,fpoint cz,fpoint rad,fpoint alpha);
+		template<class cond_class>
 		void neighbor_distribution(int *bb,fpoint dr,int max); 
+		template<class cond_class>
+		fpoint packing_badness(); 
 		void full_relax(fpoint alpha);
 		template<class v_class>
 		void local_move(v_class &vcl,fpoint cx,fpoint cy,fpoint cz,fpoint rad); 
@@ -124,6 +118,7 @@ class container_dynamic_base : public container_base<r_option> {
 		template<class v_class>
 		void move(v_class &vcl);
 		void add_particle_memory(int i);
+		inline int full_count();
 	protected:
 		int *gh;
 		fpoint **ve;
@@ -133,6 +128,7 @@ class container_dynamic_base : public container_base<r_option> {
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);
 		inline void wall_contribution(int s,int l,fpoint cx,fpoint cy,fpoint cz,fpoint alpha);
+		inline void wall_badness(fpoint cx,fpoint cy,fpoint cz,fpoint &badcount);
 };
 
 /** The basic dynamic container class. */

@@ -261,36 +261,116 @@ inline void container_dynamic_base<r_option>::wall_contribution(int s,int l,fpoi
 }
 
 template<class r_option>
+inline int container_dynamic_base<r_option>::full_count() {
+	int ijk=0,count=0;
+	while(ijk<nxyz) count+=co[ijk++];
+	return count;
+}
+
+template<class r_option>
+template<class cond_class>
 void container_dynamic_base<r_option>::neighbor_distribution(int *bb,fpoint dr,int max) {
 	int i,j,k,ijk,l,s,q,ll;
+	cond_class c1;
 	voropp_loop l1(this);
-	fpoint maxr=dr*max,maxrsq=maxr*maxr;
+	fpoint idr=1/dr,maxr=dr*max,maxrsq=maxr*maxr;
 	fpoint x,y,z,px,py,pz,cx,cy,cz,rr;
 	for(ijk=k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
 		for(l=0;l<co[ijk];l++) {
 			cx=p[ijk][sz*l];
 			cy=p[ijk][sz*l+1];
 			cz=p[ijk][sz*l+2];
-			s=l1.init(cx,cy,cz,maxr,px,py,pz);
-			while(!l1.reached(i,j,k)) {
-				for(q=0;q<co[s];q++) {
+			if(c1.test(cx,cy,cz)) {
+				s=l1.init(cx,cy,cz,maxr,px,py,pz);
+				while(!l1.reached(i,j,k)) {
+					for(q=0;q<co[s];q++) {
+						x=p[s][sz*q]+px-cx;
+						y=p[s][sz*q+1]+py-cy;
+						z=p[s][sz*q+2]+pz-cz;
+						rr=x*x+y*y+z*z;
+						if(rr<maxrsq) {ll=int(idr*sqrt(rr));if(ll<max) bb[ll]++;}
+					}
+					s=l1.inc(px,py,pz);
+				}
+				for(q=0;q<l;q++) {
 					x=p[s][sz*q]+px-cx;
 					y=p[s][sz*q+1]+py-cy;
 					z=p[s][sz*q+2]+pz-cz;
 					rr=x*x+y*y+z*z;
-					if(rr<maxrsq) {ll=int(sqrt(rr));if(ll<max) bb[max]++;}
+					if(rr<maxrsq) {ll=int(idr*sqrt(rr));if(ll<max) bb[ll]++;}
 				}
-				s=l1.inc(px,py,pz);
-			}
-			for(q=0;q<l;q++) {
-				x=p[s][sz*q]+px-cx;
-				y=p[s][sz*q+1]+py-cy;
-				z=p[s][sz*q+2]+pz-cz;
-				rr=x*x+y*y+z*z;
-				if(rr<maxrsq) {ll=int(sqrt(rr));if(ll<max) bb[max]++;}
 			}
 		}
 	}
+}
+
+
+template<class r_option>
+template<class cond_class>
+fpoint container_dynamic_base<r_option>::packing_badness() {
+	int i,j,k,ijk,l,s,q;
+	cond_class c1;
+	voropp_loop l1(this);
+	int pcount=0;
+	fpoint x,y,z,px,py,pz,cx,cy,cz,rr,badcount=0;
+	for(ijk=k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(l=0;l<co[ijk];l++) {
+			cx=p[ijk][sz*l];
+			cy=p[ijk][sz*l+1];
+			cz=p[ijk][sz*l+2];
+			if(c1.test(cx,cy,cz)) {
+				pcount++;
+				s=l1.init(cx,cy,cz,1,px,py,pz);
+				while(!l1.reached(i,j,k)) {
+					for(q=0;q<co[s];q++) {
+						x=p[s][sz*q]+px-cx;
+						y=p[s][sz*q+1]+py-cy;
+						z=p[s][sz*q+2]+pz-cz;
+						rr=x*x+y*y+z*z;
+						if(rr<1) badcount+=1-sqrt(rr);
+					}
+					s=l1.inc(px,py,pz);
+				}
+				for(q=0;q<l;q++) {
+					x=p[s][sz*q]+px-cx;
+					y=p[s][sz*q+1]+py-cy;
+					z=p[s][sz*q+2]+pz-cz;
+					rr=x*x+y*y+z*z;
+					if(rr<1) badcount+=1-sqrt(rr);
+				}
+				wall_badness(cx,cy,cz,badcount);
+			}
+		}
+	}
+	return pcount==0?0:badcount/pcount;
+}
+
+template<class r_option>
+inline void container_dynamic_base<r_option>::wall_badness(fpoint cx,fpoint cy,fpoint cz,fpoint &badcount) {
+	fpoint x,y,z,rr;
+	for(int q=0;q<wall_number;q++) {
+		walls[q]->min_distance(cx,cy,cz,x,y,z);
+		rr=x*x+y*y+z*z;
+		if (rr<0.25) badcount+=0.5-sqrt(rr);
+	}
+#ifdef VOROPP_AUTO_X_WALL
+	if(!xperiodic) {
+		if(cx-ax<0.5) badcount+=0.5+ax-cx;
+		if(bx-cx<0.5) badcount+=bx-cx-0.5;
+	}
+#endif
+#ifdef VOROPP_AUTO_Y_WALL
+	if(!yperiodic) {
+		if(cy-ay<0.5) badcount+=0.5+ay-cy;
+		if(by-cy<0.5) badcount+=by-cy-0.5;
+	}
+#endif
+#ifdef VOROPP_AUTO_Z_WALL
+	if(!zperiodic) {
+		if(cz-az<0.5) badcount+=0.5+az-cz;
+		if(bz-cz<0.5) badcount+=bz-cz-0.5;
+	}
+#endif	
 }
 
 template<class r_option>

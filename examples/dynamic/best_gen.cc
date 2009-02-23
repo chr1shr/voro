@@ -9,6 +9,7 @@
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
+const double pi=3.1415926535897932384626433832795;
 
 class cond_center {
 	public:
@@ -19,11 +20,11 @@ const int trialz=8;
 
 int main() {
 	int i=0,j,k,c=1,parts,tr;
-	fpoint x,y,z;
+	fpoint x,y,z;bool die=false;
 	fpoint alpha[200][50],al,best,trial;
 	ofstream os;
 
-	for(j=0;j<50;j++) alpha[0][j]=j<30?(j<7?0.5+fpoint(j)*0.1:1.2):1.2;
+	for(j=0;j<50;j++) alpha[0][j]=0.5;
 
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
@@ -52,14 +53,16 @@ int main() {
 	while(c<200) {
 		for(j=0;j<50;j++) {
 			al=alpha[c-1][j];
-			k=rand()%9;
-			if(k<2) {al*=1-0.2*rnd();} else if(k>6) {al*=1+0.2*rnd();}
-			if(al>1.2) al=1.2;
+		//	k=rand()%9;
+		//	if(k<2) {al*=1-0.1*rnd();} else if(k>6) {al*=1+0.1*rnd();}
 			alpha[c][j]=al;
+		}
+		for(k=0;k<12;k++) {
+			al=0.12*(1-0.05*k)*(2*rnd()-1);
+			for(j=0;j<50;j++) alpha[c][j]*=(1+al*cos(pi*k*j/50.0));
 		}
 	
 		trial=0;
-		parts=0;
 		for(tr=0;tr<trialz;tr++) {
 			con.clear();
 			for(i=0;i<54708;i++) {
@@ -70,14 +73,15 @@ int main() {
 			}
 			for(j=0;j<50;j++) con.full_relax(alpha[c][j]);
 			trial+=con.packing_badness<cond_all>();
-			parts+=con.full_count();
+			if(con.full_count()!=54708) {die=true;break;}
 		}
+		if(die) {die=false;continue;}
 
-		cout << c << " " << trial/trialz << " " << double(parts)/trialz << endl;
+		cout << c << " " << trial/trialz << endl;
 
-		if(trial<best&&parts>=54708*trialz-2) {
+		if(trial<best) {
 			best=trial;c++;
-			os.open("pat2",ofstream::out|ofstream::trunc);
+			os.open("pat3",ofstream::out|ofstream::trunc);
 			for(j=0;j<50;j++) {
 				os << j;
 				for(k=0;k<c;k++) os << " " << alpha[k][j];
