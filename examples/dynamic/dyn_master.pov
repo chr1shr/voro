@@ -4,10 +4,14 @@
 #include "metals.inc"
 #include "textures.inc"
 
+global_settings{
+	max_trace_level 64
+}
+
 camera {
 	location <13,17,-34>
-	right 0.4*x*image_width/image_height
-	up 0.4*y
+	right 0.405*x*image_width/image_height
+	up 0.405*y
 	look_at <0,0,0>
 }
 
@@ -30,5 +34,5 @@ union{
 union{
 #include "temp2.pov"
 	rotate <270,0,0>
-	pigment{rgb <0.9,0.38,0.55>} finish{specular 0.6 ambient 0.52}
+	pigment{rgb <0.91,0.36,0.53>} finish{specular 0.56 ambient 0.24 metallic reflection 0.28}
 }

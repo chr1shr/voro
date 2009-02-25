@@ -12,18 +12,18 @@ $g=0;$ng="0000";
 while (-e "$dir/${ng}_p.pov.gz") {
 	open T,">rtemp$h.pov";
 
-	open A,"packing_master.pov";
+	open A,"yeast_master.pov";
 	while (<A>) {
 		last if m/\#include "temp.pov"/;
 		print T;
 	}
 	
 	$fn="$dir/${ng}_p.pov";
-	system "gunzip $fn.gz";
+	system "gunzip -c $fn.gz >gztemp.pov";
 
-	open B,"$fn";
+	open B,"gztemp.pov";
 	print T while <B>;
-	close B;system "rm $fn";
+	close B;system "rm gztemp.pov";
 	
 #	while (<A>) {
 #		last if m/\#include "temp2.pov"/;
@@ -46,7 +46,7 @@ while (-e "$dir/${ng}_p.pov.gz") {
 
 	print "Rendering movie frames\n";
 	print "Frame $g, timestep $ts to $h\n";
-	exec "povray +SU +Ofr_$ng.png +W400 +H750 +A0.3 +R3 -J rtemp$h.pov $verb; mv fr_$ng.png output" if (($pid[$h]=fork)==0);
+	exec "povray +SU +Ofr_$ng.png +W800 +H600 +A0.3 +R3 -J rtemp$h.pov $verb; mv fr_$ng.png output" if (($pid[$h]=fork)==0);
 	if ($queue) {
 		print "Waiting...\n";
 		$piddone=wait;$h=0;

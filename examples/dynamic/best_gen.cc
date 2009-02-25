@@ -11,12 +11,9 @@
 double rnd() {return double(rand())/RAND_MAX;}
 const double pi=3.1415926535897932384626433832795;
 
-class cond_center {
-	public:
-		inline bool test(fpoint cx,fpoint cy,fpoint cz) {return cx>-15&&cx<15&&cz>15&&cz<75;}
-};
 
-const int trialz=8;
+
+const int trialz=250;
 
 int main() {
 	int i=0,j,k,c=1,parts,tr;
@@ -24,7 +21,7 @@ int main() {
 	fpoint alpha[200][50],al,best,trial;
 	ofstream os;
 
-	for(j=0;j<50;j++) alpha[0][j]=0.5;
+	for(j=0;j<50;j++) alpha[0][j]=0.2;
 
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
@@ -53,11 +50,11 @@ int main() {
 	while(c<200) {
 		for(j=0;j<50;j++) {
 			al=alpha[c-1][j];
-		//	k=rand()%9;
-		//	if(k<2) {al*=1-0.1*rnd();} else if(k>6) {al*=1+0.1*rnd();}
+	//		k=rand()%9;
+	//		if(k<2) {al*=1-0.02*rnd();} else if(k>6) {al*=1+0.02*rnd();}
 			alpha[c][j]=al;
 		}
-		for(k=0;k<12;k++) {
+		for(k=0;k<16;k++) {
 			al=0.12*(1-0.05*k)*(2*rnd()-1);
 			for(j=0;j<50;j++) alpha[c][j]*=(1+al*cos(pi*k*j/50.0));
 		}
@@ -81,7 +78,7 @@ int main() {
 
 		if(trial<best) {
 			best=trial;c++;
-			os.open("pat3",ofstream::out|ofstream::trunc);
+			os.open("pat",ofstream::out|ofstream::trunc);
 			for(j=0;j<50;j++) {
 				os << j;
 				for(k=0;k<c;k++) os << " " << alpha[k][j];
