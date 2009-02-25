@@ -32,7 +32,7 @@ class wall;
 template<class r_option>
 class container_base {
 	public:
-		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
+		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,const bool xper,const bool yper,const bool zper,int memi);
 		virtual ~container_base();
 		void draw_particles(const char *filename);
 		void draw_particles();

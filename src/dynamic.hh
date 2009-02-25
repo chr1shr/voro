@@ -93,7 +93,7 @@ template<class r_option>
 class container_dynamic_base : public container_base<r_option> {
 	public:
 		container_dynamic_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,
-				fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
+				fpoint zb,int xn,int yn,int zn,const bool xper,const bool yper,const bool zper,int memi);
 		~container_dynamic_base();
 		using container_base<r_option>::xperiodic;
 		using container_base<r_option>::yperiodic;
@@ -129,7 +129,6 @@ class container_dynamic_base : public container_base<r_option> {
 		template<class cond_class>
 		fpoint packing_badness(); 
 		void full_relax(fpoint alpha);
-		void stick(fpoint alpha);
 		template<class v_class>
 		void local_move(v_class &vcl,fpoint cx,fpoint cy,fpoint cz,fpoint rad); 
 		template<class v_class>
@@ -138,8 +137,11 @@ class container_dynamic_base : public container_base<r_option> {
 		void move(v_class &vcl);
 		void add_particle_memory(int i);
 		inline int full_count();
+#ifdef YEAST_ROUTINES
+		void stick(fpoint alpha);
 		void draw_yeast_pov(const char *filename);
-		void draw_yeast_pov(ostream &os); 
+		void draw_yeast_pov(ostream &os);
+#endif
 	protected:
 		int *gh;
 		fpoint **ve;

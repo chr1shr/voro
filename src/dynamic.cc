@@ -12,8 +12,8 @@
 
 template<class r_option>
 container_dynamic_base<r_option>::container_dynamic_base(fpoint xa,fpoint xb,fpoint ya,
-		fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,
-		bool zper,int memi) : container_base<r_option> (xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi), v_inter(ve) {
+		fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,const bool xper,const bool yper,
+		const bool zper,int memi) : container_base<r_option> (xa,xb,ya,yb,za,zb,xn,yn,zn,xper,yper,zper,memi), v_inter(ve) {
 	gh=new int[nxyz];
 	ve=new fpoint*[nxyz];
 	for(int i=0;i<nxyz;i++) ve[i]=new fpoint[3*memi];
@@ -144,18 +144,18 @@ void container_dynamic_base<r_option>::relax(fpoint cx,fpoint cy,fpoint cz,fpoin
 	s1=l1.reset(ox,oy,oz);
 	do {
 		for(l=0;l<co[s1];l++) {
-			ex=p[s1][sz*l]+ox;dx=ex-cx;
-			ey=p[s1][sz*l+1]+oy;dy=ey-cy;
-			ez=p[s1][sz*l+2]+oz;dz=ez-cz;
+			ex=p[s1][sz*l];if(xperiodic) ex+=ox;dx=ex-cx;
+			ey=p[s1][sz*l+1];if(yperiodic) ey+=oy;dy=ey-cy;
+			ez=p[s1][sz*l+2];if(zperiodic) ez+=oz;dz=ez-cz;
 			dd=dx*dx+dy*dy+dz*dz;
 			if(dd>=radsq) {l++;continue;}
 
 			s2=l2.init(ex,ey,ez,1,px,py,pz);
 			while(!l2.reached(l1.i,l1.j,l1.k)) {
 				for(q=0;q<co[s2];q++) {
-					x=p[s2][sz*q]+px-ex;
-					y=p[s2][sz*q+1]+py-ey;
-					z=p[s2][sz*q+2]+pz-ez;
+					x=p[s2][sz*q]-ex;if(xperiodic) x+=px;
+					y=p[s2][sz*q+1]-ey;if(yperiodic) y+=py;
+					z=p[s2][sz*q+2]-ez;if(zperiodic) z+=pz;
 					rr=x*x+y*y+z*z;
 					if (rr<1) {
 						if(dd+rr+2*(dx*x+dy*y+dz*z)<radsq) {
@@ -172,9 +172,9 @@ void container_dynamic_base<r_option>::relax(fpoint cx,fpoint cy,fpoint cz,fpoin
 				s2=l2.inc(px,py,pz);
 			}
 			for(q=0;q<l;q++) {
-				x=p[s2][sz*q]+px-ex;
-				y=p[s2][sz*q+1]+py-ey;
-				z=p[s2][sz*q+2]+pz-ez;
+				x=p[s2][sz*q]-ex;if(xperiodic) x+=px;
+				y=p[s2][sz*q+1]-ey;if(yperiodic) y+=py;
+				z=p[s2][sz*q+2]-ez;if(zperiodic) z+=pz;
 				rr=x*x+y*y+z*z;
 				if (rr<1) {
 					if(dd+rr+2*(dx*x+dy*y+dz*z)<radsq) {
@@ -190,9 +190,9 @@ void container_dynamic_base<r_option>::relax(fpoint cx,fpoint cy,fpoint cz,fpoin
 			}
 			q++;
 			while(q<co[s2]) {
-				x=p[s2][sz*q]+px-ex;
-				y=p[s2][sz*q+1]+py-ey;
-				z=p[s2][sz*q+2]+pz-ez;
+				x=p[s2][sz*q]-ex;if(xperiodic) x+=px;
+				y=p[s2][sz*q+1]-ey;if(yperiodic) y+=py;
+				z=p[s2][sz*q+2]-ez;if(zperiodic) z+=pz;
 				rr=x*x+y*y+z*z;
 				if (rr<1) {
 					if(dd+rr+2*(dx*x+dy*y+dz*z)>=radsq) {
@@ -206,9 +206,9 @@ void container_dynamic_base<r_option>::relax(fpoint cx,fpoint cy,fpoint cz,fpoin
 			}
 			while((s2=l2.inc(px,py,pz))!=-1) {
 				for(q=0;q<co[s2];q++) {
-					x=p[s2][sz*q]+px-ex;
-					y=p[s2][sz*q+1]+py-ey;
-					z=p[s2][sz*q+2]+pz-ez;
+					x=p[s2][sz*q]-ex;if(xperiodic) x+=px;
+					y=p[s2][sz*q+1]-ey;if(yperiodic) y+=py;
+					z=p[s2][sz*q+2]-ez;if(zperiodic) z+=pz;
 					rr=x*x+y*y+z*z;
 					if (rr<1) {
 						if(dd+rr+2*(dx*x+dy*y+dz*z)>=radsq) {
@@ -373,6 +373,7 @@ inline void container_dynamic_base<r_option>::wall_badness(fpoint cx,fpoint cy,f
 #endif	
 }
 
+#ifdef YEAST_ROUTINES
 /** An overloaded version of the draw_yeast_pov() routine, that outputs
  * the particle positions to a file.
  * \param[in] filename the file to write to. */
@@ -478,6 +479,7 @@ void container_dynamic_base<r_option>::stick(fpoint alpha) {
 
 	move(v_inter);
 }
+#endif
 
 template<class r_option>
 void container_dynamic_base<r_option>::full_relax(fpoint alpha) {

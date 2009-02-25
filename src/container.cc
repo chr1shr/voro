@@ -18,7 +18,7 @@
  * final argument sets the amount of memory allocated to each block. */
 template<class r_option>
 container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,
-		int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
+		int xn,int yn,int zn,const bool xper,const bool yper,const bool zper,int memi)
 	: ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
 	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
 	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
