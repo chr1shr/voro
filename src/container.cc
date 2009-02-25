@@ -146,7 +146,8 @@ container_base<r_option>::~container_base() {
 	delete [] mrad;
 }
 
-/** Dumps all the particle positions and identifies to a file. */
+/** Dumps all the particle positions and identifiers to an output stream.
+ * \param[in] &os the output stream to write to. */
 template<class r_option>
 void container_base<r_option>::draw_particles(ostream &os) {
 	int c,l,i;
@@ -156,6 +157,37 @@ void container_base<r_option>::draw_particles(ostream &os) {
 			for(i=sz*c;i<sz*(c+1);i++) os << " " << p[l][i];
 			os << "\n";
 		}
+	}
+}
+
+/** Dumps all the particle positions and identifiers in the LAMMPS restart
+ * format to an output stream.
+ * \param[in] &os the output stream to write to.
+ * \param[in] timestep the value of the "ITEM: TIMESTEP" field to write in the
+ * restart file.
+ * \param[in] scaled a boolean value of whether to scale the particle
+ * coordinates to the range (0,1), as used in some LAMMPS implementations. */
+template<class r_option>
+void container_base<r_option>::draw_lammps_restart(ostream &os,fpoint timestep,bool scaled) {
+	const fpoint facx=1/(bx-ax),facy=1/(by-ay),facz=1/(bz-az); 
+	int l=0,ijk=0;
+	while(ijk<nxyz) l+=co[ijk++];
+	os << " ITEM: TIMESTEP\n" << timestep;
+	os << "\n ITEM: NUMBER OF ATOMS\n" << l;
+	os << "\n ITEM: BOX BOUNDS\n";
+	os << ax << " " << bx << "\n";
+	os << ay << " " << by << "\n";
+	os << az << " " << bz << "\n ITEM: ATOMS\n";
+	for(ijk=0;ijk<nxyz;ijk++) for(l=0;l<co[ijk];l++) {
+		os << id[ijk][l] << " 1 ";	
+		radius.diam(os,ijk,l);
+		os << " ";
+		if (scaled) {
+			os << (p[ijk][sz*l]-ax)*facx << " " << (p[ijk][sz*l+1]-ay)*facy << " " << (p[ijk][sz*l+2]-az)*facz;
+		} else {
+			os << p[ijk][sz*l] << " " << p[ijk][sz*l+1] << " " << p[ijk][sz*l+2];
+		}
+		os << "\n";
 	}
 }
 
@@ -1496,6 +1528,23 @@ inline fpoint radius_poly::cutoff(fpoint lrs) {
  * \return The same value passed to it. */
 inline fpoint radius_mono::cutoff(fpoint lrs) {
 	return lrs;
+}
+
+/** Prints the diameter of a particle as 1 during the LAMMPS snapshot output, a
+ * generic value for the monodisperse case.
+ * \param[in] &os the output stream to write to.
+ * \param[in] l the region to consider.
+ * \param[in] c the number of the particle within the region. */
+inline void radius_mono::diam(ostream &os,int l,int c) {
+	os << "1";
+}
+
+/** Prints the diameter of a particle during the LAMMPS snapshot output.
+ * \param[in] &os the output stream to write to.
+ * \param[in] l the region to consider.
+ * \param[in] c the number of the particle within the region. */
+inline void radius_poly::diam(ostream &os,int l,int c) {
+	os << cc->p[l][4*c+3];
 }
 
 /** Prints the radius of particle, by just supplying a generic value of "s".

@@ -373,6 +373,112 @@ inline void container_dynamic_base<r_option>::wall_badness(fpoint cx,fpoint cy,f
 #endif	
 }
 
+/** An overloaded version of the draw_yeast_pov() routine, that outputs
+ * the particle positions to a file.
+ * \param[in] filename the file to write to. */
+template<class r_option>
+void container_dynamic_base<r_option>::draw_yeast_pov(const char *filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	draw_yeast_pov(os);
+	os.close();
+}
+
+/** Dumps all the particle positions in the POV-Ray format. */
+template<class r_option>
+void container_dynamic_base<r_option>::draw_yeast_pov(ostream &os) {
+	int l,c;
+	for(l=0;l<nxyz;l++) {
+		for(c=0;c<co[l];c++) {
+			os << "// id " << id[l][c] << "\n";
+			os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
+			   << p[l][sz*c+2] << ">,";
+			radius.rad(os,l,c);
+			if(id[l][c]<stickycut) {
+				os << " pigment{rgb <0.9,0.3,0.6>} finish{reflection 0.15 ambient 0.4 specular 0.3}}\n";
+			} else {
+				os << " pigment{rgb <0.9,0.85,0.35>} finish{reflection 0.15 specular 0.3 ambient 0.42}}\n";
+			}
+		}
+	}
+}
+
+template<class r_option>
+void container_dynamic_base<r_option>::stick(fpoint alpha) {
+	int i,j,k,ijk,l,q,s;
+	fpoint bigrad,smallrad,currad;
+	fpoint bigfac,smallfac,curfac;
+	fpoint x,y,z,px,py,pz,cx,cy,cz,rr;
+	voropp_loop l1(this);
+
+	for(ijk=0;ijk<nxyz;ijk++) for(l=0;l<3*co[ijk];l++) ve[ijk][l]=0;
+	
+	for(ijk=k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(l=0;l<co[ijk];l++) {
+			cx=p[ijk][sz*l];
+			cy=p[ijk][sz*l+1];
+			cz=p[ijk][sz*l+2];
+			if(id[ijk][l]<stickycut) {
+				bigrad=1.6;smallrad=1.2;
+				bigfac=1/0.8;smallfac=1/0.4;
+			} else {
+				bigrad=1.2;smallrad=0.799999999;
+				bigfac=1/0.4;smallfac=0;
+			}
+			s=l1.init(cx,cy,cz,bigrad,px,py,pz);
+			while(!l1.reached(i,j,k)) {
+				for(q=0;q<co[s];q++) {
+					x=p[s][sz*q]+px-cx;
+					y=p[s][sz*q+1]+py-cy;
+					z=p[s][sz*q+2]+pz-cz;
+					rr=x*x+y*y+z*z;
+					if(id[s][q]<stickycut) {
+						currad=bigrad;curfac=bigfac;
+					} else {
+						currad=smallrad;curfac=smallfac;
+					}
+					if (rr<currad*currad) {
+						if(rr<0.8*0.8) rr=0.5*alpha*(1-0.8/sqrt(rr));
+						else {rr=sqrt(rr);rr=0.5*alpha*(rr-0.8)*(1-(rr-0.8)*curfac*(2-(rr-0.8)*curfac))/rr;}
+						ve[ijk][3*l]+=x*rr;
+						ve[ijk][3*l+1]+=y*rr;
+						ve[ijk][3*l+2]+=z*rr;
+						ve[s][3*q]-=x*rr;
+						ve[s][3*q+1]-=y*rr;
+						ve[s][3*q+2]-=z*rr;
+					}
+				}
+				s=l1.inc(px,py,pz);
+			}
+			if (s!=ijk) throw fatal_error("s and ijk should be aligned and they're not");
+			for(q=0;q<l;q++) {
+				x=p[s][sz*q]+px-cx;
+				y=p[s][sz*q+1]+py-cy;
+				z=p[s][sz*q+2]+pz-cz;
+				rr=x*x+y*y+z*z;
+				if(id[s][q]<stickycut) {
+					currad=bigrad;curfac=bigfac;
+				} else {
+					currad=smallrad;curfac=smallfac;
+				}
+				if (rr<currad*currad) {
+					if(rr<0.8*0.8) rr=0.5*alpha*(1-0.8/sqrt(rr));
+					else {rr=sqrt(rr);rr=0.5*alpha*(rr-0.8)*(1-(rr-0.8)*curfac*(2-(rr-0.8)*curfac))/rr;}
+					ve[ijk][3*l]+=x*rr;
+					ve[ijk][3*l+1]+=y*rr;
+					ve[ijk][3*l+2]+=z*rr;
+					ve[s][3*q]-=x*rr;
+					ve[s][3*q+1]-=y*rr;
+					ve[s][3*q+2]-=z*rr;
+				}
+			}
+			wall_contribution(ijk,l,cx,cy,cz,alpha);
+		}
+	}
+
+	move(v_inter);
+}
+
 template<class r_option>
 void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 	int i,j,k,ijk,l,q,s;
@@ -393,7 +499,7 @@ void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 					y=p[s][sz*q+1]+py-cy;
 					z=p[s][sz*q+2]+pz-cz;
 					rr=x*x+y*y+z*z;
-					if (x*x+y*y+z*z<1) {
+					if (rr<1) {
 						rr=alpha*(0.5-0.5/sqrt(rr));
 						ve[ijk][3*l]+=x*rr;
 						ve[ijk][3*l+1]+=y*rr;
@@ -411,7 +517,7 @@ void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 				y=p[s][sz*q+1]+py-cy;
 				z=p[s][sz*q+2]+pz-cz;
 				rr=x*x+y*y+z*z;
-				if (x*x+y*y+z*z<1) {
+				if (rr<1) {
 					rr=alpha*(0.5-0.5/sqrt(rr));
 					ve[ijk][3*l]+=x*rr;
 					ve[ijk][3*l+1]+=y*rr;

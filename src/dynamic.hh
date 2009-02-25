@@ -43,6 +43,24 @@ class velocity_brownian {
 		inline fpoint rnd() {return fpoint(rand())/RAND_MAX;}
 };
 
+class velocity_brownian2 {
+	public:
+		velocity_brownian2() : track_ve(false), mag(0.02), tmag(2*mag) {}; 
+		inline void vel(int ijk,int q,fpoint &x,fpoint &y,fpoint &z) {
+			fpoint dx,dy,dz;
+			do {
+				dx=tmag*rnd()-mag;
+				dy=tmag*rnd()-mag;
+				dz=tmag*rnd()-mag;
+			} while (dx*dx+dy*dy+dz*dz>=mag*mag);
+			x+=dx/*+0.0001*sin(y*3.1415926535897932384626433832795/20)*/;y+=dy;z+=dz;
+		}
+		const bool track_ve;
+	private:
+		const fpoint mag,tmag;
+		inline fpoint rnd() {return fpoint(rand())/RAND_MAX;}
+};
+
 class velocity_constant {
 	public:
 		velocity_constant(fpoint idx,fpoint idy,fpoint idz) : track_ve(false),
@@ -111,6 +129,7 @@ class container_dynamic_base : public container_base<r_option> {
 		template<class cond_class>
 		fpoint packing_badness(); 
 		void full_relax(fpoint alpha);
+		void stick(fpoint alpha);
 		template<class v_class>
 		void local_move(v_class &vcl,fpoint cx,fpoint cy,fpoint cz,fpoint rad); 
 		template<class v_class>
@@ -119,6 +138,8 @@ class container_dynamic_base : public container_base<r_option> {
 		void move(v_class &vcl);
 		void add_particle_memory(int i);
 		inline int full_count();
+		void draw_yeast_pov(const char *filename);
+		void draw_yeast_pov(ostream &os); 
 	protected:
 		int *gh;
 		fpoint **ve;

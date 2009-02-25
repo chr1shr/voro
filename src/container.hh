@@ -40,6 +40,7 @@ class container_base {
 		void draw_particles_pov(const char *filename);
 		void draw_particles_pov();
 		void draw_particles_pov(ostream &os);
+		void draw_lammps_restart(ostream &os,fpoint timestep,bool scaled=false);
 		void import(istream &is);
 		inline void import();
 		inline void import(const char *filename);
@@ -254,6 +255,7 @@ class radius_mono {
 		/** This is a blank placeholder function that does nothing. */
 		inline void print(ostream &os,int ijk,int q) {};
 		inline void rad(ostream &os,int l,int c);
+		inline void diam(ostream &os,int l,int c);
 	private:	
 		container_base<radius_mono> *cc;
 };
@@ -284,6 +286,7 @@ class radius_poly {
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q);
 		inline void rad(ostream &os,int l,int c);
+		inline void diam(ostream &os,int l,int c);
 	private:	
 		container_base<radius_poly> *cc;
 		fpoint max_radius,crad,mul;

@@ -41,13 +41,13 @@ int main() {
 		if(con.count(x,y,z,1)==0) con.put(i++,x,y,z);
 	}
 
-	for(i=0;i<=400;i++) {
+	for(i=0;i<=800;i++) {
 		cout << i << " " << con.packing_badness<cond_all>() << endl;
 		sprintf(q,"output/%04d_p.pov",i);con.draw_yeast_pov(q);
 		sprintf(q,"gzip -f -9 output/%04d_p.pov",i);system(q);
 	//	sprintf(q,"output/%04d_v.pov",i);con.draw_cells_pov(q);
 	//	sprintf(q,"gzip -f -9 output/%04d_v.pov",i);system(q);
-		for(j=0;j<100*i;j++) {
+		for(j=0;j<1000*i;j++) {
 			con.move<velocity_brownian2>();con.stick(0.7);
 		}
 	}
