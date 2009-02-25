@@ -4,6 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+const int stickycut=1500;
+
 #include "voro++.cc"
 #include "dynamic.cc"
 
@@ -16,7 +18,7 @@ const fpoint z_min=-20,z_max=20;
 const int n_x=20,n_y=20,n_z=20;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=4000;
+const int particles=3000;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -39,15 +41,14 @@ int main() {
 		if(con.count(x,y,z,1)==0) con.put(i++,x,y,z);
 	}
 
-	for(i=0;i<=200;i++) {
-		cout << i << endl;
-		sprintf(q,"output/%04d_p.pov",i);con.draw_particles_pov(q);
+	for(i=0;i<=400;i++) {
+		cout << i << " " << con.packing_badness<cond_all>() << endl;
+		sprintf(q,"output/%04d_p.pov",i);con.draw_yeast_pov(q);
 		sprintf(q,"gzip -f -9 output/%04d_p.pov",i);system(q);
 	//	sprintf(q,"output/%04d_v.pov",i);con.draw_cells_pov(q);
 	//	sprintf(q,"gzip -f -9 output/%04d_v.pov",i);system(q);
-		for(j=0;j<2000;j++) {
-			con.move<velocity_brownian2>();
-			con.stick(0.6);con.stick(0.6);con.stick(0.6);
+		for(j=0;j<100*i;j++) {
+			con.move<velocity_brownian2>();con.stick(0.7);
 		}
 	}
 }

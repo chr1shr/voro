@@ -2,13 +2,19 @@
 
 @nodes=("yuba.dhcp.lbl.gov","yuba.dhcp.lbl.gov","jordan.lbl.gov","tigris.lbl.gov","jordan.lbl.gov","ganges.lbl.gov","volga.lbl.gov","jordan.lbl.gov","volga.lbl.gov","volga.lbl.gov","tigris.lbl.gov","yuba.dhcp.lbl.gov","yuba.dhcp.lbl.gov","mekong.lbl.gov","mekong.lbl.gov","ganges.lbl.gov","kaczawa.lbl.gov","kaczawa.lbl.gov","kaczawa.lbl.gov","rio-grande.lbl.gov","rio-grande.lbl.gov");
 
+$dir=$#ARGV==0?"output":$ARGV[1];
+
 $h=0;
 $voronoi=0;
-$dir="output";
 
 $g=0;$ng="0000";
 
 while (-e "$dir/${ng}_p.pov.gz") {
+	if (-e "$dir/fr_$ng.png") {
+		$g++;
+		$ng=sprintf("%04d",$g);
+		next;
+	}
 
 	open T,">rtemp.pov";
 
@@ -19,10 +25,10 @@ while (-e "$dir/${ng}_p.pov.gz") {
 	}
 	
 	$fn="$dir/${ng}_p.pov";
-	system "gunzip -c $fn.gz >$fn";
-	open B,"$fn";
+	system "gunzip -c $fn.gz >gztemp.pov";
+	open B,"gztemp.pov";
 	print T while <B>;
-	close B;system "rm $fn";
+	close B;system "rm gztemp.pov";
 
 	if ($voronoi==1) {
 		
@@ -49,7 +55,7 @@ while (-e "$dir/${ng}_p.pov.gz") {
 	print "Frame $g to $nodes[$h]\n";
 	`rsync -z rtemp.pov $nodes[$h]:cgran/rtemp$h.pov`;
 	$nice=(@nodes[$h]=~m/yuba/)?"nice -n 19":"nice +19";
-	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W1024 +H768 +A0.001 +R3 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png output ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
+	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W800 +H700 +A0.001 +R3 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png $dir ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
 	if ($queue) {
 		print "Waiting...\n";
 		$piddone=wait;$h=0;
@@ -66,8 +72,8 @@ while (-e "$dir/${ng}_p.pov.gz") {
 wait foreach 1..$#nodes;
 
 if ($g>0) {
-#	system "qt_export --sequencerate=15 output/fr_0000.png --loadsettings=/Users/chr/misc/qtprefs/qt --replacefile $ARGV[0]";
-#	system "rm output/fr_????.png";
+	system "qt_export --sequencerate=15 $dir/fr_0000.png --loadsettings=/Users/chr/misc/qtprefs/qt --replacefile $ARGV[0]";
+#	system "rm $dir/fr_????.png";
 } else {
 	print "No files to process\n";
 }

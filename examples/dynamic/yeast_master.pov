@@ -48,5 +48,5 @@ union{
 #include "temp.pov"
 	rotate <270,0,0>
 //	texture{T_Chrome_3C}
-	pigment{rgb <0.9,0.85,0.35>} finish{reflection 0.1 specular 0.3 ambient 0.42}
+//	pigment{rgb <0.9,0.85,0.35>} finish{reflection 0.1 specular 0.3 ambient 0.42}
 }
