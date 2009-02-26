@@ -4,6 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
+#define YEAST_ROUTINES
 const int stickycut=1500;
 
 #include "voro++.cc"

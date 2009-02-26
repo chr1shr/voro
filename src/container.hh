@@ -18,6 +18,7 @@
 using namespace std;
 
 class voropp_loop;
+class radius_mono;
 class radius_poly;
 class wall;
 
@@ -44,6 +45,7 @@ class container_base {
 		void import(istream &is);
 		inline void import();
 		inline void import(const char *filename);
+		void import_lammps_restart(istream &is,bool scaled=false);
 		void region_count();
 		void clear();
 		void draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
@@ -222,6 +224,7 @@ class container_base {
 		inline bool compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gx,fpoint gy,fpoint gz,fpoint& crs,fpoint mrs);
 		friend class voropp_loop;
 		friend class radius_poly;
+		friend class radius_mono;
 };
 
 /** \brief A class encapsulating all routines specifically needed in
@@ -256,6 +259,7 @@ class radius_mono {
 		inline void print(ostream &os,int ijk,int q) {};
 		inline void rad(ostream &os,int l,int c);
 		inline void diam(ostream &os,int l,int c);
+		inline void import_lammps(istream &is,int n,bool scaled);
 	private:	
 		container_base<radius_mono> *cc;
 };
@@ -287,6 +291,7 @@ class radius_poly {
 		inline void print(ostream &os,int ijk,int q);
 		inline void rad(ostream &os,int l,int c);
 		inline void diam(ostream &os,int l,int c);
+		inline void import_lammps(istream &is,int n,bool scaled);
 	private:	
 		container_base<radius_poly> *cc;
 		fpoint max_radius,crad,mul;

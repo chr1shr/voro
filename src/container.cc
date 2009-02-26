@@ -191,6 +191,18 @@ void container_base<r_option>::draw_lammps_restart(ostream &os,fpoint timestep,b
 	}
 }
 
+template<class r_option>
+void container_base<r_option>::import_lammps_restart(istream &is,bool scaled) {
+	int i,n;
+	static const char q[256];
+	clear();
+	for(i=0;i<3;i++) is.getline(q,256);
+	is >> n;
+	for(i=0;i<6;i++) is.getline(q,256);
+	radius->import_lammps(is,n,scaled);
+	is.getline();
+}
+
 /** An overloaded version of the draw_particles() routine, that just prints
  * to standard output. */
 template<class r_option>
@@ -1474,6 +1486,34 @@ inline void radius_poly::store_radius(int i,int j,fpoint r) {
 /** Clears the stored maximum radius. */
 inline void radius_poly::clear_max() {
 	max_radius=0;
+}
+
+/** Imports a list of particles from an input stream of a LAMMPS restart file
+ * for the monodisperse case where no radius information is expected.
+ * \param[in] &is an input stream to read from. */
+inline void radius_mono::import_lammps(istream &is,int n,bool scaled) {
+	const fpoint ax=cc->ax,ay=cc->ay,az=cc->az;
+	const fpoint facx=cc->bx-ax,facy=cc->by-ay,facz=cc->bz-az;
+	fpoint j,t,d,x,y,z;
+	for(int i=0;i<n;i++) {
+		is >> j >> t >> d >> x >> y >> z;
+		if(scaled) {x=x*facx+ax;y=y*facy+ay;z=z*facz+az;}
+		cc->put(j,x,y,z);
+	}
+}
+
+/** Imports a list of particles from an input stream of a LAMMPS restart file
+ * for the polydisperse case, where both positions and particle radii are both stored.
+ * \param[in] &is an input stream to read from. */
+inline void radius_poly::import_lammps(istream &is,int n,bool scaled) {
+	const fpoint ax=cc->ax,ay=cc->ay,az=cc->az;
+	const fpoint facx=cc->bx-ax,facy=cc->by-ay,facz=cc->bz-az;
+	fpoint j,t,d,x,y,z;
+	for(int i=0;i<n;i++) {
+		is >> j >> t >> d >> x >> y >> z;d*=0.5;
+		if(scaled) {x=x*facx+ax;y=y*facy+ay;z=z*facz+az;}
+		cc->put(j,x,y,z,d);
+	}
 }
 
 /** Imports a list of particles from an input stream for the monodisperse case

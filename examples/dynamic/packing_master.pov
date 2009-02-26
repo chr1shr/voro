@@ -35,8 +35,8 @@ union{
 	pigment{rgb <1,0.95,0.5>} finish{reflection 0.1 specular 0.3 ambient 0.42}
 }
 
-
+/*
 union{
 #include "temp2.pov"
 	pigment{rgb <0.4,0.6,0.8>} finish{specular 0.5 ambient 0.42}
-}
+}*/

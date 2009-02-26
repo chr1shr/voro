@@ -20,7 +20,10 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
 EXECUTABLES=dyn_test square_test packing_gen best_gen yeast
 
 # Makefile rules
-all: yeast
+all: dyn_test square_test packing_gen best_gen yeast
+
+quick_gofr: $(SOURCE) quick_gofr.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o quick_gofr quick_gofr.cc
 
 dyn_test: $(SOURCE) dyn_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o dyn_test dyn_test.cc

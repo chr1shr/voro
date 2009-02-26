@@ -482,13 +482,23 @@ void container_dynamic_base<r_option>::stick(fpoint alpha) {
 #endif
 
 template<class r_option>
+inline void container_dynamic_base<r_option>::clear_velocities() {
+	for(int l,ijk=0;ijk<nxyz;ijk++) for(l=0;l<3*co[ijk];l++) ve[ijk][l]=0;
+}
+
+template<class r_option>
+inline void container_dynamic_base<r_option>::damp_velocities(fpoint damp) {
+	for(int l,ijk=0;ijk<nxyz;ijk++) for(l=0;l<3*co[ijk];l++) ve[ijk][l]*=damp;
+}
+
+template<class r_option>
 void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 	int i,j,k,ijk,l,q,s;
 	fpoint x,y,z,px,py,pz,cx,cy,cz,rr;
 	voropp_loop l1(this);
 
-	for(ijk=0;ijk<nxyz;ijk++) for(l=0;l<3*co[ijk];l++) ve[ijk][l]=0;
-	
+	clear_velocities();
+
 	for(ijk=k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
 		for(l=0;l<co[ijk];l++) {
 			cx=p[ijk][sz*l];
@@ -608,19 +618,24 @@ void container_dynamic_base<r_option>::move(v_class &vcl) {
 					p[ni][co[ni]*sz]=x;
 					p[ni][co[ni]*sz+1]=y;
 					p[ni][co[ni]*sz+2]=z;
+					if(vcl.track_ve) {
+						ve[ni][3*co[ni]]=ve[ijk][3*l];
+						ve[ni][3*co[ni]+1]=ve[ijk][3*l+1];
+						ve[ni][3*co[ni]+2]=ve[ijk][3*l+2];
+					}
 					if(sz==4) p[ni][co[ni]*sz+3]=p[ijk][l*sz+3];
 					co[ni]++;
 				}
 				co[ijk]--;
 				id[ijk][l]=id[ijk][co[ijk]];
 				for(ll=0;ll<sz;ll++) p[ijk][sz*l+ll]=p[ijk][sz*co[ijk]+ll];
+				if (vcl.track_ve) {
+					ve[ijk][3*l]=ve[ijk][3*co[ijk]];
+					ve[ijk][3*l+1]=ve[ijk][3*co[ijk]+1];
+					ve[ijk][3*l+2]=ve[ijk][3*co[ijk]+2];
+				}
 				if(co[ijk]+1==gh[ijk]) {
 					gh[ijk]--;
-					if (vcl.track_ve) {
-						ve[ijk][3*l]=ve[ijk][3*co[ijk]];
-						ve[ijk][3*l+1]=ve[ijk][3*co[ijk]+1];
-						ve[ijk][3*l+2]=ve[ijk][3*co[ijk]+2];
-					}
 				} else l++;
 			}
 		}

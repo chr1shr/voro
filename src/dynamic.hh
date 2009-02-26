@@ -119,6 +119,8 @@ class container_dynamic_base : public container_base<r_option> {
 		using container_base<r_option>::wall_number;
 		using container_base<r_option>::walls;
 		using container_base<r_option>::mem;
+		inline void clear_velocities();
+		inline void damp_velocities(fpoint damp);
 		void wall_diagnostic();
 		int count(fpoint x,fpoint y,fpoint z,fpoint r);
 		void spot(fpoint cx,fpoint cy,fpoint cz,fpoint dx,fpoint dy,fpoint dz,fpoint rad);

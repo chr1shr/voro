@@ -6,6 +6,7 @@ $dir=$#ARGV==0?"output":$ARGV[1];
 
 $h=0;
 $voronoi=0;
+$verb=" >/dev/null 2>/dev/null";$verb="";
 
 $g=0;$ng="0000";
 
@@ -18,7 +19,7 @@ while (-e "$dir/${ng}_p.pov.gz") {
 
 	open T,">rtemp.pov";
 
-	open A,"yeast_master.pov";
+	open A,"packing_master.pov";
 	while (<A>) {
 		last if m/\#include "temp.pov"/;
 		print T;
@@ -55,7 +56,8 @@ while (-e "$dir/${ng}_p.pov.gz") {
 	print "Frame $g to $nodes[$h]\n";
 	`rsync -z rtemp.pov $nodes[$h]:cgran/rtemp$h.pov`;
 	$nice=(@nodes[$h]=~m/yuba/)?"nice -n 19":"nice +19";
-	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W800 +H700 +A0.001 +R3 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png $dir ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
+	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W300 +H800 +A0.001 +R3 -J rtemp$h.pov\"$verb; rsync -rz @nodes[$h]:cgran/fr_$ng.png $dir ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
+#	exec "ssh @nodes[$h] \"cd cgran;$nice povray +SU +Ofr_$ng.png +W800 +H700 +A0.001 +R3 -J rtemp$h.pov\" >/dev/null 2>/dev/null; rsync -rz @nodes[$h]:cgran/fr_$ng.png $dir ; ssh @nodes[$h] \"rm cgran/fr_$ng.png\"\n" if (($pid[$h]=fork)==0);
 	if ($queue) {
 		print "Waiting...\n";
 		$piddone=wait;$h=0;
