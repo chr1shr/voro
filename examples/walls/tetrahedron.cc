@@ -32,12 +32,15 @@ int main() {
 	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
 			false,false,false,8);
 
-	// Add a cylindrical wall to the container
+	// Add four plane walls to the container to make
+	// a tetrahedron
 	wall_plane p1(1,1,1,1);con.add_wall(p1);
 	wall_plane p2(-1,-1,1,1);con.add_wall(p2);
 	wall_plane p3(1,-1,-1,1);con.add_wall(p3);
 	wall_plane p4(-1,1,-1,1);con.add_wall(p4);
 
+	// Randomly insert particles into the container, checking that they
+	// lie inside the tetrahedron
 	while(i<particles) {
 		x=x_min+rnd()*(x_max-x_min);
 		y=y_min+rnd()*(y_max-y_min);
