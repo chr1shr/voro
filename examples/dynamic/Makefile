@@ -17,10 +17,10 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/voro++.hh ../../src/dynamic.hh ../../src/dynamic.cc
 
 # List of executables
-EXECUTABLES=dyn_test square_test packing_gen best_gen yeast
+EXECUTABLES=dyn_test square_test packing_gen best_gen helix yeast
 
 # Makefile rules
-all: dyn_test square_test packing_gen best_gen yeast
+all: dyn_test square_test packing_gen best_gen helix yeast
 
 quick_gofr: $(SOURCE) quick_gofr.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o quick_gofr quick_gofr.cc
@@ -36,6 +36,9 @@ packing_gen: $(SOURCE) packing_gen.cc
 
 best_gen: $(SOURCE) best_gen.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o best_gen best_gen.cc
+
+helix: $(SOURCE) helix.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -I/opt/local/include/ -o helix helix.cc -L/opt/local/lib -lgsl -lblas 
 
 yeast: $(SOURCE) yeast.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o yeast yeast.cc
