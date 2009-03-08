@@ -163,7 +163,7 @@ void container_base<r_option>::draw_particles(ostream &os) {
  * to standard output. */
 template<class r_option>
 void container_base<r_option>::draw_particles() {
-	draw_particles(cin);
+	draw_particles(cout);
 }
 
 /** An overloaded version of the draw_particles() routine, that outputs
@@ -196,7 +196,7 @@ void container_base<r_option>::draw_particles_pov(ostream &os) {
  * to standard output. */
 template<class r_option>
 void container_base<r_option>::draw_particles_pov() {
-	draw_particles_pov(cin);
+	draw_particles_pov(cout);
 }
 
 /** An overloaded version of the draw_particles_pov() routine, that outputs
