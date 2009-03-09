@@ -4,54 +4,70 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-//#include "voro++.cc"
-//#include "dynamic.cc"
+#include "voro++.cc"
+#include "dynamic.cc"
 #include <cstdio>
 #include <iostream>
 #include <cmath>
 using namespace std;
 #include <gsl/gsl_linalg.h>
 
+const fpoint pi=3.1415926535897932384626433832795;
+
 // Set up constants for the container geometry
-/*const fpoint x_min=-5,x_max=5;
-const fpoint y_min=-5,y_max=5;
-const fpoint z_min=-0.5,z_max=0.5;
+const fpoint x_min=-16,x_max=16;
+const fpoint y_min=-16,y_max=16;
+const fpoint z_min=-40,z_max=32;
 
 // Set the computational grid size
-const int n_x=8,n_y=8,n_z=1;
+const int n_x=16,n_y=16,n_z=32;
+
+// Helix parameters
+const fpoint aradius=7.5,bradius=4,lam=3,upz=20,downz=-32,insbuf=0.4;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=100;
+const int particles=pi*bradius*bradius*aradius*(upz-downz)/lam*1.2;
 
-// This function returns a random double between 0 and 1
-*/
+// This function returns a random fpoint between 0 and 1
+fpoint rnd() {return fpoint(rand())/RAND_MAX;}
 
-const double pi=3.1415926535897932384626433832795;
-inline double arg(double x,double y) { 
-return x+y>0?(x>y?atan(y/x):pi*0.5-atan(x/y)):(x>y?-atan(x/y)-pi*0.5:atan(y/x)+(y>0?pi:-pi)); 
+inline fpoint arg(fpoint x,fpoint y) {
+	return x+y>0?(x>y?atan(y/x):pi*0.5-atan(x/y)):(x>y?-atan(x/y)-pi*0.5:atan(y/x)+(y>0?pi:-pi)); 
 }
 
-double rnd() {return double(rand())/RAND_MAX;}
+class wall_helix_end;
 
-/*void output_all(container_dynamic &con,int i) {
-	char q[256];
-	sprintf(q,"output/%04d_p.pov",i);con.draw_particles_pov(q);
-	sprintf(q,"gzip -f -9 output/%04d_p.pov",i);system(q);
-	sprintf(q,"output/%04d_v.pov",i);con.draw_cells_pov(q);
-	sprintf(q,"gzip -f -9 output/%04d_v.pov",i);system(q);
-}*/
-
-class wall_helix {
+class wall_helix : public wall {
 	public:
-		wall_helix(double ir,double il) : r(ir), l(il),
-			lilr(il/sqrt(ir*ir+il*il)), rilr(ir/sqrt(ir*ir+il*il)),
+		wall_helix(fpoint ir,fpoint il,fpoint ib,int iw_id=-99) : w_id(iw_id), b(ib),
+			r(ir), l(il), lilr(il/sqrt(ir*ir+il*il)), rilr(ir/sqrt(ir*ir+il*il)),
 			og(gsl_matrix_view_array(o,3,3)),
 			vg(gsl_vector_view_array(v,3)),
        			eg(gsl_vector_view_array(e,3)),
 			pg(gsl_permutation_alloc(3)) {};
-		void convert(double x,double y,double z,double &a,double &t,double &p) {
+		bool point_inside(fpoint x,fpoint y,fpoint z) {
+			const fpoint rmin=b>r?0:(b-r)*(b-r),rmax=(b+r)*(b+r);
+			fpoint rad=x*x+y*y,a,t,p;
+			if(rad<rmin||rad>rmax) return false;
+			convert(x,y,z,a,t,p);
+			return a<b;
+		}
+		void convert(fpoint x,fpoint y,fpoint z,fpoint &a,fpoint &t,fpoint &p) {
+			fpoint temp1,temp2,rad=x*x+y*y;
+			t=arg(x,y);
+			if(t<z/l-pi) {
+				do {
+					t+=2*pi;
+				} while(t<z/l-pi);
+			} else {
+				while(t>z/l+pi) t-=2*pi;
+			}
+			temp1=z-t*lam;
+			temp2=sqrt(rad)-4;
+			a=sqrt(temp1*temp1+temp2*temp2);
+			p=arg(temp2,temp1);
 			int s,i=0,j=0;
-			double cp,ct,sp,st,racp;
+			fpoint cp,ct,sp,st,racp;
 			do {
 				cp=cos(p);ct=cos(t);
 				sp=sin(p);st=sin(t);
@@ -73,84 +89,121 @@ class wall_helix {
 				v[1]=y-(racp*st-a*lilr*ct*sp);
 				v[2]=z-(t*l+a*rilr*sp);
 
-			/*	printf ("\no = \n");
-  				gsl_matrix_fprintf(stdout,&og.matrix,"%g");
-				printf ("\nv = \n");
-  				gsl_vector_fprintf(stdout,&vg.vector,"%g");*/
-				if (v[0]*v[0]+v[1]*v[1]+v[2]*v[2]<1e-20) j++;
-				i++;if(i>100) {cout << "Newton-Raphson didn't converge" << endl;}
-
+				if (v[0]*v[0]+v[1]*v[1]+v[2]*v[2]<tolerance*tolerance) j++;
+				i++;if(i>100) {cout << "Newton-Raphson didn't converge" << endl;exit(0);}
+				
 				gsl_linalg_LU_decomp(&og.matrix,pg,&s);
 				gsl_linalg_LU_solve(&og.matrix,pg,&vg.vector,&eg.vector);
-			//	cout << v[0]*v[0]+v[1]*v[1]+v[2]*v[2] << " " << a << " " << p << " " << t << " " << e[0] << " " << e[1] << " " << e[2] << endl;
 				a+=e[0];t+=e[1];p+=e[2];
 			} while (j<5);
+			if(a<0) {p+=pi;a=-a;}
+			//cout << a << " " << t << " c " << p << endl;
 		}
-		void compute(double a,double t,double p,double &x,double &y,double &z) {
-			double racp=r+a*cos(p);
+		template<class n_option>
+		inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+			fpoint dx,dy,dz,a,t,p;
+			convert(x,y,z,a,t,p);
+			dx=(cos(p)*cos(t)+lilr*sin(t)*sin(p));
+			dy=(cos(p)*sin(t)-lilr*cos(t)*sin(p));
+			dz=rilr*sin(p);
+			return c.plane(dx,dy,dz,2*(b-a));
+		}
+		void min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz) {
+			fpoint a,t,p;
+			convert(x,y,z,a,t,p);
+			dx=(b-a)*(cos(p)*cos(t)+lilr*sin(t)*sin(p));
+			dy=(b-a)*(cos(p)*sin(t)-lilr*cos(t)*sin(p));
+			dz=(b-a)*rilr*sin(p);
+		}
+		void compute(fpoint a,fpoint t,fpoint p,fpoint &x,fpoint &y,fpoint &z) {
+			fpoint racp=r+a*cos(p);
 			x=racp*cos(t)+a*lilr*sin(t)*sin(p);
 			y=racp*sin(t)-a*lilr*cos(t)*sin(p);
 			z=t*l+a*rilr*sin(p);
 		}
+		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 	private:
-		const double r,l,lilr,rilr;
-		double o[9],v[3],e[3];
+		const int w_id;
+		const fpoint b,r,l,lilr,rilr;
+		fpoint o[9],v[3],e[3];
 		gsl_matrix_view og;
 		gsl_vector_view vg;
 		gsl_vector_view eg;
 		gsl_permutation *pg;
+		friend class wall_helix_end;
+};
+
+class wall_helix_end : public wall {
+	public:
+		wall_helix_end(wall_helix &iwh,fpoint z,fpoint upsign) :
+			w_id(iwh.w_id), wh(iwh), radc((iwh.b+0.5)*(iwh.b+0.5)), walld(2) {
+			fpoint t=z/wh.l;
+			xc=-wh.rilr*sin(t)*upsign;yc=wh.rilr*cos(t)*upsign;zc=wh.lilr*upsign;  // Normal
+			xa=wh.r*cos(t);ya=wh.r*sin(t);za=t*wh.l; // Pos vector of axis
+		}
+		template<class n_option>
+		inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+			fpoint xp=x-xa,yp=y-ya,zp=z-za;
+			fpoint dp=xp*xc+yp*yc+zp*zc;
+			xp-=dp*xc;yp-=dp*yc;zp-=dp*zc;
+//			return c.plane(xc,yc,zc,-2*dp);
+			return xp*xp+yp*yp+zp*zp<radc&&dp>-walld?c.plane(xc,yc,zc,-2*dp):true;
+		}
+		bool point_inside(fpoint x,fpoint y,fpoint z) {
+			fpoint xp=x-xa,yp=y-ya,zp=z-za;
+			fpoint dp=xp*xc+yp*yc+zp*zc;
+			xp-=dp*xc;yp-=dp*yc;zp-=dp*zc;
+			return (xp*xp+yp*yp+zp*zp>radc||dp<0);
+		}
+		void min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz) {
+			fpoint xp=x-xa,yp=y-ya,zp=z-za;
+			fpoint dp=xp*xc+yp*yc+zp*zc;
+			xp-=dp*xc;yp-=dp*yc;zp-=dp*zc;
+			if(xp*xp+yp*yp+zp*zp<radc&&dp>-walld) {
+				dx=-xc*dp;dy=-yc*dp;dz=-zc*dp;
+			} else {
+				dx=1e4;dy=1e4;dz=1e4;
+			}
+		}
+		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+	private:
+		const int w_id;
+		wall_helix &wh;
+		const fpoint radc,walld;
+		fpoint xc,yc,zc;
+		fpoint xa,ya,za;
+		fpoint r;
 };
 
 int main() {
-	const double lam=0.5;
 	int i=0;
-	double x,y,z,dx,dy,dz,a,p,t,rad,temp1,temp2;
-	wall_helix wh(4,lam);
+	fpoint a,t,p,x,y,z;
+
+	container_dynamic con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,false,false,false,8);
+
+	wall_helix wh(aradius,lam,bradius);
+	wall_helix_end whe1(wh,upz,1);
+	wall_helix_end whe2(wh,downz,-1);
+	con.add_wall(wh);
+	con.add_wall(whe1);
+	con.add_wall(whe2);
 	
-	while(i<5000) {
-		x=5*(2*rnd()-1);
-		y=5*(2*rnd()-1);
-		z=5*(2*rnd()-1);
-		rad=x*x+y*y;
-		if(rad>9&&rad<25) {
-			t=arg(x,y);
-			if(t<z/lam-pi) {
-				do {
-					t+=2*pi;
-				} while(t<z/lam-pi);
-			} else {
-				while(t>z/lam+pi) t-=2*pi;
-			}
-			temp1=z-t*lam;
-			temp2=sqrt(rad)-4;
-			a=sqrt(temp1*temp1+temp2*temp2);
-			p=arg(temp2,temp1);
-		//	cout << x << " " << y << " " << z << " " << a << " " << t << " " << p << endl;
-		//	cout << x << " " << y << " " << z << " " << cos(t)*(4+a*cos(p)) << " " << sin(t)*(4+a*cos(p)) << " " << t*lam+a*sin(p) << endl;
-			wh.convert(x,y,z,a,t,p);
-			if(a<1&&a>0) {
-				a=1;
-				wh.compute(a,t,p,dx,dy,dz);
-				cout << x << " " << y << " " << z << " " << dx-x << " " << dy-y << " " << dz-z << endl;
-			}
-			i++;
-		}
+	while(i<particles) {
+		a=(bradius-insbuf)*rnd();
+		t=(downz/lam+insbuf/sqrt(lam*lam+aradius*aradius))+rnd()*((upz-downz)/lam-2*insbuf/sqrt(lam*lam+aradius*aradius));
+		p=2*pi*rnd();
+		wh.compute(a,t,p,x,y,z);
+		//cout << a << " " << t << " " << p << endl;
+		if(!con.point_inside(x,y,z)) {cout << i << " " << x << " " << y << " " << z << endl;return 0;}
+		con.put(i,x,y,z);i++;
 	}
+	for(i=0;i<200;i++) {
+		con.full_relax(0.05*(i<12?i:12));
+		cout << i << " " << con.packing_badness<cond_all>() << endl;
+	}
+
+	con.draw_particles_pov("helix_p.pov");
+	con.draw_cells_pov("helix_v.pov");
 }
-
-
-
-/*
-output_all(con,0);
-for(i=0;i<=10;i++) con.full_relax(0.8);
-	output_all(con,1);
-
-	for(i=20;i<=1000;i++) {
-		con.spot(0,0,0,0.005,0.005,0,2.5);
-	//	con.relax(4,4,0,3.5,0.8);
-		con.full_relax(0.8);
-		if(i%10==0) {
-			output_all(con,i/10);
-		}
-	}
-}*/
