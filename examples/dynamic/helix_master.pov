@@ -4,10 +4,14 @@
 #include "metals.inc"
 #include "textures.inc"
 
+global_settings {
+	max_trace_level 256
+}
+
 camera {
-	location <40/1.2,35*1.2,-80/1.2>
-	right 0.7*x*image_width/image_height
-	up 0.7*y
+	location <40/1.3,35*1.3,-80/1.3>
+	right 0.77*x*image_width/image_height
+	up 0.77*y
 	look_at <0,-5,0>
 }
 
