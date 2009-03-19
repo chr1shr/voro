@@ -19,7 +19,7 @@ const int max_regions=16777216;
 // This message gets displayed if the command line arguments are incorrect
 // or if the user requests the help flag
 void help_message() {
-	cout << "Voro++ version 0.2, by Chris H. Rycroft (UC Berkeley/LBL)\n\n";
+	cout << "Voro++ version 0.2.6, by Chris H. Rycroft (UC Berkeley/LBL)\n\n";
 	cout << "Syntax: voro++ [opts] <length_scale> <x_min> <x_max> <y_min>\n";
 	cout << "                      <y_max> <z_min> <z_max> <filename>\n\n";
 	cout << "<length_scale> should be set to a typical particle diameter,\n";
@@ -47,7 +47,7 @@ void help_message() {
 // Prints an error message. This is called when the program is unable to make
 // sense of the command line options.
 void error_message() {
-	cerr << "Unrecognized command line options; type \"voro++ -h\" for more information." << endl;
+	cerr << "voro++: Unrecognized command line options; type \"voro++ -h\" for more information." << endl;
 }
 
 // Global variables to set the wall memory allocation, and the current number
@@ -61,7 +61,8 @@ wall **wp;
 void add_wall_memory() {
 	wall **nwp;
 	wall_mem*=2;
-	if (wall_mem>max_wall_size) cerr << "Too many walls allocated. Try recompiling by boosting the value of max_wall_size in config.hh" << endl;
+	if (wall_mem>max_wall_size)
+		voropp_fatal_error("Too many walls allocated; try recompiling by boosting the value of max_wall_size in config.hh",VOROPP_MEMORY_ERROR);
 	nwp=new wall*[wall_mem];
 	for(int i=0;i<wall_count;i++) nwp[i]=wp[i];
 	delete [] wp;
@@ -87,14 +88,16 @@ int main(int argc,char **argv) {
 		if (strcmp(argv[1],"-h")==0||strcmp(argv[1],"--help")==0) {
 			help_message();return 0;
 		} else {
-			error_message();return 1;
+			error_message();
+			return VOROPP_CMD_LINE_ERROR;
 		}
 	}
 	
 	// If there aren't enough command line arguments, then bail out
 	// with an error.
 	if (argc<9) {
-	       error_message();return 1;
+	       error_message();
+	       return VOROPP_CMD_LINE_ERROR;
 	}
 
 	// We have enough arguments. Now start searching for command line
@@ -150,7 +153,8 @@ int main(int argc,char **argv) {
 			wp[wall_count++]=new wall_cone(w0,w1,w2,w3,w4,w5,w6,j);
 			j--;
 		} else {
-			error_message();return 1;
+			error_message();
+			return VOROPP_CMD_LINE_ERROR;
 		}
 		i++;
 	}
@@ -164,6 +168,7 @@ int main(int argc,char **argv) {
 
 	// Check that the length scale is positive and reasonably large
 	if (ls<tolerance) {
+		cerr << "voro++: ";
 		if (ls<0) {
 			cerr << "The length scale must be positive" << endl;
 		} else {
@@ -172,7 +177,7 @@ int main(int argc,char **argv) {
 			cerr << "different limit." << endl;
 		}
 		wall_deallocate();
-		return 0;
+		return VOROPP_CMD_LINE_ERROR;
 	}
 	ls=1.8/ls;
 
@@ -184,11 +189,11 @@ int main(int argc,char **argv) {
 	int nz=int((zmax-zmin)*ls)+1;
 	int nxyz=nx*ny*nz;
 	if (nx*ny*nz>max_regions) {
-		cerr << "Number of computational blocks (" << nxyz << ") exceeds the maximum\n";
-		cerr << "allowed of " << max_regions << ". Either increase the particle\n";
-		cerr << "length scale, or recompile with an increased maximum." << endl;
+		cerr << "voro++: Number of computational blocks (" << nxyz << ") exceeds the\n";
+		cerr << "maximum allowed of " << max_regions << ". Either increase the\n";
+		cerr << "particle length scale, or recompile with an increased maximum." << endl;
 		wall_deallocate();
-		return 0;
+		return VOROPP_MEMORY_ERROR;
 	}
 
 	// Prepare output filename

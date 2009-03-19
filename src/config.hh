@@ -94,4 +94,21 @@ const fpoint tolerance2=2e-10;
 /** A large number that is used in the computation. */
 const fpoint large_number=1e30;
 
+/** Voro++ returns this status code if there is a file-related error, such as not being
+ * able to open file. */
+#define VOROPP_FILE_ERROR 1
+
+/** Voro++ returns this status code if there is a memory allocation error, if one of the
+ * safe memory limits is exceeded. */ 
+#define VOROPP_MEMORY_ERROR 2
+
+/** Voro++ returns this status code if there is any type of internal error, if it detects
+ * that representation of the Voronoi cell is inconsistent. This status code will generally
+ * indicate a bug, and the developer should be contacted. */
+#define VOROPP_INTERNAL_ERROR 3
+
+/** Voro++ returns this status code if it could not interpret to the command line arguments
+ * passed to the command line utility. */
+#define VOROPP_CMD_LINE_ERROR 4
+
 #endif

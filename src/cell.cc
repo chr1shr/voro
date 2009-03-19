@@ -77,7 +77,7 @@ void voronoicell_base<n_option>::add_memory(int i) {
 	} else {
 		int j=0,k,*l;
 		mem[i]*=2;
-		if (mem[i]>max_n_vertices) throw fatal_error("Point memory allocation exceeded absolute maximum");
+		if (mem[i]>max_n_vertices) voropp_fatal_error("Point memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 		cerr << "Order " << i << " vertex memory scaled up to " << mem[i] << endl;
 #endif
@@ -98,7 +98,7 @@ void voronoicell_base<n_option>::add_memory(int i) {
 						break;
 					}
 				}
-				if(o==stack2) throw fatal_error("Couldn't relocate dangling pointer");
+				if(o==stack2) voropp_fatal_error("Couldn't relocate dangling pointer",VOROPP_INTERNAL_ERROR);
 #if VOROPP_VERBOSE >=3
 				cerr << "Relocated dangling pointer" << endl;
 #endif
@@ -114,12 +114,12 @@ void voronoicell_base<n_option>::add_memory(int i) {
 
 /** Doubles the maximum number of vertices allowed, by reallocating the ed, nu,
  * pts, and ne <em>(neighbor option only)</em> arrays. If the allocation
- * exceeds the absolute maximum set in max_vertices, then the routine throws a
- * fatal error. */
+ * exceeds the absolute maximum set in max_vertices, then the routine exits
+ * with a fatal error. */
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_vertices() {
 	int i=2*current_vertices,j,**pp,*pnu;
-	if (i>max_vertices) throw fatal_error("Vertex memory allocation exceeded absolute maximum");
+	if (i>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Vertex memory scaled up to " << i << endl;
 #endif
@@ -144,7 +144,7 @@ void voronoicell_base<n_option>::add_memory_vertices() {
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_vorder() {
 	int i=2*current_vertex_order,j,*p1,**p2;
-	if (i>max_vertex_order) throw fatal_error("Vertex order memory allocation exceeded absolute maximum");
+	if (i>max_vertex_order) voropp_fatal_error("Vertex order memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Vertex order memory scaled up to " << i << endl;
 #endif
@@ -167,7 +167,7 @@ void voronoicell_base<n_option>::add_memory_vorder() {
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_ds() {
 	int i=2*current_delete_size,j,*pds;
-	if (i>max_delete_size) throw fatal_error("Delete stack 1 memory allocation exceeded absolute maximum");
+	if (i>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Delete stack 1 memory scaled up to " << i << endl;
 #endif
@@ -183,7 +183,7 @@ void voronoicell_base<n_option>::add_memory_ds() {
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_ds2() {
 	int i=2*current_delete2_size,j,*pds2;
-	if (i>max_delete2_size) throw fatal_error("Delete stack 2 memory allocation exceeded absolute maximum");
+	if (i>max_delete2_size) voropp_fatal_error("Delete stack 2 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Delete stack 2 memory scaled up to " << i << endl;
 #endif
@@ -532,7 +532,7 @@ inline void voronoicell_base<n_option>::construct_relations() {
 		l=0;
 		while(ed[k][l]!=i) {
 			l++;
-			if (l==nu[k]) throw fatal_error("Relation table construction failed");
+			if (l==nu[k]) voropp_fatal_error("Relation table construction failed",VOROPP_INTERNAL_ERROR);
 		}
 		ed[i][nu[i]+j]=l;
 	}
@@ -1259,7 +1259,8 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			ed[up]=ed[p];
 			nu[up]=nu[p];
 			for(i=0;i<nu[up];i++) {
-				if (ed[up][i]==-1) throw fatal_error("fishy");
+				if (ed[up][i]==-1)
+					voropp_fatal_error("Dangling edge found",VOROPP_INTERNAL_ERROR);
 				ed[ed[up][i]][ed[up][nu[up]+i]]=up;
 			}
 			ed[up][2*nu[up]]=up;
@@ -1267,7 +1268,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	}
 
 	// Check for any vertices of zero order
-	if (mec[0]>0) throw fatal_error("Zero order vertex formed");
+	if (mec[0]>0) voropp_fatal_error("Zero order vertex formed",VOROPP_INTERNAL_ERROR);
 
 	// Collapse any order 2 vertices and exit
 	return collapse_order2();
@@ -1507,7 +1508,7 @@ fpoint voronoicell_base<n_option>::volume() {
 	}
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) throw fatal_error("Volume routine didn't look everywhere");
+			if(ed[i][j]>=0) voropp_fatal_error("Volume routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
@@ -1642,7 +1643,7 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(ostream &os,fpoint x,fpoin
 	}
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) throw fatal_error("Mesh routine didn't look everywhere");
+			if(ed[i][j]>=0) voropp_fatal_error("Mesh routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
@@ -1711,7 +1712,7 @@ int suretest::check_marginal(int n,fpoint &ans) {
 	for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
 	if (sc==2*current_marginal) {
 		i=2*current_marginal;
-		if (i>max_marginal) throw fatal_error("Marginal case buffer allocation exceeded absolute maximum");
+		if (i>max_marginal) voropp_fatal_error("Marginal case buffer allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 		cerr << "Marginal cases buffer scaled up to " << i << endl;
 #endif
@@ -1769,7 +1770,7 @@ void voronoicell_base<n_option>::facets(ostream &os) {
 	}
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) throw fatal_error("Facet evaluation routine didn't look everywhere");
+			if(ed[i][j]>=0) voropp_fatal_error("Facet evaluation routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
@@ -1798,7 +1799,7 @@ int voronoicell_base<n_option>::number_of_faces() {
 	}
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) throw fatal_error("Face evaluation routine didn't look everywhere");
+			if(ed[i][j]>=0) voropp_fatal_error("Face evaluation routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
@@ -1870,7 +1871,7 @@ void voronoicell_base<n_option>::facet_statistics(ostream &os) {
 	}
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) throw fatal_error("Facet statistics routine didn't look everywhere");
+			if(ed[i][j]>=0) voropp_fatal_error("Facet statistics routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
@@ -2218,7 +2219,7 @@ void neighbor_track::check_facets() {
 	}
 	for(i=0;i<vc->p;i++) {
 		for(j=0;j<nup[i];j++) {
-			if(edp[i][j]>=0) throw fatal_error("Facet labeling routine didn't look everywhere");
+			if(edp[i][j]>=0) voropp_fatal_error("Facet labeling routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
 			edp[i][j]=-1-edp[i][j];
 		}
 	}
@@ -2247,7 +2248,7 @@ void neighbor_track::neighbors(ostream &os) {
 	}
 	for(i=0;i<vc->p;i++) {
 		for(j=0;j<nup[i];j++) {
-			if(edp[i][j]>=0) throw fatal_error("Neighbor routine didn't look everywhere");
+			if(edp[i][j]>=0) voropp_fatal_error("Neighbor routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
 			edp[i][j]=-1-edp[i][j];
 		}
 	}
@@ -2277,7 +2278,7 @@ void neighbor_track::label_facets() {
 	}
 	for(i=0;i<vc->p;i++) {
 		for(j=0;j<nup[i];j++) {
-			if(edp[i][j]>=0) throw fatal_error("Facet labeling routine didn't look everywhere");
+			if(edp[i][j]>=0) voropp_fatal_error("Facet labeling routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
 			edp[i][j]=-1-edp[i][j];
 		}
 	}

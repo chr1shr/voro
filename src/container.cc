@@ -253,7 +253,8 @@ void container_base<r_option>::add_particle_memory(int i) {
 #if VOROPP_VERBOSE >=3
 	cerr << "Particle memory in region " << i << " scaled up to " << nmem << endl;
 #endif
-	if(nmem>max_particle_memory) throw fatal_error("Absolute maximum memory allocation exceeded");
+	if(nmem>max_particle_memory)
+		voropp_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
 	pp=new fpoint[sz*nmem];
@@ -302,7 +303,7 @@ template<class r_option>
 inline void container_base<r_option>::import(const char *filename) {
 	ifstream is;
 	is.open(filename,ifstream::in);
-	if(is.fail()) throw fatal_error("Unable to open file for import");
+	if(is.fail()) voropp_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
 	import(is);
 	is.close();
 }
@@ -1424,7 +1425,8 @@ template<class r_option>
 void container_base<r_option>::add_wall(wall& w) {
 	if(wall_number==current_wall_size) {
 		current_wall_size*=2;
-		if(current_wall_size>max_wall_size) throw fatal_error("Wall memory allocation exceeded absolute maximum");
+		if(current_wall_size>max_wall_size)
+			voropp_fatal_error("Wall memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 		wall **pwall;
 		pwall=new wall*[current_wall_size];
 		for(int i=0;i<wall_number;i++) pwall[i]=walls[i];

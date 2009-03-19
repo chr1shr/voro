@@ -25,8 +25,6 @@ int main() {
 	//Randomly add particles into the container
 	con.import("pack_ten_cube");
 
-	con.print_facet_information();
-	
 	// Save the Voronoi network of all the particles to text files
 	// in gnuplot and POV-Ray formats
 	con.draw_cells_gnuplot("cells_ten_cube.gnu");

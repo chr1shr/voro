@@ -17,14 +17,13 @@
 #include <cmath>
 using namespace std;
 
-/** \brief Structure for printing fatal error messages and exiting.
+/** \brief Function for printing fatal error messages and exiting.
  *
- * Structure for printing fatal error messages and exiting. */
-struct fatal_error {
-	/** This routine prints an error message to the standard error.
-	 * \param[in] p The message to print. */
-	fatal_error(const char *p) {cerr << p << endl;}
-};
+ * Function for printing fatal error messages and exiting. */
+void voropp_fatal_error(const char *p,int status) {
+	cerr << "voro++: " << p << endl;
+	exit(status);
+}
 
 /** \brief A class to reliably carry out floating point comparisons, storing
  * marginal cases for future reference.
