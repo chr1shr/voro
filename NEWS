@@ -8,6 +8,14 @@ Version 0.2.6 (March 19, 2009)
 * Corrected error in comment in the tetrahedron example
 * Minor comment cleanups of the worklist_gen.pl script
 * Updated Doxyfile to version 1.5.8
+* Added a routine print_facet_information() in response to a problem
+  from Hengxing Lan
+* Many of the cell based statistics routines (like number_of_faces() and
+  facets()) internally track their progress by temporarily flipping the edge
+  table entries to negative values, so that they know where they have already
+  been. The common code that was used at the end of each of these functions for
+  resetting the edges back to positive has now been made into a private inline
+  function called reset_edges().
 
 Version 0.2.5 (January 1, 2009)
 ===============================

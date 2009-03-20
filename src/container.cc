@@ -484,6 +484,8 @@ fpoint container_base<r_option>::sum_cell_volumes() {
 	return vol;
 }
 
+/** For each particle, this prints a list of the vertices which make up each
+ * face of the Voronoi cell. */
 template<class r_option>
 void container_base<r_option>::print_facet_information() {
 	voronoicell c;

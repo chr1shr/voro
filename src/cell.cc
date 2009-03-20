@@ -1506,13 +1506,7 @@ fpoint voronoicell_base<n_option>::volume() {
 			}
 		}
 	}
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) voropp_fatal_error("Volume routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
-			ed[i][j]=-1-ed[i][j];
-		}
-	}
-
+	reset_edges();
 	return vol*fe;
 }
 
@@ -1641,13 +1635,25 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(ostream &os,fpoint x,fpoin
 			}
 		}
 	}
+	reset_edges();
+	os << "}\ninside_vector <0,0,1>\n}\n";
+}
+
+/** Several routines in the class that gather cell-based statistics internally
+ * track their progress by flipping edges to negative so that they know what
+ * parts of the cell have already been tested. This function resets them back
+ * to positive. When it is called, it assumes that every edge in the routine
+ * should have already been flipped to negative, and it bails out with an
+ * internal error if it encounters a positive edge. */
+template<class n_option>
+inline void voronoicell_base<n_option>::reset_edges() {
+	int i,j;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) voropp_fatal_error("Mesh routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
+			if(ed[i][j]>=0) voropp_fatal_error("Edge reset routine found a previously untested edge",VOROPP_INTERNAL_ERROR);
 			ed[i][j]=-1-ed[i][j];
 		}
 	}
-	os << "}\ninside_vector <0,0,1>\n}\n";
 }
 
 /** An overloaded version of the draw_pov_mesh routine, that writes directly to a
@@ -1768,12 +1774,7 @@ void voronoicell_base<n_option>::facets(ostream &os) {
 			}
 		}
 	}
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) voropp_fatal_error("Facet evaluation routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
-			ed[i][j]=-1-ed[i][j];
-		}
-	}
+	reset_edges();
 }
 
 /** Returns the number of faces of a computed Voronoi cell.
@@ -1797,12 +1798,7 @@ int voronoicell_base<n_option>::number_of_faces() {
 			}
 		}
 	}
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) voropp_fatal_error("Face evaluation routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
-			ed[i][j]=-1-ed[i][j];
-		}
-	}
+	reset_edges();
 	return s;
 }
 
@@ -1869,12 +1865,7 @@ void voronoicell_base<n_option>::facet_statistics(ostream &os) {
 			}
 		}
 	}
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) voropp_fatal_error("Facet statistics routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
-			ed[i][j]=-1-ed[i][j];
-		}
-	}
+	reset_edges();
 	for(i=0;i<=maxf;i++) os << i << " " << stat[i] << endl;
 	delete [] stat;
 }
@@ -2217,12 +2208,7 @@ void neighbor_track::check_facets() {
 			}
 		}
 	}
-	for(i=0;i<vc->p;i++) {
-		for(j=0;j<nup[i];j++) {
-			if(edp[i][j]>=0) voropp_fatal_error("Facet labeling routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
-			edp[i][j]=-1-edp[i][j];
-		}
-	}
+	vc->reset_edges();
 }
 
 /** This routine provides a list of plane IDs.
@@ -2246,12 +2232,7 @@ void neighbor_track::neighbors(ostream &os) {
 			}
 		}
 	}
-	for(i=0;i<vc->p;i++) {
-		for(j=0;j<nup[i];j++) {
-			if(edp[i][j]>=0) voropp_fatal_error("Neighbor routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
-			edp[i][j]=-1-edp[i][j];
-		}
-	}
+	vc->reset_edges();
 }
 
 /** This routine labels the facets in an arbitrary order, starting from one. */
@@ -2276,12 +2257,7 @@ void neighbor_track::label_facets() {
 			}
 		}
 	}
-	for(i=0;i<vc->p;i++) {
-		for(j=0;j<nup[i];j++) {
-			if(edp[i][j]>=0) voropp_fatal_error("Facet labeling routine didn't look everywhere",VOROPP_INTERNAL_ERROR);
-			edp[i][j]=-1-edp[i][j];
-		}
-	}
+	vc->reset_edges();
 }
 
 /** This routine prints out a bracketed pair showing a vertex number, and the
