@@ -342,7 +342,7 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xm
 		for(q=0;q<co[s];q++) {
 			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_gnuplot(os,x,y,z);
+				if(compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_gnuplot(os,x,y,z);
 			}
 		}
 	} while((s=l1.inc(px,py,pz))!=-1);

@@ -275,7 +275,8 @@ class radius_poly {
 		/** This constructor sets a pointer back to the container class
 		 * that created it, and initializes the mem_size constant to 4.
 		 */
-		radius_poly(container_base<radius_poly> *icc) : mem_size(4), cc(icc) {};
+		radius_poly(container_base<radius_poly> *icc) :
+			mem_size(4), cc(icc), max_radius(0) {};
 		inline void import(istream &is);
 		inline void store_radius(int i,int j,fpoint r);
 		inline void clear_max();

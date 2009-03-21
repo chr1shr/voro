@@ -51,13 +51,17 @@ void voropp_fatal_error(const char *p,int status) {
  * are close to the plane are stored and tested, so this routine should create
  * minimal computational overhead.
  */
-class suretest { public:
+class suretest {
+	public:
 		/** This is a pointer to the array in the voronoicell class
 		 * which holds the vertex coordinates.*/
-		fpoint *p;		suretest(); ~suretest(); inline void
-			init(fpoint x,fpoint y,fpoint z,fpoint rsq); inline int
-			test(int n,fpoint &ans); private: int
-			check_marginal(int n,fpoint &ans);
+		fpoint *p;
+		suretest();
+		~suretest();
+		inline void init(fpoint x,fpoint y,fpoint z,fpoint rsq);
+		inline int test(int n,fpoint &ans);
+	private:
+		int check_marginal(int n,fpoint &ans);
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
 		int current_marginal;
@@ -74,7 +78,8 @@ class suretest { public:
 		/** The z coordinate of the normal vector to the test plane. */
 		fpoint pz;
 		/** The magnitude of the normal vector to the test plane. */
-		fpoint prsq; };
+		fpoint prsq;
+};
 
 class neighbor_track;
 
