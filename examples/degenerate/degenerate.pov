@@ -25,14 +25,9 @@ light_source{<20,5,-10> color rgb <0.4,0.42,0.42>}
 union{
 #include "degenerate_v.pov"
 	texture{T_Gold_3C}
-//	pigment{rgb <0.6,0.4,0.9>}
-//	finish{specular 0.3 ambient 0.4}
 }
 
 sphere{<0,0,0>,0.5-r
-	//material{M_Glass3}
 	pigment{rgb <0.1,0.15,0.4>}
-	//pigment{rgb <0.2,0.3,0.5>}
 	finish{reflection 0.25 specular 0.4 ambient 0.6}
-	//texture{T_Chrome_3C}
 }
