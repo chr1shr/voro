@@ -166,6 +166,24 @@ int main(int argc,char **argv) {
 	fpoint ymin=atof(argv[i+3]),ymax=atof(argv[i+4]);
 	fpoint zmin=atof(argv[i+5]),zmax=atof(argv[i+6]);
 
+	// Check that for each coordinate, the minimum value is smaller
+	// than the maximum value
+	if(xmax<xmin) {
+		cerr << "voro++: Minimum x coordinate exceeds maximum x coordinate" << endl;
+		wall_deallocate();
+		return VOROPP_CMD_LINE_ERROR;
+	}
+	if(ymax<ymin) {
+		cerr << "voro++: Minimum y coordinate eyceeds maximum y coordinate" << endl;
+		wall_deallocate();
+		return VOROPP_CMD_LINE_ERROR;
+	}
+	if(zmax<zmin) {
+		cerr << "voro++: Minimum z coordinate ezceeds maximum z coordinate" << endl;
+		wall_deallocate();
+		return VOROPP_CMD_LINE_ERROR;
+	}
+
 	// Check that the length scale is positive and reasonably large
 	if (ls<tolerance) {
 		cerr << "voro++: ";
@@ -182,19 +200,26 @@ int main(int argc,char **argv) {
 	ls=1.8/ls;
 
 	// Compute the number regions based on the length scale provided. If
-	// the total number exceeds a cutoff then bail out, to prevent making
-	// a massive memory allocation.
-	int nx=int((xmax-xmin)*ls)+1;
-	int ny=int((ymax-ymin)*ls)+1;
-	int nz=int((zmax-zmin)*ls)+1;
-	int nxyz=nx*ny*nz;
-	if (nx*ny*nz>max_regions) {
-		cerr << "voro++: Number of computational blocks (" << nxyz << ") exceeds the\n";
-		cerr << "maximum allowed of " << max_regions << ". Either increase the\n";
-		cerr << "particle length scale, or recompile with an increased maximum." << endl;
+	// the total number exceeds a cutoff then bail out, to prevent making a
+	// massive memory allocation. Do this test using floating point
+	// numbers, since huge integers could potentially wrap around to
+	// negative values.
+	fpoint nxf=(xmax-xmin)*ls+1;
+	fpoint nyf=(ymax-ymin)*ls+1;
+	fpoint nzf=(zmax-zmin)*ls+1;
+	if (nxf*nyf*nzf>max_regions) {
+		cerr << "voro++: Number of computational blocks exceeds the maximum\n";
+		cerr << "allowed of " << max_regions << ". Either increase the particle\n";
+		cerr << "length scale, or recompile with an increased maximum." << endl;
 		wall_deallocate();
 		return VOROPP_MEMORY_ERROR;
 	}
+
+	// Now that we are confident that the number of regions is reasonable,
+	// create integer versions of them.
+	int nx=int(nxf);
+	int ny=int(nyf);
+	int nz=int(nzf);
 
 	// Prepare output filename
 	sprintf(buffer,"%s.vol",argv[i+7]);
