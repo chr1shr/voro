@@ -60,7 +60,7 @@ Version 0.2 (October 31, 2008)
 * Updated some occurrences of char* with const char* for compatability with
   version 4.2 of the GNU C++ compiler
 * Making use of default parameters in the wall classes
-* The command line utility can now add walls
+* The command-line utility can now add walls
 
 Version 0.1 (August 22, 2008)
 =============================
