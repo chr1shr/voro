@@ -25,6 +25,7 @@ Version 0.2.6 (March 23, 2009)
   invalid command-line arguments. Switched the test on the number of
   computational blocks to use floating point arithmetic, because integers
   could potentially overflow and become negative.
+* Cleanup of the README file for the basic examples
 
 Version 0.2.5 (January 1, 2009)
 ===============================
