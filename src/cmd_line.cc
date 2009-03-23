@@ -47,7 +47,7 @@ void help_message() {
 // Prints an error message. This is called when the program is unable to make
 // sense of the command line options.
 void error_message() {
-	cerr << "voro++: Unrecognized command line options; type \"voro++ -h\" for more information." << endl;
+	cerr << "voro++: Unrecognized command line options; type \"voro++ -h\" for more\ninformation." << endl;
 }
 
 // Global variables to set the wall memory allocation, and the current number
