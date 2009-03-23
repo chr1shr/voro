@@ -20,7 +20,7 @@ with plane cuts, some inaccuracies can be seen.
 2. tetrahedron.cc - this example creates a tetrahedron with four planes, and
 randomly inserts particles into it, using the point_inside() function to
 determine whether the points are within the walls. It outputs the particles to
-tetrahedron_p.gnu, and the Voronoi cells to tetrahedron_v.pov. These can be
+tetrahedron_p.gnu, and the Voronoi cells to tetrahedron_v.gnu. These can be
 visualized in gnuplot using:
 
 splot 'tetrahedron_p.gnu' with points, 'tetrahedron_v.gnu' with lines
