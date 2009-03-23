@@ -174,12 +174,12 @@ int main(int argc,char **argv) {
 		return VOROPP_CMD_LINE_ERROR;
 	}
 	if(ymax<ymin) {
-		cerr << "voro++: Minimum y coordinate eyceeds maximum y coordinate" << endl;
+		cerr << "voro++: Minimum y coordinate exceeds maximum y coordinate" << endl;
 		wall_deallocate();
 		return VOROPP_CMD_LINE_ERROR;
 	}
 	if(zmax<zmin) {
-		cerr << "voro++: Minimum z coordinate ezceeds maximum z coordinate" << endl;
+		cerr << "voro++: Minimum z coordinate exceeds maximum z coordinate" << endl;
 		wall_deallocate();
 		return VOROPP_CMD_LINE_ERROR;
 	}
@@ -190,9 +190,8 @@ int main(int argc,char **argv) {
 		if (ls<0) {
 			cerr << "The length scale must be positive" << endl;
 		} else {
-			cerr << "The length scale is smaller than the safe limit of " << tolerance << ".\n";
-			cerr << "Either increase the particle length scale, or recompile with a\n";
-			cerr << "different limit." << endl;
+			cerr << "The length scale is smaller than the safe limit of " << tolerance << ". Either\n";
+			cerr << "increase the particle length scale, or recompile with a different limit." << endl;
 		}
 		wall_deallocate();
 		return VOROPP_CMD_LINE_ERROR;
@@ -208,9 +207,8 @@ int main(int argc,char **argv) {
 	fpoint nyf=(ymax-ymin)*ls+1;
 	fpoint nzf=(zmax-zmin)*ls+1;
 	if (nxf*nyf*nzf>max_regions) {
-		cerr << "voro++: Number of computational blocks exceeds the maximum\n";
-		cerr << "allowed of " << max_regions << ". Either increase the particle\n";
-		cerr << "length scale, or recompile with an increased maximum." << endl;
+		cerr << "voro++: Number of computational blocks exceeds the maximum allowed of " << max_regions << ".\n";
+		cerr << "Either increase the particle length scale, or recompile with an increased\nmaximum." << endl;
 		wall_deallocate();
 		return VOROPP_MEMORY_ERROR;
 	}
