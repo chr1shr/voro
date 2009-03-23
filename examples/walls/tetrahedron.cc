@@ -27,8 +27,8 @@ int main() {
 	double x,y,z;
 
 	// Create a container with the geometry given above, and make it
-	// non-periodic in each of the three coordinates. Allocate space for
-	// 8 particles within each computational block.
+	// non-periodic in each of the three coordinates. Allocate space for 8
+	// particles within each computational block.
 	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
 			false,false,false,8);
 
