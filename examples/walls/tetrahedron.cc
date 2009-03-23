@@ -38,8 +38,8 @@ int main() {
 	wall_plane p3(1,-1,-1,1);con.add_wall(p3);
 	wall_plane p4(-1,1,-1,1);con.add_wall(p4);
 
-	// Randomly insert particles into the container, checking that they
-	// lie inside the tetrahedron
+	// Randomly insert particles into the container, checking that they lie
+	// inside the tetrahedron
 	while(i<particles) {
 		x=x_min+rnd()*(x_max-x_min);
 		y=y_min+rnd()*(y_max-y_min);
