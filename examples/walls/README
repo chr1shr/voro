@@ -17,7 +17,7 @@ object. It fills the frustum with 500 random points, and outputs the
 Voronoi cells in gnuplot format. Due to the conical wall being approximated
 with plane cuts, some inaccuracies can be seen.
 
-2. tetrahedron.cc - this example creates a tetrahedron with four planes, and
+3. tetrahedron.cc - this example creates a tetrahedron with four planes, and
 randomly inserts particles into it, using the point_inside() function to
 determine whether the points are within the walls. It outputs the particles to
 tetrahedron_p.gnu, and the Voronoi cells to tetrahedron_v.gnu. These can be

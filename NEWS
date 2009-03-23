@@ -28,7 +28,7 @@ Version 0.2.6 (March 23, 2009)
 * Included several more of the POV-Ray header files that were used to create
   the example images on the website
 * Removed a "cout" statement in the wall_cone class
-* Cleanup of the README file for the basic examples
+* Cleanup of the README files for the basic examples and the wall examples
 
 Version 0.2.5 (January 1, 2009)
 ===============================
