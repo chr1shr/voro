@@ -1125,9 +1125,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 					if(face_z_test(c,xlo,ylo,zlo,xhi,yhi)) continue;
 				} else if(dk<ck) {
 					if(face_z_test(c,xlo,ylo,zhi,xhi,yhi)) continue;
-				} else {
-					cout << "Can't happen ... happened\n";
-				}
+				} else voropp_fatal_error("Compute cell routine revisiting central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
 			}
 		}
 
@@ -1724,7 +1722,7 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
 				crs=0;
-				cout << "Can't happen ... happened\n";
+				voropp_fatal_error("Min/max radius function called for central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
 			}
 			crs+=gys;
 		}

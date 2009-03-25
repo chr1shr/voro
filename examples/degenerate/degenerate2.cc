@@ -41,7 +41,7 @@ int main() {
 		// Skip it if it's outside the unit sphere or too close to the
 		// origin
 		rsq=x*x+y*y+z*z;
-		if(rsq>0.01||rsq<1) continue;
+		if(rsq<0.01||rsq>1) continue;
 
 		// Rescale the point so that it has modulus 1, and then apply
 		// plane cuts around this point
