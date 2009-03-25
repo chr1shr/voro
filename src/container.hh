@@ -11,7 +11,7 @@
 #define VOROPP_CONTAINER_HH
 
 #include "config.hh"
-#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <cmath>

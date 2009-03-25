@@ -5,7 +5,7 @@
 // Date     : July 1st 2008
 
 /** \file cmd_line.cc
- * \brief Source code for the command line utility. */
+ * \brief Source code for the command-line utility. */
 
 #include "voro++.cc"
 
@@ -16,7 +16,7 @@ const int memory=8;
 // being allocated
 const int max_regions=16777216;
 
-// This message gets displayed if the command line arguments are incorrect
+// This message gets displayed if the command-line arguments are incorrect
 // or if the user requests the help flag
 void help_message() {
 	cout << "Voro++ version 0.2.6, by Chris H. Rycroft (UC Berkeley/LBL)\n\n";
@@ -45,9 +45,9 @@ void help_message() {
 }
 
 // Prints an error message. This is called when the program is unable to make
-// sense of the command line options.
+// sense of the command-line options.
 void error_message() {
-	cerr << "voro++: Unrecognized command line options; type \"voro++ -h\" for more\ninformation." << endl;
+	cerr << "voro++: Unrecognized command-line options; type \"voro++ -h\" for more\ninformation." << endl;
 }
 
 // Global variables to set the wall memory allocation, and the current number
@@ -93,14 +93,14 @@ int main(int argc,char **argv) {
 		}
 	}
 	
-	// If there aren't enough command line arguments, then bail out
+	// If there aren't enough command-line arguments, then bail out
 	// with an error.
 	if (argc<9) {
 	       error_message();
 	       return VOROPP_CMD_LINE_ERROR;
 	}
 
-	// We have enough arguments. Now start searching for command line
+	// We have enough arguments. Now start searching for command-line
 	// options.
 	while(i+8<argc) {
 		if (strcmp(argv[i],"-g")==0) {
