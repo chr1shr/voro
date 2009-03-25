@@ -29,6 +29,8 @@ Version 0.2.6 (March 23, 2009)
   the example images on the website
 * Removed a "cout" statement in the wall_cone class
 * Cleanup of the README files for the basic examples and the wall examples
+* Added some missing cstdlib and cstring header files that cause compilation
+  errors on some systems
 
 Version 0.2.5 (January 1, 2009)
 ===============================
