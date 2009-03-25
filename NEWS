@@ -1,5 +1,5 @@
-Version 0.2.6.1 (March 25, 2009)
-================================
+Version 0.2.7 (March 25, 2009)
+==============================
 * Added some missing cstdlib and cstring header files that cause compilation
   errors on some systems
 * Some text cleanups in the main README file and cmd_line.cc
