@@ -3,17 +3,16 @@
 # The range of grid sizes to consider
 @range=(10..40);
 
-# The number of trials to consider. If this is set to one, the time
-# for a single trial will be outputted. For higher values, the mean
-# of all the trials will be outputted, along with the standard
-# deviation.
+# The number of trials to consider. If this is set to one, the time for a
+# single trial will be outputted. For higher values, the mean of all the trials
+# will be outputted, along with the standard deviation.
 $tries=1;
 
 # The flags to pass for code optimization. The second line is appropriate for
 # Mac OS X, forcing more function inlining, and enabling the Apple-only "-fast"
 # flag for maximum code optimization.
 $opt="-O3";
-#$opt+="-fast --param large-function-growth=1000 --param max-inline-insns-single=2000";
+#$opt="-fast --param large-function-growth=1000 --param max-inline-insns-single=2000";
 
 foreach $r (@range) {
 

@@ -1777,6 +1777,87 @@ void voronoicell_base<n_option>::facets(ostream &os) {
 	reset_edges();
 }
 
+/** For each face of the Voronoi cell, this routine prints the out the normal
+ * vector of the face, and scales it to the distance from the cell center to
+ * that plane. If the neighbor option is used, it additionally lists the ID of
+ * the face.
+ * \param[in] &os an output stream to write to. */
+template<class n_option>
+void voronoicell_base<n_option>::neighbor_normals(ostream &os) {
+	int i,j,k;
+	for(i=1;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) neighbor_normals_search(os,i,j,k);
+		}
+	}
+	reset_edges();
+}
+
+/** This inline routine is called by neighbor_normals(). It attempts to
+ * construct a single normal vector that is associated with a particular face.
+ * It first traces around the face, trying to find two vectors along the face
+ * edges whose vector product is above the numerical tolerance. In then
+ * contstructs the normal vector using this product. If the face is too small,
+ * and the none of the vector products are large enough, the routine may exit
+ * without printing a face.
+ * \param[in] &os an output stream to write to.
+ * \param[in] i the initial vertex of the face to test.
+ * \param[in] j the index of an edge of the vertex.
+ * \param[in] k the neighboring vertex of i, set to ed[i][j]. */
+template<class n_option>
+inline void voronoicell_base<n_option>::neighbor_normals_search(ostream &os,int i,int j,int k) {
+	ed[i][j]=-1-k;
+	int l=cycle_up(ed[i][nu[i]+j],k),m;
+	fpoint ux,uy,uz,vx,vy,vz,wx,wy,wz,wmag;
+	do {
+		m=ed[k][l];ed[k][l]=-1-m;
+		ux=pts[3*m]-pts[3*k];
+		uy=pts[3*m+1]-pts[3*k+1];
+		uz=pts[3*m+2]-pts[3*k+2];
+
+		// Test to see if the length of this edge is above the tolerance
+		if(ux*ux+uy*uy+uz*uz>tolerance) {
+			while(m!=i) {
+				l=cycle_up(ed[k][nu[k]+l],m);
+				k=m;m=ed[k][l];ed[k][l]=-1-m;
+				vx=pts[3*m]-pts[3*k];
+				vy=pts[3*m+1]-pts[3*k+1];
+				vz=pts[3*m+2]-pts[3*k+2];
+
+				// Construct the vector product of this edge with
+				// the previous one
+				wx=uy*vz-uz*vy;
+				wy=uz*vx-ux*vz;
+				wz=ux*vy-uy*vx;
+				wmag=wx*wx+wy*wy+wz*wz;
+
+				// Test to see if this vector product of the
+				// two edges is above the tolerance
+				if(wmag>tolerance) {
+
+					// Construct the normal vector and print it
+					wmag=0.5*(pts[3*i]*wx+pts[3*i+1]*wy+pts[3*i+2]*wz)/wmag;
+					neighbor.print_neighbor(os,i,j);
+					os << wx*wmag << " " << wy*wmag << " " << wz*wmag << "\n";
+
+					// Mark all of the remaining edges of this
+					// face and exit
+					while(m!=i) {
+						l=cycle_up(ed[k][nu[k]+l],m);
+						k=m;m=ed[k][l];ed[k][l]=-1-m;
+					}
+					return;
+				}
+			}
+			return;
+		}
+		l=cycle_up(ed[k][nu[k]+l],m);
+		k=m;
+	} while (k!=i);
+}
+
+
 /** Returns the number of faces of a computed Voronoi cell.
  * \return The number of faces. */
 template<class n_option>
@@ -2267,4 +2348,12 @@ void neighbor_track::label_facets() {
  * \param[in] j The index of the neighbor information to print. */
 void neighbor_track::print(ostream &os,int i,int j) {
 	os << "(" << i << "," << ne[i][j] << ")";
+}
+
+/** This routine outputs a specific piece of neighbor information.
+ * \param[in] &os The output stream to write to.
+ * \param[in] i The vertex number to print.
+ * \param[in] j The index of the neighbor information to print. */
+void neighbor_track::print_neighbor(ostream &os,int i,int j) {
+	os << ne[i][j] << " ";
 }

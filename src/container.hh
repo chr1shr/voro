@@ -54,6 +54,7 @@ class container_base {
 		fpoint packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		fpoint sum_cell_volumes();
 		void print_facet_information();
+		void print_neighbor_normals(ostream &os);
 		void compute_all_cells();
 		void count_all_faces(ostream &os);
 		void count_all_faces();

@@ -498,6 +498,23 @@ void container_base<r_option>::print_facet_information() {
 	}
 }
 
+/** For each particle, this prints the particle ID number and position. It the
+ * prints all of the normal vectors associated with each face, using the
+ * neighbor_normal() function in the voronoicell class.
+ * \param[in] &os an output stream to write to. */
+template<class r_option>
+void container_base<r_option>::print_neighbor_normals(ostream &os) {
+	voronoicell_neighbor c;
+	int i,j,k,ijk=0,q;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(q=0;q<co[ijk];q++) if (compute_cell(c,i,j,k,ijk,q)) {
+			cout << id[ijk][q] << " " << p[ijk][sz*q] << " " << p[ijk][sz*q+1] << " " << p[ijk][sz*q+2] << "\n";
+			c.neighbor_normals(cout);
+			cout << "\n";
+		}
+	}
+}
+
 /** Prints a list of all particle labels, positions, and the number of faces to
  * the standard output. */
 template<class r_option>

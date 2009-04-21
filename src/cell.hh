@@ -187,6 +187,7 @@ class voronoicell_base {
 		inline void facets(const char *filename);
 		void facet_statistics(ostream &os);
 		inline void facet_statistics();
+		void neighbor_normals(ostream &os);
 		inline void facet_statistics(const char *filename);
 		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
 		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
@@ -243,6 +244,7 @@ class voronoicell_base {
 		inline bool delete_connection(int j,int k,bool hand);
 		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,fpoint g);
 		inline void reset_edges();
+		inline void neighbor_normals_search(ostream &os,int i,int j,int k);
 		friend class neighbor_track;
 };
 
@@ -308,6 +310,8 @@ class neighbor_none {
 		inline void neighbors(ostream &os) {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void check_facets() {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void print_neighbor(ostream &os,int i,int j) {};
 };
 
 /** \brief A class passed to the voronoicell_base template to switch on the
@@ -363,6 +367,7 @@ class neighbor_track {
 		inline void print(ostream &os,int i,int j);
 		inline void label_facets();
 		inline void neighbors(ostream &os);
+		inline void print_neighbor(ostream &os,int i,int j);
 		inline void check_facets();
 	private:
 		/** This is an auxiliary pointer which is used in some of the
