@@ -120,7 +120,7 @@ inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,f
 	if(ti>0) {temp=boxx*ti-xhi;radsq=temp*temp;}
 	else if(ti<0) {temp=xlo-boxx*(1+ti);radsq=temp*temp;}
 	else radsq=0;
-	
+
 	if(tj>0) {temp=boxy*tj-yhi;radsq+=temp*temp;}
 	else if(tj<0) {temp=ylo-boxy*(1+tj);radsq+=temp*temp;}
 
@@ -549,7 +549,7 @@ void container_base<r_option>::count_all_faces(const char* filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	count_all_faces(os);
-	os.close();	
+	os.close();
 }
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
@@ -566,7 +566,7 @@ inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_o
 			radius.print(os,ijk,q);
 			if (compute_cell(c,i,j,k,ijk,q,x,y,z)) {
 				os << " " << c.volume();
-				c.neighbors(os);		
+				c.neighbors(os);
 				os << "\n";
 			} else os << " 0\n";
 		}
@@ -855,7 +855,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	sijk=si+hgrid*(sj+hgrid*sk);
 	radp=mrad+sijk*seq_length;
 	e=(const_cast<unsigned int*> (wl))+sijk*seq_length;
-	
+
 	// Read in how many items in the worklist can be tested without having to
 	// worry about writing to the mask
 	f=e[0];g=0;
@@ -867,12 +867,12 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			mrs=c.maxradsq();
 			if(list_index!=list_size) next_count=count_list[list_index++];
 		}
-		
+
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done.
 		if(mrs<radius.cutoff(radp[g])) return true;
 		g++;
-		
+
 		// Load in a block off the worklist, permute it with the
 		// symmetry mask, and decode its position. These are all
 		// integer bit operations so they should run very fast.
@@ -888,14 +888,14 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		else {if(dj<-j) continue;else if(dj>=ny-j) continue;}
 		if(zperiodic) {if(dk<-nz) continue;else if(dk>nz) continue;}
 		else {if(dk<-k) continue;else if(dk>=nz-k) continue;}
-		
+
 		// Call the compute_min_max_radius() function. This returns
 		// true if the minimum distance to the block is bigger than the
 		// current mrs, in which case we skip this block and move on.
 		// Otherwise, it computes the maximum distance to the block and
 		// returns it in crs.
 		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
-		
+
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases.
 		di+=i;dj+=j;dk+=k;
@@ -951,7 +951,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 
 	// Reset the block by block counters
 	s_start=s_end=0;
-	
+
 	while(g<seq_length-1) {
 
 		// At the intervals specified by count_list, we recompute the
@@ -959,13 +959,13 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(g==next_count) {
 			mrs=c.maxradsq();
 			if(list_index!=list_size) next_count=count_list[list_index++];
-		}		
-		
+		}
+
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done.
 		if(mrs<radius.cutoff(radp[g])) return true;
 		g++;
-		
+
 		// Load in a block off the worklist, permute it with the
 		// symmetry mask, and decode its position. These are all
 		// integer bit operations so they should run very fast.
@@ -973,7 +973,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		di=q&127;di-=64;
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
-		
+
 		// Compute the position in the mask of the current block. If
 		// this lies outside the mask, then skip it. Otherwise, mark
 		// it.
@@ -985,14 +985,14 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(ek<0) continue;else if(ek>=hz) continue;
 		eijk=ei+hx*(ej+hy*ek);
 		mask[eijk]=mv;
-		
+
 		// Call the compute_min_max_radius() function. This returns
 		// true if the minimum distance to the block is bigger than the
 		// current mrs, in which case we skip this block and move on.
 		// Otherwise, it computes the maximum distance to the block and
 		// returns it in crs.
 		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
-		
+
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases.
 		di+=i;dj+=j;dk+=k;
@@ -1038,7 +1038,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		} else if((q&b1)==b1) {if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}}
 		if((q&b4)==b4) {if(ej>0) if(mask[eijk-hx]!=mv) {mask[eijk-hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej-1;sl[s_end++]=ek;}
 			if((q&b3)==0) if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}
-		} else if((q&b3)==b3) {if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}} 
+		} else if((q&b3)==b3) {if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}}
 		if((q&b6)==b6) {if(ek>0) if(mask[eijk-hxy]!=mv) {mask[eijk-hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek-1;}
 			if((q&b5)==0) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
 		} else if((q&b5)==b5) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
@@ -1067,7 +1067,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		zlo=dk*boxz-fz;zhi=zlo+boxz;
 
 		// Carry out plane tests to see if any particle in this block
-		// could possibly intersect the cell 
+		// could possibly intersect the cell
 		if(di>ci) {
 			if(dj>cj) {
 				if(dk>ck) {
@@ -1342,19 +1342,19 @@ inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,f
 	bi=step_int((vx-ax+r)*xsp);
 	if(!xperiodic) {
 		if(ai<0) {ai=0;if(bi<0) bi=0;}
-		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;} 
+		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;}
 	}
 	aj=step_int((vy-ay-r)*ysp);
 	bj=step_int((vy-ay+r)*ysp);
 	if(!yperiodic) {
 		if(aj<0) {aj=0;if(bj<0) bj=0;}
-		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;} 
+		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;}
 	}
 	ak=step_int((vz-az-r)*zsp);
 	bk=step_int((vz-az+r)*zsp);
 	if(!zperiodic) {
 		if(ak<0) {ak=0;if(bk<0) bk=0;}
-		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;} 
+		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;}
 	}
 	i=ai;j=aj;k=ak;
 	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
@@ -1376,19 +1376,19 @@ inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpo
 	bi=step_int((xmax-ax)*xsp);
 	if(!xperiodic) {
 		if(ai<0) {ai=0;if(bi<0) bi=0;}
-		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;} 
+		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;}
 	}
 	aj=step_int((ymin-ay)*ysp);
 	bj=step_int((ymax-ay)*ysp);
 	if(!yperiodic) {
 		if(aj<0) {aj=0;if(bj<0) bj=0;}
-		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;} 
+		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;}
 	}
 	ak=step_int((zmin-az)*zsp);
 	bk=step_int((zmax-az)*zsp);
 	if(!zperiodic) {
 		if(ak<0) {ak=0;if(bk<0) bk=0;}
-		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;} 
+		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;}
 	}
 	i=ai;j=aj;k=ak;
 	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
@@ -1447,7 +1447,7 @@ void container_base<r_option>::add_wall(wall& w) {
 		wall **pwall;
 		pwall=new wall*[current_wall_size];
 		for(int i=0;i<wall_number;i++) pwall[i]=walls[i];
-		delete [] walls;walls=pwall;		
+		delete [] walls;walls=pwall;
 	}
 	walls[wall_number++]=&w;
 }
@@ -1588,7 +1588,7 @@ inline void radius_poly::print(ostream &os,int ijk,int q) {
  * the routine returns true, and computes the maximum distance from the point
  * to the region. Otherwise, the routine returns false.
  * \param[in] (di,dj,dk) The position of the nearby region to be tested,
- * relative to the region that the point is in. 
+ * relative to the region that the point is in.
  * \param[in] (fx,fy,fz) The displacement of the point within its region.
  * \param[in] (gxs,gys,gzs) The minimum squared distances from the point to the
  * sides of its region.

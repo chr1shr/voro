@@ -44,10 +44,10 @@ int main() {
 	cout << "Container volume : " << cvol << "\n";
 	cout << "Voronoi volume   : " << vvol << "\n";
 	cout << "Difference       : " << vvol-cvol << endl;
-	
+
 	// Output the particle positions in gnuplot format
 	con.draw_particles("random_points_p.gnu");
-	
+
 	// Output the Voronoi cells in gnuplot format
 	con.draw_cells_gnuplot("random_points_v.gnu");
 }

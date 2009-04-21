@@ -66,7 +66,7 @@ const int max_wall_size=2048;
  * precision numbers and double precision numbers. Under normal usage fpoint is
  * set be a double precision floating point number, but defining the
  * preprocessor macro VOROPP_SINGLE_PRECISION will switch it to single
- * precision and make the code tolerances larger. */ 
+ * precision and make the code tolerances larger. */
 #ifdef VOROPP_SINGLE_PRECISION
 typedef float fpoint;
 #else
@@ -99,7 +99,7 @@ const fpoint large_number=1e30;
 #define VOROPP_FILE_ERROR 1
 
 /** Voro++ returns this status code if there is a memory allocation error, if
- * one of the safe memory limits is exceeded. */ 
+ * one of the safe memory limits is exceeded. */
 #define VOROPP_MEMORY_ERROR 2
 
 /** Voro++ returns this status code if there is any type of internal error, if

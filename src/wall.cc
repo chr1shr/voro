@@ -11,7 +11,7 @@
 
 /** Tests to see whether a point is inside the sphere wall object.
  * \param[in] (x,y,z) the vector to test.
- * \return true if the point is inside, false if the point is outside. */ 
+ * \return true if the point is inside, false if the point is outside. */
 bool wall_sphere::point_inside(fpoint x,fpoint y,fpoint z) {
 	return (x-xc)*(x-xc)+(y-yc)*(y-yc)+(z-zc)*(z-zc)<rc*rc;
 }
@@ -36,7 +36,7 @@ inline bool wall_sphere::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fp
 
 /** Tests to see whether a point is inside the plane wall object.
  * \param[in] (x,y,z) the vector to test.
- * \return true if the point is inside, false if the point is outside. */ 
+ * \return true if the point is inside, false if the point is outside. */
 bool wall_plane::point_inside(fpoint x,fpoint y,fpoint z) {
 	return x*xc+y*yc+z*zc<ac;
 }
@@ -53,7 +53,7 @@ inline bool wall_plane::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpo
 
 /** Tests to see whether a point is inside the cylindrical wall object.
  * \param[in] (x,y,z) the vector to test.
- * \return true if the point is inside, false if the point is outside. */ 
+ * \return true if the point is inside, false if the point is outside. */
 bool wall_cylinder::point_inside(fpoint x,fpoint y,fpoint z) {
 	fpoint xd=x-xc,yd=y-yc,zd=z-zc;
 	fpoint pa=(xd*xa+yd*ya+zd*za)*asi;
@@ -84,7 +84,7 @@ inline bool wall_cylinder::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,
 
 /** Tests to see whether a point is inside the cone wall object.
  * \param[in] (x,y,z) the vector to test.
- * \return true if the point is inside, false if the point is outside. */ 
+ * \return true if the point is inside, false if the point is outside. */
 bool wall_cone::point_inside(fpoint x,fpoint y,fpoint z) {
 	fpoint xd=x-xc,yd=y-yc,zd=z-zc;
 	fpoint pa=(xd*xa+yd*ya+zd*za)*asi;

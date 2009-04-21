@@ -17,7 +17,7 @@ struct wall_sphere : public wall {
 	public:
 		/** Constructs a spherical wall object.
 		 * \param[in] iw_id an ID number to associate with the wall for
-		 * neighbor tracking. 
+		 * neighbor tracking.
 		 * \param[in] (ixc,iyc,izc) a position vector for the sphere's
 		 * center.
 		 * \param[in] irc the radius of the sphere. */
@@ -40,7 +40,7 @@ struct wall_plane : public wall {
 	public:
 		/** Constructs a plane wall object
 		 * \param[in] (ixc,iyc,izc) a normal vector to the plane.
-		 * \param[in] iac a displacement along the normal vector. 
+		 * \param[in] iac a displacement along the normal vector.
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. */
 		wall_plane(fpoint ixc,fpoint iyc,fpoint izc,fpoint iac,int iw_id=-99)
@@ -51,7 +51,7 @@ struct wall_plane : public wall {
 		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 	private:
-		const int w_id; 
+		const int w_id;
 		const fpoint xc,yc,zc,ac;
 };
 
@@ -65,7 +65,7 @@ struct wall_cylinder : public wall {
 		 * cylinder.
 		 * \param[in] (ixa,iya,iza) a vector pointing along the
 		 * direction of the cylinder.
-		 * \param[in] irc the radius of the cylinder 
+		 * \param[in] irc the radius of the cylinder
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. */
 		wall_cylinder(fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint irc,int iw_id=-99)
@@ -82,7 +82,7 @@ struct wall_cylinder : public wall {
 };
 
 
-/** \brief A class representing a conical wall object. 
+/** \brief A class representing a conical wall object.
  *
  * This class represents a cone wall object. */
 struct wall_cone : public wall {
@@ -94,7 +94,7 @@ struct wall_cone : public wall {
 		 * \param[in] ang the angle (in radians) of the cone, measured
 		 * from the axis.
 		 * \param[in] iw_id an ID number to associate with the wall for
-		 * neighbor tracking. */ 
+		 * neighbor tracking. */
 		wall_cone(fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint ang,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
 			asi(1/(ixa*ixa+iya*iya+iza*iza)),

@@ -12,7 +12,7 @@ double rnd() {return double(rand())/RAND_MAX;}
 int main() {
 	double x,y,z,rsq,r;
 	voronoicell v;
-	
+
 	// Initialize the Voronoi cell to be a cube of side length 2, centered
 	// on the origin
 	v.init(-1,1,-1,1,-1,1);

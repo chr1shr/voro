@@ -104,7 +104,7 @@ class voronoicell_base {
 		 * the edge connections of the vertices that make up the cell.
 		 * The two dimensional array is not allocated in the usual method.
 		 * To account for the fact the different vertices have different
-		 * orders, and thus require different amounts of storage, the 
+		 * orders, and thus require different amounts of storage, the
 		 * elements of ed[i] point to one-dimensional arrays in the mep[]
 		 * array of different sizes.
 		 *
@@ -138,7 +138,7 @@ class voronoicell_base {
 		/** This sets the size of the auxiliary delete stack. */
 		int current_delete2_size;
 		/** This in an array with size 3*current_vertices for holding
-		 * the positions of the vertices. */ 
+		 * the positions of the vertices. */
 		fpoint *pts;
 		/** This sets the total number of vertices in the current cell.
 		 */
@@ -168,7 +168,7 @@ class voronoicell_base {
 		void draw_pov(ostream &os,fpoint x,fpoint y,fpoint z);
 		inline void draw_pov(const char *filename,fpoint x,fpoint y,fpoint z);
 		inline void draw_pov(fpoint x,fpoint y,fpoint z);
-		void draw_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z);		
+		void draw_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z);
 		inline void draw_pov_mesh(const char *filename,fpoint x,fpoint y,fpoint z);
 		inline void draw_pov_mesh(fpoint x,fpoint y,fpoint z);
 		void draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
@@ -289,7 +289,7 @@ class neighbor_none {
 		/** This is a blank placeholder function that does nothing. */
 		inline void copy_pointer(int a,int b) {};
 		/** This is a blank placeholder function that does nothing. */
-		inline void set_to_aux1(int j) {};		
+		inline void set_to_aux1(int j) {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void set_to_aux2(int j) {};
 		/** This is a blank placeholder function that does nothing. */

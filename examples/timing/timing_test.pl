@@ -19,7 +19,7 @@ foreach $r (@range) {
 	# Compile the code with the current grid size
 	system "g++ -I../../src -DNNN=$r -o timing_test $opt timing_test.cc";
 
-	# Carry out the trials for this grid size 
+	# Carry out the trials for this grid size
 	$st=$stt=0;
 	foreach $t (1..$tries) {
 

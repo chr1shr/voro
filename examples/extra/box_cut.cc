@@ -1,4 +1,4 @@
-// Single Voronoi cell example code
+// Box cutting example code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu

@@ -1,4 +1,4 @@
-// Single Voronoi cell example code
+// Cell cutting region example code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
@@ -20,7 +20,7 @@ int main() {
 	voronoicell v;
 	ofstream os;
 	os.open("cell_cut_region.gnu",ofstream::out|ofstream::trunc);
-	
+
 	// Initialize the Voronoi cell to be an octahedron and make a single
 	// plane cut to add some variation
 	v.init_octahedron(1);
@@ -67,6 +67,6 @@ int main() {
 			os << x << " " << y << " " << z << endl;
 		}
 	}
-	
+
 	os.close();
 }

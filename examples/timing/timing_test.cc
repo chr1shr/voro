@@ -1,4 +1,4 @@
-// Voronoi calculation example code
+// Timing test example code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu

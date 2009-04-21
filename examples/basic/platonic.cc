@@ -19,14 +19,14 @@ int main() {
 	v.plane(1,-1,-1);
 	v.plane(-1,1,-1);
 	v.plane(-1,-1,1);
-	
+
 	v.draw_gnuplot("tetrahedron.gnu",0,0,0);
 
 	// Create a cube. Since this is the default shape
-	// we don't need to do any plane cutting. 
+	// we don't need to do any plane cutting.
 	v.init(-1,1,-1,1,-1,1);
 	v.draw_gnuplot("cube.gnu",0,0,0);
-	
+
 	// Create an octahedron
 	v.init(-2,2,-2,2,-2,2);
 	v.plane(1,1,1);
@@ -67,9 +67,9 @@ int main() {
 	v.plane(-1,1,-1);
 	v.plane(1,-1,-1);
 	v.plane(-1,-1,-1);
-	v.plane(0,phi,Phi);	
-	v.plane(0,phi,-Phi);	
-	v.plane(0,-phi,Phi);	
+	v.plane(0,phi,Phi);
+	v.plane(0,phi,-Phi);
+	v.plane(0,-phi,Phi);
 	v.plane(0,-phi,-Phi);
 	v.plane(Phi,0,phi);
 	v.plane(Phi,0,-phi);

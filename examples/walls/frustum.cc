@@ -1,4 +1,4 @@
-// Voronoi calculation example code
+// Frustum example code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
@@ -11,7 +11,7 @@ const double pi=3.1415926535897932384626433832795;
 int main() {
 	int i=0;
 	fpoint x,y,z,evol,vvol;
-	
+
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
 	// eight particles within each computational block.

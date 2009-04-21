@@ -1,4 +1,4 @@
-// Single Voronoi cell example code
+// Degenerate Voronoi cell example code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
@@ -8,7 +8,7 @@
 
 const double pi=3.1415926535897932384626433832795;
 
-// The number of planes to be cut around each coordinate axis 
+// The number of planes to be cut around each coordinate axis
 const int n=32;
 const double step=2*pi/n;
 

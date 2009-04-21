@@ -76,8 +76,8 @@ class container_base {
 		void put(int n,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
 		void add_wall(wall &w);
-		bool point_inside(fpoint x,fpoint y,fpoint z); 
-		bool point_inside_walls(fpoint x,fpoint y,fpoint z); 
+		bool point_inside(fpoint x,fpoint y,fpoint z);
+		bool point_inside_walls(fpoint x,fpoint y,fpoint z);
 	protected:
 		/** The minimum x coordinate of the container. */
 		const fpoint ax;
@@ -256,7 +256,7 @@ class radius_mono {
 		/** This is a blank placeholder function that does nothing. */
 		inline void print(ostream &os,int ijk,int q) {};
 		inline void rad(ostream &os,int l,int c);
-	private:	
+	private:
 		container_base<radius_mono> *cc;
 };
 
@@ -287,20 +287,20 @@ class radius_poly {
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q);
 		inline void rad(ostream &os,int l,int c);
-	private:	
+	private:
 		container_base<radius_poly> *cc;
 		fpoint max_radius,crad,mul;
 };
 
 /** \brief A class to handle loops on regions of the container handling
- * non-periodic and periodic boundary conditions. 
+ * non-periodic and periodic boundary conditions.
  *
  * Many of the container routines require scanning over a rectangular sub-grid
  * of blocks, and the routines for handling this are stored in the voropp_loop
  * class. A voropp_loop class can first be initialized to either calculate the
  * subgrid which is within a distance r of a vector (vx,vy,vz), or a subgrid
  * corresponding to a rectangular box. The routine inc() can then be
- * successively called to step through all the blocks within this subgrid. 
+ * successively called to step through all the blocks within this subgrid.
  */
 class voropp_loop {
 	public:

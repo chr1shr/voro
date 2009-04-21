@@ -82,7 +82,7 @@ int main(int argc,char **argv) {
 	bool xperiodic=false,yperiodic=false,zperiodic=false;
 	char buffer[256];
 	wp=new wall*[init_wall_size];
-	
+
 	// If there's one argument, check to see if it's requesting help.
 	// Otherwise, bail out with an error.
 	if (argc==2) {
@@ -93,7 +93,7 @@ int main(int argc,char **argv) {
 			return VOROPP_CMD_LINE_ERROR;
 		}
 	}
-	
+
 	// If there aren't enough command-line arguments, then bail out
 	// with an error.
 	if (argc<9) {

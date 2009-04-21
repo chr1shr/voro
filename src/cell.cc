@@ -571,7 +571,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			if(us==nu[up]) {
 				return false;
 			}
-			
+
 			ls=ed[up][nu[up]+us];
 			while(lw==1) {
 				if(++count>=p) throw true;
@@ -705,7 +705,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 					break;
 				}
 			} else {
-				
+
 				// The point is in the plane, so we just
 				// proceed with the complicated setup routine
 				up=qp;
@@ -728,7 +728,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		pts[3*p]=pts[3*up];
 		pts[3*p+1]=pts[3*up+1];
 		pts[3*p+2]=pts[3*up+2];
-		
+
 		// Search for a collection of edges of the test vertex which
 		// are outside of the cutting space. Begin by testing the
 		// zeroth edge.
@@ -886,7 +886,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			neighbor.copy(p,k,up,qs);
 			neighbor.set(p,0,p_id);
 		} else neighbor.copy(p,0,up,qs);
-		
+
 		// Add this point to the auxiliary delete stack
 		if (stack2==current_delete2_size) add_memory_ds2();
 		ds2[stack2++]=up;
@@ -947,7 +947,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		// intersects the plane.
 		lp=ed[qp][qs];
 		lw=sure.test(lp,l);
-		
+
 		if (lw==1) {
 
 			// The point is still in the cutting space. Just add it
@@ -957,7 +957,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			qp=lp;
 			q=l;
 			ds[stack++]=qp;
-		
+
 		} else if (lw==-1) {
 
 			// The point is outside of the cutting space, so we've
@@ -998,7 +998,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			// first we need to figure out the number of edges it
 			// has.
 			if(p==current_vertices) add_memory_vertices();
-			
+
 			// If the previous vertex detected a double edge, our
 			// new vertex will have one less edge.
 			k=double_edge?0:1;
@@ -1014,7 +1014,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				lp=ed[qp][qs];
 				lw=sure.test(lp,l);
 			} while (lw==-1);
-			
+
 			// Now we need to find out whether this marginal vertex
 			// we are on has been visited before, because if that's
 			// the case, we need to add vertices to the existing
@@ -1036,7 +1036,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 					// count those vertices to the ones we
 					// already have.
 					k+=nu[j];
-					
+
 					// The only time when we might make a
 					// duplicate edge is if the point we're
 					// going to move to next is also a
@@ -1089,13 +1089,13 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 					} else new_double_edge=false;
 				}
 			}
-			
+
 			// k now holds the number of edges of the new vertex
 			// we are forming. Add memory for it if it doesn't exist
 			// already.
 			while(k>=current_vertex_order) add_memory_vorder();
 			if (mec[k]==mem[k]) add_memory(k);
-			
+
 			// Now create a new vertex with order k, or augment
 			// the existing one
 			if(j>0) {
@@ -1199,7 +1199,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			i++;
 		} else ds[i]=ds[--stack];
 	}
-	
+
 	// Add the points in the auxiliary delete stack,
 	// and reset their back pointers
 	for(i=0;i<stack2;i++) {
@@ -1211,7 +1211,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			ds[stack++]=j;
 		}
 	}
-	
+
 	// Scan connections and add in extras
 	for(i=0;i<stack;i++) {
 		cp=ds[i];
@@ -1294,9 +1294,9 @@ inline bool voronoicell_base<n_option>::collapse_order2() {
 		i=--mec[2];
 		j=mep[2][5*i];k=mep[2][5*i+1];
 		if (j==k) {
-#if VOROPP_VERBOSE >=1			
+#if VOROPP_VERBOSE >=1
 			cerr << "Order two vertex joins itself" << endl;
-#endif			
+#endif
 			return false;
 		}
 
@@ -1350,7 +1350,7 @@ inline bool voronoicell_base<n_option>::collapse_order1() {
 	int i,j,k;
 	while(mec[1]>0) {
 		up=0;
-#if VOROPP_VERBOSE >=1		
+#if VOROPP_VERBOSE >=1
 		cerr << "Order one collapse" << endl;
 #endif
 		i=--mec[1];
@@ -1728,7 +1728,7 @@ int suretest::check_marginal(int n,fpoint &ans) {
 	}
 	sn[sc++]=n;
 	sn[sc++]=ans>tolerance?1:(ans<-tolerance?-1:0);
-	return sn[sc-1];	
+	return sn[sc-1];
 }
 
 /** Prints the vertices, their edges, the relation table, and also notifies if
@@ -1887,7 +1887,7 @@ int voronoicell_base<n_option>::number_of_faces() {
  * vertex.
  * \param[in] &os The output stream to write to.
  * \param[in] i The ID of a vertex.
- * \param[in] j The particular plane of interest (ignored in this routine). */ 
+ * \param[in] j The particular plane of interest (ignored in this routine). */
 void neighbor_none::print(ostream &os,int i,int j) {
 	os << i;
 }
@@ -1990,7 +1990,7 @@ void voronoicell_base<n_option>::neighbors(ostream &os) {
  * this routine will check that the neighbor information is consistent, by
  * tracing around every facet, and ensuring that all the neighbor information
  * for that facet refers to the same neighbor. If the neighbor tracking isn't
- * turned on, this routine does nothing. */ 
+ * turned on, this routine does nothing. */
 template<class n_option>
 void voronoicell_base<n_option>::check_facets() {
 	neighbor.check_facets();
@@ -2020,7 +2020,7 @@ template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	up=0;
 	fpoint g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
-	if (g<rsq) { 
+	if (g<rsq) {
 		int ca=1,cc=p>>3,mp=1;
 		fpoint m;
 		while(ca<cc) {
@@ -2062,7 +2062,7 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 					for(tp=0;tp<p;tp++) if (x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) return true;
 					return false;
 				}
-				
+
 				// Test all the neighbors of the current point
 				// and find the one which is closest to the
 				// plane
@@ -2106,7 +2106,7 @@ neighbor_track::neighbor_track(voronoicell_base<neighbor_track> *ivc) : vc(ivc) 
 neighbor_track::~neighbor_track() {
 	for(int i=0;i<vc->current_vertex_order;i++) if (vc->mem[i]>0) delete [] mne[i];
 	delete [] mne;
-	delete [] ne;	
+	delete [] ne;
 }
 
 /** This allocates a single array for neighbor tracking.

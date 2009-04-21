@@ -1,4 +1,4 @@
-// Voronoi calculation example code
+// Radical Voronoi tessellation example code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu

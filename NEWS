@@ -1,3 +1,11 @@
+Version 0.2.8 (...)
+===================
+* Added new routines for computing neighbor normals, in response to a
+  request from Dave Greenwood
+* Removed unnecessary trailing tabs and spaces in the source code
+* Fixed a few text justification problems, and altered some of the comments
+  in the example programs
+
 Version 0.2.7 (March 25, 2009)
 ==============================
 * Added some missing cstdlib and cstring header files that cause compilation

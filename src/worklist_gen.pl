@@ -107,7 +107,7 @@ sub worklist {
 		$xp=@a[3*$nx];$yp=@a[3*$nx+1];$zp=@a[3*$nx+2];
 		add($xp+1,$yp,$zp);add($xp,$yp+1,$zp);add($xp,$yp,$zp+1);
 		add($xp-1,$yp,$zp);add($xp,$yp-1,$zp);add($xp,$yp,$zp-1);
-#		print "=> $l $xp $yp $zp\n" if $l<4; 
+#		print "=> $l $xp $yp $zp\n" if $l<4;
 		push @b,(splice @a,3*$nx,3);$ac--;
 	}
 	$v++;
@@ -123,7 +123,7 @@ sub worklist {
 		last if $m[$d+$xt][$d+$yt][$d+$zt+1]!=$v;
 		last if $m[$d+$xt-1][$d+$yt][$d+$zt]!=$v;
 		last if $m[$d+$xt][$d+$yt-1][$d+$zt]!=$v;
-		last if $m[$d+$xt][$d+$yt][$d+$zt-1]!=$v;	
+		last if $m[$d+$xt][$d+$yt][$d+$zt-1]!=$v;
 	}
 	$j=$i/3;
 	print W "\t$j";

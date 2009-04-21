@@ -13,7 +13,7 @@ using the scene file cylinder.pov with the command:
 povray +W600 +H800 +A0.3 +Ocylinder.png cylinder.pov
 
 2. frustum.cc - this example creates a frustum by making use of a cone wall
-object. It fills the frustum with 500 random points, and outputs the 
+object. It fills the frustum with 500 random points, and outputs the
 Voronoi cells in gnuplot format. Due to the conical wall being approximated
 with plane cuts, some inaccuracies can be seen.
 
