@@ -518,38 +518,110 @@ void container_base<r_option>::print_neighbor_normals(ostream &os) {
 /** Prints a list of all particle labels, positions, and the number of faces to
  * the standard output. */
 template<class r_option>
-inline void container_base<r_option>::count_all_faces(ostream &os) {
-	voronoicell c;
-	fpoint x,y,z;
-	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
-		for(q=0;q<co[ijk];q++) {
-			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
-			os << id[ijk][q] << " " << x << " " << y << " " << z;
-			radius.print(os,ijk,q);
-			if (compute_cell(c,i,j,k,ijk,q,x,y,z)) {
-				os << " " << c.number_of_faces() << "\n";
-			} else os << " 0\n";
+inline void container_base<r_option>::print_all_custom(const char *format,ostream &os) {
+	int fp=0;
+	while(format[fp]!=0) {
+		if(format[fp]=='%') {
+			fp++;
+			if(format[fp]=='n') {
+				voronoicell_neighbor c;
+				print_all_custom_internal(c,format,cout);
+				return;
+			} else if(format[fp]==0) break;
 		}
+		fp++;
 	}
+	voronoicell c;
+	print_all_custom_internal(c,format,cout);
 }
 
 /** Prints a list of all particle labels, positions, and the number of faces to
  * the standard output. */
 template<class r_option>
-void container_base<r_option>::count_all_faces() {
-	count_all_faces(cout);
+void container_base<r_option>::print_all_custom(const char *format) {
+	print_all_custom(format,cout);
 }
 
 /** An overloaded version of count_all_faces(), which outputs the result to a
  * particular file.
  * \param[in] filename The name of the file to write to. */
 template<class r_option>
-void container_base<r_option>::count_all_faces(const char* filename) {
+void container_base<r_option>::print_all_custom(const char *format,const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	count_all_faces(os);
+	print_all_custom(format,os);
 	os.close();
+}
+
+/** Prints 
+ * %v Volume
+ * %x %y %z Position
+ * %i Particle ID
+ * %r Radius
+ * %n Neighbors
+ * %o Face normals
+
+%a Face vertex numbers
+ * %A Vertex number histogram
+%f Face areas
+%F Total face area
+%e Face perimeters
+ * %E Total edge distance
+ * %p Vertex positions relative to particle center
+ * %P Vertex positions in global coordinates
+ * %w Total vertices
+
+ * %m Maximum radius squared
+ * %s Number of faces
+%t Face table
+ * %c Centroid position relative to particle center
+ * %C Centroid position in global coordinates*/
+template<class r_option>
+template<class n_option>
+void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os) {
+	fpoint x,y,z;
+	int i,j,k,ijk=0,q,fp;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) for(q=0;q<co[ijk];q++) {
+		x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
+		if (!compute_cell(c,i,j,k,ijk,q,x,y,z)) continue;
+		fp=0;
+		while(format[fp]!=0) {
+			if(format[fp]=='%') {
+				fp++;
+				switch(format[fp]) {
+					case 'x': os << x;break;
+					case 'y': os << y;break;
+					case 'z': os << z;break;
+					case 'i': os << id[ijk][q];break;
+					case 'r': radius.print(os,ijk,q);break;
+					case 'v': os << c.volume();break;
+					case 'n': c.neighbors(os);break;
+					case 'o': c.neighbor_normals(os);break;
+					case 'A': c.vertex_number_histogram(os);break;
+					case 'p': c.output_vertices(os);break;
+					case 'P': c.output_vertices(os,x,y,z);break;
+					case 'w': os << c.p;break;
+					case 's': os << c.number_of_faces();break;
+					case 'E': os << c.total_edge_distance();break;
+					case 'm': os << c.max_radius_squared();break;
+					case 'c': {
+							  fpoint cx,cy,cz;
+							  c.centroid(cx,cy,cz);
+							  os << cx << " " << cy << " " << cz;
+						  } break;
+					case 'C': {
+							  fpoint cx,cy,cz;
+							  c.centroid(cx,cy,cz);
+							  os << x+cx << " " << y+cy << " " << z+cz;
+						  } break;
+					case 0: fp--;break;
+					default: os << '%' << format[fp];
+				}
+			} else os << format[fp];
+			fp++;
+		}
+		os << "\n";
+	}
 }
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
@@ -701,7 +773,7 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
 	radius.init(ijk,s);
-	while(radius.cutoff(lrs)<c.maxradsq()) {
+	while(radius.cutoff(lrs)<c.max_radius_squared()) {
 		ur=lr+0.5*length_scale;urs=ur*ur;
 		t=l.init(x,y,z,ur,qx,qy,qz);
 		do {
@@ -814,7 +886,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	// Now compute the maximum distance squared from the cell
 	// center to a vertex. This is used to cut off the calculation
 	// since we only need to test out to twice this range.
-	mrs=c.maxradsq();
+	mrs=c.max_radius_squared();
 
 	// Now compute the fractional position of the particle within
 	// its region and store it in (fx,fy,fz). We use this to
@@ -864,7 +936,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		// At the intervals specified by count_list, we recompute the
 		// maximum radius squared
 		if(g==next_count) {
-			mrs=c.maxradsq();
+			mrs=c.max_radius_squared();
 			if(list_index!=list_size) next_count=count_list[list_index++];
 		}
 
@@ -957,7 +1029,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		// At the intervals specified by count_list, we recompute the
 		// maximum radius squared
 		if(g==next_count) {
-			mrs=c.maxradsq();
+			mrs=c.max_radius_squared();
 			if(list_index!=list_size) next_count=count_list[list_index++];
 		}
 

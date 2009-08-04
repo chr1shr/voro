@@ -1510,12 +1510,60 @@ fpoint voronoicell_base<n_option>::volume() {
 	return vol*fe;
 }
 
+
+/** Calculates the centroid of the Voronoi cell, by decomposing the cell into
+ * tetrahedra extending outward from the zeroth vertex.
+ * \param[in] (&cx,&cy,&cz) references to floating point numbers in which to
+ *            pass back the centroid vector. */
+template<class n_option>
+void voronoicell_base<n_option>::centroid(fpoint &cx,fpoint &cy,fpoint &cz) {
+	fpoint tvol,vol=0;cx=cy=cz=0;
+	int i,j,k,l,m,n;
+	fpoint ux,uy,uz,vx,vy,vz,wx,wy,wz;
+	for(i=1;i<p;i++) {
+		ux=pts[0]-pts[3*i];
+		uy=pts[1]-pts[3*i+1];
+		uz=pts[2]-pts[3*i+2];
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				ed[i][j]=-1-k;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				vx=pts[3*k]-pts[0];
+				vy=pts[3*k+1]-pts[1];
+				vz=pts[3*k+2]-pts[2];
+				m=ed[k][l];ed[k][l]=-1-m;
+				while(m!=i) {
+					n=cycle_up(ed[k][nu[k]+l],m);
+					wx=pts[3*m]-pts[0];
+					wy=pts[3*m+1]-pts[1];
+					wz=pts[3*m+2]-pts[2];
+					tvol=ux*vy*wz+uy*vz*wx+uz*vx*wy-uz*vy*wx-uy*vx*wz-ux*vz*wy;
+					vol+=tvol;
+					cx+=(wx+vx-ux)*tvol;
+					cy+=(wy+vy-uy)*tvol;
+					cz+=(wz+vz-uz)*tvol;
+					k=m;l=n;vx=wx;vy=wy;vz=wz;
+					m=ed[k][l];ed[k][l]=-1-m;
+				}
+			}
+		}
+	}
+	reset_edges();
+	if(vol>tolerance*tolerance) {
+		vol=0.125/vol;
+		cx=cx*vol+0.5*pts[0];
+		cy=cy*vol+0.5*pts[1];
+		cz=cz*vol+0.5*pts[2];
+	} else cx=cy=cz=0;
+}
+
 /** Computes the maximum radius squared of a vertex from the center
  * of the cell. It can be used to determine when enough particles have
  * been testing an all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
 template<class n_option>
-fpoint voronoicell_base<n_option>::maxradsq() {
+fpoint voronoicell_base<n_option>::max_radius_squared() {
 	int i;fpoint r,s;
 	r=pts[0]*pts[0]+pts[1]*pts[1]+pts[2]*pts[2];
 	for(i=3;i<3*p;i+=3) {
@@ -1523,6 +1571,26 @@ fpoint voronoicell_base<n_option>::maxradsq() {
 		if(s>r) r=s;
 	}
 	return r;
+}
+
+/** Calculates the total edge distance of the Voronoi cell.
+ * \return A floating point number holding the calculated distance. */
+template<class n_option>
+fpoint voronoicell_base<n_option>::total_edge_distance() {
+	int i,j,k;
+	fpoint dis=0,dx,dy,dz;
+	for(i=0;i<p-1;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>i) {
+				dx=pts[3*k]-pts[3*i];
+				dy=pts[3*k+1]-pts[3*i+1];
+				dz=pts[3*k+2]-pts[3*i+1];
+				dis+=sqrt(dx*dx+dy*dy+dz*dz);
+			}
+		}
+	}
+	return 0.5*dis;
 }
 
 /** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
@@ -1784,11 +1852,15 @@ void voronoicell_base<n_option>::facets(ostream &os) {
  * \param[in] &os an output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::neighbor_normals(ostream &os) {
-	int i,j,k;
+	int i,j,k;bool later=false;
 	for(i=1;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (k>=0) neighbor_normals_search(os,i,j,k);
+			if (k>=0) {
+				if(later) os << " ";
+				else later=true;
+				neighbor_normals_search(os,i,j,k);
+			}
 		}
 	}
 	reset_edges();
@@ -1839,7 +1911,7 @@ inline void voronoicell_base<n_option>::neighbor_normals_search(ostream &os,int 
 					// Construct the normal vector and print it
 					wmag=0.5*(pts[3*i]*wx+pts[3*i+1]*wy+pts[3*i+2]*wz)/wmag;
 					neighbor.print_neighbor(os,i,j);
-					os << wx*wmag << " " << wy*wmag << " " << wz*wmag << "\n";
+					os << "(" << wx*wmag << "," << wy*wmag << "," << wz*wmag << ")";
 
 					// Mark all of the remaining edges of this
 					// face and exit
@@ -1850,11 +1922,13 @@ inline void voronoicell_base<n_option>::neighbor_normals_search(ostream &os,int 
 					return;
 				}
 			}
+			os << "(0,0,0)";
 			return;
 		}
 		l=cycle_up(ed[k][nu[k]+l],m);
 		k=m;
 	} while (k!=i);
+	os << "(0,0,0)";
 }
 
 
@@ -1881,6 +1955,23 @@ int voronoicell_base<n_option>::number_of_faces() {
 	}
 	reset_edges();
 	return s;
+}
+
+/** Outputs the vertex vectors to an open output stream using the local
+ * coordinate system. */
+template<class n_option>
+void voronoicell_base<n_option>::output_vertices(ostream &os) {
+	os << "(" << pts[0]*0.5 << "," << pts[1]*0.5 << "," << pts[2]*0.5 << ")";
+	for(int i=3;i<3*p;i+=3) os << " (" << pts[i]*0.5 << "," << pts[i+1]*0.5 << "," << pts[i+2]*0.5 << ")";
+}
+
+
+/** Outputs the vertex vectors to an open output stream using the global
+ * coordinate system. */
+template<class n_option>
+void voronoicell_base<n_option>::output_vertices(ostream &os,fpoint x,fpoint y,fpoint z) {
+	os << "(" << x+pts[0]*0.5 << "," << y+pts[1]*0.5 << "," << z+pts[2]*0.5 << ")";
+	for(int i=3;i<3*p;i+=3) os << " (" << x+pts[i]*0.5 << "," << y+pts[i+1]*0.5 << "," << z+pts[i+2]*0.5 << ")";
 }
 
 /** This routine is a placeholder which just prints the ID of a
@@ -1913,7 +2004,7 @@ inline void voronoicell_base<n_option>::facets(const char *filename) {
  * they have.
  * \param[in] &os An open output stream to write to. */
 template<class n_option>
-void voronoicell_base<n_option>::facet_statistics(ostream &os) {
+void voronoicell_base<n_option>::vertex_number_histogram(ostream &os) {
 	int *stat,*pstat,current_facet_size=init_facet_size,newc,maxf=0;
 	stat=new int[current_facet_size];
 	int i,j,k,l,m,q;
@@ -1947,26 +2038,9 @@ void voronoicell_base<n_option>::facet_statistics(ostream &os) {
 		}
 	}
 	reset_edges();
-	for(i=0;i<=maxf;i++) os << i << " " << stat[i] << endl;
+	os << "(0," << stat[0] << ")";
+	for(i=1;i<=maxf;i++) os << " (" << i << "," << stat[i] << ")";
 	delete [] stat;
-}
-
-/** An overloaded version of facet_statistics() which outputs the results to
- * standard output. */
-template<class n_option>
-inline void voronoicell_base<n_option>::facet_statistics() {
-	facet_statistics(cout);
-}
-
-/** An overloaded version of facet_statistics() which outputs the results to
- * a file.
- * \param[in] filename The name of the file to write to. */
-template<class n_option>
-inline void voronoicell_base<n_option>::facet_statistics(const char *filename) {
-	ofstream os;
-	os.open(filename,ofstream::out|ofstream::trunc);
-	facet_statistics(os);
-	os.close();
 }
 
 /** If the template is instantiated with the neighbor tracking turned on,

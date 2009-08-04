@@ -56,9 +56,11 @@ class container_base {
 		void print_facet_information();
 		void print_neighbor_normals(ostream &os);
 		void compute_all_cells();
-		void count_all_faces(ostream &os);
-		void count_all_faces();
-		void count_all_faces(const char *filename);
+		void print_all_custom(const char *format,ostream &os);
+		void print_all_custom(const char *format);
+		void print_all_custom(const char *format,const char *filename);
+		template<class n_option>
+		void print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os);
 		void print_all(ostream &os);
 		void print_all();
 		void print_all(const char *filename);

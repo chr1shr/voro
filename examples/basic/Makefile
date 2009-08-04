@@ -20,7 +20,8 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
 EXECUTABLES=single_cell platonic random_points import 
 
 # Makefile rules
-all: single_cell platonic random_points import 
+#all: single_cell platonic random_points import 
+all: import
 
 single_cell: $(SOURCE) single_cell.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o single_cell single_cell.cc
