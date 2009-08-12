@@ -17,13 +17,19 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/voro++.hh
 
 # List of executables
-EXECUTABLES=radical
+EXECUTABLES=radical cell_statistics custom_output
 
 # Makefile rules
-all: radical
+all: radical cell_statistics custom_output
 
 radical: $(SOURCE) radical.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o radical radical.cc
+
+cell_statistics: $(SOURCE) cell_statistics.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o cell_statistics cell_statistics.cc
+
+custom_output: $(SOURCE) custom_output.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o custom_output custom_output.cc
 
 clean:
 	rm -f $(EXECUTABLES)

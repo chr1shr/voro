@@ -180,8 +180,10 @@ class voronoicell_base {
 		fpoint volume();
 		fpoint max_radius_squared();
 		fpoint total_edge_distance();
+		fpoint surface_area();
 		void centroid(fpoint &cx,fpoint &cy,fpoint &cz);
 		int number_of_faces();
+		void output_vertex_orders(ostream &os);
 		void output_vertices(ostream &os);
 		void output_vertices(ostream &os,fpoint x,fpoint y,fpoint z);
 		void print_edges();
@@ -189,8 +191,12 @@ class voronoicell_base {
 		void facets(ostream &os);
 		inline void facets();
 		inline void facets(const char *filename);
-		void vertex_number_histogram(ostream &os);
-		void neighbor_normals(ostream &os);
+		void output_face_areas(ostream &os);
+		void output_face_orders(ostream &os);
+		void output_face_freq_table(ostream &os);
+		void output_face_vertices(ostream &os);
+		void output_face_perimeters(ostream &os);
+		void output_normals(ostream &os);
 		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
 		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
 		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
@@ -198,8 +204,9 @@ class voronoicell_base {
 		bool plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rs);
 		bool plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rs);
 		void label_facets();
-		void neighbors(ostream &os);
+		void output_neighbors(ostream &os,bool later=false);
 		void check_facets();
+		int number_of_edges();
 	private:
 		/** This a one dimensional array that holds the current sizes
 		 * of the memory allocations for them mep array.*/
@@ -246,7 +253,7 @@ class voronoicell_base {
 		inline bool delete_connection(int j,int k,bool hand);
 		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,fpoint g);
 		inline void reset_edges();
-		inline void neighbor_normals_search(ostream &os,int i,int j,int k);
+		inline void output_normals_search(ostream &os,int i,int j,int k);
 		friend class neighbor_track;
 };
 
@@ -309,7 +316,7 @@ class neighbor_none {
 		/** This is a blank placeholder function that does nothing. */
 		inline void label_facets() {};
 		/** This is a blank placeholder function that does nothing. */
-		inline void neighbors(ostream &os) {};
+		inline void neighbors(ostream &os,bool later) {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void check_facets() {};
 		/** This is a blank placeholder function that does nothing. */
@@ -368,7 +375,7 @@ class neighbor_track {
 		inline void set_to_aux1_offset(int k,int m);
 		inline void print(ostream &os,int i,int j);
 		inline void label_facets();
-		inline void neighbors(ostream &os);
+		inline void neighbors(ostream &os,bool later);
 		inline void print_neighbor(ostream &os,int i,int j);
 		inline void check_facets();
 	private:

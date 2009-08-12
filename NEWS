@@ -1,10 +1,29 @@
-Version 0.2.8 (...)
-===================
+Version 0.3.0 (August 12, 2009)
+===============================
+* In response to feedback from several people, the routines for computing
+  statistics about computed Voronoi cells have been significantly revised,
+  extended, and put within a common framework. The voronoicell class now has a
+  large number of routines of the form output_...() that will print cell
+  information to an output stream. There are also a number of new, simple
+  routines for computing basic statistics such as the number of edges and faces
+  of each cell. All of these routines can now be used during the container
+  analysis, by making use of the new print_custom() routine, which can output
+  according to a given format string, that uses control sequences similar to
+  the standard C printf() routine.
+* Renamed the "radical" example directory to "custom", and added two
+  new programs called "cell_statistics.cc" and "custom_output.cc" for
+  demonstrating the new output routines for the voronoicell and container
+  classes respectively
+* Added a routine for computing the centroid of a Voronoi cell
 * Added new routines for computing neighbor normals, in response to a
   request from Dave Greenwood
 * Removed unnecessary trailing tabs and spaces in the source code
 * Fixed a few text justification problems, and altered some of the comments
   in the example programs
+* Improved the command-line utility, allowing it to specify custom information
+  in the output, and doing better error checking on command-line arguments.
+* Updated Doxyfile to version 1.5.9
+* TODO radical line references
 
 Version 0.2.7 (March 25, 2009)
 ==============================

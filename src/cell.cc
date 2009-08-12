@@ -547,6 +547,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	int us=0,ls=0,qs,iqs,cs,uw,qw,lw;
 	int *edp,*edd;
 	fpoint u,l,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
+	
 	//Initialize the safe testing routine
 	sure.init(x,y,z,rsq);
 
@@ -1510,6 +1511,83 @@ fpoint voronoicell_base<n_option>::volume() {
 	return vol*fe;
 }
 
+/** Calculates the areas of the faces of the Voronoi cell and prints
+ * the results to an on output stream.
+ * \param[in] &os an output stream to write to. */
+template<class n_option>
+void voronoicell_base<n_option>::output_face_areas(ostream &os) {
+	bool later=false;
+	fpoint area;
+	int i,j,k,l,m,n;
+	fpoint ux,uy,uz,vx,vy,vz,wx,wy,wz;
+	for(i=1;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				area=0;
+				ed[i][j]=-1-k;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				m=ed[k][l];ed[k][l]=-1-m;
+				while(m!=i) {
+					n=cycle_up(ed[k][nu[k]+l],m);
+					ux=pts[3*k]-pts[3*i];
+					uy=pts[3*k+1]-pts[3*i+1];
+					uz=pts[3*k+2]-pts[3*i+2];
+					vx=pts[3*m]-pts[3*i];
+					vy=pts[3*m+1]-pts[3*i+1];
+					vz=pts[3*m+2]-pts[3*i+2];
+					wx=uy*vz-uz*vy;
+					wy=uz*vx-ux*vz;
+					wz=ux*vy-uy*vx;
+					area+=sqrt(wx*wx+wy*wy+wz*wz);
+					k=m;l=n;
+					m=ed[k][l];ed[k][l]=-1-m;
+				}
+				if(later) os << " ";else later=true;
+				os << 0.125*area;
+			}
+		}
+	}
+	reset_edges();
+}
+
+
+/** Calculates the total face area of the Voronoi cell. 
+ * \return the computed area. */
+template<class n_option>
+fpoint voronoicell_base<n_option>::surface_area() {
+	fpoint area=0;
+	int i,j,k,l,m,n;
+	fpoint ux,uy,uz,vx,vy,vz,wx,wy,wz;
+	for(i=1;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				ed[i][j]=-1-k;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				m=ed[k][l];ed[k][l]=-1-m;
+				while(m!=i) {
+					n=cycle_up(ed[k][nu[k]+l],m);
+					ux=pts[3*k]-pts[3*i];
+					uy=pts[3*k+1]-pts[3*i+1];
+					uz=pts[3*k+2]-pts[3*i+2];
+					vx=pts[3*m]-pts[3*i];
+					vy=pts[3*m+1]-pts[3*i+1];
+					vz=pts[3*m+2]-pts[3*i+2];
+					wx=uy*vz-uz*vy;
+					wy=uz*vx-ux*vz;
+					wz=ux*vy-uy*vx;
+					area+=sqrt(wx*wx+wy*wy+wz*wz);
+					k=m;l=n;
+					m=ed[k][l];ed[k][l]=-1-m;
+				}
+			}
+		}
+	}
+	reset_edges();
+	return 0.125*area;
+}
+
 
 /** Calculates the centroid of the Voronoi cell, by decomposing the cell into
  * tetrahedra extending outward from the zeroth vertex.
@@ -1550,7 +1628,7 @@ void voronoicell_base<n_option>::centroid(fpoint &cx,fpoint &cy,fpoint &cz) {
 		}
 	}
 	reset_edges();
-	if(vol>tolerance*tolerance) {
+	if(vol>tolerance_sq) {
 		vol=0.125/vol;
 		cx=cx*vol+0.5*pts[0];
 		cy=cy*vol+0.5*pts[1];
@@ -1585,7 +1663,7 @@ fpoint voronoicell_base<n_option>::total_edge_distance() {
 			if (k>i) {
 				dx=pts[3*k]-pts[3*i];
 				dy=pts[3*k+1]-pts[3*i+1];
-				dz=pts[3*k+2]-pts[3*i+1];
+				dz=pts[3*k+2]-pts[3*i+2];
 				dis+=sqrt(dx*dx+dy*dy+dz*dz);
 			}
 		}
@@ -1746,7 +1824,8 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(fpoint x,fpoint y,fpoint z
 	draw_pov_mesh(cout,x,y,z);
 }
 
-/** Randomly perturbs the points in the Voronoi cell by an amount r. */
+/** Randomly perturbs the points in the Voronoi cell by an amount r. 
+ * \param[in] r the amount to perturb each coordinate by. */
 template<class n_option>
 inline void voronoicell_base<n_option>::perturb(fpoint r) {
 	for(int i=0;i<3*p;i++) {
@@ -1759,7 +1838,7 @@ suretest::suretest() : current_marginal(init_marginal) {
 	sn=new int[2*current_marginal];
 }
 
-/** Suretest destructor to free memory allocation. */
+/** Suretest destructor that deallocates memory for the marginal cases. */
 suretest::~suretest() {
 	delete [] sn;
 }
@@ -1770,7 +1849,16 @@ inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	sc=0;px=x;py=y;pz=z;prsq=rsq;
 }
 
-/** */
+/** Checks to see if a given vertex is inside, outside or within the test
+ * plane. If the point is far away from the test plane, the routine immediately
+ * returns whether it is inside or outside. If the routine is close the the
+ * plane and within the specified tolerance, then the special check_marginal()
+ * routine is called.
+ * \param[in] n the vertex to test.
+ * \param[out] &ans the result of the scalar product used in evaluating
+ *                  the 
+ * \return -1 if the point is inside the plane, 1 if the point is outside the
+ *         plane, or 0 if the point is within the plane. */
 inline int suretest::test(int n,fpoint &ans) {
 	ans=px*p[3*n]+py*p[3*n+1]+pz*p[3*n+2]-prsq;
 	if(ans<-tolerance2) {
@@ -1781,6 +1869,18 @@ inline int suretest::test(int n,fpoint &ans) {
 	return check_marginal(n,ans);
 }
 
+/** Checks to see if a given vertex is inside, outside or within the test
+ * plane, for the case when the point has been detected to be very close to the
+ * plane. The routine ensures that the returned results are always consistent
+ * with previous tests, by keeping a table of any marginal results. The routine
+ * first sees if the vertex is in the table, and if it finds a previously
+ * computed result it uses that. Otherwise, it computes a result for this
+ * vertex and adds it the table.
+ * \param[in] n the vertex to test.
+ * \param[in] ans the result of the scalar product used in evaluating
+ *                  the 
+ * \return -1 if the point is inside the plane, 1 if the point is outside the
+ *         plane, or 0 if the point is within the plane. */
 int suretest::check_marginal(int n,fpoint &ans) {
 	int i;
 	for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
@@ -1851,34 +1951,34 @@ void voronoicell_base<n_option>::facets(ostream &os) {
  * the face.
  * \param[in] &os an output stream to write to. */
 template<class n_option>
-void voronoicell_base<n_option>::neighbor_normals(ostream &os) {
+void voronoicell_base<n_option>::output_normals(ostream &os) {
 	int i,j,k;bool later=false;
-	for(i=1;i<p;i++) {
+	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
 			if (k>=0) {
 				if(later) os << " ";
 				else later=true;
-				neighbor_normals_search(os,i,j,k);
+				output_normals_search(os,i,j,k);
 			}
 		}
 	}
 	reset_edges();
 }
 
-/** This inline routine is called by neighbor_normals(). It attempts to
+/** This inline routine is called by output_normals(). It attempts to
  * construct a single normal vector that is associated with a particular face.
  * It first traces around the face, trying to find two vectors along the face
- * edges whose vector product is above the numerical tolerance. In then
- * contstructs the normal vector using this product. If the face is too small,
- * and the none of the vector products are large enough, the routine may exit
- * without printing a face.
+ * edges whose vector product is above the numerical tolerance. It then
+ * constructs the normal vector using this product. If the face is too small,
+ * and the none of the vector products are large enough, the routine may
+ * return (0,0,0) as the normal vector.
  * \param[in] &os an output stream to write to.
  * \param[in] i the initial vertex of the face to test.
  * \param[in] j the index of an edge of the vertex.
  * \param[in] k the neighboring vertex of i, set to ed[i][j]. */
 template<class n_option>
-inline void voronoicell_base<n_option>::neighbor_normals_search(ostream &os,int i,int j,int k) {
+inline void voronoicell_base<n_option>::output_normals_search(ostream &os,int i,int j,int k) {
 	ed[i][j]=-1-k;
 	int l=cycle_up(ed[i][nu[i]+j],k),m;
 	fpoint ux,uy,uz,vx,vy,vz,wx,wy,wz,wmag;
@@ -1889,7 +1989,7 @@ inline void voronoicell_base<n_option>::neighbor_normals_search(ostream &os,int 
 		uz=pts[3*m+2]-pts[3*k+2];
 
 		// Test to see if the length of this edge is above the tolerance
-		if(ux*ux+uy*uy+uz*uz>tolerance) {
+		if(ux*ux+uy*uy+uz*uz>tolerance_sq) {
 			while(m!=i) {
 				l=cycle_up(ed[k][nu[k]+l],m);
 				k=m;m=ed[k][l];ed[k][l]=-1-m;
@@ -1906,11 +2006,10 @@ inline void voronoicell_base<n_option>::neighbor_normals_search(ostream &os,int 
 
 				// Test to see if this vector product of the
 				// two edges is above the tolerance
-				if(wmag>tolerance) {
+				if(wmag>tolerance_sq) {
 
 					// Construct the normal vector and print it
-					wmag=0.5*(pts[3*i]*wx+pts[3*i+1]*wy+pts[3*i+2]*wz)/wmag;
-					neighbor.print_neighbor(os,i,j);
+					wmag=1/sqrt(wmag);
 					os << "(" << wx*wmag << "," << wy*wmag << "," << wz*wmag << ")";
 
 					// Mark all of the remaining edges of this
@@ -1957,19 +2056,34 @@ int voronoicell_base<n_option>::number_of_faces() {
 	return s;
 }
 
+/** Outputs the vertex orders to an open output stream.
+ * \param[in] &os the output stream to write to. */
+template<class n_option>
+void voronoicell_base<n_option>::output_vertex_orders(ostream &os) {
+	if(p==0) return;
+	os << nu[0];
+	for(int i=1;i<p;i++) os << " " << nu[i];
+}
+
 /** Outputs the vertex vectors to an open output stream using the local
- * coordinate system. */
+ * coordinate system.
+ * \param[in] &os the output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_vertices(ostream &os) {
+	if(p==0) return;
 	os << "(" << pts[0]*0.5 << "," << pts[1]*0.5 << "," << pts[2]*0.5 << ")";
 	for(int i=3;i<3*p;i+=3) os << " (" << pts[i]*0.5 << "," << pts[i+1]*0.5 << "," << pts[i+2]*0.5 << ")";
 }
 
 
 /** Outputs the vertex vectors to an open output stream using the global
- * coordinate system. */
+ * coordinate system.
+ * \param[in] &os the output stream to write to.
+ * \param[in] (x,y,z) the position vector of the particle in the global
+ *                    coordinate system. */
 template<class n_option>
 void voronoicell_base<n_option>::output_vertices(ostream &os,fpoint x,fpoint y,fpoint z) {
+	if(p==0) return;
 	os << "(" << x+pts[0]*0.5 << "," << y+pts[1]*0.5 << "," << z+pts[2]*0.5 << ")";
 	for(int i=3;i<3*p;i+=3) os << " (" << x+pts[i]*0.5 << "," << y+pts[i+1]*0.5 << "," << z+pts[i+2]*0.5 << ")";
 }
@@ -2000,11 +2114,100 @@ inline void voronoicell_base<n_option>::facets(const char *filename) {
 	os.close();
 }
 
-/** Examines all the facets, and evaluates them by the number of vertices that
- * they have.
+/** This routine outputs the perimeters of each face.
  * \param[in] &os An open output stream to write to. */
 template<class n_option>
-void voronoicell_base<n_option>::vertex_number_histogram(ostream &os) {
+void voronoicell_base<n_option>::output_face_perimeters(ostream &os) {
+	int i,j,k,l,m;bool later=false;
+	fpoint dx,dy,dz,perim;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				dx=pts[3*k]-pts[3*i];
+				dy=pts[3*k+1]-pts[3*i+1];
+				dz=pts[3*k+2]-pts[3*i+2];
+				perim=sqrt(dx*dx+dy*dy+dz*dz);
+				ed[i][j]=-1-k;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				do {
+					m=ed[k][l];
+					dx=pts[3*m]-pts[3*k];
+					dy=pts[3*m+1]-pts[3*k+1];
+					dz=pts[3*m+2]-pts[3*k+2];
+					perim+=sqrt(dx*dx+dy*dy+dz*dz);
+					ed[k][l]=-1-m;
+					l=cycle_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+				if(later) os << " ";else later=true;
+				os << 0.5*perim;
+			}
+		}
+	}
+	reset_edges();
+}
+
+/** For each face, this routine outputs a bracketed sequence of numbers
+ * containing a list of all the vertices that make up that face.
+ * \param[in] &os An open output stream to write to. */
+template<class n_option>
+void voronoicell_base<n_option>::output_face_vertices(ostream &os) {
+	int i,j,k,l,m;bool later=false;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				if(later) os << " ";else later=true;
+				os << "(" << i;
+				ed[i][j]=-1-k;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				do {
+					os << "," << k;
+					m=ed[k][l];
+					ed[k][l]=-1-m;
+					l=cycle_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+				os << ")";
+			}
+		}
+	}
+	reset_edges();
+}
+
+/** Outputs a list of the number of edges in each face.
+ * \param[in] &os An open output stream to write to. */
+template<class n_option>
+void voronoicell_base<n_option>::output_face_orders(ostream &os) {
+	int i,j,k,l,m,q;bool later=false;
+	for(i=0;i<p;i++) {
+		for(j=0;j<nu[i];j++) {
+			k=ed[i][j];
+			if (k>=0) {
+				q=1;
+				ed[i][j]=-1-k;
+				l=cycle_up(ed[i][nu[i]+j],k);
+				do {
+					q++;
+					m=ed[k][l];
+					ed[k][l]=-1-m;
+					l=cycle_up(ed[k][nu[k]+l],m);
+					k=m;
+				} while (k!=i);
+				if(later) os << " ";else later=true;
+				os << q;
+			}
+		}
+	}
+	reset_edges();
+}
+
+/** Computes the number of edges that each face has and outputs a frequency
+ * table of the results.
+ * \param[in] &os An open output stream to write to. */
+template<class n_option>
+void voronoicell_base<n_option>::output_face_freq_table(ostream &os) {
 	int *stat,*pstat,current_facet_size=init_facet_size,newc,maxf=0;
 	stat=new int[current_facet_size];
 	int i,j,k,l,m,q;
@@ -2054,10 +2257,12 @@ void voronoicell_base<n_option>::label_facets() {
 /** If the template is instantiated with the neighbor tracking turned on, then
  * this routine will print out a list of all the neighbors of a given cell.
  * Otherwise, this routine does nothing.
- * \param[in] &os An open output stream to write to. */
+ * \param[in] &os An open output stream to write to.
+ * \param[in] later A boolean value to determine whether or not to write a
+ *                  space character before the first entry. */
 template<class n_option>
-void voronoicell_base<n_option>::neighbors(ostream &os) {
-	neighbor.neighbors(os);
+void voronoicell_base<n_option>::output_neighbors(ostream &os,bool later) {
+	neighbor.neighbors(os,later);
 }
 
 /** If the template is instantiated with the neighbor tracking turned on, then
@@ -2161,6 +2366,15 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 		}
 	}
 	return false;
+}
+
+/** Counts the number of edges of the Voronoi cell.
+ * \return the number of edges. */
+template<class n_option>
+int voronoicell_base<n_option>::number_of_edges() {
+	int i,edges=0;
+	for(i=0;i<p;i++) edges+=nu[i];
+	return edges>>1;
 }
 
 /** This constructs the neighbor_track class, within a current
@@ -2367,15 +2581,18 @@ void neighbor_track::check_facets() {
 }
 
 /** This routine provides a list of plane IDs.
- * \param[in] &os An output stream to write to. */
-void neighbor_track::neighbors(ostream &os) {
-	int **edp,*nup;edp=vc->ed;nup=vc->nu;
+ * \param[in] &os An output stream to write to.
+ * \param[in] later A boolean value to determine whether or not to write a
+ *                  space character before the first entry. */
+void neighbor_track::neighbors(ostream &os,bool later) {
+	int **edp=vc->ed,*nup=vc->nu;
 	int i,j,k,l,m;
 	for(i=0;i<vc->p;i++) {
 		for(j=0;j<nup[i];j++) {
 			k=edp[i][j];
 			if (k>=0) {
-				os << " " << ne[i][j];
+				if(later) os << " ";else later=true;
+				os << ne[i][j];
 				edp[i][j]=-1-k;
 				l=vc->cycle_up(edp[i][nup[i]+j],k);
 				do {

@@ -53,20 +53,16 @@ class container_base {
 		fpoint packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r);
 		fpoint packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		fpoint sum_cell_volumes();
-		void print_facet_information();
-		void print_neighbor_normals(ostream &os);
 		void compute_all_cells();
-		void print_all_custom(const char *format,ostream &os);
-		void print_all_custom(const char *format);
-		void print_all_custom(const char *format,const char *filename);
-		template<class n_option>
-		void print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os);
 		void print_all(ostream &os);
 		void print_all();
 		void print_all(const char *filename);
 		void print_all_neighbor(ostream &os);
 		void print_all_neighbor();
 		void print_all_neighbor(const char *filename);
+		void print_all_custom(const char *format,ostream &os);
+		void print_all_custom(const char *format);
+		void print_all_custom(const char *format,const char *filename);
 		template<class n_option>
 		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
@@ -199,7 +195,9 @@ class container_base {
 		fpoint *mrad;
 
 		template<class n_option>
-		inline void print_all(ostream &os,voronoicell_base<n_option> &c);
+		inline void print_all_internal(voronoicell_base<n_option> &c,ostream &os);
+		template<class n_option>
+		void print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os);
 		template<class n_option>
 		inline bool initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		void add_particle_memory(int i);
@@ -256,7 +254,7 @@ class radius_mono {
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		/** This is a blank placeholder function that does nothing. */
-		inline void print(ostream &os,int ijk,int q) {};
+		inline void print(ostream &os,int ijk,int q,bool later=true) {};
 		inline void rad(ostream &os,int l,int c);
 	private:
 		container_base<radius_mono> *cc;
@@ -287,7 +285,7 @@ class radius_poly {
 		inline fpoint volume(int ijk,int s);
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
-		inline void print(ostream &os,int ijk,int q);
+		inline void print(ostream &os,int ijk,int q,bool later=true);
 		inline void rad(ostream &os,int l,int c);
 	private:
 		container_base<radius_poly> *cc;

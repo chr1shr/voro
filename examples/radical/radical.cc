@@ -16,6 +16,7 @@ const fpoint z_min=0,z_max=6;
 const int n_x=3,n_y=3,n_z=3;
 
 int main() {
+
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
 	// eight particles within each computational block. Import

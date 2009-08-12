@@ -91,6 +91,10 @@ const fpoint tolerance2=2e-5;
 const fpoint tolerance2=2e-10;
 #endif
 
+/** The square of the tolerance, used when deciding whether some squared
+ * quantities are large enough to be used. */
+const fpoint tolerance_sq=tolerance*tolerance;
+
 /** A large number that is used in the computation. */
 const fpoint large_number=1e30;
 

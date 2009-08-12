@@ -146,7 +146,8 @@ container_base<r_option>::~container_base() {
 	delete [] mrad;
 }
 
-/** Dumps all the particle positions and identifies to a file. */
+/** Dumps all the particle positions and identifies to a file.
+ * \param[in] os an output stream to write to. */
 template<class r_option>
 void container_base<r_option>::draw_particles(ostream &os) {
 	int c,l,i;
@@ -484,66 +485,54 @@ fpoint container_base<r_option>::sum_cell_volumes() {
 	return vol;
 }
 
-/** For each particle, this prints a list of the vertices which make up each
- * face of the Voronoi cell. */
-template<class r_option>
-void container_base<r_option>::print_facet_information() {
-	voronoicell c;
-	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
-		for(q=0;q<co[ijk];q++) if (compute_cell(c,i,j,k,ijk,q)) {
-			cout << "Particle " << id[ijk][q] << ":\n";
-			c.facets(cout);
-		}
-	}
-}
-
-/** For each particle, this prints the particle ID number and position. It the
- * prints all of the normal vectors associated with each face, using the
- * neighbor_normal() function in the voronoicell class.
- * \param[in] &os an output stream to write to. */
-template<class r_option>
-void container_base<r_option>::print_neighbor_normals(ostream &os) {
-	voronoicell_neighbor c;
-	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
-		for(q=0;q<co[ijk];q++) if (compute_cell(c,i,j,k,ijk,q)) {
-			cout << id[ijk][q] << " " << p[ijk][sz*q] << " " << p[ijk][sz*q+1] << " " << p[ijk][sz*q+2] << "\n";
-			c.neighbor_normals(cout);
-			cout << "\n";
-		}
-	}
-}
-
-/** Prints a list of all particle labels, positions, and the number of faces to
- * the standard output. */
+/** Computes the Voronoi cells for all particles in the container, and for each
+ * cell, outputs a line containing custom information about the cell structure.
+ * The output format is specified using an input string with control sequences
+ * similar to the standard C printf() routine. Full information about the
+ * control sequences is available at http://math.lbl.gov/voro++/doc/custom.html
+ * \param[in] format the format of the output lines, using control sequences to
+ *                   denote the different cell statistics.
+ * \param[in] &os an open output stream to write to. */
 template<class r_option>
 inline void container_base<r_option>::print_all_custom(const char *format,ostream &os) {
 	int fp=0;
+
+	// Check to see if the sequence "%n" appears in the format sequence
 	while(format[fp]!=0) {
 		if(format[fp]=='%') {
 			fp++;
 			if(format[fp]=='n') {
+
+				// If a "%n" is detected, then we're going to
+				// need neighbor information during the custom
+				// output, so use the voronoicell_neighbor
+				// class
 				voronoicell_neighbor c;
-				print_all_custom_internal(c,format,cout);
+				print_all_custom_internal(c,format,os);
 				return;
 			} else if(format[fp]==0) break;
 		}
 		fp++;
 	}
+
+	// No "%n" was detected, so we can just use the regular voronoicell
+	// class without computing neighbor information.
 	voronoicell c;
-	print_all_custom_internal(c,format,cout);
+	print_all_custom_internal(c,format,os);
 }
 
-/** Prints a list of all particle labels, positions, and the number of faces to
- * the standard output. */
+/** An overloaded version of print_all_custom() that prints to standard output.
+ * \param[in] format the format of the output lines, using control sequences to
+ *                   denote the different cell statistics. */
 template<class r_option>
 void container_base<r_option>::print_all_custom(const char *format) {
 	print_all_custom(format,cout);
 }
 
-/** An overloaded version of count_all_faces(), which outputs the result to a
+/** An overloaded version of print_all_custom(), which outputs the result to a
  * particular file.
+ * \param[in] format the format of the output lines, using control sequences to
+ *                   denote the different cell statistics.
  * \param[in] filename The name of the file to write to. */
 template<class r_option>
 void container_base<r_option>::print_all_custom(const char *format,const char *filename) {
@@ -553,29 +542,13 @@ void container_base<r_option>::print_all_custom(const char *format,const char *f
 	os.close();
 }
 
-/** Prints 
- * %v Volume
- * %x %y %z Position
- * %i Particle ID
- * %r Radius
- * %n Neighbors
- * %o Face normals
-
-%a Face vertex numbers
- * %A Vertex number histogram
-%f Face areas
-%F Total face area
-%e Face perimeters
- * %E Total edge distance
- * %p Vertex positions relative to particle center
- * %P Vertex positions in global coordinates
- * %w Total vertices
-
- * %m Maximum radius squared
- * %s Number of faces
-%t Face table
- * %c Centroid position relative to particle center
- * %C Centroid position in global coordinates*/
+/** The internal part of the print_all_custom() routine, that can be called
+ * with either a voronoicell class (if no neighbor computations are needed) or
+ * with a voronoicell_neighbor class (if neighbor computations are needed).
+ * \param[in] &c a Voronoi cell object to use for the computation.
+ * \param[in] format the format of the output lines, using control sequences to
+ *                   denote the different cell statistics.
+ * \param[in] &os an open output stream to write to. */
 template<class r_option>
 template<class n_option>
 void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os) {
@@ -589,21 +562,39 @@ void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_opti
 			if(format[fp]=='%') {
 				fp++;
 				switch(format[fp]) {
+
+					// Particle-related output
+					case 'i': os << id[ijk][q];break;
 					case 'x': os << x;break;
 					case 'y': os << y;break;
 					case 'z': os << z;break;
-					case 'i': os << id[ijk][q];break;
-					case 'r': radius.print(os,ijk,q);break;
-					case 'v': os << c.volume();break;
-					case 'n': c.neighbors(os);break;
-					case 'o': c.neighbor_normals(os);break;
-					case 'A': c.vertex_number_histogram(os);break;
+					case 'q': os << x << " " << y << " " << z;break;
+					case 'r': radius.print(os,ijk,q,false);break;
+
+					// Vertex-related output
+					case 'w': os << c.p;break;
 					case 'p': c.output_vertices(os);break;
 					case 'P': c.output_vertices(os,x,y,z);break;
-					case 'w': os << c.p;break;
-					case 's': os << c.number_of_faces();break;
+					case 'o': c.output_vertex_orders(os);
+					case 'm': os << 0.25*c.max_radius_squared();break;
+
+					// Edge-related output
+					case 'g': os << c.number_of_edges();break;
 					case 'E': os << c.total_edge_distance();break;
-					case 'm': os << c.max_radius_squared();break;
+					case 'e': c.output_face_perimeters(os);break;
+
+					// Face-related output
+					case 's': os << c.number_of_faces();break;
+					case 'F': os << c.surface_area();break;
+					case 'A': c.output_face_freq_table(os);break;
+					case 'a': c.output_face_orders(os);break;
+					case 'f': c.output_face_areas(os);break;
+					case 't': c.output_face_vertices(os);break;
+					case 'l': c.output_normals(os);break;
+					case 'n': c.output_neighbors(os);break;
+					
+					// Volume-related output
+					case 'v': os << c.volume();break;
 					case 'c': {
 							  fpoint cx,cy,cz;
 							  c.centroid(cx,cy,cz);
@@ -614,7 +605,12 @@ void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_opti
 							  c.centroid(cx,cy,cz);
 							  os << x+cx << " " << y+cy << " " << z+cz;
 						  } break;
+
+					// End-of-string reached
 					case 0: fp--;break;
+
+					// The percent sign is not part of a
+					// control sequence
 					default: os << '%' << format[fp];
 				}
 			} else os << format[fp];
@@ -624,11 +620,16 @@ void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_opti
 	}
 }
 
-/** Prints a list of all particle labels, positions, and Voronoi volumes to the
- * standard output. */
+/** The internal part of the print_all() and print_all_neighbor() routines, that
+ * computes all of the Voronoi cells, and then outputs simple information about
+ * them. The routine can be called with either a voronoicell class (if no
+ * neighbor computations are needed) or with a voronoicell_neighbor class (if
+ * neighbor computations are needed).
+ * \param[in] &c a Voronoi cell object to use for the computation.
+ * \param[in] &os an open output stream to write to. */
 template<class r_option>
 template<class n_option>
-inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_option> &c) {
+inline void container_base<r_option>::print_all_internal(voronoicell_base<n_option> &c,ostream &os) {
 	fpoint x,y,z;
 	int i,j,k,ijk=0,q;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
@@ -638,7 +639,7 @@ inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_o
 			radius.print(os,ijk,q);
 			if (compute_cell(c,i,j,k,ijk,q,x,y,z)) {
 				os << " " << c.volume();
-				c.neighbors(os);
+				c.output_neighbors(os,true);
 				os << "\n";
 			} else os << " 0\n";
 		}
@@ -646,18 +647,19 @@ inline void container_base<r_option>::print_all(ostream &os,voronoicell_base<n_o
 }
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
- * standard output. */
+ * standard output.
+ * \param[in] os The output stream to print to.*/
 template<class r_option>
 void container_base<r_option>::print_all(ostream &os) {
 	voronoicell c;
-	print_all(os,c);
+	print_all_internal(c,os);
 }
 
 /** An overloaded version of print_all(), which just prints to standard output. */
 template<class r_option>
 void container_base<r_option>::print_all() {
 	voronoicell c;
-	print_all(cout,c);
+	print_all_internal(c,cout);
 }
 
 /** An overloaded version of print_all(), which outputs the result to a particular
@@ -668,7 +670,7 @@ inline void container_base<r_option>::print_all(const char* filename) {
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	print_all(os,c);
+	print_all_internal(c,os);
 	os.close();
 }
 
@@ -678,7 +680,7 @@ inline void container_base<r_option>::print_all(const char* filename) {
 template<class r_option>
 void container_base<r_option>::print_all_neighbor(ostream &os) {
 	voronoicell_neighbor c;
-	print_all(os,c);
+	print_all_internal(c,os);
 }
 
 /** An overloaded version of print_all_neighbor(), which just prints to
@@ -686,7 +688,7 @@ void container_base<r_option>::print_all_neighbor(ostream &os) {
 template<class r_option>
 void container_base<r_option>::print_all_neighbor() {
 	voronoicell_neighbor c;
-	print_all(cout,c);
+	print_all_internal(c,cout);
 }
 
 /** An overloaded version of print_all_neighbor(), which outputs the result to a
@@ -697,7 +699,7 @@ inline void container_base<r_option>::print_all_neighbor(const char* filename) {
 	voronoicell_neighbor c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	print_all(os,c);
+	print_all_internal(c,os);
 	os.close();
 }
 
@@ -1651,8 +1653,9 @@ inline fpoint radius_mono::scale(fpoint rs,int t,int q) {
  * \param[in] &os an open file stream.
  * \param[in] ijk the region to consider.
  * \param[in] q the number of the particle within the region. */
-inline void radius_poly::print(ostream &os,int ijk,int q) {
-	os << " " << cc->p[ijk][4*q+3];
+inline void radius_poly::print(ostream &os,int ijk,int q,bool later) {
+	if(later) os << " ";
+	os << cc->p[ijk][4*q+3];
 }
 
 /** This routine checks to see whether a point is within a particular distance

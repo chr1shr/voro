@@ -21,7 +21,7 @@ EXECUTABLES=single_cell platonic random_points import
 
 # Makefile rules
 #all: single_cell platonic random_points import 
-all: import
+all: import platonic
 
 single_cell: $(SOURCE) single_cell.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o single_cell single_cell.cc
