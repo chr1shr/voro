@@ -53,8 +53,8 @@ void custom_output_message() {
 	cout << "file to contain a variety of statistics about each computed Voronoi cell. The\n";
 	cout << "string is similar to the standard C printf() function, made up of text with\n";
 	cout << "additional control sequences that begin with percentage signs that are expanded\n";
-	cout << "to different statistics. See the http://math.lbl.gov/voro++/doc/custom.html for\n";
-	cout << "more information.\n";
+	cout << "to different statistics. See http://math.lbl.gov/voro++/doc/custom.html for more\n";
+	cout << "information.\n";
 	cout << "\nParticle-related:\n";
 	cout << "  %i The particle ID number\n";
 	cout << "  %x The x coordinate of the particle\n";
