@@ -14,7 +14,7 @@ while(<A>) {
 	# $1 and $2.
 	m/pos=\((.*)\).*faces=(\d*)/;
 
-	# Print a sphere to the POV-Ray file.
+	# Print a sphere to the POV-Ray file
 	print B "sphere{<$1>,0.5 texture{t$2}}\n";
 }
 

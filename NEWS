@@ -1,4 +1,4 @@
-Version 0.3.0 (August 12, 2009)
+Version 0.3.0 (August 16, 2009)
 ===============================
 * In response to feedback from several people, the routines for computing
   statistics about computed Voronoi cells have been significantly revised,

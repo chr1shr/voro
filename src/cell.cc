@@ -1999,9 +1999,9 @@ inline void voronoicell_base<n_option>::output_normals_search(ostream &os,int i,
 
 				// Construct the vector product of this edge with
 				// the previous one
-				wx=uy*vz-uz*vy;
-				wy=uz*vx-ux*vz;
-				wz=ux*vy-uy*vx;
+				wx=uz*vy-uy*vz;
+				wy=ux*vz-uz*vx;
+				wz=uy*vx-ux*vy;
 				wmag=wx*wx+wy*wy+wz*wz;
 
 				// Test to see if this vector product of the
