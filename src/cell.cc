@@ -1473,8 +1473,8 @@ inline int voronoicell_base<n_option>::cycle_down(int a,int p) {
 }
 
 /** Calculates the volume of the Voronoi cell, by decomposing the cell into
- * tetrahedra extending outward from the zeroth vertex, which are evaluated
- * using a scalar triple product.
+ * tetrahedra extending outward from the zeroth vertex, whose volumes are
+ * evaluated using a scalar triple product.
  * \return A floating point number holding the calculated volume. */
 template<class n_option>
 fpoint voronoicell_base<n_option>::volume() {
@@ -1511,8 +1511,8 @@ fpoint voronoicell_base<n_option>::volume() {
 	return vol*fe;
 }
 
-/** Calculates the areas of the faces of the Voronoi cell and prints
- * the results to an on output stream.
+/** Calculates the areas of each face of the Voronoi cell and prints the
+ * results to an output stream.
  * \param[in] &os an output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_face_areas(ostream &os) {
@@ -1552,7 +1552,7 @@ void voronoicell_base<n_option>::output_face_areas(ostream &os) {
 }
 
 
-/** Calculates the total face area of the Voronoi cell. 
+/** Calculates the total surface area of the Voronoi cell. 
  * \return the computed area. */
 template<class n_option>
 fpoint voronoicell_base<n_option>::surface_area() {
@@ -1592,7 +1592,7 @@ fpoint voronoicell_base<n_option>::surface_area() {
 /** Calculates the centroid of the Voronoi cell, by decomposing the cell into
  * tetrahedra extending outward from the zeroth vertex.
  * \param[in] (&cx,&cy,&cz) references to floating point numbers in which to
- *            pass back the centroid vector. */
+ * pass back the centroid vector. */
 template<class n_option>
 void voronoicell_base<n_option>::centroid(fpoint &cx,fpoint &cy,fpoint &cz) {
 	fpoint tvol,vol=0;cx=cy=cz=0;
@@ -1672,7 +1672,7 @@ fpoint voronoicell_base<n_option>::total_edge_distance() {
 }
 
 /** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
- * stream, displacing the cell by an amount (x,y,z).
+ * stream, displacing the cell by given vector.
  * \param[in] &os A output stream to write to.
  * \param[in] (x,y,z) A displacement vector to be added to the cell's position. */
 template<class n_option>
@@ -1855,10 +1855,10 @@ inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
  * plane and within the specified tolerance, then the special check_marginal()
  * routine is called.
  * \param[in] n the vertex to test.
- * \param[out] &ans the result of the scalar product used in evaluating
- *                  the 
+ * \param[out] &ans the result of the scalar product used in evaluating the
+ * location of the point. 
  * \return -1 if the point is inside the plane, 1 if the point is outside the
- *         plane, or 0 if the point is within the plane. */
+ * plane, or 0 if the point is within the plane. */
 inline int suretest::test(int n,fpoint &ans) {
 	ans=px*p[3*n]+py*p[3*n+1]+pz*p[3*n+2]-prsq;
 	if(ans<-tolerance2) {
@@ -1878,9 +1878,9 @@ inline int suretest::test(int n,fpoint &ans) {
  * vertex and adds it the table.
  * \param[in] n the vertex to test.
  * \param[in] ans the result of the scalar product used in evaluating
- *                  the 
+ * the location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
- *         plane, or 0 if the point is within the plane. */
+ * plane, or 0 if the point is within the plane. */
 int suretest::check_marginal(int n,fpoint &ans) {
 	int i;
 	for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
@@ -1919,7 +1919,8 @@ void voronoicell_base<n_option>::print_edges() {
 }
 
 /** Prints out a list of all the facets and their vertices. If the neighbor option
- * is defined, it lists each cutting plane. */
+ * is defined, it lists each cutting plane.
+ * \param[in] os an output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::facets(ostream &os) {
 	int i,j,k,l,m;
@@ -1947,8 +1948,7 @@ void voronoicell_base<n_option>::facets(ostream &os) {
 
 /** For each face of the Voronoi cell, this routine prints the out the normal
  * vector of the face, and scales it to the distance from the cell center to
- * that plane. If the neighbor option is used, it additionally lists the ID of
- * the face.
+ * that plane.
  * \param[in] &os an output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_normals(ostream &os) {
@@ -1966,13 +1966,13 @@ void voronoicell_base<n_option>::output_normals(ostream &os) {
 	reset_edges();
 }
 
-/** This inline routine is called by output_normals(). It attempts to
- * construct a single normal vector that is associated with a particular face.
- * It first traces around the face, trying to find two vectors along the face
- * edges whose vector product is above the numerical tolerance. It then
- * constructs the normal vector using this product. If the face is too small,
- * and the none of the vector products are large enough, the routine may
- * return (0,0,0) as the normal vector.
+/** This inline routine is called by output_normals(). It attempts to construct
+ * a single normal vector that is associated with a particular face. It first
+ * traces around the face, trying to find two vectors along the face edges
+ * whose vector product is above the numerical tolerance. It then constructs
+ * the normal vector using this product. If the face is too small, and the none
+ * of the vector products are large enough, the routine may return (0,0,0) as
+ * the normal vector.
  * \param[in] &os an output stream to write to.
  * \param[in] i the initial vertex of the face to test.
  * \param[in] j the index of an edge of the vertex.
@@ -2080,7 +2080,7 @@ void voronoicell_base<n_option>::output_vertices(ostream &os) {
  * coordinate system.
  * \param[in] &os the output stream to write to.
  * \param[in] (x,y,z) the position vector of the particle in the global
- *                    coordinate system. */
+ * coordinate system. */
 template<class n_option>
 void voronoicell_base<n_option>::output_vertices(ostream &os,fpoint x,fpoint y,fpoint z) {
 	if(p==0) return;
@@ -2259,7 +2259,7 @@ void voronoicell_base<n_option>::label_facets() {
  * Otherwise, this routine does nothing.
  * \param[in] &os An open output stream to write to.
  * \param[in] later A boolean value to determine whether or not to write a
- *                  space character before the first entry. */
+ * space character before the first entry. */
 template<class n_option>
 void voronoicell_base<n_option>::output_neighbors(ostream &os,bool later) {
 	neighbor.neighbors(os,later);
@@ -2583,7 +2583,7 @@ void neighbor_track::check_facets() {
 /** This routine provides a list of plane IDs.
  * \param[in] &os An output stream to write to.
  * \param[in] later A boolean value to determine whether or not to write a
- *                  space character before the first entry. */
+ * space character before the first entry. */
 void neighbor_track::neighbors(ostream &os,bool later) {
 	int **edp=vc->ed,*nup=vc->nu;
 	int i,j,k,l,m;

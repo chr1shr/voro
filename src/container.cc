@@ -491,7 +491,7 @@ fpoint container_base<r_option>::sum_cell_volumes() {
  * similar to the standard C printf() routine. Full information about the
  * control sequences is available at http://math.lbl.gov/voro++/doc/custom.html
  * \param[in] format the format of the output lines, using control sequences to
- *                   denote the different cell statistics.
+ * denote the different cell statistics.
  * \param[in] &os an open output stream to write to. */
 template<class r_option>
 inline void container_base<r_option>::print_all_custom(const char *format,ostream &os) {
@@ -523,7 +523,7 @@ inline void container_base<r_option>::print_all_custom(const char *format,ostrea
 
 /** An overloaded version of print_all_custom() that prints to standard output.
  * \param[in] format the format of the output lines, using control sequences to
- *                   denote the different cell statistics. */
+ * denote the different cell statistics. */
 template<class r_option>
 void container_base<r_option>::print_all_custom(const char *format) {
 	print_all_custom(format,cout);
@@ -532,7 +532,7 @@ void container_base<r_option>::print_all_custom(const char *format) {
 /** An overloaded version of print_all_custom(), which outputs the result to a
  * particular file.
  * \param[in] format the format of the output lines, using control sequences to
- *                   denote the different cell statistics.
+ * denote the different cell statistics.
  * \param[in] filename The name of the file to write to. */
 template<class r_option>
 void container_base<r_option>::print_all_custom(const char *format,const char *filename) {
@@ -547,7 +547,7 @@ void container_base<r_option>::print_all_custom(const char *format,const char *f
  * with a voronoicell_neighbor class (if neighbor computations are needed).
  * \param[in] &c a Voronoi cell object to use for the computation.
  * \param[in] format the format of the output lines, using control sequences to
- *                   denote the different cell statistics.
+ * denote the different cell statistics.
  * \param[in] &os an open output stream to write to. */
 template<class r_option>
 template<class n_option>
@@ -1652,7 +1652,9 @@ inline fpoint radius_mono::scale(fpoint rs,int t,int q) {
 /** Prints the radius of a particle to an open file stream.
  * \param[in] &os an open file stream.
  * \param[in] ijk the region to consider.
- * \param[in] q the number of the particle within the region. */
+ * \param[in] q the number of the particle within the region.
+ * \param[in] later A boolean value to determine whether or not to write a
+ * space character before the first entry. */
 inline void radius_poly::print(ostream &os,int ijk,int q,bool later) {
 	if(later) os << " ";
 	os << cc->p[ijk][4*q+3];

@@ -7,14 +7,14 @@
 # Makefile rules
 all:
 	cd basic && make
+	cd walls && make
+	cd custom && make
 	cd extra && make
 	cd degenerate && make
-	cd radical && make
-	cd walls && make
 
 clean:
 	cd basic && make clean
+	cd walls && make clean
+	cd custom && make clean
 	cd extra && make clean
 	cd degenerate && make clean
-	cd radical && make clean
-	cd walls && make clean
