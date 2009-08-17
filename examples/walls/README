@@ -37,3 +37,11 @@ handle these cases, the easiest way would be to divide the domain into several
 convex sub-domains, carry out a calculation in each, and then glue the cells
 that cross the divisions. Native support for non-convex domains may be added in
 a later version.
+
+4. torus.cc - this example shows how to create a custom wall object, derived
+from the pure virtual "wall" class. A routine is written that can cut a Voronoi
+cell in response to a torus centered on the origin that is aligned with the xy
+plane. The program writes POV-Ray files of the particles and Voronoi cells, and
+these can be rendered using the following command:
+
+povray +W800 +H600 +A0.3 +Otorus.png torus.pov
