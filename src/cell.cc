@@ -497,7 +497,7 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
  * out any errors. This algorithm is O(p), so running it every time the plane
  * routine is called will result in a significant slowdown. */
 template<class n_option>
-inline void voronoicell_base<n_option>::check_relations() {
+void voronoicell_base<n_option>::check_relations() {
 	int i,j;
 	for(i=0;i<p;i++) {
 		for(j=0;j<nu[i];j++) {
@@ -512,7 +512,7 @@ inline void voronoicell_base<n_option>::check_relations() {
  * running it every time the plane routine is called will result in a significant
  * slowdown. */
 template<class n_option>
-inline void voronoicell_base<n_option>::check_duplicates() {
+void voronoicell_base<n_option>::check_duplicates() {
 	int i,j,k;
 	for(i=0;i<p;i++) {
 		for(j=1;j<nu[i];j++) {
@@ -525,7 +525,7 @@ inline void voronoicell_base<n_option>::check_duplicates() {
 
 /** Constructs the relational table if the edges have been specified. */
 template<class n_option>
-inline void voronoicell_base<n_option>::construct_relations() {
+void voronoicell_base<n_option>::construct_relations() {
 	int i,j,k,l;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
@@ -2576,12 +2576,4 @@ void neighbor_track::label_facets() {
 		}
 	}
 	vc->reset_edges();
-}
-
-/** This routine outputs a specific piece of neighbor information.
- * \param[in] &os The output stream to write to.
- * \param[in] i The vertex number to print.
- * \param[in] j The index of the neighbor information to print. */
-void neighbor_track::print_neighbor(ostream &os,int i,int j) {
-	os << ne[i][j] << " ";
 }

@@ -19,7 +19,7 @@ const int max_regions=16777216;
 
 // This message gets displayed if the user requests the help flag
 void help_message() {
-	cout << "Voro++ version 0.3.0, by Chris H. Rycroft (UC Berkeley/LBL)\n\n";
+	cout << "Voro++ version 0.3, by Chris H. Rycroft (UC Berkeley/LBL)\n\n";
 	cout << "Syntax: voro++ [opts] <length_scale> <x_min> <x_max> <y_min>\n";
 	cout << "                      <y_max> <z_min> <z_max> <filename>\n\n";
 	cout << "<length_scale> should be set to a typical particle diameter,\n";

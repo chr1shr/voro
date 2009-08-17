@@ -1,4 +1,4 @@
-Version 0.3.0 (August 16, 2009)
+Version 0.3.0 (August 17, 2009)
 ===============================
 * In response to feedback from several people, the routines for computing
   statistics about computed Voronoi cells have been significantly revised,
@@ -22,6 +22,9 @@ Version 0.3.0 (August 16, 2009)
   in the example programs
 * Improved the command-line utility, allowing it to specify custom information
   in the output. Implemented better error checking on command-line arguments.
+* Removed the facets() routine, since this has been superseded by the new
+  output_...() routines. This also rendered some functions in the neighbor_none
+  and neighbor_track classes obsolete, and they have also been removed.
 * Updated Doxyfile to version 1.5.9
 
 Version 0.2.7 (March 25, 2009)

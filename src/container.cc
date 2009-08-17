@@ -494,7 +494,7 @@ fpoint container_base<r_option>::sum_cell_volumes() {
  * denote the different cell statistics.
  * \param[in] &os an open output stream to write to. */
 template<class r_option>
-inline void container_base<r_option>::print_all_custom(const char *format,ostream &os) {
+void container_base<r_option>::print_all_custom(const char *format,ostream &os) {
 	int fp=0;
 
 	// Check to see if the sequence "%n" appears in the format sequence

@@ -159,12 +159,6 @@ class voronoicell_base {
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void init_octahedron(fpoint l);
 		inline void init_tetrahedron(fpoint x0,fpoint y0,fpoint z0,fpoint x1,fpoint y1,fpoint z1,fpoint x2,fpoint y2,fpoint z2,fpoint x3,fpoint y3,fpoint z3);
-		inline void init_test(int n);
-		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a);
-		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b);
-		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c);
-		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d);
-		inline void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e);
 		void draw_pov(ostream &os,fpoint x,fpoint y,fpoint z);
 		inline void draw_pov(const char *filename,fpoint x,fpoint y,fpoint z);
 		inline void draw_pov(fpoint x,fpoint y,fpoint z);
@@ -174,9 +168,6 @@ class voronoicell_base {
 		void draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
 		inline void draw_gnuplot(const char *filename,fpoint x,fpoint y,fpoint z);
 		inline void draw_gnuplot(fpoint x,fpoint y,fpoint z);
-		inline void check_relations();
-		inline void check_duplicates();
-		inline void construct_relations();
 		fpoint volume();
 		fpoint max_radius_squared();
 		fpoint total_edge_distance();
@@ -200,6 +191,15 @@ class voronoicell_base {
 		inline bool plane(fpoint x,fpoint y,fpoint z);
 		bool plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rs);
 		bool plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rs);
+		inline void init_test(int n);
+		void add_vertex(fpoint x,fpoint y,fpoint z,int a);
+		void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b);
+		void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c);
+		void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d);
+		void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e);
+		void construct_relations();
+		void check_relations();
+		void check_duplicates();
 		void print_edges();
 		void label_facets();
 		void check_facets();
@@ -309,13 +309,11 @@ class neighbor_none {
 		/** This is a blank placeholder function that does nothing. */
 		inline void set_to_aux1_offset(int k,int m) {};
 		/** This is a blank placeholder function that does nothing. */
-		inline void label_facets() {};
-		/** This is a blank placeholder function that does nothing. */
 		inline void neighbors(ostream &os,bool later) {};
 		/** This is a blank placeholder function that does nothing. */
-		inline void check_facets() {};
+		inline void label_facets() {};
 		/** This is a blank placeholder function that does nothing. */
-		inline void print_neighbor(ostream &os,int i,int j) {};
+		inline void check_facets() {};
 };
 
 /** \brief A class passed to the voronoicell_base template to switch on the
@@ -368,9 +366,8 @@ class neighbor_track {
 		inline void switch_to_aux1(int i);
 		inline void copy_to_aux1(int i,int m);
 		inline void set_to_aux1_offset(int k,int m);
-		inline void label_facets();
 		inline void neighbors(ostream &os,bool later);
-		inline void print_neighbor(ostream &os,int i,int j);
+		inline void label_facets();
 		inline void check_facets();
 	private:
 		/** This is an auxiliary pointer which is used in some of the
