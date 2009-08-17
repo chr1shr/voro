@@ -1918,34 +1918,6 @@ void voronoicell_base<n_option>::print_edges() {
 	}
 }
 
-/** Prints out a list of all the facets and their vertices. If the neighbor option
- * is defined, it lists each cutting plane.
- * \param[in] os an output stream to write to. */
-template<class n_option>
-void voronoicell_base<n_option>::facets(ostream &os) {
-	int i,j,k,l,m;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				neighbor.print(os,i,j);
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
-				do {
-					os << " ";
-					neighbor.print(os,k,l);
-					m=ed[k][l];
-					ed[k][l]=-1-m;
-					l=cycle_up(ed[k][nu[k]+l],m);
-					k=m;
-				} while (k!=i);
-				os << endl;
-			}
-		}
-	}
-	reset_edges();
-}
-
 /** For each face of the Voronoi cell, this routine prints the out the normal
  * vector of the face, and scales it to the distance from the cell center to
  * that plane.
@@ -2086,32 +2058,6 @@ void voronoicell_base<n_option>::output_vertices(ostream &os,fpoint x,fpoint y,f
 	if(p==0) return;
 	os << "(" << x+pts[0]*0.5 << "," << y+pts[1]*0.5 << "," << z+pts[2]*0.5 << ")";
 	for(int i=3;i<3*p;i+=3) os << " (" << x+pts[i]*0.5 << "," << y+pts[i+1]*0.5 << "," << z+pts[i+2]*0.5 << ")";
-}
-
-/** This routine is a placeholder which just prints the ID of a
- * vertex.
- * \param[in] &os The output stream to write to.
- * \param[in] i The ID of a vertex.
- * \param[in] j The particular plane of interest (ignored in this routine). */
-void neighbor_none::print(ostream &os,int i,int j) {
-	os << i;
-}
-
-/** An overloaded version of facets() which output the results to the standard
- * output. */
-template<class n_option>
-inline void voronoicell_base<n_option>::facets() {
-	facets(cout);
-}
-
-/** An overloaded version of facets(), which outputs the results to a file.
- * \param[in] filename The name of the file to write to. */
-template<class n_option>
-inline void voronoicell_base<n_option>::facets(const char *filename) {
-	ofstream os;
-	os.open(filename,ofstream::out|ofstream::trunc);
-	facets(os);
-	os.close();
 }
 
 /** This routine outputs the perimeters of each face.
@@ -2630,15 +2576,6 @@ void neighbor_track::label_facets() {
 		}
 	}
 	vc->reset_edges();
-}
-
-/** This routine prints out a bracketed pair showing a vertex number, and the
- * corresponding neighbor information.
- * \param[in] &os The output stream to write to.
- * \param[in] i The vertex number to print.
- * \param[in] j The index of the neighbor information to print. */
-void neighbor_track::print(ostream &os,int i,int j) {
-	os << "(" << i << "," << ne[i][j] << ")";
 }
 
 /** This routine outputs a specific piece of neighbor information.

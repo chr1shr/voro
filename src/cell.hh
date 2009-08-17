@@ -183,30 +183,27 @@ class voronoicell_base {
 		fpoint surface_area();
 		void centroid(fpoint &cx,fpoint &cy,fpoint &cz);
 		int number_of_faces();
+		int number_of_edges();
 		void output_vertex_orders(ostream &os);
 		void output_vertices(ostream &os);
 		void output_vertices(ostream &os,fpoint x,fpoint y,fpoint z);
-		void print_edges();
-		inline void perturb(fpoint r);
-		void facets(ostream &os);
-		inline void facets();
-		inline void facets(const char *filename);
 		void output_face_areas(ostream &os);
 		void output_face_orders(ostream &os);
 		void output_face_freq_table(ostream &os);
 		void output_face_vertices(ostream &os);
 		void output_face_perimeters(ostream &os);
 		void output_normals(ostream &os);
+		void output_neighbors(ostream &os,bool later=false);
 		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
 		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
 		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
 		inline bool plane(fpoint x,fpoint y,fpoint z);
 		bool plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rs);
 		bool plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rs);
+		void print_edges();
 		void label_facets();
-		void output_neighbors(ostream &os,bool later=false);
 		void check_facets();
-		int number_of_edges();
+		inline void perturb(fpoint r);
 	private:
 		/** This a one dimensional array that holds the current sizes
 		 * of the memory allocations for them mep array.*/
@@ -312,8 +309,6 @@ class neighbor_none {
 		/** This is a blank placeholder function that does nothing. */
 		inline void set_to_aux1_offset(int k,int m) {};
 		/** This is a blank placeholder function that does nothing. */
-		inline void print(ostream &os,int i,int j);
-		/** This is a blank placeholder function that does nothing. */
 		inline void label_facets() {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void neighbors(ostream &os,bool later) {};
@@ -373,7 +368,6 @@ class neighbor_track {
 		inline void switch_to_aux1(int i);
 		inline void copy_to_aux1(int i,int m);
 		inline void set_to_aux1_offset(int k,int m);
-		inline void print(ostream &os,int i,int j);
 		inline void label_facets();
 		inline void neighbors(ostream &os,bool later);
 		inline void print_neighbor(ostream &os,int i,int j);
