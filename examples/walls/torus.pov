@@ -23,16 +23,17 @@ union{
 	#include "torus_p.pov"
 	rotate <90,0,0>
 	pigment{rgb 0.97}
-	finish{reflection 0.12 ambient 0.32 specular 0.3}
+	finish{reflection 0.1 ambient 0.30 specular 0.3}
 }
 
 union{
 	#include "torus_v.pov"
 	rotate <90,0,0>
 	pigment{radial pigment_map {
-			[0 rgb <1,0.5,0.75>]
-			[0.33333333 rgb <0.5,0.75,1>]
-			[0.66666666 rgb <0.75,1,0.5>]
-			[1 rgb <1,0.5,0.75>]}}
+			[0 rgb <0.6,0.7,1>]
+			[0.25 rgb <0.4,0.87,0.92>]
+			[0.5 rgb <0.6,0.7,1>]
+			[0.75 rgb <0.7,0.5,1>]
+			[1 rgb <0.6,0.7,1>]}}
 	finish{specular 0.3 ambient 0.3 reflection 0.1}
 }
