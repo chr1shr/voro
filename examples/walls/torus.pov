@@ -4,6 +4,10 @@
 #include "metals.inc"
 #include "textures.inc"
 
+global_settings {
+	max_trace_level 64
+}
+
 camera {
 	location <0,34,-40>
 	right 0.4*x*image_width/image_height
@@ -30,10 +34,10 @@ union{
 	#include "torus_v.pov"
 	rotate <90,0,0>
 	pigment{radial pigment_map {
-			[0 rgb <0.6,0.7,1>]
-			[0.25 rgb <0.4,0.87,0.92>]
-			[0.5 rgb <0.6,0.7,1>]
-			[0.75 rgb <0.7,0.5,1>]
-			[1 rgb <0.6,0.7,1>]}}
+			[0 rgb <0.5,0.7,1>]
+			[0.25 rgb <0.38,0.82,0.92>]
+			[0.5 rgb <0.5,0.7,1>]
+			[0.75 rgb <0.65,0.4,1>]
+			[1 rgb <0.5,0.7,1>]}}
 	finish{specular 0.3 ambient 0.3 reflection 0.1}
 }
