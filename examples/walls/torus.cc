@@ -1,4 +1,4 @@
-// Voronoi calculation example code
+// Custom wall class example code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
@@ -59,8 +59,8 @@ class wall_torus : public wall {
 			fpoint odis=orad-mjr;
 			fpoint ot=odis*odis+z*z;
 
-			// If the particle is very close to the major radius
-			// then no plane cut is made.
+			// Unless the particle is within 1% of the major
+			// radius, then a plane cut is made
 			if(ot>0.01*mnr) {
 				ot=2*mnr/sqrt(ot)-2;
 				z*=ot;
@@ -72,8 +72,9 @@ class wall_torus : public wall {
 			return true;
 		}
 
-		// These virtual functions are called during the cell computation in the
-		// container class. They call instances of the template given above. 
+		// These virtual functions are called during the cell
+		// computation in the container class. They call instances of
+		// the template given above. 
 		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,
 				fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,
@@ -86,8 +87,6 @@ class wall_torus : public wall {
 		// The minor radius of the torus
 		const fpoint mnr;
 };
-
-
 
 int main() {
 
