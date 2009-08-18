@@ -38,7 +38,6 @@ light_source{<25,12,-12> color rgb <0.43,0.45,0.45>}
 union{
 #include "custom_output_p.pov"
 	rotate <270,0,0>
-	pigment{rgb <0.92,0.65,1>} finish{reflection 0.12 specular 0.3 ambient 0.42}
 }
 
 union{
