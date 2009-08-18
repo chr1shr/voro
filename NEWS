@@ -25,6 +25,8 @@ Version 0.3.0 (August 17, 2009)
 * Removed the facets() routine, since this has been superseded by the new
   output_...() routines. This also rendered some functions in the neighbor_none
   and neighbor_track classes obsolete, and they have also been removed.
+* Added torus.cc example that shows how to write custom walls as derived
+  classes
 * Updated Doxyfile to version 1.5.9
 
 Version 0.2.7 (March 25, 2009)

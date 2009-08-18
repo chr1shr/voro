@@ -53,7 +53,8 @@ class wall_torus : public wall {
 		// (x,y,z), and makes a plane cut to to the object to account
 		// for the toroidal wall
 		template<class n_option>
-		inline bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+		inline bool cut_cell_base(voronoicell_base<n_option> &c,
+				fpoint x,fpoint y,fpoint z) {
 			fpoint orad=sqrt(x*x+y*y);
 			fpoint odis=orad-mjr;
 			fpoint ot=odis*odis+z*z;
@@ -73,10 +74,10 @@ class wall_torus : public wall {
 
 		// These virtual functions are called during the cell computation in the
 		// container class. They call instances of the template given above. 
-		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z)
-			{return cut_cell_base(c,x,y,z);}
-		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z)
-			{return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,
+				fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,
+				fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 	private:
 		// The ID number associated with the wall
 		const int w_id;
