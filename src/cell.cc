@@ -547,7 +547,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	int us=0,ls=0,qs,iqs,cs,uw,qw,lw;
 	int *edp,*edd;
 	fpoint u,l,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
-	
+
 	//Initialize the safe testing routine
 	sure.init(x,y,z,rsq);
 
@@ -1552,7 +1552,7 @@ void voronoicell_base<n_option>::output_face_areas(ostream &os) {
 }
 
 
-/** Calculates the total surface area of the Voronoi cell. 
+/** Calculates the total surface area of the Voronoi cell.
  * \return the computed area. */
 template<class n_option>
 fpoint voronoicell_base<n_option>::surface_area() {
@@ -1824,7 +1824,7 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(fpoint x,fpoint y,fpoint z
 	draw_pov_mesh(cout,x,y,z);
 }
 
-/** Randomly perturbs the points in the Voronoi cell by an amount r. 
+/** Randomly perturbs the points in the Voronoi cell by an amount r.
  * \param[in] r the amount to perturb each coordinate by. */
 template<class n_option>
 inline void voronoicell_base<n_option>::perturb(fpoint r) {
@@ -1856,7 +1856,7 @@ inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
  * routine is called.
  * \param[in] n the vertex to test.
  * \param[out] &ans the result of the scalar product used in evaluating the
- * location of the point. 
+ * location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  * plane, or 0 if the point is within the plane. */
 inline int suretest::test(int n,fpoint &ans) {

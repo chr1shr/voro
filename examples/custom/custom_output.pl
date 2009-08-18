@@ -14,7 +14,8 @@ while(<A>) {
 	# $1 and $2.
 	m/pos=\((.*)\).*faces=(\d*)/;
 
-	# Print a sphere to the POV-Ray file
+	# Print a sphere to the POV-Ray file, giving it a different texture
+	# depending on the number of faces of the Voronoi cell
 	print B "sphere{<$1>,0.5 texture{t$2}}\n";
 }
 

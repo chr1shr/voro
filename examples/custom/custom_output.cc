@@ -22,13 +22,13 @@ int main() {
 	// eight particles within each computational block.
 	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
 			false,false,false,8);
-	
+
 	// Import the monodisperse test packing and output the Voronoi
 	// tessellation in gnuplot and POV-Ray formats.
 	con.import("pack_six_cube");
 
 	// Use the basic output routine, that saves the particle IDs,
-	// positions, and Voronoi cell volumes 
+	// positions, and Voronoi cell volumes
 	con.print_all("packing.standard");
 
 	// Use the neighbor output routine, that also includes information
@@ -38,18 +38,18 @@ int main() {
 	con.print_all_neighbor("packing.neighbor");
 
 	// Do a custom output routine to store the number of vertices, edges,
-	// and faces of each Voronoi cell 
+	// and faces of each Voronoi cell
 	con.print_all_custom(
 		"ID=%i, pos=(%x,%y,%z), vertices=%w, edges=%g, faces=%s",
 		"packing.custom1");
-	
+
 	// Do a custom output routine to store a variety of face-based
 	// statistics. Store the particle ID and position, the number of faces
 	// the total face area, the order of each face, the areas of each face,
 	// the vertices making up each face, and the neighboring particle (or
-	// wall) corresponding to each face. 
+	// wall) corresponding to each face.
 	con.print_all_custom("%i %q %s %F %a %f %t %l %n","packing.custom2");
-	
+
 	// Do a custom output routine that outputs the particle IDs and
 	// positions, plus the volume and the centroid position relative to the
 	// particle center

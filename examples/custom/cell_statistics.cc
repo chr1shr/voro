@@ -16,7 +16,7 @@ int main() {
 	// Initialize the Voronoi cell to be a cube of side length 2, centered
 	// on the origin
 	v.init(-1,1,-1,1,-1,1);
-	
+
 	// Remove one edge of the cell with a single plane cut
 	v.plane(1,1,0,2);
 
@@ -28,12 +28,12 @@ int main() {
 	cout << "Vertex positions    : ";v.output_vertices(cout);cout << "\n";
 	cout << "Vertex orders       : ";v.output_vertex_orders(cout);cout << "\n";
 	cout << "Max rad. sq. vertex : " << 0.25*v.max_radius_squared() << "\n\n";
-	
+
 	// Output edge-based statistics
 	cout << "Total edges         : " << v.number_of_edges() << "\n";
 	cout << "Total edge distance : " << v.total_edge_distance() << "\n";
 	cout << "Face perimeters     : ";v.output_face_perimeters(cout);cout << "\n\n";
-	
+
 	// Output face-based statistics
 	cout << "Total faces         : " << v.number_of_faces() << "\n";
 	cout << "Surface area        : " << v.surface_area() << "\n";

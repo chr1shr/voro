@@ -38,7 +38,7 @@ class wall_torus : public wall {
 		// value of -99 is used.
 		wall_torus(fpoint imjr,fpoint imnr,int iw_id=-99)
 			: w_id(iw_id), mjr(imjr), mnr(imnr) {};
-		
+
 		// This returns true if a given vector is inside the torus, and
 		// false if it is outside. For the current example, this
 		// routine is not needed, but in general it would be, for use
@@ -74,7 +74,7 @@ class wall_torus : public wall {
 
 		// These virtual functions are called during the cell
 		// computation in the container class. They call instances of
-		// the template given above. 
+		// the template given above.
 		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,
 				fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,

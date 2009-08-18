@@ -592,7 +592,7 @@ void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_opti
 					case 't': c.output_face_vertices(os);break;
 					case 'l': c.output_normals(os);break;
 					case 'n': c.output_neighbors(os);break;
-					
+
 					// Volume-related output
 					case 'v': os << c.volume();break;
 					case 'c': {

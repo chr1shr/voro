@@ -26,7 +26,7 @@ void help_message() {
 	cout << "or typical distance between particles. It is used to configure\n";
 	cout << "the code for maximum efficiency.\n\n";
 	cout << "Available options:\n";
-	cout << " -c <str>   : Specify a custom output string\n"; 
+	cout << " -c <str>   : Specify a custom output string\n";
 	cout << " -g         : Turn on the gnuplot output to <filename.gnu>\n";
 	cout << " -h/--help  : Print this information\n";
 	cout << " -hc        : Print information about custom output\n";

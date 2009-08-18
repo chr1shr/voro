@@ -1,5 +1,5 @@
-Version 0.3.0 (August 17, 2009)
-===============================
+Version 0.3 (August 17, 2009)
+=============================
 * In response to feedback from several people, the routines for computing
   statistics about computed Voronoi cells have been significantly revised,
   extended, and put within a common framework. The voronoicell class now has a
@@ -25,6 +25,8 @@ Version 0.3.0 (August 17, 2009)
 * Removed the facets() routine, since this has been superseded by the new
   output_...() routines. This also rendered some functions in the neighbor_none
   and neighbor_track classes obsolete, and they have also been removed.
+* Some reorganization of the cell.hh and container.hh header files to group
+  similar functions together
 * Added torus.cc example that shows how to write custom walls as derived
   classes
 * Updated Doxyfile to version 1.5.9
