@@ -1537,14 +1537,27 @@ fpoint voronoicell_base<n_option>::maxradsq() {
 template<class n_option>
 void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
+//os << "merge{";
 	for(i=0;i<p;i++) {
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
-		os << "sphere{<" << ux << "," << uy << "," << uz << ">,r}\n";
+		if (neighbor.internal_wall(i)) os << "sphere{<" << ux << "," << uy << "," << uz << ">,r}\n";
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (k<i) os << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}\n";
+			if (k<i&&!neighbor.internal_wall(i,j)) os << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}\n";
 		}
 	}
+//	os << "}\n";
+}
+
+inline bool neighbor_track::internal_wall(int i) {
+	for(int j=0;j<vc->nu[i];j++) {
+		if(ne[i][j]!=-99) return true;
+	}
+	return false;
+}
+
+inline bool neighbor_track::internal_wall(int i,int j) {
+	return ne[i][j]==-99&&ne[i][j==vc->nu[i]-1?0:j+1]==-99;
 }
 
 /** An overloaded version of the draw_pov routine, that outputs the edges of

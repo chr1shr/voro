@@ -32,18 +32,18 @@ union{
 //	pigment{rgb <1,0.95,0.5>} finish{reflection 0.1 specular 0.3 ambient 0.42}
 }
 
-union{
+/*union{
 #include "acc_sphere_vi.pov"
 	rotate <270,0,0>
 	interior{I_Glass1}
 	finish{F_Glass5}
 	pigment{color rgbf <0.97, 0.99, 0.98, 0.92>}
-//	pigment{rgbft <0.91,0.36,0.53,0,0>} finish{specular 0.36 ambient 0.44}
-}
+	pigment{rgbft <0.91,0.36,0.53,0,0>} finish{specular 0.36 ambient 0.44}
+}*/
 
-#declare r=0.05;
+#declare r=0.01;
 union{
-#include "acc_sphere_v.pov"
+//#include "acc_sphere_v.pov"
 	rotate <270,0,0>
 //	texture{T_Silver_3C}
 	pigment{rgb <0.91,0.36,0.53>} finish{specular 0.56 ambient 0.24 metallic reflection 0.28}

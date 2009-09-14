@@ -406,7 +406,7 @@ void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,f
 	fpoint x,y,z,px,py,pz;
 	voropp_loop l1(this);
 	int q,s;
-	voronoicell c;
+	voronoicell_neighbor c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);

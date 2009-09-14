@@ -303,6 +303,8 @@ class neighbor_none {
 		inline void neighbors(ostream &os) {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void check_facets() {};
+		inline bool internal_wall(int i) {return true;}
+		inline bool internal_wall(int i,int j) {return true;}
 };
 
 /** \brief A class passed to the voronoicell_base template to switch on the
@@ -359,6 +361,8 @@ class neighbor_track {
 		inline void label_facets();
 		inline void neighbors(ostream &os);
 		inline void check_facets();
+		inline bool internal_wall(int i);
+		inline bool internal_wall(int i,int j);
 	private:
 		/** This is an auxiliary pointer which is used in some of the
 		 * low level neighbor operations. */
