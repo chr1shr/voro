@@ -33,3 +33,5 @@ custom_output: $(SOURCE) custom_output.cc
 
 clean:
 	rm -f $(EXECUTABLES)
+
+.PHONY: all clean

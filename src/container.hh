@@ -133,41 +133,9 @@ class container_base {
 		/** A boolean value that determines if the z coordinate in
 		 * periodic or not. */
 		const bool zperiodic;
-		/** This array holds the number of particles within each
-		 * computational box of the container. */
-		int *co;
-		/** This array holds the maximum amount of particle memory for
-		 * each computational box of the container. If the number of
-		 * particles in a particular box ever approaches this limit,
-		 * more is allocated using the add_particle_memory() function.
-		 */
-		int *mem;
-		/** This array holds the numerical IDs of each particle in each
-		 * computational box. */
-		int **id;
-		/** This array is used as a mask. */
-		unsigned int *mask;
-		/** This array is used to store the list of blocks to test during
-		 * the Voronoi cell computation. */
-		int *sl;
 		/** This sets the current value being used to mark tested blocks
 		 * in the mask. */
 		unsigned int mv;
-		/** The position of the first element on the search list to be
-		 * considered. */
-		int s_start;
-		/** The position of the last element on the search list to be
-		 * considered. */
-		int s_end;
-		/** The current size of the search list. */
-		int s_size;
-		/** A two dimensional array holding particle positions. For the
-		 * derived container_poly class, this also holds particle
-		 * radii. */
-		fpoint **p;
-		/** This array holds pointers to any wall objects that have
-		 * been added to the container. */
-		wall **walls;
 		/** The current number of wall objects, initially set to zero. */
 		int wall_number;
 		/** The current amount of memory allocated for walls. */
@@ -189,10 +157,43 @@ class container_base {
 		 * class container_poly, then this is set to 4, to also hold
 		 * the particle radii. */
 		int sz;
+		/** The position of the first element on the search list to be
+		 * considered. */
+		int s_start;
+		/** The position of the last element on the search list to be
+		 * considered. */
+		int s_end;
+		/** The current size of the search list. */
+		int s_size;		
+		/** This array holds the number of particles within each
+		 * computational box of the container. */
+		int *co;
+		/** This array holds the maximum amount of particle memory for
+		 * each computational box of the container. If the number of
+		 * particles in a particular box ever approaches this limit,
+		 * more is allocated using the add_particle_memory() function.
+		 */
+		int *mem;
+		/** This array is used during the cell computation to determine
+		 * which blocks have been considered. */
+		unsigned int *mask;
+		/** This array is used to store the list of blocks to test during
+		 * the Voronoi cell computation. */
+		int *sl;		
 		/** An array to hold the minimum distances associated with the
 		 * worklists. This array is initialized during container
 		 * construction, by the initialize_radii() routine. */
 		fpoint *mrad;
+		/** This array holds pointers to any wall objects that have
+		 * been added to the container. */
+		wall **walls;
+		/** This array holds the numerical IDs of each particle in each
+		 * computational box. */
+		int **id;
+		/** A two dimensional array holding particle positions. For the
+		 * derived container_poly class, this also holds particle
+		 * radii. */
+		fpoint **p;
 
 		template<class n_option>
 		inline void print_all_internal(voronoicell_base<n_option> &c,ostream &os);

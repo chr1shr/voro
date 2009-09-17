@@ -11,126 +11,44 @@
 #include "cell.hh"
 #include "container.hh"
 
-/** Container constructor. The first six arguments set the corners of the box to
- * be (xa,ya,za) and (xb,yb,zb). The box is then divided into an nx by ny by nz
- * grid of blocks, set by the following three arguments. The next three
- * arguments are booleans, which set the periodicity in each direction. The
- * final argument sets the amount of memory allocated to each block. */
+/** The class constructor sets up the geometry of container, initializing the
+ * minimum and maximum coordinates in each direction, and setting whether each
+ * direction is periodic or not. It divides the container into a rectangular
+ * grid of blocks, and allocates memory for each of these for storing particle
+ * positions and IDs. It precomputes the radius table used during the cell
+ * computation.
+ * \param[in] (xa,xb) the minimum and maximum x coordinates.
+ * \param[in] (ya,yb) the minimum and maximum y coordinates.
+ * \param[in] (za,zb) the minimum and maximum z coordinates.
+ * \param[in] (xn,yn,zn) the number of grid blocks in each of the three
+ *                       coordinate directions.
+ * \param[in] (xper,yper,zper) flags setting whether the container is periodic
+ *                             in each coordinate direction.
+ * \param[in] memi the initial memory allocation for each block. */
 template<class r_option>
-container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,
-		int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi)
+container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,
+		fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,
+		bool xper,bool yper,bool zper,int memi)
 	: ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
-	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),
-	nx(xn),ny(yn),nz(zn),nxy(xn*yn),nxyz(xn*yn*zn),
-	hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
+	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),nx(xn),ny(yn),nz(zn),
+	nxy(xn*yn),nxyz(xn*yn*zn),hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),
+	hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
 	xperiodic(xper),yperiodic(yper),zperiodic(zper),
-	mv(0),wall_number(0),current_wall_size(init_wall_size),
-	radius(this),sz(radius.mem_size) {
+	mv(0),wall_number(0),current_wall_size(init_wall_size),radius(this),
+	sz(radius.mem_size),s_size(3*(3+hxy+hz*(hx+hy))),
+	co(new int[nxyz]),mem(new int[nxyz]),mask(new unsigned int[hxyz]),
+	sl(new int[s_size]),mrad(new fpoint[hgridsq*seq_length]),
+	walls(new wall*[init_wall_size]),id(new int*[nxyz]),p(new fpoint*[nxyz]) {
 	int l;
-	co=new int[nxyz];
 	for(l=0;l<nxyz;l++) co[l]=0;
-	mem=new int[nxyz];
 	for(l=0;l<nxyz;l++) mem[l]=memi;
-	id=new int*[nxyz];
-	for(l=0;l<nxyz;l++) id[l]=new int[memi];
-	p=new fpoint*[nxyz];
-	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
-	mask=new unsigned int[hxyz];
 	for(l=0;l<hxyz;l++) mask[l]=0;
-	s_size=3*(hxy+hz*(hx+hy));if(s_size<18) s_size=18;
-	sl=new int[s_size];
-	walls=new wall*[current_wall_size];
-	mrad=new fpoint[hgridsq*seq_length];
+	for(l=0;l<nxyz;l++) id[l]=new int[memi];
+	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
 	initialize_radii();
 }
 
-/** This function is called during container construction. The routine scans
- * all of the worklists in the wl[] array. For a given worklist of blocks
- * labeled \f$w_1\f$ to \f$w_n\f$, it computes a sequence \f$r_0\f$ to
- * \f$r_n\f$ so that $r_i$ is the minimum distance to all the blocks
- * \f$w_{j}\f$ where \f$j>i\f$ and all blocks outside the worklist. The values
- * of \f$r_n\f$ is calculated first, as the minimum distance to any block in
- * the shell surrounding the worklist. The \f$r_i\f$ are then computed in
- * reverse order by considering the distance to \f$w_{i+1}\f$.
- */
-template<class r_option>
-void container_base<r_option>::initialize_radii() {
-	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
-	const fpoint xstep=(bx-ax)/nx/fgrid;
-	const fpoint ystep=(by-ay)/ny/fgrid;
-	const fpoint zstep=(bz-az)/nz/fgrid;
-	int i,j,k,lx,ly,lz,l=0,q;
-	unsigned int *e=const_cast<unsigned int*> (wl);
-	fpoint xlo,ylo,zlo,xhi,yhi,zhi,minr;fpoint *radp=mrad;
-	unsigned int f;
-	for(zlo=0,zhi=zstep,lz=0;lz<hgrid;zlo=zhi,zhi+=zstep,lz++) {
-		for(ylo=0,yhi=ystep,ly=0;ly<hgrid;ylo=yhi,yhi+=ystep,ly++) {
-			for(xlo=0,xhi=xstep,lx=0;lx<hgrid;xlo=xhi,xhi+=xstep,l++,lx++) {
-				minr=large_number;
-				for(q=e[0]+1;q<seq_length;q++) {
-					f=e[q];
-					i=(f&127)-64;
-					j=(f>>7&127)-64;
-					k=(f>>14&127)-64;
-					if((f&b2)==b2) {
-						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i-1,j,k);
-						if((f&b1)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
-					} else if((f&b1)==b1) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
-					if((f&b4)==b4) {
-						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j-1,k);
-						if((f&b3)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
-					} else if((f&b3)==b3) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
-					if((f&b6)==b6) {
-						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k-1);
-						if((f&b5)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
-					} else if((f&b5)==b5) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
-				}
-				q--;
-				while(q>0) {
-					radp[q]=minr;
-					f=e[q];
-					i=(f&127)-64;
-					j=(f>>7&127)-64;
-					k=(f>>14&127)-64;
-					compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k);
-					q--;
-				}
-				radp[0]=minr;
-				e+=seq_length;
-				radp+=seq_length;
-			}
-		}
-	}
-}
-
-/** Computes the minimum distance from a subregion to a given block. If this distance
- * is smaller than the value of minr, then it passes
- * \param[in] &minr a pointer to the current minimum distance. If distance
- * computed in this function is smaller, then this distance is set to the new
- * one.
- * \param[in] (&xlo,&ylo,&zlo) the lower coordinates of the subregion being
- * considered.
- * \param[in] (&xhi,&yhi,&zhi) the upper coordinates of the subregion being
- * considered.
- * \param[in] (ti,tj,tk) the coordinates of the block. */
-template<class r_option>
-inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk) {
-	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
-	fpoint radsq,temp;
-	if(ti>0) {temp=boxx*ti-xhi;radsq=temp*temp;}
-	else if(ti<0) {temp=xlo-boxx*(1+ti);radsq=temp*temp;}
-	else radsq=0;
-
-	if(tj>0) {temp=boxy*tj-yhi;radsq+=temp*temp;}
-	else if(tj<0) {temp=ylo-boxy*(1+tj);radsq+=temp*temp;}
-
-	if(tk>0) {temp=boxz*tk-zhi;radsq+=temp*temp;}
-	else if(tk<0) {temp=zlo-boxz*(1+tk);radsq+=temp*temp;}
-
-	if(radsq<minr) minr=radsq;
-}
-
-/** Container destructor - free memory. */
+/** The container destructor frees the dynamically allocated memory. */
 template<class r_option>
 container_base<r_option>::~container_base() {
 	int l;
@@ -138,12 +56,12 @@ container_base<r_option>::~container_base() {
 	for(l=0;l<nxyz;l++) delete [] id[l];
 	delete [] p;
 	delete [] id;
-	delete [] mem;
-	delete [] co;
-	delete [] mask;
-	delete [] sl;
 	delete [] walls;
 	delete [] mrad;
+	delete [] sl;
+	delete [] mask;
+	delete [] mem;
+	delete [] co;
 }
 
 /** Dumps all the particle positions and identifies to a file.
@@ -178,7 +96,8 @@ void container_base<r_option>::draw_particles(const char *filename) {
 	os.close();
 }
 
-/** Dumps all the particle positions in the POV-Ray format. */
+/** Dumps all the particle positions in the POV-Ray format.
+ * \param[in] os an output stream to write to. */
 template<class r_option>
 void container_base<r_option>::draw_particles_pov(ostream &os) {
 	int l,c;
@@ -211,7 +130,9 @@ void container_base<r_option>::draw_particles_pov(const char *filename) {
 	os.close();
 }
 
-/** Put a particle into the correct region of the container. */
+/** Put a particle into the correct region of the container. 
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle. */
 template<class r_option>
 void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
 	if(x>ax&&y>ay&&z>az) {
@@ -228,9 +149,9 @@ void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
 }
 
 /** Put a particle into the correct region of the container.
- * \param[in] n The numerical ID of the inserted particle.
- * \param[in] (x,y,z) The position vector of the inserted particle.
- * \param[in] r The radius of the particle.*/
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle.
+ * \param[in] r the radius of the particle.*/
 template<class r_option>
 void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
 	if(x>ax&&y>ay&&z>az) {
@@ -246,7 +167,8 @@ void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
 	}
 }
 
-/** Increase memory for a particular region. */
+/** Increase memory for a particular region.
+ * \param[in] i the index of the region to reallocate. */
 template<class r_option>
 void container_base<r_option>::add_particle_memory(int i) {
 	int *idp;fpoint *pp;
@@ -284,7 +206,8 @@ inline void container_base<r_option>::add_list_memory() {
 	delete [] sl;sl=ps;
 }
 
-/** Import a list of particles from standard input. */
+/** Import a list of particles from standard input.
+ * \param[in] is a standard input stream to read from. */
 template<class r_option>
 void container_base<r_option>::import(istream &is) {
 	radius.import(is);
@@ -299,7 +222,7 @@ inline void container_base<r_option>::import() {
 
 /** An overloaded version of the import routine, that reads in particles from
  * a particular file.
- * \param[in] filename The name of the file to read from. */
+ * \param[in] filename the name of the file to read from. */
 template<class r_option>
 inline void container_base<r_option>::import(const char *filename) {
 	ifstream is;
@@ -327,9 +250,12 @@ void container_base<r_option>::clear() {
 	radius.clear_max();
 }
 
-/** Computes the Voronoi cells for all particles within a box with corners
- * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
- * that can be read by gnuplot. */
+/** Computes the Voronoi cells for all particles within a rectangular box,
+ * and saves the output in gnuplot format.
+ * \param[in] filename the name of the file to write to.
+ * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
+ * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
+ * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box. */
 template<class r_option>
 void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
@@ -350,16 +276,21 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xm
 	os.close();
 }
 
-/** If only a filename is supplied to draw_cells_gnuplot(), then assume that we are
- * calculating the entire simulation region. */
+/** An overloaded version of draw_cells_gnuplot() that computes the Voronoi
+ * cells for the entire simulation region and saves the output in gnuplot
+ * format.
+ * \param[in] filename the name of the file to write to. */
 template<class r_option>
 void container_base<r_option>::draw_cells_gnuplot(const char *filename) {
 	draw_cells_gnuplot(filename,ax,bx,ay,by,az,bz);
 }
 
-/** Computes the Voronoi cells for all particles within a box with corners
- * (xmin,ymin,zmin) and (xmax,ymax,zmax), and saves the output in a format
- * that can be read by gnuplot.*/
+/** Computes the Voronoi cells for all particles within a rectangular box,
+ * and saves the output in POV-Ray format.
+ * \param[in] filename the name of the file to write to.
+ * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
+ * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
+ * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box. */
 template<class r_option>
 void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
@@ -381,16 +312,18 @@ void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,f
 	os.close();
 }
 
-/** If only a filename is supplied to draw_cells_pov(), then assume that we are
- * calculating the entire simulation region.*/
+/** An overloaded version of draw_cells_pov() that computes the Voronoi
+ * cells for the entire simulation region and saves the output in POV-Ray
+ * format.
+ * \param[in] filename the name of the file to write to. */
 template<class r_option>
 void container_base<r_option>::draw_cells_pov(const char *filename) {
 	draw_cells_pov(filename,ax,bx,ay,by,az,bz);
 }
 
-/** This function computes all the cells in the container, but does nothing
+/** Computes all of the Voronoi cells in the container, but does nothing
  * with the output. It is useful for measuring the pure computation time
- * of the Voronoi algorithm, without any extraneous calculations, such as
+ * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 template<class r_option>
 void container_base<r_option>::compute_all_cells() {
@@ -401,29 +334,26 @@ void container_base<r_option>::compute_all_cells() {
 	}
 }
 
-
-/** Computes the Voronoi volumes for all the particles, and stores the
- * results according to the particle label in the fpoint array bb.*/
+/** Computes the Voronoi volumes for all the particles, and stores the results
+ * according to the particle ID numbers in a floating point array that the user
+ * has supplied. No bounds checking on the array is performed, so it is up to
+ * the user to ensure that the array is large enough to store the particles.
+ * \param[in] bb a pointer to an array to store the volumes. */
 template<class r_option>
 void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
 	int i,j,k,ijk=0,q;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
-		for(q=0;q<co[ijk];q++) {
-			if (compute_cell(c,i,j,k,ijk,q)) {
-				bb[id[ijk][q]]=c.volume();
-			} else {
-				bb[id[ijk][q]]=0;
-			}
-		}
+		for(q=0;q<co[ijk];q++) bb[id[ijk][q]]=compute_cell(c,i,j,k,ijk,q)?c.volume():0;
 	}
 }
 
 /** Computes the local packing fraction at a point, by summing the volumes
  * of all particles within a test sphere, and dividing by the sum of their
- * Voronoi volumes that were previous computed using the store_cell_volumes()
+ * Voronoi volumes that were previously computed using the store_cell_volumes()
  * function.
- * \param[in] *bb an array holding the Voronoi volumes of the particles.
+ * \param[in] bb a pointer to an array holding the Voronoi volumes of the
+ *               particles.
  * \param[in] (cx,cy,cz) the center of the test sphere.
  * \param[in] r the radius of the test sphere. */
 template<class r_option>
@@ -446,13 +376,13 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy
 	return vvol>tolerance?pvol/vvol*4.1887902047863909846168578443726:0;
 }
 
-/** Computes the local packing fraction at a point, by summing the volumes
- * of all particles within test box, and dividing by the sum of their
- * Voronoi volumes that were previous computed using the store_cell_volumes()
- * function.
- * \param[in] *bb an array holding the Voronoi volumes of the particles.
- * \param[in] (xmin,ymin,zmin) the minimum coordinates of the box.
- * \param[in] (xmax,ymax,zmax) the maximum coordinates of the box. */
+/** Computes the local packing fraction at a point, by summing the volumes of
+ * all particles within test box, and dividing by the sum of their Voronoi
+ * volumes that were previous computed using the store_cell_volumes() function.
+ * \param[in] bb an array holding the Voronoi volumes of the particles.
+ * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
+ * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
+ * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box. */
 template<class r_option>
 fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	voropp_loop l1(this);
@@ -473,8 +403,10 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint 
 	return vvol>tolerance?pvol/vvol*4.1887902047863909846168578443726:0;
 }
 
-/** Computes the Voronoi volumes for all the particles, and stores the
- * results according to the particle label in the fpoint array bb.*/
+/** Calculates all of the Voronoi cells and sums their volumes. In most cases
+ * without walls, the sum of the Voronoi cell volumes should equal the volume
+ * of the container to numerical precision.
+ * \return the sum of all of the computed Voronoi volumes. */
 template<class r_option>
 fpoint container_base<r_option>::sum_cell_volumes() {
 	voronoicell c;
@@ -491,8 +423,8 @@ fpoint container_base<r_option>::sum_cell_volumes() {
  * similar to the standard C printf() routine. Full information about the
  * control sequences is available at http://math.lbl.gov/voro++/doc/custom.html
  * \param[in] format the format of the output lines, using control sequences to
- * denote the different cell statistics.
- * \param[in] &os an open output stream to write to. */
+ *                   denote the different cell statistics.
+ * \param[in] os an open output stream to write to. */
 template<class r_option>
 void container_base<r_option>::print_all_custom(const char *format,ostream &os) {
 	int fp=0;
@@ -523,7 +455,7 @@ void container_base<r_option>::print_all_custom(const char *format,ostream &os) 
 
 /** An overloaded version of print_all_custom() that prints to standard output.
  * \param[in] format the format of the output lines, using control sequences to
- * denote the different cell statistics. */
+ *                   denote the different cell statistics. */
 template<class r_option>
 void container_base<r_option>::print_all_custom(const char *format) {
 	print_all_custom(format,cout);
@@ -532,8 +464,8 @@ void container_base<r_option>::print_all_custom(const char *format) {
 /** An overloaded version of print_all_custom(), which outputs the result to a
  * particular file.
  * \param[in] format the format of the output lines, using control sequences to
- * denote the different cell statistics.
- * \param[in] filename The name of the file to write to. */
+ *                   denote the different cell statistics.
+ * \param[in] filename the name of the file to write to. */
 template<class r_option>
 void container_base<r_option>::print_all_custom(const char *format,const char *filename) {
 	ofstream os;
@@ -545,10 +477,10 @@ void container_base<r_option>::print_all_custom(const char *format,const char *f
 /** The internal part of the print_all_custom() routine, that can be called
  * with either a voronoicell class (if no neighbor computations are needed) or
  * with a voronoicell_neighbor class (if neighbor computations are needed).
- * \param[in] &c a Voronoi cell object to use for the computation.
+ * \param[in,out] c a Voronoi cell object to use for the computation.
  * \param[in] format the format of the output lines, using control sequences to
- * denote the different cell statistics.
- * \param[in] &os an open output stream to write to. */
+ *                   denote the different cell statistics.
+ * \param[in] os an open output stream to write to. */
 template<class r_option>
 template<class n_option>
 void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os) {
@@ -625,8 +557,8 @@ void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_opti
  * them. The routine can be called with either a voronoicell class (if no
  * neighbor computations are needed) or with a voronoicell_neighbor class (if
  * neighbor computations are needed).
- * \param[in] &c a Voronoi cell object to use for the computation.
- * \param[in] &os an open output stream to write to. */
+ * \param[in,out] c a Voronoi cell object to use for the computation.
+ * \param[in] os an open output stream to write to. */
 template<class r_option>
 template<class n_option>
 inline void container_base<r_option>::print_all_internal(voronoicell_base<n_option> &c,ostream &os) {
@@ -648,7 +580,7 @@ inline void container_base<r_option>::print_all_internal(voronoicell_base<n_opti
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output.
- * \param[in] os The output stream to print to.*/
+ * \param[in] os the output stream to print to.*/
 template<class r_option>
 void container_base<r_option>::print_all(ostream &os) {
 	voronoicell c;
@@ -664,7 +596,7 @@ void container_base<r_option>::print_all() {
 
 /** An overloaded version of print_all(), which outputs the result to a particular
  * file.
- * \param[in] filename The name of the file to write to. */
+ * \param[in] filename the name of the file to write to. */
 template<class r_option>
 inline void container_base<r_option>::print_all(const char* filename) {
 	voronoicell c;
@@ -676,7 +608,7 @@ inline void container_base<r_option>::print_all(const char* filename) {
 
 /** Prints a list of all particle labels, positions, Voronoi volumes, and a list
  * of neighboring particles to an output stream.
- * \param[in] os The output stream to print to.*/
+ * \param[in] os the output stream to print to.*/
 template<class r_option>
 void container_base<r_option>::print_all_neighbor(ostream &os) {
 	voronoicell_neighbor c;
@@ -693,7 +625,7 @@ void container_base<r_option>::print_all_neighbor() {
 
 /** An overloaded version of print_all_neighbor(), which outputs the result to a
  * particular file
- * \param[in] filename The name of the file to write to. */
+ * \param[in] filename the name of the file to write to. */
 template<class r_option>
 inline void container_base<r_option>::print_all_neighbor(const char* filename) {
 	voronoicell_neighbor c;
@@ -707,7 +639,12 @@ inline void container_base<r_option>::print_all_neighbor(const char* filename) {
  * coordinates, this is set by the position of the walls. For periodic
  * coordinates, the space is equally divided in either direction from the
  * particle's initial position. That makes sense since those boundaries would
- * be made by the neighboring periodic images of this particle. */
+ * be made by the neighboring periodic images of this particle. It also applies
+ * plane cuts made by any walls that have been added to the container.
+ * \param[in,out] c a reference to a voronoicell object.
+ * \param[in] (x,y,z) the position of the particle.
+ * \return False if the plane cuts applied by walls completely removed the
+ *         cell, true otherwise. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
@@ -716,17 +653,15 @@ inline bool container_base<r_option>::initialize_voronoicell(voronoicell_base<n_
 	if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 	if(zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
 	c.init(x1,x2,y1,y2,z1,z2);
-	for(int j=0;j<wall_number;j++) {
-		if (!(walls[j]->cut_cell(c,x,y,z))) return false;
-	}
+	for(int j=0;j<wall_number;j++) if(!(walls[j]->cut_cell(c,x,y,z))) return false;
 	return true;
 }
 
 /** This function tests to see if a given vector lies within the container
  * bounds and any walls.
- * \param[in] (x,y,z) The position vector to be tested.
+ * \param[in] (x,y,z) the position vector to be tested.
  * \return True if the point is inside the container, false if the point is
- * outside. */
+ *         outside. */
 template<class r_option>
 bool container_base<r_option>::point_inside(fpoint x,fpoint y,fpoint z) {
 	if(x<ax||x>bx||y<ay||y>by||z<az||z>bz) return false;
@@ -736,9 +671,9 @@ bool container_base<r_option>::point_inside(fpoint x,fpoint y,fpoint z) {
 /** This function tests to see if a give vector lies within the walls that have
  * been added to the container, but does not specifically check whether the
  * vector lies within the container bounds.
- * \param[in] (x,y,z) The position vector to be tested.
+ * \param[in] (x,y,z) the position vector to be tested.
  * \return True if the point is inside the container, false if the point is
- * outside. */
+ *         outside. */
 template<class r_option>
 bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
 	for(int j=0;j<wall_number;j++) if(!walls[j]->point_inside(x,y,z)) return false;
@@ -752,13 +687,13 @@ bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
  * for cases when the particles are not homogeneously distributed, or where
  * parts of the container might not be filled. In that case, the spheres may
  * grow very large before being cut off, leading to poor efficiency.
- * \param[in] &c a reference to a voronoicell object.
+ * \param[in,out] c a reference to a voronoicell object.
  * \param[in] (i,j,k) the coordinates of the block that the test particle is
- * in.
+ *                    in.
  * \param[in] ijk the index of the block that the test particle is in, set to
- * i+nx*(j+ny*k).
+ *                i+nx*(j+ny*k).
  * \param[in] s the index of the particle within the test block.
- * \param[in] (x,y,z) The coordinates of the particle. */
+ * \param[in] (x,y,z) the coordinates of the particle. */
 template<class r_option>
 template<class n_option>
 bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
@@ -794,11 +729,11 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 
 /** A overloaded version of compute_cell_sphere(), that sets up the x, y, and z
  * variables.
- * \param[in] &c a reference to a voronoicell object.
+ * \param[in,out] c a reference to a voronoicell object.
  * \param[in] (i,j,k) the coordinates of the block that the test particle is
- * in.
+ *                    in.
  * \param[in] ijk the index of the block that the test particle is in, set to
- * i+nx*(j+ny*k).
+ *                i+nx*(j+ny*k).
  * \param[in] s the index of the particle within the test block. */
 template<class r_option>
 template<class n_option>
@@ -810,11 +745,11 @@ inline bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_opt
 /** A overloaded version of compute_cell, that sets up the x, y, and z variables.
  * It can be run by the user, and it is also called multiple times by the
  * functions print_all(), store_cell_volumes(), and the output routines.
- * \param[in] &c a reference to a voronoicell object.
+ * \param[in,out] c a reference to a voronoicell object.
  * \param[in] (i,j,k) the coordinates of the block that the test particle is
- * in.
+ *                    in.
  * \param[in] ijk the index of the block that the test particle is in, set to
- * i+nx*(j+ny*k).
+ *                i+nx*(j+ny*k).
  * \param[in] s the index of the particle within the test block. */
 template<class r_option>
 template<class n_option>
@@ -839,14 +774,13 @@ inline bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c
  * possibly intersect the cell. For blocks that intersect the cell, it tests
  * the particles in that block, and then adds the block neighbors to the list
  * of potential places to consider.
- * \param[in] &c a reference to a voronoicell object.
+ * \param[in,out] c a reference to a voronoicell object.
  * \param[in] (i,j,k) the coordinates of the block that the test particle is
- * in.
+ *                    in.
  * \param[in] ijk the index of the block that the test particle is in, set to
- * i+nx*(j+ny*k).
+ *                i+nx*(j+ny*k).
  * \param[in] s the index of the particle within the test block.
- * \param[in] (x,y,z) The coordinates of the particle.
- * \param[in] s the index of the particle within the test block. */
+ * \param[in] (x,y,z) the coordinates of the particle. */
 template<class r_option>
 template<class n_option>
 bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
@@ -885,15 +819,14 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		l++;
 	}
 
-	// Now compute the maximum distance squared from the cell
-	// center to a vertex. This is used to cut off the calculation
-	// since we only need to test out to twice this range.
+	// Now compute the maximum distance squared from the cell center to a
+	// vertex. This is used to cut off the calculation since we only need
+	// to test out to twice this range.
 	mrs=c.max_radius_squared();
 
-	// Now compute the fractional position of the particle within
-	// its region and store it in (fx,fy,fz). We use this to
-	// compute an index (si,sj,sk) of which subregion the particle
-	// is within.
+	// Now compute the fractional position of the particle within its
+	// region and store it in (fx,fy,fz). We use this to compute an index
+	// (si,sj,sk) of which subregion the particle is within.
 	unsigned int m1,m2;
 	fpoint fx=x-ax-boxx*i,fy=y-ay-boxy*j,fz=z-az-boxz*k;
 	si=int(fx*xsp*fgrid);sj=int(fy*ysp*fgrid);sk=int(fz*zsp*fgrid);
@@ -943,7 +876,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		}
 
 		// If mrs is less than the minimum distance to any untested
-		// block, then we are done.
+		// block, then we are done
 		if(mrs<radius.cutoff(radp[g])) return true;
 		g++;
 
@@ -971,7 +904,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
 
 		// Now compute which region we are going to loop over, adding a
-		// displacement for the periodic cases.
+		// displacement for the periodic cases
 		di+=i;dj+=j;dk+=k;
 		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
 		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;dj-=ny;} else qy=0;}
@@ -1036,7 +969,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		}
 
 		// If mrs is less than the minimum distance to any untested
-		// block, then we are done.
+		// block, then we are done
 		if(mrs<radius.cutoff(radp[g])) return true;
 		g++;
 
@@ -1068,7 +1001,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if(compute_min_max_radius(di,dj,dk,fx,fy,fz,gxs,gys,gzs,crs,mrs)) continue;
 
 		// Now compute which region we are going to loop over, adding a
-		// displacement for the periodic cases.
+		// displacement for the periodic cases
 		di+=i;dj+=j;dk+=k;
 		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
 		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;dj-=ny;} else qy=0;}
@@ -1130,7 +1063,8 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	// off the list
 	while(s_start!=s_end) {
 
-		// If we reached the end of the list memory loop back to the start
+		// If we reached the end of the list memory loop back to the
+		// start
 		if(s_start==s_size) s_start=0;
 
 		// Read in a block off the list, and compute the upper and lower
@@ -1221,15 +1155,15 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		}
 
 		// Now compute the region that we are going to test over, and
-		// set a displacement vector for the periodic cases.
+		// set a displacement vector for the periodic cases
 		if(xperiodic) {ei=i+di-nx;if(ei<0) {qx=ax-bx;ei+=nx;} else if(ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
 		if(yperiodic) {ej=j+dj-ny;if(ej<0) {qy=ay-by;ej+=ny;} else if(ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
 		if(zperiodic) {ek=k+dk-nz;if(ek<0) {qz=az-bz;ek+=nz;} else if(ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
 		eijk=ei+nx*(ej+ny*ek);
 
-		// Loop over all the elements in the block to test for cuts.
-		// It would be possible to exclude some of these cases by testing
-		// against mrs, but I am not convinced that this will save time.
+		// Loop over all the elements in the block to test for cuts. It
+		// would be possible to exclude some of these cases by testing
+		// against mrs, but this will probably not save time.
 		for(l=0;l<co[eijk];l++) {
 			x1=p[eijk][sz*l]+qx-x;
 			y1=p[eijk][sz*l+1]+qy-y;
@@ -1242,7 +1176,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
 
 		// Test the neighbors of the current block, and add them to the
-		// block list if they haven't already been tested.
+		// block list if they haven't already been tested
 		dijk=di+hx*(dj+hy*dk);
 		if(di>0) if(mask[dijk-1]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-1]=mv;sl[s_end++]=di-1;sl[s_end++]=dj;sl[s_end++]=dk;}
 		if(dj>0) if(mask[dijk-hx]!=mv) {if(s_end==s_size) s_end=0;mask[dijk-hx]=mv;sl[s_end++]=di;sl[s_end++]=dj-1;sl[s_end++]=dk;}
@@ -1258,11 +1192,11 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 /** This function checks to see whether a particular block can possibly have
  * any intersection with a Voronoi cell, for the case when the closest point
  * from the cell center to the block is at a corner.
- * \param[in] &c a reference to a Voronoi cell.
- * \param[in] (xl,yl,zl) the relative coordinates of the corner of the block closest to
- * the cell center.
- * \param[in] (xh,yh,zh) the relative coordinates of the corner of the block furthest
- * away from the cell center.
+ * \param[in,out] c a reference to a Voronoi cell.
+ * \param[in] (xl,yl,zl) the relative coordinates of the corner of the block
+ *                       closest to the cell center.
+ * \param[in] (xh,yh,zh) the relative coordinates of the corner of the block
+ *                       furthest away from the cell center.
  * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
@@ -1280,12 +1214,13 @@ inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,
  * any intersection with a Voronoi cell, for the case when the closest point
  * from the cell center to the block is on an edge which points along the x
  * direction.
- * \param[in] &c a reference to a Voronoi cell.
- * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the block.
- * \param[in] (yl,zl) the relative y and z coordinates of the corner of the block closest to
- * the cell center.
- * \param[in] (yh,zh) the relative y and z coordinates of the corner of the block furthest
- * away from the cell center.
+ * \param[in,out] c a reference to a Voronoi cell.
+ * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the
+ *                    block.
+ * \param[in] (yl,zl) the relative y and z coordinates of the corner of the
+ *                    block closest to the cell center.
+ * \param[in] (yh,zh) the relative y and z coordinates of the corner of the
+ *                    block furthest away from the cell center.
  * \return false if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
@@ -1303,13 +1238,14 @@ inline bool container_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,
  * any intersection with a Voronoi cell, for the case when the closest point
  * from the cell center to the block is on an edge which points along the y
  * direction.
- * \param[in] &c a reference to a Voronoi cell.
- * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the block.
- * \param[in] (xl,zl) the relative x and z coordinates of the corner of the block closest to
- * the cell center.
- * \param[in] (xh,zh) the relative x and z coordinates of the corner of the block furthest
- * away from the cell center.
- * \return false if the block may intersect, true if does not. */
+ * \param[in,out] c a reference to a Voronoi cell.
+ * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the
+ *                    block.
+ * \param[in] (xl,zl) the relative x and z coordinates of the corner of the
+ *                    block closest to the cell center.
+ * \param[in] (xh,zh) the relative x and z coordinates of the corner of the
+ *                    block furthest away from the cell center.
+ * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
@@ -1326,13 +1262,13 @@ inline bool container_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,
  * any intersection with a Voronoi cell, for the case when the closest point
  * from the cell center to the block is on an edge which points along the z
  * direction.
- * \param[in] &c a reference to a Voronoi cell.
+ * \param[in,out] c a reference to a Voronoi cell.
  * \param[in] (z0,z1) the minimum and maximum relative z coordinates of the block.
- * \param[in] (xl,yl) the relative x and y coordinates of the corner of the block closest to
- * the cell center.
- * \param[in] (xh,yh) the relative x and y coordinates of the corner of the block furthest
- * away from the cell center.
- * \return false if the block may intersect, true if does not. */
+ * \param[in] (xl,yl) the relative x and y coordinates of the corner of the
+ *                    block closest to the cell center.
+ * \param[in] (xh,yh) the relative x and y coordinates of the corner of the
+ *                    block furthest away from the cell center.
+ * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
@@ -1348,11 +1284,13 @@ inline bool container_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,
 /** This function checks to see whether a particular block can possibly have
  * any intersection with a Voronoi cell, for the case when the closest point
  * from the cell center to the block is on a face aligned with the x direction.
- * \param[in] &c a reference to a Voronoi cell.
+ * \param[in,out] c a reference to a Voronoi cell.
  * \param[in] xl the minimum distance from the cell center to the face.
- * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the block.
- * \param[in] (z0,z1) the minimum and maximum relative z coordinates of the block.
- * \return false if the block may intersect, true if does not. */
+ * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the
+ *                    block.
+ * \param[in] (z0,z1) the minimum and maximum relative z coordinates of the
+ *                    block.
+ * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
@@ -1366,11 +1304,13 @@ inline bool container_base<r_option>::face_x_test(voronoicell_base<n_option> &c,
 /** This function checks to see whether a particular block can possibly have
  * any intersection with a Voronoi cell, for the case when the closest point
  * from the cell center to the block is on a face aligned with the y direction.
- * \param[in] &c a reference to a Voronoi cell.
+ * \param[in,out] c a reference to a Voronoi cell.
  * \param[in] yl the minimum distance from the cell center to the face.
- * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the block.
- * \param[in] (z0,z1) the minimum and maximum relative z coordinates of the block.
- * \return false if the block may intersect, true if does not. */
+ * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the
+ *                    block.
+ * \param[in] (z0,z1) the minimum and maximum relative z coordinates of the
+ *                    block.
+ * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
@@ -1384,11 +1324,13 @@ inline bool container_base<r_option>::face_y_test(voronoicell_base<n_option> &c,
 /** This function checks to see whether a particular block can possibly have
  * any intersection with a Voronoi cell, for the case when the closest point
  * from the cell center to the block is on a face aligned with the z direction.
- * \param[in] &c a reference to a Voronoi cell.
+ * \param[in,out] c a reference to a Voronoi cell.
  * \param[in] zl the minimum distance from the cell center to the face.
- * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the block.
- * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the block.
- * \return false if the block may intersect, true if does not. */
+ * \param[in] (x0,x1) the minimum and maximum relative x coordinates of the
+ *                    block.
+ * \param[in] (y0,y1) the minimum and maximum relative y coordinates of the
+ *                    block.
+ * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
@@ -1399,8 +1341,9 @@ inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
-/** Creates a voropp_loop object, by pulling the necessary constants about the container
- * geometry from a pointer to the current container class. */
+/** Creates a voropp_loop object, by pulling the necessary constants about the
+ * container geometry from a pointer to the current container class.
+ * \param[in] q a pointer to the current container class. */
 template<class r_option>
 voropp_loop::voropp_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
 	xsp(q->xsp),ysp(q->ysp),zsp(q->zsp),
@@ -1408,9 +1351,14 @@ voropp_loop::voropp_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->b
 	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz),
 	xperiodic(q->xperiodic),yperiodic(q->yperiodic),zperiodic(q->zperiodic) {}
 
-/** Initializes a voropp_loop object, by finding all blocks which are within a distance
- * r of the vector (vx,vy,vz). It returns the first block which is to be
- * tested, and sets the periodic displacement vector (px,py,pz) accordingly. */
+/** Initializes a voropp_loop object, by finding all blocks which are within a
+ * given sphere. It calculates the index of the first block that needs to be
+ * tested and sets the periodic displacement vector accordingly.
+ * \param[in] (vx,vy,vz) the position vector of the center of the sphere.
+ * \param[in] r the radius of the sphere.
+ * \param[out] (px,py,pz) the periodic displacement vector for the first block
+ *                        to be tested.
+ * \return The index of the first block to be tested. */
 inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
@@ -1441,10 +1389,15 @@ inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,f
 	return s;
 }
 
-/** Initializes a voropp_loop object, by finding all blocks which overlap the box with
- * corners (xmin,ymin,zmin) and (xmax,ymax,zmax). It returns the first block
- * which is to be tested, and sets the periodic displacement vector (px,py,pz)
- * accordingly. */
+/** Initializes a voropp_loop object, by finding all blocks which overlap a given
+ * rectangular box. It calculates the index of the first block that needs to be
+ * tested and sets the periodic displacement vector (px,py,pz) accordingly.
+ * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
+ * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
+ * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box.
+ * \param[out] (px,py,pz) the periodic displacement vector for the first block
+ *                        to be tested.
+ * \return The index of the first block to be tested. */
 inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
@@ -1476,7 +1429,10 @@ inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpo
 }
 
 /** Returns the next block to be tested in a loop, and updates the periodicity
- * vector if necessary. */
+ * vector if necessary.
+ * \param[in,out] (px,py,pz) the current block on entering the function, which
+ *                           is updated to the next block on exiting the
+ *                           function. */
 inline int voropp_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 	if(i<bi) {
 		i++;
@@ -1500,18 +1456,20 @@ inline int voropp_loop::step_int(fpoint a) {
 	return a<0?int(a)-1:int(a);
 }
 
-/** Custom mod function, that gives consistent stepping for negative numbers. */
+/** Custom modulo function, that gives consistent stepping for negative
+ * numbers. */
 inline int voropp_loop::step_mod(int a,int b) {
 	return a>=0?a%b:b-1-(b-1-a)%b;
 }
 
-/** Custom div function, that gives consistent stepping for negative numbers. */
+/** Custom integer division function, that gives consistent stepping for
+ * negative numbers. */
 inline int voropp_loop::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 }
 
 /** Adds a wall to the container.
- * \param[in] &w a wall object to be added.*/
+ * \param[in] w a wall object to be added.*/
 template<class r_option>
 void container_base<r_option>::add_wall(wall& w) {
 	if(wall_number==current_wall_size) {
@@ -1526,7 +1484,8 @@ void container_base<r_option>::add_wall(wall& w) {
 	walls[wall_number++]=&w;
 }
 
-/** Sets the radius of the jth particle in region i to r, and updates the maximum particle radius.
+/** Sets the radius of the jth particle in region i to r, and updates the
+ * maximum particle radius.
  * \param[in] i the region of the particle to consider.
  * \param[in] j the number of the particle within the region.
  * \param[in] r the radius to set. */
@@ -1542,7 +1501,7 @@ inline void radius_poly::clear_max() {
 
 /** Imports a list of particles from an input stream for the monodisperse case
  * where no radius information is expected.
- * \param[in] &is an input stream to read from. */
+ * \param[in] is an input stream to read from. */
 inline void radius_mono::import(istream &is) {
 	int n;fpoint x,y,z;
 	is >> n >> x >> y >> z;
@@ -1554,7 +1513,7 @@ inline void radius_mono::import(istream &is) {
 
 /** Imports a list of particles from an input stream for the polydisperse case,
  * where both positions and particle radii are both stored.
- * \param[in] &is an input stream to read from. */
+ * \param[in] is an input stream to read from. */
 inline void radius_poly::import(istream &is) {
 	int n;fpoint x,y,z,r;
 	is >> n >> x >> y >> z >> r;
@@ -1564,9 +1523,9 @@ inline void radius_poly::import(istream &is) {
 	}
 }
 
-/** Initializes the radius_poly class for a new Voronoi cell calculation,
- * by computing the radial cut-off value, based on the current particle's
- * radius and the maximum radius of any particle in the packing.
+/** Initializes the radius_poly class for a new Voronoi cell calculation, by
+ * computing the radial cut-off value, based on the current particle's radius
+ * and the maximum radius of any particle in the packing.
  * \param[in] ijk the region to consider.
  * \param[in] s the number of the particle within the region. */
 inline void radius_poly::init(int ijk,int s) {
@@ -1575,19 +1534,19 @@ inline void radius_poly::init(int ijk,int s) {
 	crad*=crad;
 }
 
-/** This routine is called when deciding when to terminate the computation
- * of a Voronoi cell. For the Voronoi radical tessellation for a polydisperse
- * case, this routine multiplies the cutoff value by the scaling factor that
- * was precomputed in the init() routine.
+/** This routine is called when deciding when to terminate the computation of a
+ * Voronoi cell. For the Voronoi radical tessellation for a polydisperse case,
+ * this routine multiplies the cutoff value by the scaling factor that was
+ * precomputed in the init() routine.
  * \param[in] lrs a cutoff radius for the cell computation.
  * \return The value scaled by the factor mul. */
 inline fpoint radius_poly::cutoff(fpoint lrs) {
 	return mul*lrs;
 }
 
-/** This routine is called when deciding when to terminate the computation
- * of a Voronoi cell. For the monodisperse case, this routine just returns
- * the same value that is passed to it.
+/** This routine is called when deciding when to terminate the computation of a
+ * Voronoi cell. For the monodisperse case, this routine just returns the same
+ * value that is passed to it.
  * \param[in] lrs a cutoff radius for the cell computation.
  * \return The same value passed to it. */
 inline fpoint radius_mono::cutoff(fpoint lrs) {
@@ -1595,7 +1554,7 @@ inline fpoint radius_mono::cutoff(fpoint lrs) {
 }
 
 /** Prints the radius of particle, by just supplying a generic value of "s".
- * \param[in] &os the output stream to write to.
+ * \param[in] os the output stream to write to.
  * \param[in] l the region to consider.
  * \param[in] c the number of the particle within the region. */
 inline void radius_mono::rad(ostream &os,int l,int c) {
@@ -1603,20 +1562,19 @@ inline void radius_mono::rad(ostream &os,int l,int c) {
 }
 
 /** Prints the radius of a particle to an open output stream.
- * \param[in] &os the output stream to write to.
+ * \param[in] os the output stream to write to.
  * \param[in] l the region to consider.
  * \param[in] c the number of the particle within the region. */
 inline void radius_poly::rad(ostream &os,int l,int c) {
 	os << cc->p[l][4*c+3];
 }
 
-/** Returns the scaled volume of a particle, which is always set
- * to 0.125 for the monodisperse case where particles are taken
- * to have unit diameter.
+/** Returns the scaled volume of a particle, which is always set to 0.125 for
+ * the monodisperse case where particles are taken to have unit diameter.
  * \param[in] ijk the region to consider.
  * \param[in] s the number of the particle within the region.
- * \return The cube of the radius of the particle, which is 0.125
- * in this case. */
+ * \return The cube of the radius of the particle, which is 0.125 in this case.
+ */
 inline fpoint radius_mono::volume(int ijk,int s) {
 	return 0.125;
 }
@@ -1650,28 +1608,114 @@ inline fpoint radius_mono::scale(fpoint rs,int t,int q) {
 }
 
 /** Prints the radius of a particle to an open file stream.
- * \param[in] &os an open file stream.
+ * \param[in] os an open file stream.
  * \param[in] ijk the region to consider.
  * \param[in] q the number of the particle within the region.
  * \param[in] later A boolean value to determine whether or not to write a
- * space character before the first entry. */
+ *                  space character before the first entry. */
 inline void radius_poly::print(ostream &os,int ijk,int q,bool later) {
 	if(later) os << " ";
 	os << cc->p[ijk][4*q+3];
+}
+
+/** This function is called during container construction. The routine scans
+ * all of the worklists in the wl[] array. For a given worklist of blocks
+ * labeled \f$w_1\f$ to \f$w_n\f$, it computes a sequence \f$r_0\f$ to
+ * \f$r_n\f$ so that $r_i$ is the minimum distance to all the blocks
+ * \f$w_{j}\f$ where \f$j>i\f$ and all blocks outside the worklist. The values
+ * of \f$r_n\f$ is calculated first, as the minimum distance to any block in
+ * the shell surrounding the worklist. The \f$r_i\f$ are then computed in
+ * reverse order by considering the distance to \f$w_{i+1}\f$.
+ */
+template<class r_option>
+void container_base<r_option>::initialize_radii() {
+	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
+	const fpoint xstep=(bx-ax)/nx/fgrid;
+	const fpoint ystep=(by-ay)/ny/fgrid;
+	const fpoint zstep=(bz-az)/nz/fgrid;
+	int i,j,k,lx,ly,lz,l=0,q;
+	unsigned int *e=const_cast<unsigned int*> (wl);
+	fpoint xlo,ylo,zlo,xhi,yhi,zhi,minr;fpoint *radp=mrad;
+	unsigned int f;
+	for(zlo=0,zhi=zstep,lz=0;lz<hgrid;zlo=zhi,zhi+=zstep,lz++) {
+		for(ylo=0,yhi=ystep,ly=0;ly<hgrid;ylo=yhi,yhi+=ystep,ly++) {
+			for(xlo=0,xhi=xstep,lx=0;lx<hgrid;xlo=xhi,xhi+=xstep,l++,lx++) {
+				minr=large_number;
+				for(q=e[0]+1;q<seq_length;q++) {
+					f=e[q];
+					i=(f&127)-64;
+					j=(f>>7&127)-64;
+					k=(f>>14&127)-64;
+					if((f&b2)==b2) {
+						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i-1,j,k);
+						if((f&b1)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
+					} else if((f&b1)==b1) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i+1,j,k);
+					if((f&b4)==b4) {
+						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j-1,k);
+						if((f&b3)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
+					} else if((f&b3)==b3) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j+1,k);
+					if((f&b6)==b6) {
+						compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k-1);
+						if((f&b5)==0) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
+					} else if((f&b5)==b5) compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k+1);
+				}
+				q--;
+				while(q>0) {
+					radp[q]=minr;
+					f=e[q];
+					i=(f&127)-64;
+					j=(f>>7&127)-64;
+					k=(f>>14&127)-64;
+					compute_minimum(minr,xlo,xhi,ylo,yhi,zlo,zhi,i,j,k);
+					q--;
+				}
+				radp[0]=minr;
+				e+=seq_length;
+				radp+=seq_length;
+			}
+		}
+	}
+}
+
+/** Computes the minimum distance from a subregion to a given block. If this distance
+ * is smaller than the value of minr, then it passes
+ * \param[in,out] minr a pointer to the current minimum distance. If the distance
+ *                     computed in this function is smaller, then this distance is
+ *                     set to the new one.
+ * \param[out] (xlo,ylo,zlo) the lower coordinates of the subregion being
+ *                           considered.
+ * \param[out] (xhi,yhi,zhi) the upper coordinates of the subregion being
+ *                           considered.
+ * \param[in] (ti,tj,tk) the coordinates of the block. */
+template<class r_option>
+inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk) {
+	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
+	fpoint radsq,temp;
+	if(ti>0) {temp=boxx*ti-xhi;radsq=temp*temp;}
+	else if(ti<0) {temp=xlo-boxx*(1+ti);radsq=temp*temp;}
+	else radsq=0;
+
+	if(tj>0) {temp=boxy*tj-yhi;radsq+=temp*temp;}
+	else if(tj<0) {temp=ylo-boxy*(1+tj);radsq+=temp*temp;}
+
+	if(tk>0) {temp=boxz*tk-zhi;radsq+=temp*temp;}
+	else if(tk<0) {temp=zlo-boxz*(1+tk);radsq+=temp*temp;}
+
+	if(radsq<minr) minr=radsq;
 }
 
 /** This routine checks to see whether a point is within a particular distance
  * of a nearby region. If the point is within the distance of the region, then
  * the routine returns true, and computes the maximum distance from the point
  * to the region. Otherwise, the routine returns false.
- * \param[in] (di,dj,dk) The position of the nearby region to be tested,
- * relative to the region that the point is in.
- * \param[in] (fx,fy,fz) The displacement of the point within its region.
- * \param[in] (gxs,gys,gzs) The minimum squared distances from the point to the
- * sides of its region.
- * \param[in] &crs A reference in which to return the maximum distance to the
- * region (only computed if the routine returns positive).
- * \param[in] mrs The distance to be tested.
+ * \param[in] (di,dj,dk) the position of the nearby region to be tested,
+ *                       relative to the region that the point is in.
+ * \param[in] (fx,fy,fz) the displacement of the point within its region.
+ * \param[in] (gxs,gys,gzs) the minimum squared distances from the point to the
+ *                          sides of its region.
+ * \param[out] crs a reference in which to return the maximum distance to the
+ *                 region (only computed if the routine returns positive).
+ * \param[in] mrs the distance to be tested.
  * \return False if the region is further away than mrs, true if the region in within mrs.*/
 template<class r_option>
 inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gxs,fpoint gys,fpoint gzs,fpoint &crs,fpoint mrs) {

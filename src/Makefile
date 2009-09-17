@@ -19,9 +19,11 @@ all: $(EXECUTABLES)
 "../bin/voro++": $(SOURCE) cmd_line.cc
 	$(CC) $(CFLAGS) -o ../bin/voro++ cmd_line.cc
 
-clean:
-	rm -f $(EXECUTABLES)
-
 help: Doxyfile $(SOURCE)
 	doxygen Doxyfile
 	cd ../latex && make
+
+clean:
+	rm -f $(EXECUTABLES)
+
+.PHONY: all help clean

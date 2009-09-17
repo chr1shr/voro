@@ -33,3 +33,5 @@ box_cut: $(SOURCE) box_cut.cc
 
 clean:
 	rm -f $(EXECUTABLES)
+
+.PHONY: all clean

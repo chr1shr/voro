@@ -30,3 +30,5 @@ degenerate2: $(SOURCE) degenerate2.cc
 
 clean:
 	rm -f $(EXECUTABLES)
+
+.PHONY: all clean

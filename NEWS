@@ -1,3 +1,12 @@
+Version 0.3.1 (***)
+===================
+* Additional comments in the Makefiles, and added the "phony target" keyword
+* Improved documentation of the container constructor, and reordered some
+  array allocations
+* Carried out many documentation improvements in the container.cc file, and
+  fixed several documentation errors
+* Updated Doxyfile to 1.6.1
+
 Version 0.3 (August 17, 2009)
 =============================
 * In response to feedback from several people, the routines for computing

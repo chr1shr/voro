@@ -18,3 +18,5 @@ clean:
 	cd custom && make clean
 	cd extra && make clean
 	cd degenerate && make clean
+
+.PHONY: all clean

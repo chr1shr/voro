@@ -36,3 +36,5 @@ import: $(SOURCE) import.cc
 
 clean:
 	rm -f $(EXECUTABLES)
+
+.PHONY: all clean
