@@ -15,16 +15,11 @@ template<class n_option>
 voronoicell_base<n_option>::voronoicell_base() :
 	current_vertices(init_vertices), current_vertex_order(init_vertex_order),
 	current_delete_size(init_delete_size), current_delete2_size(init_delete2_size),
-	neighbor(this) {
+	ed(new int*[current_vertices]), nu(new int[current_vertices]),
+	pts(new fpoint[3*current_vertices]), mem(new int[current_vertex_order]),
+	mec(new int[current_vertex_order]), mep(new int*[current_vertex_order]),
+	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]), neighbor(this) {
 	int i;
-	ds=new int[current_delete_size];
-	ds2=new int[current_delete2_size];
-	mem=new int[current_vertex_order];
-	mec=new int[current_vertex_order];
-	mep=new int*[current_vertex_order];
-	ed=new int*[current_vertices];
-	nu=new int[current_vertices];
-	pts=new fpoint[3*current_vertices];
 	sure.p=pts;
 	for(i=0;i<3;i++) {
 		mem[i]=init_n_vertices;
@@ -56,14 +51,16 @@ voronoicell_base<n_option>::~voronoicell_base() {
 }
 
 /** Increases the memory storage for a particular vertex order, by increasing
- * the size of the of the mep and mne <em>(neighbor option only)</em> arrays.
- * If the arrays already exist, their size is doubled; if they don't exist,
- * then new ones of size init_n_vertices are allocated. The routine also ensures
- * that the pointers in the ed array are updated, by making use of the back
- * pointers. For the cases where the back pointer has been temporarily
- * overwritten in the marginal vertex code, the auxiliary delete stack is
- * scanned to find out how to update the ed value.
- * \param[in] i The order of the vertex memory to be increased.*/
+ * the size of the of the corresponding mep array. If the arrays already exist,
+ * their size is doubled; if they don't exist, then new ones of size
+ * init_n_vertices are allocated. The routine also ensures that the pointers in
+ * the ed array are updated, by making use of the back pointers. For the cases
+ * where the back pointer has been temporarily overwritten in the marginal
+ * vertex code, the auxiliary delete stack is scanned to find out how to update
+ * the ed value. If the template has been instantiated with the neighbor
+ * tracking turned on, then the routine also reallocates the corresponding mne
+ * array.
+ * \param[in] i the order of the vertex memory to be increased. */
 template<class n_option>
 void voronoicell_base<n_option>::add_memory(int i) {
 	int s=2*i+1;
@@ -113,9 +110,10 @@ void voronoicell_base<n_option>::add_memory(int i) {
 }
 
 /** Doubles the maximum number of vertices allowed, by reallocating the ed, nu,
- * pts, and ne <em>(neighbor option only)</em> arrays. If the allocation
- * exceeds the absolute maximum set in max_vertices, then the routine exits
- * with a fatal error. */
+ * and pts arrays. If the allocation exceeds the absolute maximum set in
+ * max_vertices, then the routine exits with a fatal error. If the template has
+ * been instantiated with the neighbor tracking turned on, then the routine
+ * also reallocates the ne array. */
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_vertices() {
 	int i=2*current_vertices,j,**pp,*pnu;
@@ -137,10 +135,11 @@ void voronoicell_base<n_option>::add_memory_vertices() {
 	current_vertices=i;
 }
 
-/** Doubles the maximum allowed vertex order, by reallocating mem, mep, mec,
- * and mnu <em>(neighbor option only)</em> arrays. If the allocation exceeds
- * the absolute maximum set in max_vertex_order, then the routine causes a fatal
- * error. */
+/** Doubles the maximum allowed vertex order, by reallocating mem, mep, and mec
+ * arrays. If the allocation exceeds the absolute maximum set in
+ * max_vertex_order, then the routine causes a fatal error. If the template has
+ * been instantiated with the neighbor tracking turned on, then the routine
+ * also reallocates the mne array. */
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_vorder() {
 	int i=2*current_vertex_order,j,*p1,**p2;
@@ -193,7 +192,10 @@ void voronoicell_base<n_option>::add_memory_ds2() {
 	current_delete2_size=i;
 }
 
-/** Initializes a Voronoi cell as a rectangular box with the given dimensions */
+/** Initializes a Voronoi cell as a rectangular box with the given dimensions.
+ * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
+ * \param[in] (ymin,ymax) the minimum and maximum y coordinates.
+ * \param[in] (zmin,zmax) the minimum and maximum z coordinates. */
 template<class n_option>
 void voronoicell_base<n_option>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
@@ -222,8 +224,9 @@ void voronoicell_base<n_option>::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint
 }
 
 /** Initializes a Voronoi cell as a regular octahedron.
- * \param[in] l The distance from the octahedron center to a vertex. Six vertices
- * are initialized at (-l,0,0), (l,0,0), (0,-l,0), (0,l,0), (0,0,-l), and (0,0,l).*/
+ * \param[in] l The distance from the octahedron center to a vertex. Six
+ *              vertices are initialized at (-l,0,0), (l,0,0), (0,-l,0),
+ *              (0,l,0), (0,0,-l), and (0,0,l). */
 template<class n_option>
 inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
@@ -248,10 +251,10 @@ inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
 
 /** Initializes a Voronoi cell as a tetrahedron. It assumes that the normal to
  * the face for the first three vertices points inside.
- * \param (x0,y0,z0) A position vector for the first vertex.
- * \param (x1,y1,z1) A position vector for the second vertex.
- * \param (x2,y2,z2) A position vector for the third vertex.
- * \param (x3,y3,z3) A position vector for the fourth vertex. */
+ * \param (x0,y0,z0) a position vector for the first vertex.
+ * \param (x1,y1,z1) a position vector for the second vertex.
+ * \param (x2,y2,z2) a position vector for the third vertex.
+ * \param (x3,y3,z3) a position vector for the fourth vertex. */
 template<class n_option>
 inline void voronoicell_base<n_option>::init_tetrahedron(fpoint x0,fpoint y0,fpoint z0,fpoint x1,fpoint y1,fpoint z1,fpoint x2,fpoint y2,fpoint z2,fpoint x3,fpoint y3,fpoint z3) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
@@ -273,7 +276,7 @@ inline void voronoicell_base<n_option>::init_tetrahedron(fpoint x0,fpoint y0,fpo
 /** Initializes an arbitrary test object using the add_vertex() and
  * construct_relations() routines. See the source code for information about
  * the specific objects.
- * \param[in] n the number of the test object (from 0 to 9)
+ * \param[in] n the number of the test object (from 0 to 9).
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::init_test(int n) {
@@ -441,9 +444,8 @@ inline void voronoicell_base<n_option>::init_test(int n) {
 }
 
 /** Adds an order one vertex to the memory structure, and specifies its edge.
- * \param[in] (x,y,z) are the coordinates of the vertex
- * \param[in] a is the first and only edge of this vertex
- */
+ * \param[in] (x,y,z) are the coordinates of the vertex.
+ * \param[in] a is the first and only edge of this vertex. */
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
@@ -453,7 +455,9 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
 	q[0]=a;q[2]=p++;
 }
 
-/** Adds an order 2 vertex to the memory structure, and specifies its edges. */
+/** Adds an order 2 vertex to the memory structure, and specifies its edges.
+ * \param[in] (x,y,z) are the coordinates of the vertex.
+ * \param[in] (a,b) are the edges of this vertex. */
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
@@ -463,7 +467,9 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
 	q[0]=a;q[1]=b;q[4]=p++;
 }
 
-/** Adds an order 3 vertex to the memory structure, and specifies its edges. */
+/** Adds an order 3 vertex to the memory structure, and specifies its edges.
+ * \param[in] (x,y,z) are the coordinates of the vertex.
+ * \param[in] (a,b,c) are the edges of this vertex. */
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
@@ -473,7 +479,9 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
 	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
 }
 
-/** Adds an order 4 vertex to the memory structure, and specifies its edges. */
+/** Adds an order 4 vertex to the memory structure, and specifies its edges.
+ * \param[in] (x,y,z) are the coordinates of the vertex.
+ * \param[in] (a,b,c,d) are the edges of this vertex. */
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
@@ -483,7 +491,9 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
 }
 
-/** Adds an order 5 vertex to the memory structure, and specifies its edges. */
+/** Adds an order 5 vertex to the memory structure, and specifies its edges.
+ * \param[in] (x,y,z) are the coordinates of the vertex.
+ * \param[in] (a,b,c,d,e) are the edges of this vertex. */
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
@@ -493,9 +503,9 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
 }
 
-/** Checks that the relational table of the Voronoi cell is accurate, and prints
- * out any errors. This algorithm is O(p), so running it every time the plane
- * routine is called will result in a significant slowdown. */
+/** Checks that the relational table of the Voronoi cell is accurate, and
+ * prints out any errors. This algorithm is O(p), so running it every time the
+ * plane routine is called will result in a significant slowdown. */
 template<class n_option>
 void voronoicell_base<n_option>::check_relations() {
 	int i,j;
@@ -506,11 +516,11 @@ void voronoicell_base<n_option>::check_relations() {
 	}
 }
 
-/** This routine checks for any two vertices that are connected by more than one
- * edge. The plane algorithm is designed so that this should not happen, so any
- * occurrences are most likely errors. Note that the routine is O(p), so
- * running it every time the plane routine is called will result in a significant
- * slowdown. */
+/** This routine checks for any two vertices that are connected by more than
+ * one edge. The plane algorithm is designed so that this should not happen, so
+ * any occurrences are most likely errors. Note that the routine is O(p), so
+ * running it every time the plane routine is called will result in a
+ * significant slowdown. */
 template<class n_option>
 void voronoicell_base<n_option>::check_duplicates() {
 	int i,j,k;
@@ -540,7 +550,11 @@ void voronoicell_base<n_option>::construct_relations() {
 
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
  * (x,y,z) from the cell center. The value of rsq should be initially set to
- * \f$x^2+y^2+z^2\f$. */
+ * \f$x^2+y^2+z^2\f$.
+ * \param[in] (x,y,z) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \param[in] p_id the plane ID (for neighbor tracking only).
+ * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class n_option>
 bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,int p_id) {
 	int count=0,i,j,k,lp=up,cp,qp,rp,stack=0;stack2=0;
@@ -560,6 +574,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	// or a vertex which is on the plane
 	try {
 		if(uw==1) {
+
 			// The test point is inside the cutting plane.
 			us=0;
 			do {
@@ -1282,9 +1297,9 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
  * the order two vertex is removed and c and d are joined together directly.
  * It is possible this process will create order two or order one vertices,
  * and the routine is continually run until all of them are removed.
- * \return false if the vertex removal was unsuccessful, indicative of
- * the cell reducing to zero volume and disappearing; true if the vertex
- * removal was successful. */
+ * \return False if the vertex removal was unsuccessful, indicative of the cell
+ *         reducing to zero volume and disappearing; true if the vertex removal
+ *         was successful. */
 template<class n_option>
 inline bool voronoicell_base<n_option>::collapse_order2() {
 	if(!collapse_order1()) return false;
@@ -1343,9 +1358,9 @@ inline bool voronoicell_base<n_option>::collapse_order2() {
 
 /** Order one vertices can potentially be created during the order two collapse
  * routine. This routine keeps removing them until there are none left.
- * \return false if the vertex removal was unsuccessful, indicative of
- * the cell having zero volume and disappearing; true if the vertex removal
- * was successful. */
+ * \return False if the vertex removal was unsuccessful, indicative of the cell
+ *         having zero volume and disappearing; true if the vertex removal was
+ *         successful. */
 template<class n_option>
 inline bool voronoicell_base<n_option>::collapse_order1() {
 	int i,j,k;
@@ -1379,8 +1394,8 @@ inline bool voronoicell_base<n_option>::collapse_order1() {
  * If the neighbor computation is enabled, we also have to supply an
  * handedness flag to decide whether to preserve the plane on the left
  * or right of the connection.
- * \return false if a zero order vertex was formed, indicative of the cell
- * disappearing; true if the vertex removal was successful. */
+ * \return False if a zero order vertex was formed, indicative of the cell
+ *         disappearing; true if the vertex removal was successful. */
 template<class n_option>
 inline bool voronoicell_base<n_option>::delete_connection(int j,int k,bool hand) {
 	int q=hand?k:cycle_up(k,j);
@@ -1426,7 +1441,8 @@ inline bool voronoicell_base<n_option>::delete_connection(int j,int k,bool hand)
  * calculating the modulus squared of this vector before passing it to the
  * main nplane() routine. Zero is supplied as the plane ID, which will be
  * ignored unless neighbor tracking is enabled.
- * \param[in] (x,y,z) The vector to cut the cell by. */
+ * \param[in] (x,y,z) the vector to cut the cell by.
+ * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class n_option>
 inline bool voronoicell_base<n_option>::plane(fpoint x,fpoint y,fpoint z) {
 	fpoint rsq=x*x+y*y+z*z;
@@ -1435,8 +1451,9 @@ inline bool voronoicell_base<n_option>::plane(fpoint x,fpoint y,fpoint z) {
 
 /** This version of the plane routine just makes up the plane ID to be zero. It
  * will only be referenced if neighbor tracking is enabled.
- * \param[in] (x,y,z) The vector to cut the cell by.
- * \param[in] rsq The modulus squared of the vector. */
+ * \param[in] (x,y,z) the vector to cut the cell by.
+ * \param[in] rsq the modulus squared of the vector.
+ * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class n_option>
 inline bool voronoicell_base<n_option>::plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	return nplane(x,y,z,rsq,0);
@@ -1444,8 +1461,9 @@ inline bool voronoicell_base<n_option>::plane(fpoint x,fpoint y,fpoint z,fpoint 
 
 /** This routine calculates the modulus squared of the vector before passing it
  * to the main nplane() routine with full arguments.
- * \param[in] (x,y,z) The vector to cut the cell by.
- * \param[in] p_id The plane ID (for neighbor tracking only).*/
+ * \param[in] (x,y,z) the vector to cut the cell by.
+ * \param[in] p_id the plane ID (for neighbor tracking only).
+ * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class n_option>
 inline bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,int p_id) {
 	fpoint rsq=x*x+y*y+z*z;
@@ -1454,8 +1472,8 @@ inline bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,int p_
 
 /** This is a simple inline function for picking out the index of the next edge
  * counterclockwise at the current vertex.
- * \param[in] a The index of an edge of the current vertex.
- * \param[in] p The number of the vertex.
+ * \param[in] a the index of an edge of the current vertex.
+ * \param[in] p the number of the vertex.
  * \return 0 if a=nu[p]-1, or a+1 otherwise. */
 template<class n_option>
 inline int voronoicell_base<n_option>::cycle_up(int a,int p) {
@@ -1464,8 +1482,8 @@ inline int voronoicell_base<n_option>::cycle_up(int a,int p) {
 
 /** This is a simple inline function for picking out the index of the next edge
  * clockwise from the current vertex.
- * \param[in] a The index of an edge of the current vertex.
- * \param[in] p The number of the vertex.
+ * \param[in] a the index of an edge of the current vertex.
+ * \param[in] p the number of the vertex.
  * \return nu[p]-1 if a=0, or a-1 otherwise. */
 template<class n_option>
 inline int voronoicell_base<n_option>::cycle_down(int a,int p) {
@@ -1513,7 +1531,7 @@ fpoint voronoicell_base<n_option>::volume() {
 
 /** Calculates the areas of each face of the Voronoi cell and prints the
  * results to an output stream.
- * \param[in] &os an output stream to write to. */
+ * \param[in] os an output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_face_areas(ostream &os) {
 	bool later=false;
@@ -1553,7 +1571,7 @@ void voronoicell_base<n_option>::output_face_areas(ostream &os) {
 
 
 /** Calculates the total surface area of the Voronoi cell.
- * \return the computed area. */
+ * \return The computed area. */
 template<class n_option>
 fpoint voronoicell_base<n_option>::surface_area() {
 	fpoint area=0;
@@ -1591,8 +1609,8 @@ fpoint voronoicell_base<n_option>::surface_area() {
 
 /** Calculates the centroid of the Voronoi cell, by decomposing the cell into
  * tetrahedra extending outward from the zeroth vertex.
- * \param[in] (&cx,&cy,&cz) references to floating point numbers in which to
- * pass back the centroid vector. */
+ * \param[out] (cx,cy,cz) references to floating point numbers in which to
+ *                        pass back the centroid vector. */
 template<class n_option>
 void voronoicell_base<n_option>::centroid(fpoint &cx,fpoint &cy,fpoint &cz) {
 	fpoint tvol,vol=0;cx=cy=cz=0;
@@ -1673,8 +1691,8 @@ fpoint voronoicell_base<n_option>::total_edge_distance() {
 
 /** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
  * stream, displacing the cell by given vector.
- * \param[in] &os A output stream to write to.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position. */
+ * \param[in] os a output stream to write to.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position. */
 template<class n_option>
 void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
@@ -1690,8 +1708,8 @@ void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z
 
 /** An overloaded version of the draw_pov routine, that outputs the edges of
  * the Voronoi cell (in POV-Ray format) to a file.
- * \param[in] filename The file to write to.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ * \param[in] filename the file to write to.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::draw_pov(const char *filename,fpoint x,fpoint y,fpoint z) {
@@ -1703,7 +1721,7 @@ inline void voronoicell_base<n_option>::draw_pov(const char *filename,fpoint x,f
 
 /** An overloaded version of the draw_pov routine, that outputs the edges of the
  * Voronoi cell (in POV-Ray format) to standard output.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::draw_pov(fpoint x,fpoint y,fpoint z) {
@@ -1711,8 +1729,8 @@ inline void voronoicell_base<n_option>::draw_pov(fpoint x,fpoint y,fpoint z) {
 }
 
 /** Outputs the edges of the Voronoi cell (in gnuplot format) to an output stream.
- * \param[in] &os A reference to an output stream to write to.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ * \param[in] os a reference to an output stream to write to.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 template<class n_option>
 void voronoicell_base<n_option>::draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z) {
@@ -1729,7 +1747,7 @@ void voronoicell_base<n_option>::draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoi
 /** An overloaded version of the draw_gnuplot routine that writes directly to
  * a file.
  * \param[in] filename The name of the file to write to.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::draw_gnuplot(const char *filename,fpoint x,fpoint y,fpoint z) {
@@ -1741,7 +1759,7 @@ inline void voronoicell_base<n_option>::draw_gnuplot(const char *filename,fpoint
 
 /** An overloaded version of the draw_gnuplot routine, that prints to the
  * standard output.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::draw_gnuplot(fpoint x,fpoint y,fpoint z) {
@@ -1754,8 +1772,8 @@ inline void voronoicell_base<n_option>::draw_gnuplot(fpoint x,fpoint y,fpoint z)
  * makes use of the optional inside_vector specification, which makes the mesh
  * object solid, so the the POV-Ray Constructive Solid Geometry (CSG) can be
  * applied.
- * \param[in] &os An output stream to write to.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ * \param[in] os an output stream to write to.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::draw_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z) {
@@ -1804,8 +1822,8 @@ inline void voronoicell_base<n_option>::reset_edges() {
 
 /** An overloaded version of the draw_pov_mesh routine, that writes directly to a
  * file.
- * \param[in] filename A filename to write to.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ * \param[in] filename a filename to write to.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::draw_pov_mesh(const char *filename,fpoint x,fpoint y,fpoint z) {
@@ -1817,7 +1835,7 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(const char *filename,fpoin
 
 /** An overloaded version of the draw_pov_mesh routine, that prints to the
  * standard output.
- * \param[in] (x,y,z) A displacement vector to be added to the cell's position.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 template<class n_option>
 inline void voronoicell_base<n_option>::draw_pov_mesh(fpoint x,fpoint y,fpoint z) {
@@ -1855,8 +1873,8 @@ inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
  * plane and within the specified tolerance, then the special check_marginal()
  * routine is called.
  * \param[in] n the vertex to test.
- * \param[out] &ans the result of the scalar product used in evaluating the
- * location of the point.
+ * \param[out] ans the result of the scalar product used in evaluating the
+ *                 location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  * plane, or 0 if the point is within the plane. */
 inline int suretest::test(int n,fpoint &ans) {
@@ -1878,7 +1896,7 @@ inline int suretest::test(int n,fpoint &ans) {
  * vertex and adds it the table.
  * \param[in] n the vertex to test.
  * \param[in] ans the result of the scalar product used in evaluating
- * the location of the point.
+ *                the location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  * plane, or 0 if the point is within the plane. */
 int suretest::check_marginal(int n,fpoint &ans) {
@@ -1921,7 +1939,7 @@ void voronoicell_base<n_option>::print_edges() {
 /** For each face of the Voronoi cell, this routine prints the out the normal
  * vector of the face, and scales it to the distance from the cell center to
  * that plane.
- * \param[in] &os an output stream to write to. */
+ * \param[in] os an output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_normals(ostream &os) {
 	int i,j,k;bool later=false;
@@ -1945,7 +1963,7 @@ void voronoicell_base<n_option>::output_normals(ostream &os) {
  * the normal vector using this product. If the face is too small, and the none
  * of the vector products are large enough, the routine may return (0,0,0) as
  * the normal vector.
- * \param[in] &os an output stream to write to.
+ * \param[in] os an output stream to write to.
  * \param[in] i the initial vertex of the face to test.
  * \param[in] j the index of an edge of the vertex.
  * \param[in] k the neighboring vertex of i, set to ed[i][j]. */
@@ -2029,7 +2047,7 @@ int voronoicell_base<n_option>::number_of_faces() {
 }
 
 /** Outputs the vertex orders to an open output stream.
- * \param[in] &os the output stream to write to. */
+ * \param[in] os the output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_vertex_orders(ostream &os) {
 	if(p==0) return;
@@ -2039,7 +2057,7 @@ void voronoicell_base<n_option>::output_vertex_orders(ostream &os) {
 
 /** Outputs the vertex vectors to an open output stream using the local
  * coordinate system.
- * \param[in] &os the output stream to write to. */
+ * \param[in] os the output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_vertices(ostream &os) {
 	if(p==0) return;
@@ -2050,9 +2068,9 @@ void voronoicell_base<n_option>::output_vertices(ostream &os) {
 
 /** Outputs the vertex vectors to an open output stream using the global
  * coordinate system.
- * \param[in] &os the output stream to write to.
+ * \param[in] os the output stream to write to.
  * \param[in] (x,y,z) the position vector of the particle in the global
- * coordinate system. */
+ *                    coordinate system. */
 template<class n_option>
 void voronoicell_base<n_option>::output_vertices(ostream &os,fpoint x,fpoint y,fpoint z) {
 	if(p==0) return;
@@ -2061,7 +2079,7 @@ void voronoicell_base<n_option>::output_vertices(ostream &os,fpoint x,fpoint y,f
 }
 
 /** This routine outputs the perimeters of each face.
- * \param[in] &os An open output stream to write to. */
+ * \param[in] os an open output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_face_perimeters(ostream &os) {
 	int i,j,k,l,m;bool later=false;
@@ -2096,7 +2114,7 @@ void voronoicell_base<n_option>::output_face_perimeters(ostream &os) {
 
 /** For each face, this routine outputs a bracketed sequence of numbers
  * containing a list of all the vertices that make up that face.
- * \param[in] &os An open output stream to write to. */
+ * \param[in] os an open output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_face_vertices(ostream &os) {
 	int i,j,k,l,m;bool later=false;
@@ -2123,7 +2141,7 @@ void voronoicell_base<n_option>::output_face_vertices(ostream &os) {
 }
 
 /** Outputs a list of the number of edges in each face.
- * \param[in] &os An open output stream to write to. */
+ * \param[in] os an open output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_face_orders(ostream &os) {
 	int i,j,k,l,m,q;bool later=false;
@@ -2151,7 +2169,7 @@ void voronoicell_base<n_option>::output_face_orders(ostream &os) {
 
 /** Computes the number of edges that each face has and outputs a frequency
  * table of the results.
- * \param[in] &os An open output stream to write to. */
+ * \param[in] os an open output stream to write to. */
 template<class n_option>
 void voronoicell_base<n_option>::output_face_freq_table(ostream &os) {
 	int *stat,*pstat,current_facet_size=init_facet_size,newc,maxf=0;
@@ -2203,9 +2221,9 @@ void voronoicell_base<n_option>::label_facets() {
 /** If the template is instantiated with the neighbor tracking turned on, then
  * this routine will print out a list of all the neighbors of a given cell.
  * Otherwise, this routine does nothing.
- * \param[in] &os An open output stream to write to.
- * \param[in] later A boolean value to determine whether or not to write a
- * space character before the first entry. */
+ * \param[in] os an open output stream to write to.
+ * \param[in] later a boolean value to determine whether or not to write a
+ *                  space character before the first entry. */
 template<class n_option>
 void voronoicell_base<n_option>::output_neighbors(ostream &os,bool later) {
 	neighbor.neighbors(os,later);
@@ -2224,9 +2242,9 @@ void voronoicell_base<n_option>::check_facets() {
 /** This routine tests to see whether the cell intersects a plane by starting
  * from the guess point up. If up intersects, then it immediately returns true.
  * Otherwise, it calls the plane_intersects_track() routine.
- * \param[in] (x,y,z) The normal vector to the plane.
- * \param[in] rsq The distance along this vector of the plane.
- * \return false if the plane does not intersect the plane, true if it does.*/
+ * \param[in] (x,y,z) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \return False if the plane does not intersect the plane, true if it does. */
 template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	fpoint g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
@@ -2238,9 +2256,9 @@ bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpo
  * random sample of approximately sqrt(p)/4 points. If any of those are
  * intersect, then it immediately returns true. Otherwise, it takes the closest
  * point and passes that to plane_intersect_track() routine.
- * \param[in] (x,y,z) The normal vector to the plane.
- * \param[in] rsq The distance along this vector of the plane.
- * \return false if the plane does not intersect the plane, true if it does.*/
+ * \param[in] (x,y,z) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \return False if the plane does not intersect the plane, true if it does. */
 template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	up=0;
@@ -2264,10 +2282,10 @@ bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint
 /* This routine tests to see if a cell intersects a plane, by tracing over the cell from
  * vertex to vertex, starting at up. It is meant to be called either by plane_intersects()
  * or plane_intersects_track(), when those routines cannot immediately resolve the case.
- * \param[in] (x,y,z) The normal vector to the plane.
- * \param[in] rsq The distance along this vector of the plane.
- * \param[in] g The distance of up from the plane.
- * \return false if the plane does not intersect the plane, true if it does.*/
+ * \param[in] (x,y,z) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \param[in] g the distance of up from the plane.
+ * \return False if the plane does not intersect the plane, true if it does. */
 template<class n_option>
 inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rsq,fpoint g) {
 	int count=0,ls,us,tp;
@@ -2325,7 +2343,8 @@ int voronoicell_base<n_option>::number_of_edges() {
 
 /** This constructs the neighbor_track class, within a current
  * voronoicell_neighbor class. It allocates memory for neighbor storage in a
- * similar way to the voronoicell constructor. */
+ * similar way to the voronoicell constructor.
+ * \param[in] ivc a pointer to the parent voronoicell_neighbor class. */
 neighbor_track::neighbor_track(voronoicell_base<neighbor_track> *ivc) : vc(ivc) {
 	int i;
 	mne=new int*[vc->current_vertex_order];
@@ -2501,7 +2520,7 @@ inline void neighbor_track::set_to_aux1_offset(int k,int m) {
 	ne[k]=paux1+m;
 }
 
-/** This routine checks to make sure the neighbor information of each facets is
+/** This routine checks to make sure the neighbor information of each face is
  * consistent.*/
 void neighbor_track::check_facets() {
 	int **edp,*nup;edp=vc->ed;nup=vc->nu;
@@ -2527,8 +2546,8 @@ void neighbor_track::check_facets() {
 }
 
 /** This routine provides a list of plane IDs.
- * \param[in] &os An output stream to write to.
- * \param[in] later A boolean value to determine whether or not to write a
+ * \param[in] os an output stream to write to.
+ * \param[in] later a boolean value to determine whether or not to write a
  * space character before the first entry. */
 void neighbor_track::neighbors(ostream &os,bool later) {
 	int **edp=vc->ed,*nup=vc->nu;

@@ -100,28 +100,6 @@ class neighbor_track;
 template <class n_option>
 class voronoicell_base {
 	public:
-		/** This is a two dimensional array that holds information about
-		 * the edge connections of the vertices that make up the cell.
-		 * The two dimensional array is not allocated in the usual method.
-		 * To account for the fact the different vertices have different
-		 * orders, and thus require different amounts of storage, the
-		 * elements of ed[i] point to one-dimensional arrays in the mep[]
-		 * array of different sizes.
-		 *
-		 * More specifically, if vertex i has order m, then ed[i]
-		 * points to a one-dimensional array in mep[m] that has 2*m+1
-		 * entries. The first m elements hold the neighboring edges, so
-		 * that the jth edge of vertex i is held in ed[i][j]. The next
-		 * m elements hold a table of relations which is redundant but
-		 * helps speed up the computation. It satisfies the relation
-		 * ed[ed[i][j]][ed[i][m+j]]=i. The final entry holds a back
-		 * pointer, so that ed[i+2*m]=i. These are used when
-		 * rearranging the memory. */
-		int **ed;
-		/** This array holds the order of the vertices in the Voronoi cell.
-		 * This array is dynamically allocated, with its current size
-		 * held by current_vertices. */
-		int *nu;
 		/** This holds the current size of the arrays ed and nu, which
 		 * hold the vertex information. If more vertices are created
 		 * than can fit in this array, then it is dynamically extended
@@ -137,23 +115,46 @@ class voronoicell_base {
 		int current_delete_size;
 		/** This sets the size of the auxiliary delete stack. */
 		int current_delete2_size;
-		/** This in an array with size 3*current_vertices for holding
-		 * the positions of the vertices. */
-		fpoint *pts;
 		/** This sets the total number of vertices in the current cell.
 		 */
 		int p;
-		/** This is the index of particular point in the cell, which is used to start
-		 * the tracing routines for plane intersection and cutting. These
-		 * routines will work starting from any point, but it's often most
-		 * efficient to start from the last point considered, since in many cases,
-		 * the cell construction algorithm may consider many planes with similar
-		 * vectors concurrently. */
+		/** This is the index of particular point in the cell, which is
+		 * used to start the tracing routines for plane intersection
+		 * and cutting. These routines will work starting from any
+		 * point, but it's often most efficient to start from the last
+		 * point considered, since in many cases, the cell construction
+		 * algorithm may consider many planes with similar vectors
+		 * concurrently. */
 		int up;
+		/** This is a two dimensional array that holds information
+		 * about the edge connections of the vertices that make up the
+		 * cell. The two dimensional array is not allocated in the
+		 * usual method. To account for the fact the different vertices
+		 * have different orders, and thus require different amounts of
+		 * storage, the elements of ed[i] point to one-dimensional
+		 * arrays in the mep[] array of different sizes.
+		 *
+		 * More specifically, if vertex i has order m, then ed[i]
+		 * points to a one-dimensional array in mep[m] that has 2*m+1
+		 * entries. The first m elements hold the neighboring edges, so
+		 * that the jth edge of vertex i is held in ed[i][j]. The next
+		 * m elements hold a table of relations which is redundant but
+		 * helps speed up the computation. It satisfies the relation
+		 * ed[ed[i][j]][ed[i][m+j]]=i. The final entry holds a back
+		 * pointer, so that ed[i+2*m]=i. These are used when
+		 * rearranging the memory. */
+		int **ed;
+		/** This array holds the order of the vertices in the Voronoi
+		 * cell. This array is dynamically allocated, with its current
+		 * size held by current_vertices. */
+		int *nu;
+		/** This in an array with size 3*current_vertices for holding
+		 * the positions of the vertices. */
+		fpoint *pts;
 		/** This is a class used in the plane routine for carrying out
 		 * reliable comparisons of whether points in the cell are
 		 * inside, outside, or on the current cutting plane. */
-		suretest sure;
+		suretest sure;	
 		voronoicell_base();
 		~voronoicell_base();
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
@@ -208,6 +209,10 @@ class voronoicell_base {
 		/** This a one dimensional array that holds the current sizes
 		 * of the memory allocations for them mep array.*/
 		int *mem;
+		/** This is a one dimensional array that holds the current
+		 * number of vertices of order p that are stored in the mep[p]
+		 * array. */
+		int *mec;
 		/** This is a two dimensional array for holding the information
 		 * about the edges of the Voronoi cell. mep[p] is a
 		 * one-dimensional array for holding the edge information about
@@ -216,10 +221,6 @@ class voronoicell_base {
 		 * on mep[p] is stored in mem[p]. If the space runs out, the
 		 * code allocates more using the add_memory() routine. */
 		int **mep;
-		/** This is a one dimensional array that holds the current
-		 * number of vertices of order p that are stored in the mep[p]
-		 * array. */
-		int *mec;
 		/** This is the delete stack, used to store the vertices which
 		 * are going to be deleted during the plane cutting procedure.
 		 */
