@@ -1862,7 +1862,9 @@ suretest::~suretest() {
 }
 
 /** Sets up the suretest class with a particular test plane, and removes
- * any special cases from the table. */
+ * any special cases from the table.
+ * \param[in] (x,y,z) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane. */
 inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	sc=0;px=x;py=y;pz=z;prsq=rsq;
 }
@@ -1918,7 +1920,7 @@ int suretest::check_marginal(int n,fpoint &ans) {
 }
 
 /** Prints the vertices, their edges, the relation table, and also notifies if
- * any glaring memory errors are visible. */
+ * any memory errors are visible. */
 template<class n_option>
 void voronoicell_base<n_option>::print_edges() {
 	int j;

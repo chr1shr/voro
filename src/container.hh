@@ -242,7 +242,8 @@ class radius_mono {
 		const int mem_size;
 		/** This constructor sets a pointer back to the container class
 		 * that created it, and initializes the mem_size constant to 3.
-		 */
+		 * \param[in] icc a pointer the container class that created
+		 *                this class. */
 		radius_mono(container_base<radius_mono> *icc) : mem_size(3), cc(icc) {};
 		inline void import(istream &is);
 		/** This is a blank placeholder function that does nothing. */
