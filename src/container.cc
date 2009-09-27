@@ -15,8 +15,7 @@
  * minimum and maximum coordinates in each direction, and setting whether each
  * direction is periodic or not. It divides the container into a rectangular
  * grid of blocks, and allocates memory for each of these for storing particle
- * positions and IDs. It precomputes the radius table used during the cell
- * computation.
+ * positions and IDs.
  * \param[in] (xa,xb) the minimum and maximum x coordinates.
  * \param[in] (ya,yb) the minimum and maximum y coordinates.
  * \param[in] (za,zb) the minimum and maximum z coordinates.
@@ -45,6 +44,8 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,
 	for(l=0;l<hxyz;l++) mask[l]=0;
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
+
+	// Precompute the radius table used in the cell construction
 	initialize_radii();
 }
 
@@ -96,7 +97,7 @@ void container_base<r_option>::draw_particles(const char *filename) {
 	os.close();
 }
 
-/** Dumps all the particle positions in the POV-Ray format.
+/** Dumps all the particle positions in POV-Ray format.
  * \param[in] os an output stream to write to. */
 template<class r_option>
 void container_base<r_option>::draw_particles_pov(ostream &os) {
@@ -337,8 +338,10 @@ void container_base<r_option>::compute_all_cells() {
 /** Computes the Voronoi volumes for all the particles, and stores the results
  * according to the particle ID numbers in a floating point array that the user
  * has supplied. No bounds checking on the array is performed, so it is up to
- * the user to ensure that the array is large enough to store the particles.
- * \param[in] bb a pointer to an array to store the volumes. */
+ * the user to ensure that the array is large enough to store the computed
+ * numbers.
+ * \param[in] bb a pointer to an array to store the volumes. The volume of the
+ *               particle with ID number n will be stored at bb[n]. */
 template<class r_option>
 void container_base<r_option>::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
@@ -406,7 +409,7 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint 
 /** Calculates all of the Voronoi cells and sums their volumes. In most cases
  * without walls, the sum of the Voronoi cell volumes should equal the volume
  * of the container to numerical precision.
- * \return the sum of all of the computed Voronoi volumes. */
+ * \return The sum of all of the computed Voronoi volumes. */
 template<class r_option>
 fpoint container_base<r_option>::sum_cell_volumes() {
 	voronoicell c;
@@ -580,7 +583,7 @@ inline void container_base<r_option>::print_all_internal(voronoicell_base<n_opti
 
 /** Prints a list of all particle labels, positions, and Voronoi volumes to the
  * standard output.
- * \param[in] os the output stream to print to.*/
+ * \param[in] os the output stream to print to. */
 template<class r_option>
 void container_base<r_option>::print_all(ostream &os) {
 	voronoicell c;
@@ -623,8 +626,8 @@ void container_base<r_option>::print_all_neighbor() {
 	print_all_internal(c,cout);
 }
 
-/** An overloaded version of print_all_neighbor(), which outputs the result to a
- * particular file
+/** An overloaded version of print_all_neighbor(), which outputs the results to
+ * a particular file.
  * \param[in] filename the name of the file to write to. */
 template<class r_option>
 inline void container_base<r_option>::print_all_neighbor(const char* filename) {
@@ -693,7 +696,9 @@ bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
  * \param[in] ijk the index of the block that the test particle is in, set to
  *                i+nx*(j+ny*k).
  * \param[in] s the index of the particle within the test block.
- * \param[in] (x,y,z) the coordinates of the particle. */
+ * \param[in] (x,y,z) the coordinates of the particle.
+ * \return False if the Voronoi cell was completely removed during the
+ *         computation and has zero volume, true otherwise. */
 template<class r_option>
 template<class n_option>
 bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
@@ -734,7 +739,9 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
  *                    in.
  * \param[in] ijk the index of the block that the test particle is in, set to
  *                i+nx*(j+ny*k).
- * \param[in] s the index of the particle within the test block. */
+ * \param[in] s the index of the particle within the test block.
+ * \return False if the Voronoi cell was completely removed during the
+ *         computation and has zero volume, true otherwise. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
@@ -750,7 +757,9 @@ inline bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_opt
  *                    in.
  * \param[in] ijk the index of the block that the test particle is in, set to
  *                i+nx*(j+ny*k).
- * \param[in] s the index of the particle within the test block. */
+ * \param[in] s the index of the particle within the test block.
+ * \return False if the Voronoi cell was completely removed during the
+ *         computation and has zero volume, true otherwise. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
@@ -780,7 +789,9 @@ inline bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c
  * \param[in] ijk the index of the block that the test particle is in, set to
  *                i+nx*(j+ny*k).
  * \param[in] s the index of the particle within the test block.
- * \param[in] (x,y,z) the coordinates of the particle. */
+ * \param[in] (x,y,z) the coordinates of the particle.
+ * \return False if the Voronoi cell was completely removed during the
+ *         computation and has zero volume, true otherwise. */
 template<class r_option>
 template<class n_option>
 bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
@@ -1197,7 +1208,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
  *                       closest to the cell center.
  * \param[in] (xh,yh,zh) the relative coordinates of the corner of the block
  *                       furthest away from the cell center.
- * \return false if the block may intersect, true if does not. */
+ * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
@@ -1221,7 +1232,7 @@ inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,
  *                    block closest to the cell center.
  * \param[in] (yh,zh) the relative y and z coordinates of the corner of the
  *                    block furthest away from the cell center.
- * \return false if the block may intersect, true if does not. */
+ * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
 inline bool container_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
@@ -1341,7 +1352,7 @@ inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,
 	return true;
 }
 
-/** Creates a voropp_loop object, by pulling the necessary constants about the
+/** Creates a voropp_loop object, by setting the necessary constants about the
  * container geometry from a pointer to the current container class.
  * \param[in] q a pointer to the current container class. */
 template<class r_option>
@@ -1451,7 +1462,7 @@ inline int voropp_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 
 /** Custom int function, that gives consistent stepping for negative numbers.
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
- * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/
+ * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1). */
 inline int voropp_loop::step_int(fpoint a) {
 	return a<0?int(a)-1:int(a);
 }
@@ -1625,8 +1636,7 @@ inline void radius_poly::print(ostream &os,int ijk,int q,bool later) {
  * \f$w_{j}\f$ where \f$j>i\f$ and all blocks outside the worklist. The values
  * of \f$r_n\f$ is calculated first, as the minimum distance to any block in
  * the shell surrounding the worklist. The \f$r_i\f$ are then computed in
- * reverse order by considering the distance to \f$w_{i+1}\f$.
- */
+ * reverse order by considering the distance to \f$w_{i+1}\f$. */
 template<class r_option>
 void container_base<r_option>::initialize_radii() {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
@@ -1716,7 +1726,8 @@ inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,f
  * \param[out] crs a reference in which to return the maximum distance to the
  *                 region (only computed if the routine returns positive).
  * \param[in] mrs the distance to be tested.
- * \return False if the region is further away than mrs, true if the region in within mrs.*/
+ * \return False if the region is further away than mrs, true if the region in
+ *         within mrs.*/
 template<class r_option>
 inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gxs,fpoint gys,fpoint gzs,fpoint &crs,fpoint mrs) {
 	fpoint xlo,ylo,zlo;

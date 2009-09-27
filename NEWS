@@ -1,10 +1,9 @@
 Version 0.3.1 (***)
 ===================
+* Carried out a major overhaul of the source code comments that are used by
+  Doxygen. Several errors in the documentation were fixed.
 * Additional comments in the Makefiles, and added the "phony target" keyword
-* Improved documentation of the container constructor, and reordered some
-  array allocations
-* Carried out many documentation improvements in the container.cc file, and
-  fixed several documentation errors
+* Concatenated some of the loops to reduce the amount of indentation
 * Updated Doxyfile to 1.6.1
 
 Version 0.3 (August 17, 2009)

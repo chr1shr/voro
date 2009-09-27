@@ -19,7 +19,9 @@ using namespace std;
 
 /** \brief Function for printing fatal error messages and exiting.
  *
- * Function for printing fatal error messages and exiting. */
+ * Function for printing fatal error messages and exiting.
+ * \param[in] p a pointer to the message to print.
+ * \param[in] status the status code to return with. */
 void voropp_fatal_error(const char *p,int status) {
 	cerr << "voro++: " << p << endl;
 	exit(status);

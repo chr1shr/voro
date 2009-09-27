@@ -22,17 +22,14 @@ voronoicell_base<n_option>::voronoicell_base() :
 	int i;
 	sure.p=pts;
 	for(i=0;i<3;i++) {
-		mem[i]=init_n_vertices;
+		mem[i]=init_n_vertices;mec[i]=0;
 		mep[i]=new int[init_n_vertices*(2*i+1)];
-		mec[i]=0;
 	}
-	mem[3]=init_3_vertices;
+	mem[3]=init_3_vertices;mec[3]=0;
 	mep[3]=new int[init_3_vertices*7];
-	mec[3]=0;
 	for(i=4;i<current_vertex_order;i++) {
-		mem[i]=init_n_vertices;
+		mem[i]=init_n_vertices;mec[i]=0;
 		mep[i]=new int[init_n_vertices*(2*i+1)];
-		mec[i]=0;
 	}
 }
 
@@ -276,8 +273,7 @@ inline void voronoicell_base<n_option>::init_tetrahedron(fpoint x0,fpoint y0,fpo
 /** Initializes an arbitrary test object using the add_vertex() and
  * construct_relations() routines. See the source code for information about
  * the specific objects.
- * \param[in] n the number of the test object (from 0 to 9).
- */
+ * \param[in] n the number of the test object (from 0 to 9). */
 template<class n_option>
 inline void voronoicell_base<n_option>::init_test(int n) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=p=0;
@@ -509,11 +505,8 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
 template<class n_option>
 void voronoicell_base<n_option>::check_relations() {
 	int i,j;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			if (ed[ed[i][j]][ed[i][nu[i]+j]]!=i) cout << "Relational error at point " << i << ", edge " << j << "." << endl;
-		}
-	}
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) if(ed[ed[i][j]][ed[i][nu[i]+j]]!=i)
+		cout << "Relational error at point " << i << ", edge " << j << "." << endl;
 }
 
 /** This routine checks for any two vertices that are connected by more than
@@ -524,13 +517,8 @@ void voronoicell_base<n_option>::check_relations() {
 template<class n_option>
 void voronoicell_base<n_option>::check_duplicates() {
 	int i,j,k;
-	for(i=0;i<p;i++) {
-		for(j=1;j<nu[i];j++) {
-			for(k=0;k<j;k++) {
-				if (ed[i][j]==ed[i][k]) cout << "Duplicate edges: (" << i << "," << j << ") and (" << i << "," << k << ") [" << ed[i][j] << "]" << endl;
-			}
-		}
-	}
+	for(i=0;i<p;i++) for(j=1;j<nu[i];j++) for(k=0;k<j;k++) if(ed[i][j]==ed[i][k])
+		cout << "Duplicate edges: (" << i << "," << j << ") and (" << i << "," << k << ") [" << ed[i][j] << "]" << endl;
 }
 
 /** Constructs the relational table if the edges have been specified. */
@@ -1391,9 +1379,9 @@ inline bool voronoicell_base<n_option>::collapse_order1() {
 }
 
 /** This routine deletes the kth edge of vertex j and reorganizes the memory.
- * If the neighbor computation is enabled, we also have to supply an
- * handedness flag to decide whether to preserve the plane on the left
- * or right of the connection.
+ * If the neighbor computation is enabled, we also have to supply an handedness
+ * flag to decide whether to preserve the plane on the left or right of the
+ * connection.
  * \return False if a zero order vertex was formed, indicative of the cell
  *         disappearing; true if the vertex removal was successful. */
 template<class n_option>
@@ -1654,9 +1642,9 @@ void voronoicell_base<n_option>::centroid(fpoint &cx,fpoint &cy,fpoint &cz) {
 	} else cx=cy=cz=0;
 }
 
-/** Computes the maximum radius squared of a vertex from the center
- * of the cell. It can be used to determine when enough particles have
- * been testing an all planes that could cut the cell have been considered.
+/** Computes the maximum radius squared of a vertex from the center of the
+ * cell. It can be used to determine when enough particles have been testing an
+ * all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
 template<class n_option>
 fpoint voronoicell_base<n_option>::max_radius_squared() {
@@ -1689,10 +1677,11 @@ fpoint voronoicell_base<n_option>::total_edge_distance() {
 	return 0.5*dis;
 }
 
-/** Outputs the edges of the Voronoi cell (in POV-Ray format) to an open file
+/** Outputs the edges of the Voronoi cell in POV-Ray format to an open file
  * stream, displacing the cell by given vector.
  * \param[in] os a output stream to write to.
- * \param[in] (x,y,z) a displacement vector to be added to the cell's position. */
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
+ */
 template<class n_option>
 void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
 	int i,j,k;fpoint ux,uy,uz;
@@ -1707,7 +1696,7 @@ void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z
 }
 
 /** An overloaded version of the draw_pov routine, that outputs the edges of
- * the Voronoi cell (in POV-Ray format) to a file.
+ * the Voronoi cell in POV-Ray format to a file.
  * \param[in] filename the file to write to.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
@@ -1728,7 +1717,7 @@ inline void voronoicell_base<n_option>::draw_pov(fpoint x,fpoint y,fpoint z) {
 	draw_pov(cout,x,y,z);
 }
 
-/** Outputs the edges of the Voronoi cell (in gnuplot format) to an output stream.
+/** Outputs the edges of the Voronoi cell in gnuplot format to an output stream.
  * \param[in] os a reference to an output stream to write to.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
@@ -1812,11 +1801,9 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(ostream &os,fpoint x,fpoin
 template<class n_option>
 inline void voronoicell_base<n_option>::reset_edges() {
 	int i,j;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			if(ed[i][j]>=0) voropp_fatal_error("Edge reset routine found a previously untested edge",VOROPP_INTERNAL_ERROR);
-			ed[i][j]=-1-ed[i][j];
-		}
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+		if(ed[i][j]>=0) voropp_fatal_error("Edge reset routine found a previously untested edge",VOROPP_INTERNAL_ERROR);
+		ed[i][j]=-1-ed[i][j];
 	}
 }
 
@@ -1861,8 +1848,8 @@ suretest::~suretest() {
 	delete [] sn;
 }
 
-/** Sets up the suretest class with a particular test plane, and removes
- * any special cases from the table.
+/** Sets up the suretest class with a particular test plane, and removes any
+ * special cases from the table.
  * \param[in] (x,y,z) the normal vector to the plane.
  * \param[in] rsq the distance along this vector of the plane. */
 inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
@@ -1878,7 +1865,7 @@ inline void suretest::init(fpoint x,fpoint y,fpoint z,fpoint rsq) {
  * \param[out] ans the result of the scalar product used in evaluating the
  *                 location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
- * plane, or 0 if the point is within the plane. */
+ *         plane, or 0 if the point is within the plane. */
 inline int suretest::test(int n,fpoint &ans) {
 	ans=px*p[3*n]+py*p[3*n+1]+pz*p[3*n+2]-prsq;
 	if(ans<-tolerance2) {
@@ -1900,7 +1887,7 @@ inline int suretest::test(int n,fpoint &ans) {
  * \param[in] ans the result of the scalar product used in evaluating
  *                the location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
- * plane, or 0 if the point is within the plane. */
+ *         plane, or 0 if the point is within the plane. */
 int suretest::check_marginal(int n,fpoint &ans) {
 	int i;
 	for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
@@ -1945,14 +1932,12 @@ void voronoicell_base<n_option>::print_edges() {
 template<class n_option>
 void voronoicell_base<n_option>::output_normals(ostream &os) {
 	int i,j,k;bool later=false;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				if(later) os << " ";
-				else later=true;
-				output_normals_search(os,i,j,k);
-			}
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if (k>=0) {
+			if(later) os << " ";
+			else later=true;
+			output_normals_search(os,i,j,k);
 		}
 	}
 	reset_edges();
@@ -2028,20 +2013,19 @@ inline void voronoicell_base<n_option>::output_normals_search(ostream &os,int i,
 template<class n_option>
 int voronoicell_base<n_option>::number_of_faces() {
 	int i,j,k,l,m,s=0;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				s++;
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
-				do {
-					m=ed[k][l];
-					ed[k][l]=-1-m;
-					l=cycle_up(ed[k][nu[k]+l],m);
-					k=m;
-				} while (k!=i);
-			}
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if (k>=0) {
+			s++;
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			do {
+				m=ed[k][l];
+				ed[k][l]=-1-m;
+				l=cycle_up(ed[k][nu[k]+l],m);
+				k=m;
+			} while (k!=i);
+
 		}
 	}
 	reset_edges();
@@ -2086,29 +2070,27 @@ template<class n_option>
 void voronoicell_base<n_option>::output_face_perimeters(ostream &os) {
 	int i,j,k,l,m;bool later=false;
 	fpoint dx,dy,dz,perim;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				dx=pts[3*k]-pts[3*i];
-				dy=pts[3*k+1]-pts[3*i+1];
-				dz=pts[3*k+2]-pts[3*i+2];
-				perim=sqrt(dx*dx+dy*dy+dz*dz);
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
-				do {
-					m=ed[k][l];
-					dx=pts[3*m]-pts[3*k];
-					dy=pts[3*m+1]-pts[3*k+1];
-					dz=pts[3*m+2]-pts[3*k+2];
-					perim+=sqrt(dx*dx+dy*dy+dz*dz);
-					ed[k][l]=-1-m;
-					l=cycle_up(ed[k][nu[k]+l],m);
-					k=m;
-				} while (k!=i);
-				if(later) os << " ";else later=true;
-				os << 0.5*perim;
-			}
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if (k>=0) {
+			dx=pts[3*k]-pts[3*i];
+			dy=pts[3*k+1]-pts[3*i+1];
+			dz=pts[3*k+2]-pts[3*i+2];
+			perim=sqrt(dx*dx+dy*dy+dz*dz);
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			do {
+				m=ed[k][l];
+				dx=pts[3*m]-pts[3*k];
+				dy=pts[3*m+1]-pts[3*k+1];
+				dz=pts[3*m+2]-pts[3*k+2];
+				perim+=sqrt(dx*dx+dy*dy+dz*dz);
+				ed[k][l]=-1-m;
+				l=cycle_up(ed[k][nu[k]+l],m);
+				k=m;
+			} while (k!=i);
+			if(later) os << " ";else later=true;
+			os << 0.5*perim;
 		}
 	}
 	reset_edges();
@@ -2120,23 +2102,21 @@ void voronoicell_base<n_option>::output_face_perimeters(ostream &os) {
 template<class n_option>
 void voronoicell_base<n_option>::output_face_vertices(ostream &os) {
 	int i,j,k,l,m;bool later=false;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				if(later) os << " ";else later=true;
-				os << "(" << i;
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
-				do {
-					os << "," << k;
-					m=ed[k][l];
-					ed[k][l]=-1-m;
-					l=cycle_up(ed[k][nu[k]+l],m);
-					k=m;
-				} while (k!=i);
-				os << ")";
-			}
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if (k>=0) {
+			if(later) os << " ";else later=true;
+			os << "(" << i;
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			do {
+				os << "," << k;
+				m=ed[k][l];
+				ed[k][l]=-1-m;
+				l=cycle_up(ed[k][nu[k]+l],m);
+				k=m;
+			} while (k!=i);
+			os << ")";
 		}
 	}
 	reset_edges();
@@ -2147,23 +2127,21 @@ void voronoicell_base<n_option>::output_face_vertices(ostream &os) {
 template<class n_option>
 void voronoicell_base<n_option>::output_face_orders(ostream &os) {
 	int i,j,k,l,m,q;bool later=false;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				q=1;
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
-				do {
-					q++;
-					m=ed[k][l];
-					ed[k][l]=-1-m;
-					l=cycle_up(ed[k][nu[k]+l],m);
-					k=m;
-				} while (k!=i);
-				if(later) os << " ";else later=true;
-				os << q;
-			}
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if (k>=0) {
+			q=1;
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			do {
+				q++;
+				m=ed[k][l];
+				ed[k][l]=-1-m;
+				l=cycle_up(ed[k][nu[k]+l],m);
+				k=m;
+			} while (k!=i);
+			if(later) os << " ";else later=true;
+			os << q;
 		}
 	}
 	reset_edges();
@@ -2178,32 +2156,30 @@ void voronoicell_base<n_option>::output_face_freq_table(ostream &os) {
 	stat=new int[current_facet_size];
 	int i,j,k,l,m,q;
 	for(i=0;i<current_facet_size;i++) stat[i]=0;
-	for(i=0;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				q=1;
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
-				do {
-					q++;
-					m=ed[k][l];
-					ed[k][l]=-1-m;
-					l=cycle_up(ed[k][nu[k]+l],m);
-					k=m;
-				} while (k!=i);
-				if (q>=current_facet_size) {
-					newc=current_facet_size*2;
-					pstat=new int[newc];
-					for(k=0;k<current_facet_size;k++) pstat[k]=stat[k];
-					while(k<newc) pstat[k]=0;
-					delete [] stat;
-					current_facet_size=newc;
-					stat=pstat;
-				}
-				stat[q]++;
-				if (q>maxf) maxf=q;
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if (k>=0) {
+			q=1;
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			do {
+				q++;
+				m=ed[k][l];
+				ed[k][l]=-1-m;
+				l=cycle_up(ed[k][nu[k]+l],m);
+				k=m;
+			} while (k!=i);
+			if (q>=current_facet_size) {
+				newc=current_facet_size*2;
+				pstat=new int[newc];
+				for(k=0;k<current_facet_size;k++) pstat[k]=stat[k];
+				while(k<newc) pstat[k]=0;
+				delete [] stat;
+				current_facet_size=newc;
+				stat=pstat;
 			}
+			stat[q]++;
+			if (q>maxf) maxf=q;
 		}
 	}
 	reset_edges();
@@ -2550,25 +2526,23 @@ void neighbor_track::check_facets() {
 /** This routine provides a list of plane IDs.
  * \param[in] os an output stream to write to.
  * \param[in] later a boolean value to determine whether or not to write a
- * space character before the first entry. */
+ *                  space character before the first entry. */
 void neighbor_track::neighbors(ostream &os,bool later) {
 	int **edp=vc->ed,*nup=vc->nu;
 	int i,j,k,l,m;
-	for(i=0;i<vc->p;i++) {
-		for(j=0;j<nup[i];j++) {
-			k=edp[i][j];
-			if (k>=0) {
-				if(later) os << " ";else later=true;
-				os << ne[i][j];
-				edp[i][j]=-1-k;
-				l=vc->cycle_up(edp[i][nup[i]+j],k);
-				do {
-					m=edp[k][l];
-					edp[k][l]=-1-m;
-					l=vc->cycle_up(edp[k][nup[k]+l],m);
-					k=m;
-				} while (k!=i);
-			}
+	for(i=0;i<vc->p;i++) for(j=0;j<nup[i];j++) {
+		k=edp[i][j];
+		if (k>=0) {
+			if(later) os << " ";else later=true;
+			os << ne[i][j];
+			edp[i][j]=-1-k;
+			l=vc->cycle_up(edp[i][nup[i]+j],k);
+			do {
+				m=edp[k][l];
+				edp[k][l]=-1-m;
+				l=vc->cycle_up(edp[k][nup[k]+l],m);
+				k=m;
+			} while (k!=i);
 		}
 	}
 	vc->reset_edges();
@@ -2578,22 +2552,20 @@ void neighbor_track::neighbors(ostream &os,bool later) {
 void neighbor_track::label_facets() {
 	int **edp,*nup;edp=vc->ed;nup=vc->nu;
 	int i,j,k,l,m,q=1;
-	for(i=0;i<vc->p;i++) {
-		for(j=0;j<nup[i];j++) {
-			k=edp[i][j];
-			if (k>=0) {
-				edp[i][j]=-1-k;
-				ne[i][j]=q;
-				l=vc->cycle_up(edp[i][nup[i]+j],k);
-				do {
-					m=edp[k][l];
-					edp[k][l]=-1-m;
-					ne[k][l]=q;
-					l=vc->cycle_up(edp[k][nup[k]+l],m);
-					k=m;
-				} while (k!=i);
-				q++;
-			}
+	for(i=0;i<vc->p;i++) for(j=0;j<nup[i];j++) {
+		k=edp[i][j];
+		if (k>=0) {
+			edp[i][j]=-1-k;
+			ne[i][j]=q;
+			l=vc->cycle_up(edp[i][nup[i]+j],k);
+			do {
+				m=edp[k][l];
+				edp[k][l]=-1-m;
+				ne[k][l]=q;
+				l=vc->cycle_up(edp[k][nup[k]+l],m);
+				k=m;
+			} while (k!=i);
+			q++;
 		}
 	}
 	vc->reset_edges();
