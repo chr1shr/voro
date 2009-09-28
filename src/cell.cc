@@ -38,7 +38,7 @@ template<class n_option>
 voronoicell_base<n_option>::~voronoicell_base() {
 	delete [] ds;
 	delete [] ds2;
-	for(int i=0;i<current_vertex_order;i++) if (mem[i]>0) delete [] mep[i];
+	for(int i=0;i<current_vertex_order;i++) if(mem[i]>0) delete [] mep[i];
 	delete [] mem;
 	delete [] mec;
 	delete [] mep;
@@ -71,7 +71,7 @@ void voronoicell_base<n_option>::add_memory(int i) {
 	} else {
 		int j=0,k,*l;
 		mem[i]*=2;
-		if (mem[i]>max_n_vertices) voropp_fatal_error("Point memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+		if(mem[i]>max_n_vertices) voropp_fatal_error("Point memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 		cerr << "Order " << i << " vertex memory scaled up to " << mem[i] << endl;
 #endif
@@ -114,7 +114,7 @@ void voronoicell_base<n_option>::add_memory(int i) {
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_vertices() {
 	int i=2*current_vertices,j,**pp,*pnu;
-	if (i>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	if(i>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Vertex memory scaled up to " << i << endl;
 #endif
@@ -140,7 +140,7 @@ void voronoicell_base<n_option>::add_memory_vertices() {
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_vorder() {
 	int i=2*current_vertex_order,j,*p1,**p2;
-	if (i>max_vertex_order) voropp_fatal_error("Vertex order memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	if(i>max_vertex_order) voropp_fatal_error("Vertex order memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Vertex order memory scaled up to " << i << endl;
 #endif
@@ -163,7 +163,7 @@ void voronoicell_base<n_option>::add_memory_vorder() {
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_ds() {
 	int i=2*current_delete_size,j,*pds;
-	if (i>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	if(i>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Delete stack 1 memory scaled up to " << i << endl;
 #endif
@@ -179,7 +179,7 @@ void voronoicell_base<n_option>::add_memory_ds() {
 template<class n_option>
 void voronoicell_base<n_option>::add_memory_ds2() {
 	int i=2*current_delete2_size,j,*pds2;
-	if (i>max_delete2_size) voropp_fatal_error("Delete stack 2 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	if(i>max_delete2_size) voropp_fatal_error("Delete stack 2 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Delete stack 2 memory scaled up to " << i << endl;
 #endif
@@ -445,7 +445,7 @@ inline void voronoicell_base<n_option>::init_test(int n) {
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
-	if (mem[1]==mec[1]) add_memory(1);
+	if(mem[1]==mec[1]) add_memory(1);
 	neighbor.set_pointer(p,1);
 	int *q=mep[1]+3*mec[1]++;ed[p]=q;
 	q[0]=a;q[2]=p++;
@@ -457,7 +457,7 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
-	if (mem[2]==mec[2]) add_memory(2);
+	if(mem[2]==mec[2]) add_memory(2);
 	neighbor.set_pointer(p,2);
 	int *q=mep[2]+5*mec[2]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[4]=p++;
@@ -469,7 +469,7 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
-	if (mem[3]==mec[3]) add_memory(3);
+	if(mem[3]==mec[3]) add_memory(3);
 	neighbor.set_pointer(p,3);
 	int *q=mep[3]+7*mec[3]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
@@ -481,7 +481,7 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
-	if (mem[4]==mec[4]) add_memory(4);
+	if(mem[4]==mec[4]) add_memory(4);
 	neighbor.set_pointer(p,4);
 	int *q=mep[4]+9*mec[4]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
@@ -493,7 +493,7 @@ void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int
 template<class n_option>
 void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e) {
 	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
-	if (mem[5]==mec[5]) add_memory(5);
+	if(mem[5]==mec[5]) add_memory(5);
 	neighbor.set_pointer(p,5);
 	int *q=mep[5]+11*mec[5]++;ed[p]=q;
 	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
@@ -530,7 +530,7 @@ void voronoicell_base<n_option>::construct_relations() {
 		l=0;
 		while(ed[k][l]!=i) {
 			l++;
-			if (l==nu[k]) voropp_fatal_error("Relation table construction failed",VOROPP_INTERNAL_ERROR);
+			if(l==nu[k]) voropp_fatal_error("Relation table construction failed",VOROPP_INTERNAL_ERROR);
 		}
 		ed[i][nu[i]+j]=l;
 	}
@@ -603,11 +603,11 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			// If the last point in the iteration is within the
 			// plane, we need to do the complicated setup
 			// routine. Otherwise, we use the regular iteration.
-			if (lw==0) {
+			if(lw==0) {
 				up=lp;
 				complicated_setup=true;
 			} else complicated_setup=false;
-		} else if (uw==-1) {
+		} else if(uw==-1) {
 			us=0;
 			do {
 				qp=ed[up][us];
@@ -637,7 +637,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 					if(us==nu[up]) return true;
 				}
 			}
-			if (qw==1) {
+			if(qw==1) {
 				lp=up;ls=us;l=u;
 				up=qp;us=ed[lp][nu[lp]+ls];u=q;
 				complicated_setup=false;
@@ -664,7 +664,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		qw=1;lw=0;
 		for(qp=0;qp<p;qp++) {
 			qw=sure.test(qp,q);
-			if (qw==1) {
+			if(qw==1) {
 
 				// The point is inside the cutting space. Now
 				// see if we can find a neighbor which isn't.
@@ -672,7 +672,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 					lp=ed[qp][us];
 					if(lp<qp) {
 						lw=sure.test(lp,l);
-						if (lw!=1) break;
+						if(lw!=1) break;
 					}
 				}
 				if(us<nu[qp]) {
@@ -686,7 +686,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 					}
 					break;
 				}
-			} else if (qw==-1) {
+			} else if(qw==-1) {
 
 				// The point is outside the cutting space. See
 				// if we can find a neighbor which isn't.
@@ -694,7 +694,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 					up=ed[qp][ls];
 					if(up<qp) {
 						uw=sure.test(up,u);
-						if (uw!=-1) break;
+						if(uw!=-1) break;
 					}
 				}
 				if(ls<nu[qp]) {
@@ -725,7 +725,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	// it.
 	if(p==current_vertices) add_memory_vertices();
 
-	if (complicated_setup) {
+	if(complicated_setup) {
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
 		// the same location.
@@ -752,7 +752,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				// then all of the vertices are inside
 				// or on the plane, so the cell is completely
 				// deleted
-				if (i==nu[up]) return false;
+				if(i==nu[up]) return false;
 				lp=ed[up][i];
 				lw=sure.test(lp,l);
 			} while (lw!=-1);
@@ -764,7 +764,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			while(j<nu[up]) {
 				lp=ed[up][j];
 				lw=sure.test(lp,l);
-				if (lw!=-1) break;
+				if(lw!=-1) break;
 				j++;
 			}
 
@@ -784,7 +784,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			// Add memory for the new vertex if needed, and
 			// initialize
 			while (nu[p]>=current_vertex_order) add_memory_vorder();
-			if (mec[nu[p]]==mem[nu[p]]) add_memory(nu[p]);
+			if(mec[nu[p]]==mem[nu[p]]) add_memory(nu[p]);
 			neighbor.set_pointer(p,nu[p]);
 			ed[p]=mep[nu[p]]+(2*nu[p]+1)*mec[nu[p]]++;
 			ed[p][2*nu[p]]=p;
@@ -819,7 +819,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				// If i reaches zero, then we have a point in
 				// the plane all of whose edges are outside
 				// the cutting space, so we just exit
-				if (i==0) return true;
+				if(i==0) return true;
 				lp=ed[up][i];
 				lw=sure.test(lp,l);
 			}
@@ -841,7 +841,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			// the remaining one is on the plane. For that case we
 			// have to reduce the edge count by one to prevent
 			// doubling up.
-			if (i==j&&qw==0) {
+			if(i==j&&qw==0) {
 				double_edge=true;
 				nu[p]=nu[up];
 			} else {
@@ -852,7 +852,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			// already
 			k=1;
 			while(nu[p]>=current_vertex_order) add_memory_vorder();
-			if (mec[nu[p]]==mem[nu[p]]) add_memory(nu[p]);
+			if(mec[nu[p]]==mem[nu[p]]) add_memory(nu[p]);
 
 			// Copy the edges of the original vertex into the new
 			// one. Delete the edges of the original vertex, and
@@ -886,13 +886,13 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			}
 			qs=j;
 		}
-		if (!double_edge) {
+		if(!double_edge) {
 			neighbor.copy(p,k,up,qs);
 			neighbor.set(p,0,p_id);
 		} else neighbor.copy(p,0,up,qs);
 
 		// Add this point to the auxiliary delete stack
-		if (stack2==current_delete2_size) add_memory_ds2();
+		if(stack2==current_delete2_size) add_memory_ds2();
 		ds2[stack2++]=up;
 
 		// Look at the edges on either side of the group that was
@@ -912,7 +912,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		// points lp and up. Create a new vertex between them which
 		// lies on the cutting plane. Since u and l differ by at least
 		// the tolerance, this division should never screw up.
-		if (stack==current_delete_size) add_memory_ds();
+		if(stack==current_delete_size) add_memory_ds();
 		ds[stack++]=up;
 		r=1/(u-l);
 		pts[3*p]=(pts[3*lp]*u-pts[3*up]*l)*r;
@@ -922,7 +922,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		// This point will always have three edges. Connect one of them
 		// to lp.
 		nu[p]=3;
-		if (mec[3]==mem[3]) add_memory(3);
+		if(mec[3]==mem[3]) add_memory(3);
 		neighbor.set_pointer(p,3);
 		neighbor.set(p,0,p_id);
 		neighbor.copy(p,1,up,us);
@@ -952,17 +952,17 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		lp=ed[qp][qs];
 		lw=sure.test(lp,l);
 
-		if (lw==1) {
+		if(lw==1) {
 
 			// The point is still in the cutting space. Just add it
 			// to the delete stack and keep moving.
-			if (stack==current_delete_size) add_memory_ds();
+			if(stack==current_delete_size) add_memory_ds();
 			qs=cycle_up(ed[qp][nu[qp]+qs],lp);
 			qp=lp;
 			q=l;
 			ds[stack++]=qp;
 
-		} else if (lw==-1) {
+		} else if(lw==-1) {
 
 			// The point is outside of the cutting space, so we've
 			// found an intersected edge. Introduce a regular point
@@ -975,7 +975,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			pts[3*p+1]=(pts[3*lp+1]*q-pts[3*qp+1]*l)*r;
 			pts[3*p+2]=(pts[3*lp+2]*q-pts[3*qp+2]*l)*r;
 			nu[p]=3;
-			if (mec[3]==mem[3]) add_memory(3);
+			if(mec[3]==mem[3]) add_memory(3);
 			ls=ed[qp][qs+nu[qp]];
 			neighbor.set_pointer(p,3);
 			neighbor.set(p,0,p_id);
@@ -1034,7 +1034,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				new_double_edge=false;
 				if(j>0) k+=nu[j];
 			} else {
-				if (j>0) {
+				if(j>0) {
 
 					// This vertex was visited before, so
 					// count those vertices to the ones we
@@ -1067,7 +1067,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 							// case when that's the way into the end
 							// of the facet, because that way always creates
 							// an edge.
-							if (j==rp&&lp==up&&ed[qp][nu[qp]+qs]==us) {
+							if(j==rp&&lp==up&&ed[qp][nu[qp]+qs]==us) {
 								new_double_edge=true;
 								k-=1;
 							} else new_double_edge=false;
@@ -1098,7 +1098,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			// we are forming. Add memory for it if it doesn't exist
 			// already.
 			while(k>=current_vertex_order) add_memory_vorder();
-			if (mec[k]==mem[k]) add_memory(k);
+			if(mec[k]==mem[k]) add_memory(k);
 
 			// Now create a new vertex with order k, or augment
 			// the existing one
@@ -1140,7 +1140,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				neighbor.set_pointer(p,k);
 				ed[p]=mep[k]+(2*k+1)*mec[k]++;
 				ed[p][2*k]=p;
-				if (stack2==current_delete2_size) add_memory_ds2();
+				if(stack2==current_delete2_size) add_memory_ds2();
 				ds2[stack2++]=qp;
 				pts[3*p]=pts[3*qp];
 				pts[3*p+1]=pts[3*qp+1];
@@ -1154,7 +1154,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			// Unless the previous case was a double edge, connect
 			// the first available edge of the new vertex to the
 			// last one in the facet
-			if (!double_edge) {
+			if(!double_edge) {
 				ed[j][i]=cp;
 				ed[j][nu[j]+i]=cs;
 				neighbor.set(j,i,p_id);
@@ -1211,7 +1211,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		ed[j][2*nu[j]]=j;
 		if(ed[j][nu[j]]!=-1) {
 			ed[j][nu[j]]=-1;
-			if (stack==current_delete_size) add_memory_ds();
+			if(stack==current_delete_size) add_memory_ds();
 			ds[stack++]=j;
 		}
 	}
@@ -1222,8 +1222,8 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		for(j=0;j<nu[cp];j++) {
 			qp=ed[cp][j];
 			if(qp!=-1) {
-				if (ed[qp][nu[qp]]!=-1) {
-					if (stack==current_delete_size) add_memory_ds();
+				if(ed[qp][nu[qp]]!=-1) {
+					if(stack==current_delete_size) add_memory_ds();
 					ds[stack++]=qp;
 					ed[qp][nu[qp]]=-1;
 				}
@@ -1243,7 +1243,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			ed[ed[p][2*j]]=ed[p];
 		}
 		up=ds[--stack];
-		if (up<p) {
+		if(up<p) {
 
 			// Vertex management
 			pts[3*up]=pts[3*p];
@@ -1263,7 +1263,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 			ed[up]=ed[p];
 			nu[up]=nu[p];
 			for(i=0;i<nu[up];i++) {
-				if (ed[up][i]==-1)
+				if(ed[up][i]==-1)
 					voropp_fatal_error("Dangling edge found",VOROPP_INTERNAL_ERROR);
 				ed[ed[up][i]][ed[up][nu[up]+i]]=up;
 			}
@@ -1272,7 +1272,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	}
 
 	// Check for any vertices of zero order
-	if (mec[0]>0) voropp_fatal_error("Zero order vertex formed",VOROPP_INTERNAL_ERROR);
+	if(mec[0]>0) voropp_fatal_error("Zero order vertex formed",VOROPP_INTERNAL_ERROR);
 
 	// Collapse any order 2 vertices and exit
 	return collapse_order2();
@@ -1297,7 +1297,7 @@ inline bool voronoicell_base<n_option>::collapse_order2() {
 		// Pick a order 2 vertex and read in its edges
 		i=--mec[2];
 		j=mep[2][5*i];k=mep[2][5*i+1];
-		if (j==k) {
+		if(j==k) {
 #if VOROPP_VERBOSE >=1
 			cerr << "Order two vertex joins itself" << endl;
 #endif
@@ -1319,15 +1319,15 @@ inline bool voronoicell_base<n_option>::collapse_order2() {
 			ed[j][nu[j]+a]=b;
 			ed[k][nu[k]+b]=a;
 		} else {
-			if (!delete_connection(j,a,false)) return false;
-			if (!delete_connection(k,b,true)) return false;
+			if(!delete_connection(j,a,false)) return false;
+			if(!delete_connection(k,b,true)) return false;
 		}
 
 		// Compact the memory
 		--p;
 		if(up==i) up=0;
 		if(p!=i) {
-			if (up==p) up=i;
+			if(up==p) up=i;
 			pts[3*i]=pts[3*p];
 			pts[3*i+1]=pts[3*p+1];
 			pts[3*i+2]=pts[3*p+2];
@@ -1364,7 +1364,7 @@ inline bool voronoicell_base<n_option>::collapse_order1() {
 		--p;
 		if(up==i) up=0;
 		if(p!=i) {
-			if (up==p) up=i;
+			if(up==p) up=i;
 			pts[3*i]=pts[3*p];
 			pts[3*i+1]=pts[3*p+1];
 			pts[3*i+2]=pts[3*p+2];
@@ -1494,7 +1494,7 @@ fpoint voronoicell_base<n_option>::volume() {
 		uz=pts[2]-pts[3*i+2];
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (k>=0) {
+			if(k>=0) {
 				ed[i][j]=-1-k;
 				l=cycle_up(ed[i][nu[i]+j],k);
 				vx=pts[3*k]-pts[0];
@@ -1526,32 +1526,30 @@ void voronoicell_base<n_option>::output_face_areas(ostream &os) {
 	fpoint area;
 	int i,j,k,l,m,n;
 	fpoint ux,uy,uz,vx,vy,vz,wx,wy,wz;
-	for(i=1;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				area=0;
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if(k>=0) {
+			area=0;
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			m=ed[k][l];ed[k][l]=-1-m;
+			while(m!=i) {
+				n=cycle_up(ed[k][nu[k]+l],m);
+				ux=pts[3*k]-pts[3*i];
+				uy=pts[3*k+1]-pts[3*i+1];
+				uz=pts[3*k+2]-pts[3*i+2];
+				vx=pts[3*m]-pts[3*i];
+				vy=pts[3*m+1]-pts[3*i+1];
+				vz=pts[3*m+2]-pts[3*i+2];
+				wx=uy*vz-uz*vy;
+				wy=uz*vx-ux*vz;
+				wz=ux*vy-uy*vx;
+				area+=sqrt(wx*wx+wy*wy+wz*wz);
+				k=m;l=n;
 				m=ed[k][l];ed[k][l]=-1-m;
-				while(m!=i) {
-					n=cycle_up(ed[k][nu[k]+l],m);
-					ux=pts[3*k]-pts[3*i];
-					uy=pts[3*k+1]-pts[3*i+1];
-					uz=pts[3*k+2]-pts[3*i+2];
-					vx=pts[3*m]-pts[3*i];
-					vy=pts[3*m+1]-pts[3*i+1];
-					vz=pts[3*m+2]-pts[3*i+2];
-					wx=uy*vz-uz*vy;
-					wy=uz*vx-ux*vz;
-					wz=ux*vy-uy*vx;
-					area+=sqrt(wx*wx+wy*wy+wz*wz);
-					k=m;l=n;
-					m=ed[k][l];ed[k][l]=-1-m;
-				}
-				if(later) os << " ";else later=true;
-				os << 0.125*area;
 			}
+			if(later) os << " ";else later=true;
+			os << 0.125*area;
 		}
 	}
 	reset_edges();
@@ -1565,28 +1563,26 @@ fpoint voronoicell_base<n_option>::surface_area() {
 	fpoint area=0;
 	int i,j,k,l,m,n;
 	fpoint ux,uy,uz,vx,vy,vz,wx,wy,wz;
-	for(i=1;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if(k>=0) {
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			m=ed[k][l];ed[k][l]=-1-m;
+			while(m!=i) {
+				n=cycle_up(ed[k][nu[k]+l],m);
+				ux=pts[3*k]-pts[3*i];
+				uy=pts[3*k+1]-pts[3*i+1];
+				uz=pts[3*k+2]-pts[3*i+2];
+				vx=pts[3*m]-pts[3*i];
+				vy=pts[3*m+1]-pts[3*i+1];
+				vz=pts[3*m+2]-pts[3*i+2];
+				wx=uy*vz-uz*vy;
+				wy=uz*vx-ux*vz;
+				wz=ux*vy-uy*vx;
+				area+=sqrt(wx*wx+wy*wy+wz*wz);
+				k=m;l=n;
 				m=ed[k][l];ed[k][l]=-1-m;
-				while(m!=i) {
-					n=cycle_up(ed[k][nu[k]+l],m);
-					ux=pts[3*k]-pts[3*i];
-					uy=pts[3*k+1]-pts[3*i+1];
-					uz=pts[3*k+2]-pts[3*i+2];
-					vx=pts[3*m]-pts[3*i];
-					vy=pts[3*m+1]-pts[3*i+1];
-					vz=pts[3*m+2]-pts[3*i+2];
-					wx=uy*vz-uz*vy;
-					wy=uz*vx-ux*vz;
-					wz=ux*vy-uy*vx;
-					area+=sqrt(wx*wx+wy*wy+wz*wz);
-					k=m;l=n;
-					m=ed[k][l];ed[k][l]=-1-m;
-				}
 			}
 		}
 	}
@@ -1610,7 +1606,7 @@ void voronoicell_base<n_option>::centroid(fpoint &cx,fpoint &cy,fpoint &cz) {
 		uz=pts[2]-pts[3*i+2];
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (k>=0) {
+			if(k>=0) {
 				ed[i][j]=-1-k;
 				l=cycle_up(ed[i][nu[i]+j],k);
 				vx=pts[3*k]-pts[0];
@@ -1663,15 +1659,13 @@ template<class n_option>
 fpoint voronoicell_base<n_option>::total_edge_distance() {
 	int i,j,k;
 	fpoint dis=0,dx,dy,dz;
-	for(i=0;i<p-1;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>i) {
-				dx=pts[3*k]-pts[3*i];
-				dy=pts[3*k+1]-pts[3*i+1];
-				dz=pts[3*k+2]-pts[3*i+2];
-				dis+=sqrt(dx*dx+dy*dy+dz*dz);
-			}
+	for(i=0;i<p-1;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if(k>i) {
+			dx=pts[3*k]-pts[3*i];
+			dy=pts[3*k+1]-pts[3*i+1];
+			dz=pts[3*k+2]-pts[3*i+2];
+			dis+=sqrt(dx*dx+dy*dy+dz*dz);
 		}
 	}
 	return 0.5*dis;
@@ -1690,7 +1684,7 @@ void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z
 		os << "sphere{<" << ux << "," << uy << "," << uz << ">,r}\n";
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (k<i) os << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}\n";
+			if(k<i) os << "cylinder{<" << ux << "," << uy << "," << uz << ">,<" << x+0.5*pts[3*k] << "," << y+0.5*pts[3*k+1] << "," << z+0.5*pts[3*k+2] << ">,r}\n";
 		}
 	}
 }
@@ -1728,7 +1722,7 @@ void voronoicell_base<n_option>::draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoi
 		ux=x+0.5*pts[3*i];uy=y+0.5*pts[3*i+1];uz=z+0.5*pts[3*i+2];
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
-			if (ed[i][j]<i) os << ux << " " << uy << " " << uz << "\n" << x+0.5*pts[3*k] << " " << y+0.5*pts[3*k+1] << " " << z+0.5*pts[3*k+2] << "\n\n\n";
+			if(ed[i][j]<i) os << ux << " " << uy << " " << uz << "\n" << x+0.5*pts[3*k] << " " << y+0.5*pts[3*k+1] << " " << z+0.5*pts[3*k+2] << "\n\n\n";
 		}
 	}
 }
@@ -1772,19 +1766,17 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(ostream &os,fpoint x,fpoin
 		os << "<" << x+0.5*pts[3*i] << "," << y+0.5*pts[3*i+1] << "," << z+0.5*pts[3*i+2] << ">,\n";
 	}
 	os << "}\nface_indices {\n" << 2*(p-2) << ",\n";
-	for(i=1;i<p;i++) {
-		for(j=0;j<nu[i];j++) {
-			k=ed[i][j];
-			if (k>=0) {
-				ed[i][j]=-1-k;
-				l=cycle_up(ed[i][nu[i]+j],k);
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if(k>=0) {
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			m=ed[k][l];ed[k][l]=-1-m;
+			while(m!=i) {
+				n=cycle_up(ed[k][nu[k]+l],m);
+				os << "<" << i << "," << k << "," << m << ">\n";
+				k=m;l=n;
 				m=ed[k][l];ed[k][l]=-1-m;
-				while(m!=i) {
-					n=cycle_up(ed[k][nu[k]+l],m);
-					os << "<" << i << "," << k << "," << m << ">\n";
-					k=m;l=n;
-					m=ed[k][l];ed[k][l]=-1-m;
-				}
 			}
 		}
 	}
@@ -1833,9 +1825,7 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(fpoint x,fpoint y,fpoint z
  * \param[in] r the amount to perturb each coordinate by. */
 template<class n_option>
 inline void voronoicell_base<n_option>::perturb(fpoint r) {
-	for(int i=0;i<3*p;i++) {
-		pts[i]+=(2*fpoint(rand())/RAND_MAX-1)*r;
-	}
+	for(int i=0;i<3*p;i++) pts[i]+=(2*fpoint(rand())/RAND_MAX-1)*r;
 }
 
 /** Initializes the suretest class and creates a buffer for marginal points. */
@@ -1891,9 +1881,9 @@ inline int suretest::test(int n,fpoint &ans) {
 int suretest::check_marginal(int n,fpoint &ans) {
 	int i;
 	for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
-	if (sc==2*current_marginal) {
+	if(sc==2*current_marginal) {
 		i=2*current_marginal;
-		if (i>max_marginal) voropp_fatal_error("Marginal case buffer allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+		if(i>max_marginal) voropp_fatal_error("Marginal case buffer allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 		cerr << "Marginal cases buffer scaled up to " << i << endl;
 #endif
@@ -1920,7 +1910,7 @@ void voronoicell_base<n_option>::print_edges() {
 		neighbor.print_edges(i);
 		cout << "    " << pts[3*i] << " " << pts[3*i+1] << " " << pts[3*i+2];
 		cout << " " << ed[i];
-		if (ed[i]>=mep[nu[i]]+mec[nu[i]]*(2*nu[i]+1)) cout << " Memory error";
+		if(ed[i]>=mep[nu[i]]+mec[nu[i]]*(2*nu[i]+1)) cout << " Memory error";
 		cout << endl;
 	}
 }
@@ -1934,7 +1924,7 @@ void voronoicell_base<n_option>::output_normals(ostream &os) {
 	int i,j,k;bool later=false;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
-		if (k>=0) {
+		if(k>=0) {
 			if(later) os << " ";
 			else later=true;
 			output_normals_search(os,i,j,k);
@@ -2015,7 +2005,7 @@ int voronoicell_base<n_option>::number_of_faces() {
 	int i,j,k,l,m,s=0;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
-		if (k>=0) {
+		if(k>=0) {
 			s++;
 			ed[i][j]=-1-k;
 			l=cycle_up(ed[i][nu[i]+j],k);
@@ -2072,7 +2062,7 @@ void voronoicell_base<n_option>::output_face_perimeters(ostream &os) {
 	fpoint dx,dy,dz,perim;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
-		if (k>=0) {
+		if(k>=0) {
 			dx=pts[3*k]-pts[3*i];
 			dy=pts[3*k+1]-pts[3*i+1];
 			dz=pts[3*k+2]-pts[3*i+2];
@@ -2104,7 +2094,7 @@ void voronoicell_base<n_option>::output_face_vertices(ostream &os) {
 	int i,j,k,l,m;bool later=false;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
-		if (k>=0) {
+		if(k>=0) {
 			if(later) os << " ";else later=true;
 			os << "(" << i;
 			ed[i][j]=-1-k;
@@ -2129,7 +2119,7 @@ void voronoicell_base<n_option>::output_face_orders(ostream &os) {
 	int i,j,k,l,m,q;bool later=false;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
-		if (k>=0) {
+		if(k>=0) {
 			q=1;
 			ed[i][j]=-1-k;
 			l=cycle_up(ed[i][nu[i]+j],k);
@@ -2158,7 +2148,7 @@ void voronoicell_base<n_option>::output_face_freq_table(ostream &os) {
 	for(i=0;i<current_facet_size;i++) stat[i]=0;
 	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
-		if (k>=0) {
+		if(k>=0) {
 			q=1;
 			ed[i][j]=-1-k;
 			l=cycle_up(ed[i][nu[i]+j],k);
@@ -2169,7 +2159,7 @@ void voronoicell_base<n_option>::output_face_freq_table(ostream &os) {
 				l=cycle_up(ed[k][nu[k]+l],m);
 				k=m;
 			} while (k!=i);
-			if (q>=current_facet_size) {
+			if(q>=current_facet_size) {
 				newc=current_facet_size*2;
 				pstat=new int[newc];
 				for(k=0;k<current_facet_size;k++) pstat[k]=stat[k];
@@ -2179,7 +2169,7 @@ void voronoicell_base<n_option>::output_face_freq_table(ostream &os) {
 				stat=pstat;
 			}
 			stat[q]++;
-			if (q>maxf) maxf=q;
+			if(q>maxf) maxf=q;
 		}
 	}
 	reset_edges();
@@ -2226,7 +2216,7 @@ void voronoicell_base<n_option>::check_facets() {
 template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	fpoint g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
-	if (g<rsq) return plane_intersects_track(x,y,z,rsq,g);
+	if(g<rsq) return plane_intersects_track(x,y,z,rsq,g);
 	return true;
 }
 
@@ -2241,13 +2231,13 @@ template<class n_option>
 bool voronoicell_base<n_option>::plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 	up=0;
 	fpoint g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
-	if (g<rsq) {
+	if(g<rsq) {
 		int ca=1,cc=p>>3,mp=1;
 		fpoint m;
 		while(ca<cc) {
 			m=x*pts[3*mp]+y*pts[3*mp+1]+z*pts[3*mp+2];
-			if (m>g) {
-				if (m>rsq) return true;
+			if(m>g) {
+				if(m>rsq) return true;
 				g=m;up=mp;
 			}
 			ca+=mp++;
@@ -2276,11 +2266,11 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 			ls=ed[up][nu[up]+us];
 			up=tp;
 			while (t<rsq) {
-				if (++count>=p) {
+				if(++count>=p) {
 #if VOROPP_VERBOSE >=1
 					cerr << "Bailed out of convex calculation" << endl;
 #endif
-					for(tp=0;tp<p;tp++) if (x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) return true;
+					for(tp=0;tp<p;tp++) if(x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) return true;
 					return false;
 				}
 
@@ -2292,7 +2282,7 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 					g=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
 					if(g>t) break;
 				}
-				if (us==ls) {
+				if(us==ls) {
 					us++;
 					while(us<nu[up]) {
 						tp=ed[up][us];
@@ -2300,7 +2290,7 @@ inline bool voronoicell_base<n_option>::plane_intersects_track(fpoint x,fpoint y
 						if(g>t) break;
 						us++;
 					}
-					if (us==nu[up]) return false;
+					if(us==nu[up]) return false;
 				}
 				ls=ed[up][nu[up]+us];up=tp;t=g;
 			}
@@ -2335,7 +2325,7 @@ neighbor_track::neighbor_track(voronoicell_base<neighbor_track> *ivc) : vc(ivc) 
 /** The destructor for the neighbor_track class deallocates the arrays
  * for neighbor tracking. */
 neighbor_track::~neighbor_track() {
-	for(int i=0;i<vc->current_vertex_order;i++) if (vc->mem[i]>0) delete [] mne[i];
+	for(int i=0;i<vc->current_vertex_order;i++) if(vc->mem[i]>0) delete [] mne[i];
 	delete [] mne;
 	delete [] ne;
 }
@@ -2356,8 +2346,9 @@ inline void neighbor_track::add_memory_vertices(int i) {
 	delete [] ne;ne=pp;
 }
 
-/** This increases the size of the maximum allowable vertex
- * order in the neighbor tracking. */
+/** This increases the size of the maximum allowable vertex order in the
+ * neighbor tracking.
+ * \param[in] i the new size of the neighbor vertex order array. */
 inline void neighbor_track::add_memory_vorder(int i) {
 	int **p2;
 	p2=new int*[i];
@@ -2365,9 +2356,8 @@ inline void neighbor_track::add_memory_vorder(int i) {
 	delete [] mne;mne=p2;
 }
 
-/** This initializes the neighbor information for a rectangular box
- * and is called during the initialization routine for the voronoicell
- * class. */
+/** This initializes the neighbor information for a rectangular box and is
+ * called during the initialization routine for the voronoicell class. */
 inline void neighbor_track::init() {
 	int *q;
 	q=mne[3];
@@ -2426,8 +2416,7 @@ inline void neighbor_track::set(int a,int b,int c) {
 	ne[a][b]=c;
 }
 
-/** This is a basic operation to set the auxiliary pointer
- * paux1.
+/** This is a basic operation to set the auxiliary pointer paux1.
  * \param[in] k the order of the vertex to point to. */
 inline void neighbor_track::set_aux1(int k) {
 	paux1=mne[k]+k*vc->mec[k];
@@ -2444,8 +2433,8 @@ inline void neighbor_track::copy_aux1_shift(int a,int b) {
 	paux1[b]=ne[a][b+1];
 }
 
-/** This routine sets the second auxiliary pointer to a new section
- * of memory, and then copies existing neighbor information into it. */
+/** This routine sets the second auxiliary pointer to a new section of memory,
+ * and then copies existing neighbor information into it. */
 inline void neighbor_track::set_aux2_copy(int a,int b) {
 	paux2=mne[b]+b*vc->mec[b];
 	for(int i=0;i<b;i++) ne[a][i]=paux2[i];
@@ -2474,21 +2463,19 @@ inline void neighbor_track::print_edges(int i) {
 	}
 }
 
-/** This allocates a new array and sets the auxiliary pointer
- * to it. */
+/** This allocates a new array and sets the auxiliary pointer to it. */
 inline void neighbor_track::allocate_aux1(int i) {
 	paux1=new int[i*vc->mem[i]];
 }
 
-/** This deletes a particular neighbor array and switches the
- * pointer to the auxiliary pointer. */
+/** This deletes a particular neighbor array and switches the pointer to the
+ * auxiliary pointer. */
 inline void neighbor_track::switch_to_aux1(int i) {
 	delete [] mne[i];
 	mne[i]=paux1;
 }
 
-/** This routine copies neighbor information into the
- * auxiliary pointer. */
+/** This routine copies neighbor information into the auxiliary pointer. */
 inline void neighbor_track::copy_to_aux1(int i,int m) {
 	paux1[m]=mne[i][m];
 }
@@ -2503,21 +2490,19 @@ inline void neighbor_track::set_to_aux1_offset(int k,int m) {
 void neighbor_track::check_facets() {
 	int **edp,*nup;edp=vc->ed;nup=vc->nu;
 	int i,j,k,l,m,q;
-	for(i=0;i<vc->p;i++) {
-		for(j=0;j<nup[i];j++) {
-			k=edp[i][j];
-			if (k>=0) {
-				edp[i][j]=-1-k;
-				q=ne[i][j];
-				l=vc->cycle_up(edp[i][nup[i]+j],k);
-				do {
-					m=edp[k][l];
-					edp[k][l]=-1-m;
-					if (ne[k][l]!=q) cerr << "Facet error at (" << k << "," << l << ")=" << ne[k][l] << ", started from (" << i << "," << j << ")=" << q << endl;
-					l=vc->cycle_up(edp[k][nup[k]+l],m);
-					k=m;
-				} while (k!=i);
-			}
+	for(i=0;i<vc->p;i++) for(j=0;j<nup[i];j++) {
+		k=edp[i][j];
+		if(k>=0) {
+			edp[i][j]=-1-k;
+			q=ne[i][j];
+			l=vc->cycle_up(edp[i][nup[i]+j],k);
+			do {
+				m=edp[k][l];
+				edp[k][l]=-1-m;
+				if(ne[k][l]!=q) cerr << "Facet error at (" << k << "," << l << ")=" << ne[k][l] << ", started from (" << i << "," << j << ")=" << q << endl;
+				l=vc->cycle_up(edp[k][nup[k]+l],m);
+				k=m;
+			} while (k!=i);
 		}
 	}
 	vc->reset_edges();
@@ -2532,7 +2517,7 @@ void neighbor_track::neighbors(ostream &os,bool later) {
 	int i,j,k,l,m;
 	for(i=0;i<vc->p;i++) for(j=0;j<nup[i];j++) {
 		k=edp[i][j];
-		if (k>=0) {
+		if(k>=0) {
 			if(later) os << " ";else later=true;
 			os << ne[i][j];
 			edp[i][j]=-1-k;
@@ -2554,7 +2539,7 @@ void neighbor_track::label_facets() {
 	int i,j,k,l,m,q=1;
 	for(i=0;i<vc->p;i++) for(j=0;j<nup[i];j++) {
 		k=edp[i][j];
-		if (k>=0) {
+		if(k>=0) {
 			edp[i][j]=-1-k;
 			ne[i][j]=q;
 			l=vc->cycle_up(edp[i][nup[i]+j],k);

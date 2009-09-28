@@ -70,12 +70,10 @@ container_base<r_option>::~container_base() {
 template<class r_option>
 void container_base<r_option>::draw_particles(ostream &os) {
 	int c,l,i;
-	for(l=0;l<nxyz;l++) {
-		for(c=0;c<co[l];c++) {
-			os << id[l][c];
-			for(i=sz*c;i<sz*(c+1);i++) os << " " << p[l][i];
-			os << "\n";
-		}
+	for(l=0;l<nxyz;l++) for(c=0;c<co[l];c++) {
+		os << id[l][c];
+		for(i=sz*c;i<sz*(c+1);i++) os << " " << p[l][i];
+		os << "\n";
 	}
 }
 
@@ -102,14 +100,12 @@ void container_base<r_option>::draw_particles(const char *filename) {
 template<class r_option>
 void container_base<r_option>::draw_particles_pov(ostream &os) {
 	int l,c;
-	for(l=0;l<nxyz;l++) {
-		for(c=0;c<co[l];c++) {
-			os << "// id " << id[l][c] << "\n";
-			os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
-			   << p[l][sz*c+2] << ">,";
-			radius.rad(os,l,c);
-			os << "}\n";
-		}
+	for(l=0;l<nxyz;l++) for(c=0;c<co[l];c++) {
+		os << "// id " << id[l][c] << "\n";
+		os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
+		   << p[l][sz*c+2] << ">,";
+		radius.rad(os,l,c);
+		os << "}\n";
 	}
 }
 
@@ -131,7 +127,7 @@ void container_base<r_option>::draw_particles_pov(const char *filename) {
 	os.close();
 }
 
-/** Put a particle into the correct region of the container. 
+/** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 template<class r_option>
@@ -237,11 +233,8 @@ inline void container_base<r_option>::import(const char *filename) {
 template<class r_option>
 void container_base<r_option>::region_count() {
 	int i,j,k,ijk=0;
-	for(k=0;k<nz;k++) {
-		for(j=0;j<ny;j++) {
-			for(i=0;i<nx;i++) cout << "Region (" << i << "," << j << "," << k << "): " << co[ijk++] << " particles" << endl;
-		}
-	}
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
+		cout << "Region (" << i << "," << j << "," << k << "): " << co[ijk++] << " particles" << endl;
 }
 
 /** Clears a container of particles. */
@@ -306,7 +299,7 @@ void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,f
 			os << "// cell " << id[s][q] << "\n";
 			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
-				if (compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_pov(os,x,y,z);
+				if(compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_pov(os,x,y,z);
 			}
 		}
 	} while((s=l1.inc(px,py,pz))!=-1);
@@ -370,7 +363,7 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy
 			x=p[s][sz*q]+px-cx;
 			y=p[s][sz*q+1]+py-cy;
 			z=p[s][sz*q+2]+pz-cz;
-			if (x*x+y*y+z*z<rsq) {
+			if(x*x+y*y+z*z<rsq) {
 				pvol+=radius.volume(s,q);
 				vvol+=bb[id[s][q]];
 			}
@@ -491,7 +484,7 @@ void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_opti
 	int i,j,k,ijk=0,q,fp;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) for(q=0;q<co[ijk];q++) {
 		x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
-		if (!compute_cell(c,i,j,k,ijk,q,x,y,z)) continue;
+		if(!compute_cell(c,i,j,k,ijk,q,x,y,z)) continue;
 		fp=0;
 		while(format[fp]!=0) {
 			if(format[fp]=='%') {
@@ -572,7 +565,7 @@ inline void container_base<r_option>::print_all_internal(voronoicell_base<n_opti
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
 			os << id[ijk][q] << " " << x << " " << y << " " << z;
 			radius.print(os,ijk,q);
-			if (compute_cell(c,i,j,k,ijk,q,x,y,z)) {
+			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) {
 				os << " " << c.volume();
 				c.output_neighbors(os,true);
 				os << "\n";
@@ -709,7 +702,7 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	voropp_loop l(this);
-	if (!initialize_voronoicell(c,x,y,z)) return false;
+	if(!initialize_voronoicell(c,x,y,z)) return false;
 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
@@ -723,7 +716,7 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 				x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
 				rs=x1*x1+y1*y1+z1*z1;
 				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t)) {
-					if (!c.nplane(x1,y1,z1,radius.scale(rs,t,q),id[t][q])) return false;
+					if(!c.nplane(x1,y1,z1,radius.scale(rs,t,q),id[t][q])) return false;
 				}
 			}
 		} while((t=l.inc(qx,qy,qz))!=-1);
@@ -806,7 +799,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	radius.init(ijk,s);
 
 	// Initialize the Voronoi cell to fill the entire container
-	if (!initialize_voronoicell(c,x,y,z)) return false;
+	if(!initialize_voronoicell(c,x,y,z)) return false;
 	fpoint crs,mrs;
 
 	int next_count=3,list_index=0,list_size=8;
@@ -818,7 +811,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		y1=p[ijk][sz*l+1]-y;
 		z1=p[ijk][sz*l+2]-z;
 		rs=radius.scale(x1*x1+y1*y1+z1*z1,ijk,l);
-		if (!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+		if(!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
 	}
 	l++;
 	while(l<co[ijk]) {
@@ -826,7 +819,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		y1=p[ijk][sz*l+1]-y;
 		z1=p[ijk][sz*l+2]-z;
 		rs=radius.scale(x1*x1+y1*y1+z1*z1,ijk,l);
-		if (!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+		if(!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
 		l++;
 	}
 
@@ -932,7 +925,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
-				if (!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
+				if(!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
 			}
 		} else {
 			for(l=0;l<co[dijk];l++) {
@@ -941,7 +934,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				z1=p[dijk][sz*l+2]+qz-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
 				if(rs<mrs) {
-					if (!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
+					if(!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
 				}
 			}
 		}
@@ -1029,7 +1022,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 				y1=p[dijk][sz*l+1]+qy-y;
 				z1=p[dijk][sz*l+2]+qz-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
-				if (!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
+				if(!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
 			}
 		} else {
 			for(l=0;l<co[dijk];l++) {
@@ -1180,7 +1173,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 			y1=p[eijk][sz*l+1]+qy-y;
 			z1=p[eijk][sz*l+2]+qz-z;
 			rs=radius.scale(x1*x1+y1*y1+z1*z1,eijk,l);
-			if (!c.nplane(x1,y1,z1,rs,id[eijk][l])) return false;
+			if(!c.nplane(x1,y1,z1,rs,id[eijk][l])) return false;
 		}
 
 		// If there's not much memory on the block list then add more
