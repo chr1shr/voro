@@ -1,10 +1,11 @@
-Version 0.3.1 (***)
+Version 0.3.1 (September 29, 2009)
 ===================
 * Carried out a major overhaul of the source code comments that are used by
   Doxygen. Several errors in the documentation were fixed.
 * Additional comments in the Makefiles, and added the "phony target" keyword
 * Many code cleanups and standardizations. Some double and triple loops
   were concatenated into one to reduce the amount of indentation.
+* Fixed the import.cc example program
 * Updated Doxyfile to 1.6.1
 
 Version 0.3 (August 17, 2009)
