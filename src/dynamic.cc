@@ -282,7 +282,7 @@ void container_dynamic_base<r_option>::neighbor_distribution(int *bb,fpoint dr,i
 			cz=p[ijk][sz*l+2];
 			if(c1.test(cx,cy,cz)) {
 				s=l1.init(cx,cy,cz,maxr,px,py,pz);
-				while(!l1.reached(i,j,k)) {
+				do {
 					for(q=0;q<co[s];q++) {
 						x=p[s][sz*q]+px-cx;
 						y=p[s][sz*q+1]+py-cy;
@@ -290,15 +290,7 @@ void container_dynamic_base<r_option>::neighbor_distribution(int *bb,fpoint dr,i
 						rr=x*x+y*y+z*z;
 						if(rr<maxrsq) {ll=int(idr*sqrt(rr));if(ll<max) bb[ll]++;}
 					}
-					s=l1.inc(px,py,pz);
-				}
-				for(q=0;q<l;q++) {
-					x=p[s][sz*q]+px-cx;
-					y=p[s][sz*q+1]+py-cy;
-					z=p[s][sz*q+2]+pz-cz;
-					rr=x*x+y*y+z*z;
-					if(rr<maxrsq) {ll=int(idr*sqrt(rr));if(ll<max) bb[ll]++;}
-				}
+				} while ((s=l1.inc(px,py,pz))!=-1);
 			}
 		}
 	}
@@ -321,28 +313,20 @@ fpoint container_dynamic_base<r_option>::packing_badness() {
 			if(c1.test(cx,cy,cz)) {
 				pcount++;
 				s=l1.init(cx,cy,cz,1,px,py,pz);
-				while(!l1.reached(i,j,k)) {
+				do {
 					for(q=0;q<co[s];q++) {
 						x=p[s][sz*q]+px-cx;
 						y=p[s][sz*q+1]+py-cy;
 						z=p[s][sz*q+2]+pz-cz;
 						rr=x*x+y*y+z*z;
-						if(rr<1) badcount+=1-sqrt(rr);
+						if(rr<1&&rr>tolerance) badcount+=1-2*sqrt(rr)+rr;
 					}
-					s=l1.inc(px,py,pz);
-				}
-				for(q=0;q<l;q++) {
-					x=p[s][sz*q]+px-cx;
-					y=p[s][sz*q+1]+py-cy;
-					z=p[s][sz*q+2]+pz-cz;
-					rr=x*x+y*y+z*z;
-					if(rr<1) badcount+=1-sqrt(rr);
-				}
+				} while ((s=l1.inc(px,py,pz))!=-1);
 				wall_badness(cx,cy,cz,badcount);
 			}
 		}
 	}
-	return pcount==0?0:badcount/pcount;
+	return pcount==0?0:sqrt(badcount/pcount);
 }
 
 template<class r_option>
@@ -351,24 +335,24 @@ inline void container_dynamic_base<r_option>::wall_badness(fpoint cx,fpoint cy,f
 	for(int q=0;q<wall_number;q++) {
 		walls[q]->min_distance(cx,cy,cz,x,y,z);
 		rr=x*x+y*y+z*z;
-		if (rr<0.25) badcount+=0.5-sqrt(rr);
+		if (rr<0.25) badcount+=0.25-sqrt(rr)+rr;
 	}
 #ifdef VOROPP_AUTO_X_WALL
 	if(!xperiodic) {
-		if(cx-ax<0.5) badcount+=0.5+ax-cx;
-		if(bx-cx<0.5) badcount+=bx-cx-0.5;
+		if(cx-ax<0.5) badcount+=(0.5+ax-cx)*(0.5+ax-cx);
+		if(bx-cx<0.5) badcount+=(bx-cx-0.5)*(bx-cx-0.5);
 	}
 #endif
 #ifdef VOROPP_AUTO_Y_WALL
 	if(!yperiodic) {
-		if(cy-ay<0.5) badcount+=0.5+ay-cy;
-		if(by-cy<0.5) badcount+=by-cy-0.5;
+		if(cy-ay<0.5) badcount+=(0.5+ay-cy)*(0.5+ay-cy);
+		if(by-cy<0.5) badcount+=(by-cy-0.5)*(by-cy-0.5);
 	}
 #endif
 #ifdef VOROPP_AUTO_Z_WALL
 	if(!zperiodic) {
-		if(cz-az<0.5) badcount+=0.5+az-cz;
-		if(bz-cz<0.5) badcount+=bz-cz-0.5;
+		if(cz-az<0.5) badcount+=(0.5+az-cz)*(0.5+az-cz);
+		if(bz-cz<0.5) badcount+=(bz-cz-0.5)*(bz-cz-0.5);
 	}
 #endif	
 }

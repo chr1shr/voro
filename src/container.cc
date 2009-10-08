@@ -192,15 +192,26 @@ void container_base<r_option>::draw_lammps_restart(ostream &os,fpoint timestep,b
 }
 
 template<class r_option>
+void container_base<r_option>::skip_lammps_restart(istream &is) {
+	int i,n;
+	static char q[256];
+	for(i=0;i<3;i++) is.getline(q,256);
+	is >> n;
+	if (n>100000000) throw fatal_error("Particle number exceeds safe limit");
+	for(i=0;i<6+n;i++) is.getline(q,256);
+}
+
+template<class r_option>
 void container_base<r_option>::import_lammps_restart(istream &is,bool scaled) {
 	int i,n;
-	static const char q[256];
+	static char q[256];
 	clear();
 	for(i=0;i<3;i++) is.getline(q,256);
 	is >> n;
+	if (n>100000000) throw fatal_error("Particle number exceeds safe limit");
 	for(i=0;i<6;i++) is.getline(q,256);
-	radius->import_lammps(is,n,scaled);
-	is.getline();
+	radius.import_lammps(is,n,scaled);
+	is.getline(q,256);
 }
 
 /** An overloaded version of the draw_particles() routine, that just prints

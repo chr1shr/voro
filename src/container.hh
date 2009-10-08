@@ -45,6 +45,7 @@ class container_base {
 		void import(istream &is);
 		inline void import();
 		inline void import(const char *filename);
+		void skip_lammps_restart(istream &is);
 		void import_lammps_restart(istream &is,bool scaled=false);
 		void region_count();
 		void clear();

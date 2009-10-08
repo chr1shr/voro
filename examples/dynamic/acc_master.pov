@@ -27,9 +27,9 @@ light_source{<20,5,-15> color rgb <0.38,0.40,0.40>}
 union{
 #include "acc_sphere_p.pov"
 	rotate <270,0,0>
-	pigment{rgb <0.75,0.88,1>}
-	finish{F_MetalB}
-//	pigment{rgb <1,0.95,0.5>} finish{reflection 0.1 specular 0.3 ambient 0.42}
+//	pigment{rgb <0.75,0.88,1>}
+//	finish{F_MetalB}
+	pigment{rgb <1,0.93,0.5>} finish{reflection 0.1 specular 0.3 ambient 0.45}
 }
 
 /*union{
@@ -46,6 +46,6 @@ union{
 //#include "acc_sphere_v.pov"
 	rotate <270,0,0>
 //	texture{T_Silver_3C}
-	pigment{rgb <0.91,0.36,0.53>} finish{specular 0.56 ambient 0.24 metallic reflection 0.28}
-//	pigment{rgb <0.41,0.76,0.93>} finish{specular 0.56 ambient 0.24 metallic reflection 0.28}
+//	pigment{rgb <0.91,0.36,0.53>} finish{specular 0.56 ambient 0.24 metallic reflection 0.28}
+	pigment{rgb <0.41,0.76,0.93>} finish{specular 0.56 ambient 0.24 metallic reflection 0.28}
 }
