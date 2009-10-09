@@ -23,7 +23,7 @@ EXECUTABLES=network
 all: network
 
 network: $(SOURCE) network.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o network network.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o network network.cc -ggdb
 
 clean:
 	rm -f $(EXECUTABLES)

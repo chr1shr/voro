@@ -22,5 +22,8 @@ int main() {
 
 	// Save the Voronoi network of all the particles to text files
 	// in gnuplot and POV-Ray formats
-	con.print_network("EDI_out");
+	con.print_network("EDI.network");
+	
+	con.draw_particles("EDI.par");
+	con.draw_cells_gnuplot("EDI.out");
 }

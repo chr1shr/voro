@@ -221,17 +221,31 @@ void container_base<r_option>::draw_particles_pov(const char *filename) {
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 template<class r_option>
 void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
-	if(x>ax&&y>ay&&z>az) {
-		int i,j,k;
-		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
-		if(i<nx&&j<ny&&k<nz) {
-			i+=nx*j+nxy*k;
-			if(co[i]==mem[i]) add_particle_memory(i);
-			p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
-			radius.store_radius(i,co[i],0.5);
-			id[i][co[i]++]=n;
-		}
+	x+=0.1;y+=0.1;z+=0.1;
+	int i=step_int((x-ax)*xsp),j=step_int((y-ay)*ysp),k=step_int((z-az)*zsp);
+	if(i<0||i>=nx) {
+		if(xperiodic) {
+			int ai=step_div(i,nx);
+			x+=ai*(bx-ax);i+=ai*nx;
+		} else return;
 	}
+	if(j<0||j>=ny) {
+		if(yperiodic) {
+			int aj=step_div(j,ny);
+			y+=aj*(by-ay);j+=aj*ny;
+		} else return;
+	}
+	if(k<0||k>=nz) {
+		if(zperiodic) {
+			int ak=step_div(k,nz);
+			z+=ak*(bz-az);k+=ak*nz;
+		} else return;
+	}
+	i+=nx*j+nxy*k;
+	if(co[i]==mem[i]) add_particle_memory(i);
+	p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
+	radius.store_radius(i,co[i],0.5);
+	id[i][co[i]++]=n;
 }
 
 /** Put a particle into the correct region of the container.
@@ -509,12 +523,14 @@ void container_base<r_option>::print_network(ostream &os) {
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
-			cout << x << " " << y << " " << z << " " << edc << endl;
+			//cout << x << " " << y << " " << z << " " << edc << endl;
 			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) add_to_network(c,x,y,z);
 		}
 	}
 	for(l=0;l<edc;l++) {
+		cout << l << " : " << nu[l] << endl;
 		for(q=0;q<nu[l];q++) {
+			cout << "->" << ed[l][q] << endl;
 			if(ed[l][q]<l) continue;
 		//	if(ed[l][q]==l) voropp_fatal_error("Self-connecting vertex",VOROPP_INTERNAL_ERROR);
 			i=reg[l];j=3*regp[l];
@@ -539,7 +555,13 @@ void container_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoi
 		nett=new int[netmem];
 	}
 	for(l=0;l<c.p;l++) {
-		vx=x+c.pts[3*l];vy=y+c.pts[3*l+1];vz=z+c.pts[3*l+2];
+		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
+		while(vx>bx) vx-=bx-ax;
+		while(vy>by) vy-=by-ay;
+		while(vz>bz) vz-=bz-az;
+		while(vx<ax) vx+=bx-ax;
+		while(vy<ay) vy+=by-ay;
+		while(vz<az) vz+=bz-az;
 		if(search_previous(vx,vy,vz,ijk,q)) {
 			nett[l]=idmem[ijk][q];
 		} else {
@@ -560,7 +582,7 @@ void container_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoi
 	for(l=0;l<c.p;l++) {
 		k=nett[l];
 		for(q=0;q<c.nu[l];q++) {
-			j=nett[l];
+			j=nett[c.ed[l][q]];
 			if(not_already_there(k,j)) {
 				if(nu[k]==numem[k]) add_particular_vertex_memory(k);
 				ed[k][nu[k]++]=j;
@@ -571,7 +593,9 @@ void container_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoi
 
 template<class r_option> 
 bool container_base<r_option>::not_already_there(int k,int j) {
-	for(int i=0;i<nu[j];i++) if(ed[k][i]==j) return false;
+	for(int i=0;i<nu[k];i++) {
+		if(ed[k][i]==j) return false;
+	}
 	return true;
 }
 
