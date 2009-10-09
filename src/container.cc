@@ -45,9 +45,98 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
 
+	// Additional memory allocation for network
+	pts=new double*[nxyz];
+	idmem=new int*[nxyz];
+	ptsc=new int[nxyz];
+	ptsmem=new int[nxyz];
+	for(l=0;l<nxyz;l++) {
+		pts[l]=new double[3*memi];
+		idmem[l]=new int[memi];
+		ptsc[l]=0;ptsmem[l]=memi;
+	}
+
+	edc=0;edmem=memi*nxyz;
+	ed=new int*[edmem];
+	raded=new double*[edmem];
+	nu=new int[edmem];
+	numem=new int[edmem];
+
+	reg=new int[edmem];
+	regp=new int[edmem]; 
+	for(l=0;l<nxyz;l++) {
+		ed[l]=new int[4];
+		nu[l]=0;numem[l]=4;
+	}
+	for(l=0;l<nxyz;l++) raded[l]=new double[4];
+
+	nett=new int[init_vertices];
+	netmem=init_vertices;
+
 	// Precompute the radius table used in the cell construction
 	initialize_radii();
 }
+
+/** Increase network memory for a particular region. */
+template<class r_option>
+void container_base<r_option>::add_network_memory(int l) {
+	ptsmem[l]<<=1;
+	if(ptsmem[l]>max_container_vertex_memory)
+		voropp_fatal_error("Container vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
+	double *npts(new double[3*ptsmem[l]]);
+	int *nidmem(new int[ptsmem[l]]);
+	for(int i=0;i<3*ptsc[l];i++) npts[i]=pts[l][i];
+	for(int i=0;i<ptsc[l];i++) nidmem[i]=idmem[l][i];
+	delete [] pts[l];
+	delete [] idmem[l];
+	pts[l]=npts;
+	idmem[l]=nidmem;
+}
+
+/** Increase edge network memory. */
+template<class r_option>
+void container_base<r_option>::add_edge_network_memory() {
+	edmem<<=1;
+	int **ned(new int*[edmem]);
+	double **nraded(new double*[edmem]);
+	int *nnu(new int[edmem]);
+	int *nnumem(new int[edmem]);
+	int *nreg(new int[edmem]);
+	int *nregp(new int[edmem]);
+	for(int i=0;i<edc;i++) {
+		ned[i]=ed[i];
+		nraded[i]=raded[i];
+		nnu[i]=nu[i];
+		nnumem[i]=numem[i];
+		nreg[i]=reg[i];
+		nregp[i]=regp[i];
+	}
+	delete [] ed;ed=ned;
+	delete [] raded;raded=nraded;
+	delete [] nu;nu=nnu;
+	delete [] numem;numem=nnumem;
+	delete [] reg;reg=nreg;
+	delete [] regp;regp=nregp;
+}
+
+/** Increase a particular vertex memory. */
+template<class r_option>
+void container_base<r_option>::add_particular_vertex_memory(int l) {
+	numem[l]<<=1;
+	if(numem[l]>1024)
+		voropp_fatal_error("Particular vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
+	int *ned(new int[numem[l]]);
+	double *nraded(new double[numem[l]]);
+	for(int i=0;i<nu[l];i++) {
+		ned[i]=ed[l][i];
+		nraded[i]=raded[l][i];
+	}
+	delete [] ed[l];
+	delete [] raded[l];
+	ed[l]=ned;
+	raded[l]=nraded;
+}
+
 
 /** The container destructor frees the dynamically allocated memory. */
 template<class r_option>
@@ -398,6 +487,117 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint 
 	} while((s=l1.inc(px,py,pz))!=-1);
 	return vvol>tolerance?pvol/vvol*4.1887902047863909846168578443726:0;
 }
+
+template<class r_option>
+void container_base<r_option>::print_network(const char *filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	print_network(os);
+	os.close();
+}
+
+template<class r_option>
+void container_base<r_option>::print_network() {
+	print_network(cout);
+}
+
+template<class r_option>
+void container_base<r_option>::print_network(ostream &os) {
+	voronoicell c;
+	int i,j,k,l,ijk=0,q;
+	double x,y,z;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(q=0;q<co[ijk];q++) {
+			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
+			cout << x << " " << y << " " << z << " " << edc << endl;
+			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) add_to_network(c,x,y,z);
+		}
+	}
+	for(l=0;l<edc;l++) {
+		for(q=0;q<nu[l];q++) {
+			if(ed[l][q]<l) continue;
+		//	if(ed[l][q]==l) voropp_fatal_error("Self-connecting vertex",VOROPP_INTERNAL_ERROR);
+			i=reg[l];j=3*regp[l];
+			os << pts[i][j] << " " << pts[i][j+1] << " " << pts[i][j+2] << "\n";
+			i=reg[ed[l][q]];j=3*regp[ed[l][q]];
+			os << pts[i][j] << " " << pts[i][j+1] << " " << pts[i][j+2] << "\n\n\n";
+		}
+	}
+}
+
+
+template<class r_option>
+template<class n_option>
+void container_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+	int i,j,k,ijk,l,q;
+	fpoint vx,vy,vz;
+	if(c.p>netmem) {
+		do {
+			netmem<<=1;
+		} while(netmem<c.p);
+		delete [] nett;
+		nett=new int[netmem];
+	}
+	for(l=0;l<c.p;l++) {
+		vx=x+c.pts[3*l];vy=y+c.pts[3*l+1];vz=z+c.pts[3*l+2];
+		if(search_previous(vx,vy,vz,ijk,q)) {
+			nett[l]=idmem[ijk][q];
+		} else {
+			i=step_mod(step_int((vx-ax)*xsp),nx);
+			j=step_mod(step_int((vy-ay)*ysp),ny);
+			k=step_mod(step_int((vz-az)*zsp),nz);
+			ijk=i+nx*(j+ny*k);
+			if(edc==edmem) add_edge_network_memory();
+			if(ptsc[ijk]==ptsmem[ijk]) add_network_memory(ijk);
+			reg[edc]=ijk;regp[edc]=ptsc[ijk];
+			pts[ijk][3*ptsc[ijk]]=vx;
+			pts[ijk][3*ptsc[ijk]+1]=vy;
+			pts[ijk][3*ptsc[ijk]+2]=vz;
+			idmem[ijk][ptsc[ijk]++]=edc;
+			nett[l]=edc++;
+		}
+	}
+	for(l=0;l<c.p;l++) {
+		k=nett[l];
+		for(q=0;q<c.nu[l];q++) {
+			j=nett[l];
+			if(not_already_there(k,j)) {
+				if(nu[k]==numem[k]) add_particular_vertex_memory(k);
+				ed[k][nu[k]++]=j;
+			}
+		}
+	}
+}
+
+template<class r_option> 
+bool container_base<r_option>::not_already_there(int k,int j) {
+	for(int i=0;i<nu[j];i++) if(ed[k][i]==j) return false;
+	return true;
+}
+
+template<class r_option>
+bool container_base<r_option>::search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q) {
+	int ai=step_int((x-tolerance-ax)*xsp),aj=step_int((y-tolerance-ay)*ysp),ak=step_int((z-tolerance-az)*zsp);
+	int bi=step_int((x+tolerance-ax)*xsp),bj=step_int((y+tolerance-ay)*ysp),bk=step_int((z+tolerance-az)*zsp);
+	int ci,cj,ck,i,j,k;
+	fpoint wx,wy,wz;
+	for(ci=ai;ci<=bi;ci++) {
+		i=step_mod(ci,nx);
+		for(cj=aj;cj<=bj;cj++) {
+			j=step_mod(cj,nx);
+			for(ck=ak;ck<=bk;ck++) {
+				k=step_mod(ck,nx);
+				ijk=i+nx*(j+ny*k);
+				for(q=0;q<ptsc[ijk];q++) {
+					wx=pts[ijk][3*q];wy=pts[ijk][3*q+1];wz=pts[ijk][3*q+2];
+					if(abs(wx-x)<tolerance&&abs(wy-y)<tolerance&&abs(wz-z)<tolerance) return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 /** Calculates all of the Voronoi cells and sums their volumes. In most cases
  * without walls, the sum of the Voronoi cell volumes should equal the volume
@@ -1871,6 +2071,27 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
 		crs+=gxs;
 	}
 	return false;
+}
+
+
+/** Custom int function, that gives consistent stepping for negative numbers.
+ * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
+ * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/
+template<class r_option>
+inline int container_base<r_option>::step_int(fpoint a) {
+	return a<0?int(a)-1:int(a);
+}
+
+/** Custom mod function, that gives consistent stepping for negative numbers. */
+template<class r_option>
+inline int container_base<r_option>::step_mod(int a,int b) {
+	return a>=0?a%b:b-1-(b-1-a)%b;
+}
+
+/** Custom div function, that gives consistent stepping for negative numbers. */
+template<class r_option>
+inline int container_base<r_option>::step_div(int a,int b) {
+	return a>=0?a/b:-1+(a+1)/b;
 }
 
 #include "worklist.cc"

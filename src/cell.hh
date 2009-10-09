@@ -241,6 +241,9 @@ class voronoicell_base {
 		 * declared inline, so that they should all be completely
 		 * integrated into the routine during compilation. */
 		n_option neighbor;
+		inline int step_mod(int a,int b);
+		inline int step_div(int a,int b);
+		inline int step_int(fpoint a);		
 		inline int cycle_up(int a,int p);
 		inline int cycle_down(int a,int p);
 		void add_memory(int i);

@@ -63,6 +63,11 @@ class container_base {
 		void print_all_custom(const char *format,ostream &os);
 		void print_all_custom(const char *format);
 		void print_all_custom(const char *format,const char *filename);
+		void print_network(ostream &os);
+		void print_network();
+		void print_network(const char *filename);
+		template<class n_option>
+		void add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);		
 		template<class n_option>
 		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
@@ -194,6 +199,22 @@ class container_base {
 		 * derived container_poly class, this also holds particle
 		 * radii. */
 		fpoint **p;
+		
+		fpoint **pts;
+		int **idmem;
+		int *ptsc;
+		int *ptsmem;
+
+		int **ed;
+		double **raded;
+		int edc,edmem;
+		int *nu;
+		int *numem;
+		int *reg;
+		int *regp;
+		int *nett;
+		int netmem;
+
 
 		template<class n_option>
 		inline void print_all_internal(voronoicell_base<n_option> &c,ostream &os);
@@ -203,8 +224,16 @@ class container_base {
 		inline bool initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		void add_particle_memory(int i);
 		void add_list_memory();
+		void add_particular_vertex_memory(int l);
+		void add_edge_network_memory();
+		void add_network_memory(int l);
 	private:
 #include "worklist.hh"
+		inline int step_mod(int a,int b);
+		inline int step_div(int a,int b);
+		inline int step_int(fpoint a);		
+		bool not_already_there(int k,int j);
+		bool search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q);
 		template<class n_option>
 		inline bool corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
 		template<class n_option>

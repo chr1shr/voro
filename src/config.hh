@@ -48,6 +48,9 @@ const int max_delete_size=16777216;
 const int max_delete2_size=16777216;
 /** The maximum amount of particle memory allocated for a single region. */
 const int max_particle_memory=16777216;
+/** The maximum amount of memory for storing vertices in a single region
+ * of the container class. */
+const int max_container_vertex_memory=16777216;
 /** The maximum size for the wall pointer array. */
 const int max_wall_size=2048;
 
