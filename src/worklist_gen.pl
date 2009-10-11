@@ -70,7 +70,7 @@ print W <<EOF;
 
 EOF
 printf W "template<class r_option>\n";
-printf W "const unsigned int container_base<r_option>::wl[%d]={\n",($ls+1)*$hr*$hr*$hr;
+printf W "const unsigned int container_periodic_base<r_option>::wl[%d]={\n",($ls+1)*$hr*$hr*$hr;
 
 # Now create a worklist for each subregion
 for($kk=0;$kk<$hr;$kk++) {

@@ -5,7 +5,7 @@
 // Date     : July 1st 2008
 
 /** \file container.hh
- * \brief Header file for the container_base template and related classes. */
+ * \brief Header file for the container_periodic_base template and related classes. */
 
 #ifndef VOROPP_CONTAINER_HH
 #define VOROPP_CONTAINER_HH
@@ -30,10 +30,10 @@ class wall;
  * importing particles from standard input, and carrying out Voronoi
  * calculations. */
 template<class r_option>
-class container_base {
+class container_periodic_base {
 	public:
-		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
-		~container_base();
+		container_periodic_base(fpoint xb,fpoint xyb,fpoint yb,fpoint xzb,fpoint yzb,fpoint zb,int xn,int yn,int zn,int memi);
+		~container_periodic_base();
 		void draw_particles(const char *filename);
 		void draw_particles();
 		void draw_particles(ostream &os);
@@ -82,16 +82,13 @@ class container_base {
 		bool point_inside(fpoint x,fpoint y,fpoint z);
 		bool point_inside_walls(fpoint x,fpoint y,fpoint z);
 	protected:
-		/** The minimum x coordinate of the container. */
-		const fpoint ax;
 		/** The maximum x coordinate of the container. */
 		const fpoint bx;
-		/** The minimum y coordinate of the container. */
-		const fpoint ay;
+		const fpoint bxy;
 		/** The maximum y coordinate of the container. */
 		const fpoint by;
-		/** The minimum z coordinate of the container. */
-		const fpoint az;
+		const fpoint bxz;
+		const fpoint byz;
 		/** The maximum z coordinate of the container. */
 		const fpoint bz;
 		/** The inverse box length in the x direction, set to
@@ -117,27 +114,18 @@ class container_base {
 		 * the routines which step through boxes in sequence. */
 		const int nxyz;
 		/** The number of boxes in the x direction for the searching mask. */
-		const int hx;
+		int hx;
 		/** The number of boxes in the y direction for the searching mask. */
-		const int hy;
+		int hy;
 		/** The number of boxes in the z direction for the searching mask. */
-		const int hz;
+		int hz;
 		/** A constant, set to the value of hx multiplied by hy, which
 		 * is used in the routines which step through mask boxes in
 		 * sequence. */
-		const int hxy;
+		int hxy;
 		/** A constant, set to the value of hx*hy*hz, which is used in
 		 * the routines which step through mask boxes in sequence. */
-		const int hxyz;
-		/** A boolean value that determines if the x coordinate in
-		 * periodic or not. */
-		const bool xperiodic;
-		/** A boolean value that determines if the y coordinate in
-		 * periodic or not. */
-		const bool yperiodic;
-		/** A boolean value that determines if the z coordinate in
-		 * periodic or not. */
-		const bool zperiodic;
+		int hxyz;
 		/** This sets the current value being used to mark tested blocks
 		 * in the mask. */
 		unsigned int mv;
@@ -214,6 +202,7 @@ class container_base {
 		int *regp;
 		int *nett;
 		int netmem;
+		voronoicell unitcell;
 
 		template<class n_option>
 		inline void print_all_internal(voronoicell_base<n_option> &c,ostream &os);
@@ -226,6 +215,7 @@ class container_base {
 		void add_particular_vertex_memory(int l);
 		void add_edge_network_memory();
 		void add_network_memory(int l);
+		void compute_unit_cell();
 	private:
 #include "worklist.hh"
 		inline int step_mod(int a,int b);
@@ -250,6 +240,9 @@ class container_base {
 		inline void initialize_radii();
 		inline void compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk);
 		inline bool compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gx,fpoint gy,fpoint gz,fpoint& crs,fpoint mrs);
+		inline void unit_cell_apply(int i,int j,int k);
+		bool unit_cell_intersect(int l);
+		inline bool unit_cell_test(int i,int j,int k);
 		friend class voropp_loop;
 		friend class radius_poly;
 };
@@ -272,7 +265,7 @@ class radius_mono {
 		 * that created it, and initializes the mem_size constant to 3.
 		 * \param[in] icc a pointer the container class that created
 		 *                this class. */
-		radius_mono(container_base<radius_mono> *icc) : mem_size(3), cc(icc) {};
+		radius_mono(container_periodic_base<radius_mono> *icc) : mem_size(3), cc(icc) {};
 		inline void import(istream &is);
 		/** This is a blank placeholder function that does nothing. */
 		inline void store_radius(int i,int j,fpoint r) {};
@@ -287,7 +280,7 @@ class radius_mono {
 		inline void print(ostream &os,int ijk,int q,bool later=true) {};
 		inline void rad(ostream &os,int l,int c);
 	private:
-		container_base<radius_mono> *cc;
+		container_periodic_base<radius_mono> *cc;
 };
 
 /** \brief A class encapsulating all routines specifically needed in the
@@ -306,7 +299,7 @@ class radius_poly {
 		/** This constructor sets a pointer back to the container class
 		 * that created it, and initializes the mem_size constant to 4.
 		 */
-		radius_poly(container_base<radius_poly> *icc) :
+		radius_poly(container_periodic_base<radius_poly> *icc) :
 			mem_size(4), cc(icc), max_radius(0) {};
 		inline void import(istream &is);
 		inline void store_radius(int i,int j,fpoint r);
@@ -318,7 +311,7 @@ class radius_poly {
 		inline void print(ostream &os,int ijk,int q,bool later=true);
 		inline void rad(ostream &os,int l,int c);
 	private:
-		container_base<radius_poly> *cc;
+		container_periodic_base<radius_poly> *cc;
 		fpoint max_radius,crad,mul;
 };
 
@@ -335,7 +328,7 @@ class radius_poly {
 class voropp_loop {
 	public:
 		template<class r_option>
-		voropp_loop(container_base<r_option> *q);
+		voropp_loop(container_periodic_base<r_option> *q);
 		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
 		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
 		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
@@ -355,9 +348,8 @@ class voropp_loop {
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);
 		fpoint apx,apy,apz;
-		const fpoint sx,sy,sz,xsp,ysp,zsp,ax,ay,az;
+		const fpoint sx,sy,sz,xsp,ysp,zsp;
 		const int nx,ny,nz,nxy,nxyz;
-		const bool xperiodic,yperiodic,zperiodic;
 };
 
 /** \brief Pure virtual class from which wall objects are derived.
@@ -380,8 +372,8 @@ class wall {
 };
 
 /** The basic container class. */
-typedef container_base<radius_mono> container;
+typedef container_periodic_base<radius_mono> container_periodic;
 
 /** The polydisperse container class. */
-typedef container_base<radius_poly> container_poly;
+typedef container_periodic_base<radius_poly> container_periodic_poly;
 #endif

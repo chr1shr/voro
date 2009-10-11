@@ -158,6 +158,7 @@ class voronoicell_base {
 		 * inside, outside, or on the current cutting plane. */
 		suretest sure;	
 		voronoicell_base();
+		voronoicell_base(voronoicell_base<n_option> &c);
 		~voronoicell_base();
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void init_octahedron(fpoint l);
@@ -269,6 +270,8 @@ class neighbor_none {
 	public:
 		/** This is a blank constructor. */
 		neighbor_none(voronoicell_base<neighbor_none> *ivc) {};
+		/** This is a blank constructor. */
+		neighbor_none(voronoicell_base<neighbor_none> *ivc,voronoicell_base<neighbor_none> &c) {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void allocate(int i,int m) {};
 		/** This is a blank placeholder function that does nothing. */
@@ -343,6 +346,7 @@ class neighbor_track {
 		 * face that is clockwise from the jth edge. */
 		int **ne;
 		neighbor_track(voronoicell_base<neighbor_track> *ivc);
+		neighbor_track(voronoicell_base<neighbor_track> *ivc,voronoicell_base<neighbor_track> &c);
 		~neighbor_track();
 		/** This is a pointer back to the voronoicell class which
 		 * created this class. It is used to reference the members of

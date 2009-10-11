@@ -33,6 +33,31 @@ voronoicell_base<n_option>::voronoicell_base() :
 	}
 }
 
+template<class n_option>
+voronoicell_base<n_option>::voronoicell_base(voronoicell_base<n_option> &c) :
+	current_vertices(c.current_vertices), current_vertex_order(c.current_vertex_order),
+	current_delete_size(c.current_delete_size), current_delete2_size(c.current_delete2_size),
+	ed(new int*[current_vertices]), nu(new int[current_vertices]),
+	pts(new fpoint[3*current_vertices]), mem(new int[current_vertex_order]),
+	mec(new int[current_vertex_order]), mep(new int*[current_vertex_order]),
+	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]), neighbor(this) {
+	int i,j;
+	sure.p=pts;
+	for(i=0;i<current_vertex_order;i++) {
+		mem[i]=c.mem[i];
+		if(mem[i]>0) {
+			mep[i]=new double[mem[i]*(2*i+1)];
+			mec[i]=c.mec[i];
+			for(j=0;j<mec[i]*(2*i+1);j++) mep[i][j]=c.mep[i][j];
+		} else mec[i]=0;
+	}
+	for(i=0;i<p;i++) {
+		nu[i]=c.nu[i];
+		ed[i]=c.ed[i];
+	}
+}
+
+
 /** The voronoicell destructor deallocates all the dynamic memory. */
 template<class n_option>
 voronoicell_base<n_option>::~voronoicell_base() {
@@ -2321,6 +2346,24 @@ neighbor_track::neighbor_track(voronoicell_base<neighbor_track> *ivc) : vc(ivc) 
 	mne[3]=new int[init_3_vertices*3];
 	for(i=4;i<vc->current_vertex_order;i++) mne[i]=new int[init_n_vertices*i];
 }
+
+/** This constructs the neighbor_track class, within a current
+ * voronoicell_neighbor class. It allocates memory for neighbor storage in a
+ * similar way to the voronoicell constructor.
+ * \param[in] ivc a pointer to the parent voronoicell_neighbor class. */
+neighbor_track::neighbor_track(voronoicell_base<neighbor_track> *ivc,voronoicell_base<neighbor_track> &c) : vc(ivc) {
+	int i,j;
+	mne=new int*[vc->current_vertex_order];
+	ne=new int*[vc->current_vertices];
+	for(i=0;i<c.p;i++) ne[i]=c.neighbor.ne[i];
+	for(i=0;i<c.current_vertex_order;i++) {
+		if(c.mem[i]>0) {
+			mne[i]=new int[(c.mem[i])*i];
+			for(j=0;j<c.mec[i];j++) mne[i][j]=c.neighbor.mne[i][j];
+		}
+	}
+}
+
 
 /** The destructor for the neighbor_track class deallocates the arrays
  * for neighbor tracking. */

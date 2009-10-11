@@ -5,7 +5,7 @@
 // Date     : July 1st 2008
 
 /** \file container.cc
- * \brief Function implementations for the container_base template and related
+ * \brief Function implementations for the container_periodic_base template and related
  * classes. */
 
 #include "cell.hh"
@@ -21,26 +21,24 @@
  * \param[in] (za,zb) the minimum and maximum z coordinates.
  * \param[in] (xn,yn,zn) the number of grid blocks in each of the three
  *                       coordinate directions.
- * \param[in] (xper,yper,zper) flags setting whether the container is periodic
- *                             in each coordinate direction.
  * \param[in] memi the initial memory allocation for each block. */
 template<class r_option>
-container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,
-		fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,
-		bool xper,bool yper,bool zper,int memi)
-	: ax(xa),bx(xb),ay(ya),by(yb),az(za),bz(zb),
-	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),zsp(zn/(zb-za)),nx(xn),ny(yn),nz(zn),
-	nxy(xn*yn),nxyz(xn*yn*zn),hx(xper?2*xn+1:xn),hy(yper?2*yn+1:yn),
-	hz(zper?2*zn+1:zn),hxy(hx*hy),hxyz(hx*hy*hz),
-	xperiodic(xper),yperiodic(yper),zperiodic(zper),
+container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,fpoint yb,
+		fpoint xzb,fpoint yzb,fpoint zb,int xn,int yn,int zn,int memi)
+	: bx(xb),bxy(xyb),by(yb),bxz(xzb),byz(yzb),bz(zb),
+	xsp(xn/xb),ysp(yn/yb),zsp(zn/zb),nx(xn),ny(yn),nz(zn),
+	nxy(xn*yn),nxyz(xn*yn*zn),
 	mv(0),wall_number(0),current_wall_size(init_wall_size),radius(this),
-	sz(radius.mem_size),s_size(3*(3+hxy+hz*(hx+hy))),
-	co(new int[nxyz]),mem(new int[nxyz]),mask(new unsigned int[hxyz]),
-	sl(new int[s_size]),mrad(new fpoint[hgridsq*seq_length]),
+	sz(radius.mem_size),
+	co(new int[nxyz]),mem(new int[nxyz]),mrad(new fpoint[hgridsq*seq_length]),
 	walls(new wall*[init_wall_size]),id(new int*[nxyz]),p(new fpoint*[nxyz]) {
 	int l;
 	for(l=0;l<nxyz;l++) co[l]=0;
 	for(l=0;l<nxyz;l++) mem[l]=memi;
+	hx=2*nx+1;hy=2*ny+1;hz=2*nz+1;hxy=hx*hy;hxyz=hxy*hz;
+	s_size=3*(3+hxy+hz*(hx+hy));
+	sl=new int[s_size];
+	mask=new unsigned int[hxyz];
 	for(l=0;l<hxyz;l++) mask[l]=0;
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
@@ -77,9 +75,66 @@ container_base<r_option>::container_base(fpoint xa,fpoint xb,fpoint ya,
 	initialize_radii();
 }
 
+template<class r_option>
+void container_periodic_base<r_option>::compute_unit_cell() {
+	unitcell.init(-10*bx,10*bx,-10*by,10*by,-10*bz,10*bz);
+	int i,j,l=1;
+	while(l<20) {
+		if(unit_cell_intersect(l)) {
+			unit_cell_apply(l,0,0);
+			for(i=1;i<l;i++) {
+				unit_cell_apply(l,i,0);
+				unit_cell_apply(-l,i,0);
+			}
+			for(i=-l;i<=l;i++) unit_cell_apply(i,l,0);
+			for(i=1;i<l;i++) for(j=-l+1;j<=l;j++) {
+				unit_cell_apply(l,j,i);
+				unit_cell_apply(-j,l,i);
+				unit_cell_apply(-l,-j,i);
+				unit_cell_apply(j,-l,i);
+			}
+			for(i=-l;i<=l;i++) for(j=-l;j<=l;j++) unit_cell_apply(i,j,l);
+		} else return;
+	}
+	voropp_fatal_error("Periodic cell computation failed",VOROPP_INTERNAL_ERROR);
+}
+
+template<class r_option>
+inline void container_periodic_base<r_option>::unit_cell_apply(int i,int j,int k) {
+	double x=i*bx+j*bxy+k*bxz,y=j*by+k*byz,z=k*bz;
+	unitcell.plane(x,y,z);
+	unitcell.plane(-x,-y,-z);
+}
+
+template<class r_option>
+bool container_periodic_base<r_option>::unit_cell_intersect(int l) {
+	int i,j;
+	if(unit_cell_test(l,0,0)) return true;
+	for(i=1;i<l;i++) {
+		if(unit_cell_test(l,i,0)) return true;
+		if(unit_cell_test(-l,i,0)) return true;
+	}
+	for(i=-l;i<=l;i++) if(unit_cell_test(i,l,0)) return true;
+	for(i=1;i<l;i++) for(j=-l+1;j<=l;j++) {
+		if(unit_cell_apply(l,j,i)) return true;
+		if(unit_cell_apply(-j,l,i)) return true;
+		if(unit_cell_apply(-l,-j,i)) return true;
+		if(unit_cell_apply(j,-l,i)) return true;
+	}
+	for(i=-l;i<=l;i++) for(j=-l;j<=l;j++) if(unit_cell_apply(i,j,l)) return true;
+	return false;
+}
+
+template<class r_option>
+inline bool container_periodic_base<r_option>::unit_cell_test(int i,int j,int k) {
+	double x=i*bx+j*bxy+k*bxz,y=j*by+k*byz,z=k*bz;
+	double rsq=x*x+y*y+z*z;
+	return unitcell.plane_intersects(x,y,z,rsq);
+}
+
 /** Increase network memory for a particular region. */
 template<class r_option>
-void container_base<r_option>::add_network_memory(int l) {
+void container_periodic_base<r_option>::add_network_memory(int l) {
 	ptsmem[l]<<=1;
 	if(ptsmem[l]>max_container_vertex_memory)
 		voropp_fatal_error("Container vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
@@ -95,7 +150,7 @@ void container_base<r_option>::add_network_memory(int l) {
 
 /** Increase edge network memory. */
 template<class r_option>
-void container_base<r_option>::add_edge_network_memory() {
+void container_periodic_base<r_option>::add_edge_network_memory() {
 	edmem<<=1;
 	int **ned(new int*[edmem]);
 	double **nraded(new double*[edmem]);
@@ -121,7 +176,7 @@ void container_base<r_option>::add_edge_network_memory() {
 
 /** Increase a particular vertex memory. */
 template<class r_option>
-void container_base<r_option>::add_particular_vertex_memory(int l) {
+void container_periodic_base<r_option>::add_particular_vertex_memory(int l) {
 	numem[l]<<=1;
 	if(numem[l]>1024)
 		voropp_fatal_error("Particular vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
@@ -140,7 +195,7 @@ void container_base<r_option>::add_particular_vertex_memory(int l) {
 
 /** The container destructor frees the dynamically allocated memory. */
 template<class r_option>
-container_base<r_option>::~container_base() {
+container_periodic_base<r_option>::~container_periodic_base() {
 	int l;
 	for(l=0;l<nxyz;l++) delete [] p[l];
 	for(l=0;l<nxyz;l++) delete [] id[l];
@@ -157,7 +212,7 @@ container_base<r_option>::~container_base() {
 /** Dumps all the particle positions and identifies to a file.
  * \param[in] os an output stream to write to. */
 template<class r_option>
-void container_base<r_option>::draw_particles(ostream &os) {
+void container_periodic_base<r_option>::draw_particles(ostream &os) {
 	int c,l,i;
 	for(l=0;l<nxyz;l++) for(c=0;c<co[l];c++) {
 		os << id[l][c];
@@ -169,7 +224,7 @@ void container_base<r_option>::draw_particles(ostream &os) {
 /** An overloaded version of the draw_particles() routine, that just prints
  * to standard output. */
 template<class r_option>
-void container_base<r_option>::draw_particles() {
+void container_periodic_base<r_option>::draw_particles() {
 	draw_particles(cout);
 }
 
@@ -177,7 +232,7 @@ void container_base<r_option>::draw_particles() {
  * the particle positions to a file.
  * \param[in] filename the file to write to. */
 template<class r_option>
-void container_base<r_option>::draw_particles(const char *filename) {
+void container_periodic_base<r_option>::draw_particles(const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_particles(os);
@@ -187,7 +242,7 @@ void container_base<r_option>::draw_particles(const char *filename) {
 /** Dumps all the particle positions in POV-Ray format.
  * \param[in] os an output stream to write to. */
 template<class r_option>
-void container_base<r_option>::draw_particles_pov(ostream &os) {
+void container_periodic_base<r_option>::draw_particles_pov(ostream &os) {
 	int l,c;
 	for(l=0;l<nxyz;l++) for(c=0;c<co[l];c++) {
 		os << "// id " << id[l][c] << "\n";
@@ -201,7 +256,7 @@ void container_base<r_option>::draw_particles_pov(ostream &os) {
 /** An overloaded version of the draw_particles_pov() routine, that just prints
  * to standard output. */
 template<class r_option>
-void container_base<r_option>::draw_particles_pov() {
+void container_periodic_base<r_option>::draw_particles_pov() {
 	draw_particles_pov(cout);
 }
 
@@ -209,7 +264,7 @@ void container_base<r_option>::draw_particles_pov() {
  * the particle positions to a file.
  * \param[in] filename the file to write to. */
 template<class r_option>
-void container_base<r_option>::draw_particles_pov(const char *filename) {
+void container_periodic_base<r_option>::draw_particles_pov(const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_particles_pov(os);
@@ -220,25 +275,19 @@ void container_base<r_option>::draw_particles_pov(const char *filename) {
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 template<class r_option>
-void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
-	int i=step_int((x-ax)*xsp),j=step_int((y-ay)*ysp),k=step_int((z-az)*zsp);
+void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
+	int i=step_int(x*xsp),j=step_int(y*ysp),k=step_int(z*zsp);
 	if(i<0||i>=nx) {
-		if(xperiodic) {
-			int ai=step_div(i,nx);
-			x-=ai*(bx-ax);i-=ai*nx;
-		} else return;
+		int ai=step_div(i,nx);
+		x-=ai*bx;i-=ai*nx;
 	}
 	if(j<0||j>=ny) {
-		if(yperiodic) {
-			int aj=step_div(j,ny);
-			y-=aj*(by-ay);j-=aj*ny;
-		} else return;
+		int aj=step_div(j,ny);
+		y-=aj*by;j-=aj*ny;
 	}
 	if(k<0||k>=nz) {
-		if(zperiodic) {
-			int ak=step_div(k,nz);
-			z-=ak*(bz-az);k-=ak*nz;
-		} else return;
+		int ak=step_div(k,nz);
+		z-=ak*bz;k-=ak*nz;
 	}
 	i+=nx*j+nxy*k;
 	if(co[i]==mem[i]) add_particle_memory(i);
@@ -252,10 +301,10 @@ void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle.*/
 template<class r_option>
-void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
-	if(x>ax&&y>ay&&z>az) {
+void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
+	if(x>0&&y>0&&z>0) {
 		int i,j,k;
-		i=int((x-ax)*xsp);j=int((y-ay)*ysp);k=int((z-az)*zsp);
+		i=int(x*xsp);j=int(y*ysp);k=int(z*zsp);
 		if(i<nx&&j<ny&&k<nz) {
 			i+=nx*j+nxy*k;
 			if(co[i]==mem[i]) add_particle_memory(i);
@@ -269,7 +318,7 @@ void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 template<class r_option>
-void container_base<r_option>::add_particle_memory(int i) {
+void container_periodic_base<r_option>::add_particle_memory(int i) {
 	int *idp;fpoint *pp;
 	int l,nmem=2*mem[i];
 #if VOROPP_VERBOSE >=3
@@ -288,7 +337,7 @@ void container_base<r_option>::add_particle_memory(int i) {
 
 /** Add list memory. */
 template<class r_option>
-inline void container_base<r_option>::add_list_memory() {
+inline void container_periodic_base<r_option>::add_list_memory() {
 	int i,j=0,*ps;
 	ps=new int[s_size*2];
 #if VOROPP_VERBOSE >=2
@@ -308,14 +357,14 @@ inline void container_base<r_option>::add_list_memory() {
 /** Import a list of particles from standard input.
  * \param[in] is a standard input stream to read from. */
 template<class r_option>
-void container_base<r_option>::import(istream &is) {
+void container_periodic_base<r_option>::import(istream &is) {
 	radius.import(is);
 }
 
 /** An overloaded version of the import routine, that reads the standard input.
  */
 template<class r_option>
-inline void container_base<r_option>::import() {
+inline void container_periodic_base<r_option>::import() {
 	import(cin);
 }
 
@@ -323,7 +372,7 @@ inline void container_base<r_option>::import() {
  * a particular file.
  * \param[in] filename the name of the file to read from. */
 template<class r_option>
-inline void container_base<r_option>::import(const char *filename) {
+inline void container_periodic_base<r_option>::import(const char *filename) {
 	ifstream is;
 	is.open(filename,ifstream::in);
 	if(is.fail()) voropp_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
@@ -333,7 +382,7 @@ inline void container_base<r_option>::import(const char *filename) {
 
 /** Outputs the number of particles within each region. */
 template<class r_option>
-void container_base<r_option>::region_count() {
+void container_periodic_base<r_option>::region_count() {
 	int i,j,k,ijk=0;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
 		cout << "Region (" << i << "," << j << "," << k << "): " << co[ijk++] << " particles" << endl;
@@ -341,7 +390,7 @@ void container_base<r_option>::region_count() {
 
 /** Clears a container of particles. */
 template<class r_option>
-void container_base<r_option>::clear() {
+void container_periodic_base<r_option>::clear() {
 	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
 	radius.clear_max();
 }
@@ -353,7 +402,7 @@ void container_base<r_option>::clear() {
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
  * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box. */
 template<class r_option>
-void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void container_periodic_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	voropp_loop l1(this);
 	int q,s;
@@ -377,7 +426,7 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xm
  * format.
  * \param[in] filename the name of the file to write to. */
 template<class r_option>
-void container_base<r_option>::draw_cells_gnuplot(const char *filename) {
+void container_periodic_base<r_option>::draw_cells_gnuplot(const char *filename) {
 	voronoicell c;
 	int i,j,k,s=0,q;
 	ofstream os;
@@ -397,7 +446,7 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename) {
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
  * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box. */
 template<class r_option>
-void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+void container_periodic_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	fpoint x,y,z,px,py,pz;
 	voropp_loop l1(this);
 	int q,s;
@@ -422,8 +471,8 @@ void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,f
  * format.
  * \param[in] filename the name of the file to write to. */
 template<class r_option>
-void container_base<r_option>::draw_cells_pov(const char *filename) {
-	draw_cells_pov(filename,ax,bx,ay,by,az,bz);
+void container_periodic_base<r_option>::draw_cells_pov(const char *filename) {
+	draw_cells_pov(filename,0,bx,0,by,0,bz);
 }
 
 /** Computes all of the Voronoi cells in the container, but does nothing
@@ -431,7 +480,7 @@ void container_base<r_option>::draw_cells_pov(const char *filename) {
  * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 template<class r_option>
-void container_base<r_option>::compute_all_cells() {
+void container_periodic_base<r_option>::compute_all_cells() {
 	voronoicell c;
 	int i,j,k,ijk=0,q;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
@@ -447,7 +496,7 @@ void container_base<r_option>::compute_all_cells() {
  * \param[in] bb a pointer to an array to store the volumes. The volume of the
  *               particle with ID number n will be stored at bb[n]. */
 template<class r_option>
-void container_base<r_option>::store_cell_volumes(fpoint *bb) {
+void container_periodic_base<r_option>::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
 	int i,j,k,ijk=0,q;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
@@ -464,7 +513,7 @@ void container_base<r_option>::store_cell_volumes(fpoint *bb) {
  * \param[in] (cx,cy,cz) the center of the test sphere.
  * \param[in] r the radius of the test sphere. */
 template<class r_option>
-fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r) {
+fpoint container_periodic_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r) {
 	voropp_loop l1(this);
 	fpoint px,py,pz,x,y,z,rsq=r*r,pvol=0,vvol=0;
 	int q,s;
@@ -491,7 +540,7 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
  * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box. */
 template<class r_option>
-fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
+fpoint container_periodic_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	voropp_loop l1(this);
 	fpoint x,y,z,px,py,pz,pvol=0,vvol=0;
 	int q,s;
@@ -511,7 +560,7 @@ fpoint container_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint 
 }
 
 template<class r_option>
-void container_base<r_option>::print_network(const char *filename) {
+void container_periodic_base<r_option>::print_network(const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	print_network(os);
@@ -519,12 +568,12 @@ void container_base<r_option>::print_network(const char *filename) {
 }
 
 template<class r_option>
-void container_base<r_option>::print_network() {
+void container_periodic_base<r_option>::print_network() {
 	print_network(cout);
 }
 
 template<class r_option>
-void container_base<r_option>::print_network(ostream &os) {
+void container_periodic_base<r_option>::print_network(ostream &os) {
 	voronoicell c;
 	int i,j,k,l,ijk=0,q;
 	double x,y,z;
@@ -552,7 +601,7 @@ void container_base<r_option>::print_network(ostream &os) {
 
 template<class r_option>
 template<class n_option>
-void container_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	int i,j,k,ijk,l,q;
 	fpoint vx,vy,vz;
 	if(c.p>netmem) {
@@ -567,35 +616,21 @@ void container_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoi
 		if(search_previous(vx,vy,vz,ijk,q)) {
 			nett[l]=idmem[ijk][q];
 		} else {
-			i=step_int((vx-ax)*xsp);
-			j=step_int((vy-ay)*ysp);
-			k=step_int((vz-az)*zsp);
-			cout << i << " " << j << " " << k << " old\n";
-			if(xperiodic) {
-				if(i<0||i>=nx) {
-					int ai=step_div(i,nx);
-					vx-=ai*(bx-ax);i-=ai*nx;
-				}
-			} else {
-				if(i<0) i=0;if(i>=nx) i=nx-1;
+			i=step_int(vx*xsp);
+			j=step_int(vy*ysp);
+			k=step_int(vz*zsp);
+			if(i<0||i>=nx) {
+				int ai=step_div(i,nx);
+				vx-=ai*bx;i-=ai*nx;
 			}
-			if(yperiodic) {
-				if(j<0||j>=ny) {
-					int aj=step_div(j,ny);
-					vy-=aj*(by-ay);j-=aj*ny;
-				}
-			} else {
-				if(j<0) j=0;if(j>=ny) j=ny-1;
+			if(j<0||j>=ny) {
+				int aj=step_div(j,ny);
+				vy-=aj*by;j-=aj*ny;
 			}
-			if(zperiodic) {
-				if(k<0||k>=nz) {
-					int ak=step_div(k,nz);
-					vz-=ak*(bz-az);k-=ak*nz;
-				}
-			} else {
-				if(k<0) k=0;if(k>=nz) k=nz-1;
+			if(k<0||k>=nz) {
+				int ak=step_div(k,nz);
+				vz-=ak*bz;k-=ak*nz;
 			}
-			cout << i << " " << j << " " << k << " new\n";
 			ijk=i+nx*(j+ny*k);
 			if(edc==edmem) add_edge_network_memory();
 			if(ptsc[ijk]==ptsmem[ijk]) add_network_memory(ijk);
@@ -620,7 +655,7 @@ void container_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoi
 }
 
 template<class r_option> 
-bool container_base<r_option>::not_already_there(int k,int j) {
+bool container_periodic_base<r_option>::not_already_there(int k,int j) {
 	for(int i=0;i<nu[k];i++) {
 		if(ed[k][i]==j) return false;
 	}
@@ -628,7 +663,7 @@ bool container_base<r_option>::not_already_there(int k,int j) {
 }
 
 template<class r_option>
-bool container_base<r_option>::search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q) {
+bool container_periodic_base<r_option>::search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q) {
 	voropp_loop l(this);
 	fpoint px,py,pz;
 	ijk=l.init(x,y,z,tolerance,px,py,pz); 
@@ -648,7 +683,7 @@ bool container_base<r_option>::search_previous(fpoint x,fpoint y,fpoint z,int &i
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
 template<class r_option>
-fpoint container_base<r_option>::sum_cell_volumes() {
+fpoint container_periodic_base<r_option>::sum_cell_volumes() {
 	voronoicell c;
 	int i,j,k,ijk=0,q;fpoint vol=0;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
@@ -666,7 +701,7 @@ fpoint container_base<r_option>::sum_cell_volumes() {
  *                   denote the different cell statistics.
  * \param[in] os an open output stream to write to. */
 template<class r_option>
-void container_base<r_option>::print_all_custom(const char *format,ostream &os) {
+void container_periodic_base<r_option>::print_all_custom(const char *format,ostream &os) {
 	int fp=0;
 
 	// Check to see if the sequence "%n" appears in the format sequence
@@ -697,7 +732,7 @@ void container_base<r_option>::print_all_custom(const char *format,ostream &os) 
  * \param[in] format the format of the output lines, using control sequences to
  *                   denote the different cell statistics. */
 template<class r_option>
-void container_base<r_option>::print_all_custom(const char *format) {
+void container_periodic_base<r_option>::print_all_custom(const char *format) {
 	print_all_custom(format,cout);
 }
 
@@ -707,7 +742,7 @@ void container_base<r_option>::print_all_custom(const char *format) {
  *                   denote the different cell statistics.
  * \param[in] filename the name of the file to write to. */
 template<class r_option>
-void container_base<r_option>::print_all_custom(const char *format,const char *filename) {
+void container_periodic_base<r_option>::print_all_custom(const char *format,const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	print_all_custom(format,os);
@@ -723,7 +758,7 @@ void container_base<r_option>::print_all_custom(const char *format,const char *f
  * \param[in] os an open output stream to write to. */
 template<class r_option>
 template<class n_option>
-void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os) {
+void container_periodic_base<r_option>::print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os) {
 	fpoint x,y,z;
 	int i,j,k,ijk=0,q,fp;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) for(q=0;q<co[ijk];q++) {
@@ -801,7 +836,7 @@ void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_opti
  * \param[in] os an open output stream to write to. */
 template<class r_option>
 template<class n_option>
-inline void container_base<r_option>::print_all_internal(voronoicell_base<n_option> &c,ostream &os) {
+inline void container_periodic_base<r_option>::print_all_internal(voronoicell_base<n_option> &c,ostream &os) {
 	fpoint x,y,z;
 	int i,j,k,ijk=0,q;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
@@ -822,14 +857,14 @@ inline void container_base<r_option>::print_all_internal(voronoicell_base<n_opti
  * standard output.
  * \param[in] os the output stream to print to. */
 template<class r_option>
-void container_base<r_option>::print_all(ostream &os) {
+void container_periodic_base<r_option>::print_all(ostream &os) {
 	voronoicell c;
 	print_all_internal(c,os);
 }
 
 /** An overloaded version of print_all(), which just prints to standard output. */
 template<class r_option>
-void container_base<r_option>::print_all() {
+void container_periodic_base<r_option>::print_all() {
 	voronoicell c;
 	print_all_internal(c,cout);
 }
@@ -838,7 +873,7 @@ void container_base<r_option>::print_all() {
  * file.
  * \param[in] filename the name of the file to write to. */
 template<class r_option>
-inline void container_base<r_option>::print_all(const char* filename) {
+inline void container_periodic_base<r_option>::print_all(const char* filename) {
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
@@ -850,7 +885,7 @@ inline void container_base<r_option>::print_all(const char* filename) {
  * of neighboring particles to an output stream.
  * \param[in] os the output stream to print to.*/
 template<class r_option>
-void container_base<r_option>::print_all_neighbor(ostream &os) {
+void container_periodic_base<r_option>::print_all_neighbor(ostream &os) {
 	voronoicell_neighbor c;
 	print_all_internal(c,os);
 }
@@ -858,7 +893,7 @@ void container_base<r_option>::print_all_neighbor(ostream &os) {
 /** An overloaded version of print_all_neighbor(), which just prints to
  * standard output. */
 template<class r_option>
-void container_base<r_option>::print_all_neighbor() {
+void container_periodic_base<r_option>::print_all_neighbor() {
 	voronoicell_neighbor c;
 	print_all_internal(c,cout);
 }
@@ -867,7 +902,7 @@ void container_base<r_option>::print_all_neighbor() {
  * a particular file.
  * \param[in] filename the name of the file to write to. */
 template<class r_option>
-inline void container_base<r_option>::print_all_neighbor(const char* filename) {
+inline void container_periodic_base<r_option>::print_all_neighbor(const char* filename) {
 	voronoicell_neighbor c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
@@ -887,11 +922,11 @@ inline void container_base<r_option>::print_all_neighbor(const char* filename) {
  *         cell, true otherwise. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+inline bool container_periodic_base<r_option>::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	fpoint x1,x2,y1,y2,z1,z2;
-	if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
-	if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
-	if(zperiodic) z1=-(z2=0.5*(bz-az));else {z1=az-z;z2=bz-z;}
+	x1=-(x2=0.5*bx);
+	y1=-(y2=0.5*by);
+	z1=-(z2=0.5*bz);
 	c.init(x1,x2,y1,y2,z1,z2);
 	for(int j=0;j<wall_number;j++) if(!(walls[j]->cut_cell(c,x,y,z))) return false;
 	return true;
@@ -903,8 +938,8 @@ inline bool container_base<r_option>::initialize_voronoicell(voronoicell_base<n_
  * \return True if the point is inside the container, false if the point is
  *         outside. */
 template<class r_option>
-bool container_base<r_option>::point_inside(fpoint x,fpoint y,fpoint z) {
-	if(x<ax||x>bx||y<ay||y>by||z<az||z>bz) return false;
+bool container_periodic_base<r_option>::point_inside(fpoint x,fpoint y,fpoint z) {
+	if(x<0||x>bx||y<0||y>by||z<0||z>bz) return false;
 	return point_inside_walls(x,y,z);
 }
 
@@ -915,7 +950,7 @@ bool container_base<r_option>::point_inside(fpoint x,fpoint y,fpoint z) {
  * \return True if the point is inside the container, false if the point is
  *         outside. */
 template<class r_option>
-bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
+bool container_periodic_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
 	for(int j=0;j<wall_number;j++) if(!walls[j]->point_inside(x,y,z)) return false;
 	return true;
 }
@@ -938,7 +973,7 @@ bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
  *         computation and has zero volume, true otherwise. */
 template<class r_option>
 template<class n_option>
-bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+bool container_periodic_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
@@ -981,7 +1016,7 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
  *         computation and has zero volume, true otherwise. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline bool container_periodic_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
 	return compute_cell_sphere(c,i,j,k,ijk,s,x,y,z);
 }
@@ -999,7 +1034,7 @@ inline bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_opt
  *         computation and has zero volume, true otherwise. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+inline bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
 	return  compute_cell(c,i,j,k,ijk,s,x,y,z);
 }
@@ -1031,8 +1066,8 @@ inline bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c
  *         computation and has zero volume, true otherwise. */
 template<class r_option>
 template<class n_option>
-bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
-	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
+bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
+	const fpoint boxx=bx/nx,boxy=by/ny,boxz=bz/nz;
 	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
 	int ci,cj,ck,di,dj,dk,dijk,ei,ej,ek,eijk,si,sj,sk,sijk;
@@ -1076,7 +1111,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	// region and store it in (fx,fy,fz). We use this to compute an index
 	// (si,sj,sk) of which subregion the particle is within.
 	unsigned int m1,m2;
-	fpoint fx=x-ax-boxx*i,fy=y-ay-boxy*j,fz=z-az-boxz*k;
+	fpoint fx=x-boxx*i,fy=y-boxy*j,fz=z-boxz*k;
 	si=int(fx*xsp*fgrid);sj=int(fy*ysp*fgrid);sk=int(fz*zsp*fgrid);
 
 	// The indices (si,sj,sk) tell us which worklist to use, to test the
@@ -1137,12 +1172,9 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		dk=(q>>14)&127;dk-=64;
 
 		// Check that the worklist position is in range
-		if(xperiodic) {if(di<-nx) continue;else if(di>nx) continue;}
-		else {if(di<-i) continue;else if(di>=nx-i) continue;}
-		if(yperiodic) {if(dj<-ny) continue;else if(dj>ny) continue;}
-		else {if(dj<-j) continue;else if(dj>=ny-j) continue;}
-		if(zperiodic) {if(dk<-nz) continue;else if(dk>nz) continue;}
-		else {if(dk<-k) continue;else if(dk>=nz-k) continue;}
+		if(di<-nx) continue;else if(di>nx) continue;
+		if(dj<-ny) continue;else if(dj>ny) continue;
+		if(dk<-nz) continue;else if(dk>nz) continue;
 
 		// Call the compute_min_max_radius() function. This returns
 		// true if the minimum distance to the block is bigger than the
@@ -1154,9 +1186,9 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		di+=i;dj+=j;dk+=k;
-		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
-		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;dj-=ny;} else qy=0;}
-		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;dk-=nz;} else qz=0;}
+		if(di<0) {qx=-bx;di+=nx;} else if(di>=nx) {qx=bx;di-=nx;} else qx=0;
+		if(dj<0) {qy=-by;dj+=ny;} else if(dj>=ny) {qy=by;dj-=ny;} else qy=0;
+		if(dk<0) {qz=-bz;dk+=nz;} else if(dk>=nz) {qz=bz;dk-=nz;} else qz=0;
 		dijk=di+nx*(dj+ny*dk);
 
 		// If mrs is bigger than the maximum distance to the block,
@@ -1192,9 +1224,9 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 	// The worklist also contains information about which neighbors of each
 	// block are not also on the worklist, and we start storing those
 	// points in a list in case we have to go block by block.
-	ci=xperiodic?nx:i;
-	cj=yperiodic?ny:j;
-	ck=zperiodic?nz:k;
+	ci=nx;
+	cj=ny;
+	ck=nz;
 
 	// Update the mask counter, and if it wraps around then reset the
 	// whole mask; that will only happen once every 2^32 tries
@@ -1251,9 +1283,9 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		di+=i;dj+=j;dk+=k;
-		if(xperiodic) {if(di<0) {qx=ax-bx;di+=nx;} else if(di>=nx) {qx=bx-ax;di-=nx;} else qx=0;}
-		if(yperiodic) {if(dj<0) {qy=ay-by;dj+=ny;} else if(dj>=ny) {qy=by-ay;dj-=ny;} else qy=0;}
-		if(zperiodic) {if(dk<0) {qz=az-bz;dk+=nz;} else if(dk>=nz) {qz=bz-az;dk-=nz;} else qz=0;}
+		if(di<0) {qx=-bx;di+=nx;} else if(di>=nx) {qx=bx;di-=nx;} else qx=0;
+		if(dj<0) {qy=-by;dj+=ny;} else if(dj>=ny) {qy=by;dj-=ny;} else qy=0;
+		if(dk<0) {qz=-bz;dk+=nz;} else if(dk>=nz) {qz=bz;dk-=nz;} else qz=0;
 		dijk=di+nx*(dj+ny*dk);
 
 		// If mrs is bigger than the maximum distance to the block,
@@ -1404,9 +1436,9 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
 
 		// Now compute the region that we are going to test over, and
 		// set a displacement vector for the periodic cases
-		if(xperiodic) {ei=i+di-nx;if(ei<0) {qx=ax-bx;ei+=nx;} else if(ei>=nx) {qx=bx-ax;ei-=nx;} else qx=0;} else ei=di;
-		if(yperiodic) {ej=j+dj-ny;if(ej<0) {qy=ay-by;ej+=ny;} else if(ej>=ny) {qy=by-ay;ej-=ny;} else qy=0;} else ej=dj;
-		if(zperiodic) {ek=k+dk-nz;if(ek<0) {qz=az-bz;ek+=nz;} else if(ek>=nz) {qz=bz-az;ek-=nz;} else qz=0;} else ek=dk;
+		ei=i+di-nx;if(ei<0) {qx=-bx;ei+=nx;} else if(ei>=nx) {qx=bx;ei-=nx;} else qx=0;
+		ej=j+dj-ny;if(ej<0) {qy=-by;ej+=ny;} else if(ej>=ny) {qy=by;ej-=ny;} else qy=0;
+		ek=k+dk-nz;if(ek<0) {qz=-bz;ek+=nz;} else if(ek>=nz) {qz=bz;ek-=nz;} else qz=0;
 		eijk=ei+nx*(ej+ny*ek);
 
 		// Loop over all the elements in the block to test for cuts. It
@@ -1448,7 +1480,7 @@ bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,
  * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
+inline bool container_periodic_base<r_option>::corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh) {
 	if(c.plane_intersects_guess(xh,yl,zl,radius.cutoff(xl*xh+yl*yl+zl*zl))) return false;
 	if(c.plane_intersects(xh,yh,zl,radius.cutoff(xl*xh+yl*yh+zl*zl))) return false;
 	if(c.plane_intersects(xl,yh,zl,radius.cutoff(xl*xl+yl*yh+zl*zl))) return false;
@@ -1472,7 +1504,7 @@ inline bool container_base<r_option>::corner_test(voronoicell_base<n_option> &c,
  * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
+inline bool container_periodic_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint zl,fpoint x1,fpoint yh,fpoint zh) {
 	if(c.plane_intersects_guess(x0,yl,zh,radius.cutoff(yl*yl+zl*zh))) return false;
 	if(c.plane_intersects(x1,yl,zh,radius.cutoff(yl*yl+zl*zh))) return false;
 	if(c.plane_intersects(x1,yl,zl,radius.cutoff(yl*yl+zl*zl))) return false;
@@ -1496,7 +1528,7 @@ inline bool container_base<r_option>::edge_x_test(voronoicell_base<n_option> &c,
  * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
+inline bool container_periodic_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint zl,fpoint xh,fpoint y1,fpoint zh) {
 	if(c.plane_intersects_guess(xl,y0,zh,radius.cutoff(xl*xl+zl*zh))) return false;
 	if(c.plane_intersects(xl,y1,zh,radius.cutoff(xl*xl+zl*zh))) return false;
 	if(c.plane_intersects(xl,y1,zl,radius.cutoff(xl*xl+zl*zl))) return false;
@@ -1519,7 +1551,7 @@ inline bool container_base<r_option>::edge_y_test(voronoicell_base<n_option> &c,
  * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
+inline bool container_periodic_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint z0,fpoint xh,fpoint yh,fpoint z1) {
 	if(c.plane_intersects_guess(xl,yh,z0,radius.cutoff(xl*xl+yl*yh))) return false;
 	if(c.plane_intersects(xl,yh,z1,radius.cutoff(xl*xl+yl*yh))) return false;
 	if(c.plane_intersects(xl,yl,z1,radius.cutoff(xl*xl+yl*yl))) return false;
@@ -1541,7 +1573,7 @@ inline bool container_base<r_option>::edge_z_test(voronoicell_base<n_option> &c,
  * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
+inline bool container_periodic_base<r_option>::face_x_test(voronoicell_base<n_option> &c,fpoint xl,fpoint y0,fpoint z0,fpoint y1,fpoint z1) {
 	if(c.plane_intersects_guess(xl,y0,z0,radius.cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y0,z1,radius.cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y1,z1,radius.cutoff(xl*xl))) return false;
@@ -1561,7 +1593,7 @@ inline bool container_base<r_option>::face_x_test(voronoicell_base<n_option> &c,
  * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
+inline bool container_periodic_base<r_option>::face_y_test(voronoicell_base<n_option> &c,fpoint x0,fpoint yl,fpoint z0,fpoint x1,fpoint z1) {
 	if(c.plane_intersects_guess(x0,yl,z0,radius.cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x0,yl,z1,radius.cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x1,yl,z1,radius.cutoff(yl*yl))) return false;
@@ -1581,7 +1613,7 @@ inline bool container_base<r_option>::face_y_test(voronoicell_base<n_option> &c,
  * \return False if the block may intersect, true if does not. */
 template<class r_option>
 template<class n_option>
-inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
+inline bool container_periodic_base<r_option>::face_z_test(voronoicell_base<n_option> &c,fpoint x0,fpoint y0,fpoint zl,fpoint x1,fpoint y1) {
 	if(c.plane_intersects_guess(x0,y0,zl,radius.cutoff(zl*zl))) return false;
 	if(c.plane_intersects(x0,y1,zl,radius.cutoff(zl*zl))) return false;
 	if(c.plane_intersects(x1,y1,zl,radius.cutoff(zl*zl))) return false;
@@ -1593,11 +1625,9 @@ inline bool container_base<r_option>::face_z_test(voronoicell_base<n_option> &c,
  * container geometry from a pointer to the current container class.
  * \param[in] q a pointer to the current container class. */
 template<class r_option>
-voropp_loop::voropp_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->by-q->ay), sz(q->bz-q->az),
+voropp_loop::voropp_loop(container_periodic_base<r_option> *q) : sx(q->bx), sy(q->by), sz(q->bz),
 	xsp(q->xsp),ysp(q->ysp),zsp(q->zsp),
-	ax(q->ax),ay(q->ay),az(q->az),
-	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz),
-	xperiodic(q->xperiodic),yperiodic(q->yperiodic),zperiodic(q->zperiodic) {}
+	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz) {}
 
 /** Initializes a voropp_loop object, by finding all blocks which are within a
  * given sphere. It calculates the index of the first block that needs to be
@@ -1608,24 +1638,12 @@ voropp_loop::voropp_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->b
  *                        to be tested.
  * \return The index of the first block to be tested. */
 inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
-	ai=step_int((vx-ax-r)*xsp);
-	bi=step_int((vx-ax+r)*xsp);
-	if(!xperiodic) {
-		if(ai<0) {ai=0;if(bi<0) bi=0;}
-		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;}
-	}
-	aj=step_int((vy-ay-r)*ysp);
-	bj=step_int((vy-ay+r)*ysp);
-	if(!yperiodic) {
-		if(aj<0) {aj=0;if(bj<0) bj=0;}
-		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;}
-	}
-	ak=step_int((vz-az-r)*zsp);
-	bk=step_int((vz-az+r)*zsp);
-	if(!zperiodic) {
-		if(ak<0) {ak=0;if(bk<0) bk=0;}
-		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;}
-	}
+	ai=step_int((vx-r)*xsp);
+	bi=step_int((vx+r)*xsp);
+	aj=step_int((vy-r)*ysp);
+	bj=step_int((vy+r)*ysp);
+	ak=step_int((vz-r)*zsp);
+	bk=step_int((vz+r)*zsp);
 	i=ai;j=aj;k=ak;
 	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
 	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
@@ -1647,24 +1665,12 @@ inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,f
  *                        to be tested.
  * \return The index of the first block to be tested. */
 inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
-	ai=step_int((xmin-ax)*xsp);
-	bi=step_int((xmax-ax)*xsp);
-	if(!xperiodic) {
-		if(ai<0) {ai=0;if(bi<0) bi=0;}
-		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;}
-	}
-	aj=step_int((ymin-ay)*ysp);
-	bj=step_int((ymax-ay)*ysp);
-	if(!yperiodic) {
-		if(aj<0) {aj=0;if(bj<0) bj=0;}
-		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;}
-	}
-	ak=step_int((zmin-az)*zsp);
-	bk=step_int((zmax-az)*zsp);
-	if(!zperiodic) {
-		if(ak<0) {ak=0;if(bk<0) bk=0;}
-		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;}
-	}
+	ai=step_int(xmin*xsp);
+	bi=step_int(xmax*xsp);
+	aj=step_int(ymin*ysp);
+	bj=step_int(ymax*ysp);
+	ak=step_int(zmin*zsp);
+	bk=step_int(zmax*zsp);
 	i=ai;j=aj;k=ak;
 	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
 	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
@@ -1719,7 +1725,7 @@ inline int voropp_loop::step_div(int a,int b) {
 /** Adds a wall to the container.
  * \param[in] w a wall object to be added.*/
 template<class r_option>
-void container_base<r_option>::add_wall(wall& w) {
+void container_periodic_base<r_option>::add_wall(wall& w) {
 	if(wall_number==current_wall_size) {
 		current_wall_size*=2;
 		if(current_wall_size>max_wall_size)
@@ -1875,11 +1881,11 @@ inline void radius_poly::print(ostream &os,int ijk,int q,bool later) {
  * the shell surrounding the worklist. The \f$r_i\f$ are then computed in
  * reverse order by considering the distance to \f$w_{i+1}\f$. */
 template<class r_option>
-void container_base<r_option>::initialize_radii() {
+void container_periodic_base<r_option>::initialize_radii() {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
-	const fpoint xstep=(bx-ax)/nx/fgrid;
-	const fpoint ystep=(by-ay)/ny/fgrid;
-	const fpoint zstep=(bz-az)/nz/fgrid;
+	const fpoint xstep=bx/nx/fgrid;
+	const fpoint ystep=by/ny/fgrid;
+	const fpoint zstep=bz/nz/fgrid;
 	int i,j,k,lx,ly,lz,l=0,q;
 	unsigned int *e=const_cast<unsigned int*> (wl);
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,minr;fpoint *radp=mrad;
@@ -1935,8 +1941,8 @@ void container_base<r_option>::initialize_radii() {
  *                           considered.
  * \param[in] (ti,tj,tk) the coordinates of the block. */
 template<class r_option>
-inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk) {
-	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
+inline void container_periodic_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,fpoint &xhi,fpoint &ylo,fpoint &yhi,fpoint &zlo,fpoint &zhi,int ti,int tj,int tk) {
+	const fpoint boxx=bx/nx,boxy=by/ny,boxz=bz/nz;
 	fpoint radsq,temp;
 	if(ti>0) {temp=boxx*ti-xhi;radsq=temp*temp;}
 	else if(ti<0) {temp=xlo-boxx*(1+ti);radsq=temp*temp;}
@@ -1966,9 +1972,9 @@ inline void container_base<r_option>::compute_minimum(fpoint &minr,fpoint &xlo,f
  * \return False if the region is further away than mrs, true if the region in
  *         within mrs.*/
 template<class r_option>
-inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gxs,fpoint gys,fpoint gzs,fpoint &crs,fpoint mrs) {
+inline bool container_periodic_base<r_option>::compute_min_max_radius(int di,int dj,int dk,fpoint fx,fpoint fy,fpoint fz,fpoint gxs,fpoint gys,fpoint gzs,fpoint &crs,fpoint mrs) {
 	fpoint xlo,ylo,zlo;
-	const fpoint boxx=(bx-ax)/nx,boxy=(by-ay)/ny,boxz=(bz-az)/nz;
+	const fpoint boxx=bx/nx,boxy=by/ny,boxz=bz/nz;
 	const fpoint bxsq=boxx*boxx+boxy*boxy+boxz*boxz;
 	if(di>0) {
 		xlo=di*boxx-fx;
@@ -2122,19 +2128,19 @@ inline bool container_base<r_option>::compute_min_max_radius(int di,int dj,int d
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
  * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1).*/
 template<class r_option>
-inline int container_base<r_option>::step_int(fpoint a) {
+inline int container_periodic_base<r_option>::step_int(fpoint a) {
 	return a<0?int(a)-1:int(a);
 }
 
 /** Custom mod function, that gives consistent stepping for negative numbers. */
 template<class r_option>
-inline int container_base<r_option>::step_mod(int a,int b) {
+inline int container_periodic_base<r_option>::step_mod(int a,int b) {
 	return a>=0?a%b:b-1-(b-1-a)%b;
 }
 
 /** Custom div function, that gives consistent stepping for negative numbers. */
 template<class r_option>
-inline int container_base<r_option>::step_div(int a,int b) {
+inline int container_periodic_base<r_option>::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 }
 
