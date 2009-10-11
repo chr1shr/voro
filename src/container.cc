@@ -221,24 +221,23 @@ void container_base<r_option>::draw_particles_pov(const char *filename) {
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 template<class r_option>
 void container_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
-	x+=0.1;y+=0.1;z+=0.1;
 	int i=step_int((x-ax)*xsp),j=step_int((y-ay)*ysp),k=step_int((z-az)*zsp);
 	if(i<0||i>=nx) {
 		if(xperiodic) {
 			int ai=step_div(i,nx);
-			x+=ai*(bx-ax);i+=ai*nx;
+			x-=ai*(bx-ax);i-=ai*nx;
 		} else return;
 	}
 	if(j<0||j>=ny) {
 		if(yperiodic) {
 			int aj=step_div(j,ny);
-			y+=aj*(by-ay);j+=aj*ny;
+			y-=aj*(by-ay);j-=aj*ny;
 		} else return;
 	}
 	if(k<0||k>=nz) {
 		if(zperiodic) {
 			int ak=step_div(k,nz);
-			z+=ak*(bz-az);k+=ak*nz;
+			z-=ak*(bz-az);k-=ak*nz;
 		} else return;
 	}
 	i+=nx*j+nxy*k;
@@ -379,7 +378,16 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xm
  * \param[in] filename the name of the file to write to. */
 template<class r_option>
 void container_base<r_option>::draw_cells_gnuplot(const char *filename) {
-	draw_cells_gnuplot(filename,ax,bx,ay,by,az,bz);
+	voronoicell c;
+	int i,j,k,s=0,q;
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,s++) {
+		for(q=0;q<co[s];q++) if(compute_cell(c,i,j,k,s,q)) {
+			c.draw_gnuplot(os,p[s][sz*q],p[s][sz*q+1],p[s][sz*q+2]);
+		}
+	}
+	os.close();
 }
 
 /** Computes the Voronoi cells for all particles within a rectangular box,
@@ -556,18 +564,38 @@ void container_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoi
 	}
 	for(l=0;l<c.p;l++) {
 		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
-		while(vx>bx) vx-=bx-ax;
-		while(vy>by) vy-=by-ay;
-		while(vz>bz) vz-=bz-az;
-		while(vx<ax) vx+=bx-ax;
-		while(vy<ay) vy+=by-ay;
-		while(vz<az) vz+=bz-az;
 		if(search_previous(vx,vy,vz,ijk,q)) {
 			nett[l]=idmem[ijk][q];
 		} else {
-			i=step_mod(step_int((vx-ax)*xsp),nx);
-			j=step_mod(step_int((vy-ay)*ysp),ny);
-			k=step_mod(step_int((vz-az)*zsp),nz);
+			i=step_int((vx-ax)*xsp);
+			j=step_int((vy-ay)*ysp);
+			k=step_int((vz-az)*zsp);
+			cout << i << " " << j << " " << k << " old\n";
+			if(xperiodic) {
+				if(i<0||i>=nx) {
+					int ai=step_div(i,nx);
+					vx-=ai*(bx-ax);i-=ai*nx;
+				}
+			} else {
+				if(i<0) i=0;if(i>=nx) i=nx-1;
+			}
+			if(yperiodic) {
+				if(j<0||j>=ny) {
+					int aj=step_div(j,ny);
+					vy-=aj*(by-ay);j-=aj*ny;
+				}
+			} else {
+				if(j<0) j=0;if(j>=ny) j=ny-1;
+			}
+			if(zperiodic) {
+				if(k<0||k>=nz) {
+					int ak=step_div(k,nz);
+					vz-=ak*(bz-az);k-=ak*nz;
+				}
+			} else {
+				if(k<0) k=0;if(k>=nz) k=nz-1;
+			}
+			cout << i << " " << j << " " << k << " new\n";
 			ijk=i+nx*(j+ny*k);
 			if(edc==edmem) add_edge_network_memory();
 			if(ptsc[ijk]==ptsmem[ijk]) add_network_memory(ijk);
@@ -601,24 +629,16 @@ bool container_base<r_option>::not_already_there(int k,int j) {
 
 template<class r_option>
 bool container_base<r_option>::search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q) {
-	int ai=step_int((x-tolerance-ax)*xsp),aj=step_int((y-tolerance-ay)*ysp),ak=step_int((z-tolerance-az)*zsp);
-	int bi=step_int((x+tolerance-ax)*xsp),bj=step_int((y+tolerance-ay)*ysp),bk=step_int((z+tolerance-az)*zsp);
-	int ci,cj,ck,i,j,k;
-	fpoint wx,wy,wz;
-	for(ci=ai;ci<=bi;ci++) {
-		i=step_mod(ci,nx);
-		for(cj=aj;cj<=bj;cj++) {
-			j=step_mod(cj,nx);
-			for(ck=ak;ck<=bk;ck++) {
-				k=step_mod(ck,nx);
-				ijk=i+nx*(j+ny*k);
-				for(q=0;q<ptsc[ijk];q++) {
-					wx=pts[ijk][3*q];wy=pts[ijk][3*q+1];wz=pts[ijk][3*q+2];
-					if(abs(wx-x)<tolerance&&abs(wy-y)<tolerance&&abs(wz-z)<tolerance) return true;
-				}
-			}
+	voropp_loop l(this);
+	fpoint px,py,pz;
+	ijk=l.init(x,y,z,tolerance,px,py,pz); 
+	do {
+		for(q=0;q<ptsc[ijk];q++) {
+			if(abs(pts[ijk][3*q]+px-x)<tolerance
+			 &&abs(pts[ijk][3*q+1]+py-y)<tolerance
+			 &&abs(pts[ijk][3*q+2]+pz-z)<tolerance) return true;
 		}
-	}
+	} while((ijk=l.inc(px,py,pz))!=-1);
 	return false;
 }
 

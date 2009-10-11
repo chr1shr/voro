@@ -215,7 +215,6 @@ class container_base {
 		int *nett;
 		int netmem;
 
-
 		template<class n_option>
 		inline void print_all_internal(voronoicell_base<n_option> &c,ostream &os);
 		template<class n_option>

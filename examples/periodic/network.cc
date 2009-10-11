@@ -15,7 +15,7 @@ int main() {
 	// non-periodic in each of the three coordinates. Allocate space for
 	// eight particles within each computational block
 	container con(0,6.926,0,6.926,0,6.41,n_x,n_y,n_z,
-			false,false,false,8);
+			true,true,true,8);
 
 	//Randomly add particles into the container
 	con.import("EDI");

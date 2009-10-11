@@ -17,13 +17,16 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/voro++.hh
 
 # List of executables
-EXECUTABLES=network
+EXECUTABLES=network p_test
 
 # Makefile rules
-all: network
+all: network p_test
 
 network: $(SOURCE) network.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o network network.cc -ggdb
+	$(CC) $(CFLAGS) $(INCLUDE) -o network network.cc
+
+p_test: $(SOURCE) p_test.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o p_test p_test.cc
 
 clean:
 	rm -f $(EXECUTABLES)
