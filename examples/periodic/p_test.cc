@@ -20,9 +20,9 @@ int main() {
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
 	// eight particles within each computational block
-	container_periodic con(1,0,1,0,0,1,n_x,n_y,n_z,8);
+	container_periodic con(10,0.3,1,0.4,0.2,1,n_x,n_y,n_z,8);
 
-	for(i=0;i<20;i++) {
+/*	for(i=0;i<20;i++) {
 		x=rnd();
 		y=rnd();
 		z=rnd();
@@ -31,5 +31,5 @@ int main() {
 
 	con.print_network("ptest.network");
 	con.draw_particles("ptest.par");
-	con.draw_cells_gnuplot("ptest.out");
+	con.draw_cells_gnuplot("ptest.out");*/
 }

@@ -71,6 +71,9 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 	nett=new int[init_vertices];
 	netmem=init_vertices;
 
+	compute_unit_cell();
+	unitcell.draw_gnuplot("unitc.gnu",0,0,0);
+
 	// Precompute the radius table used in the cell construction
 	initialize_radii();
 }
@@ -80,6 +83,7 @@ void container_periodic_base<r_option>::compute_unit_cell() {
 	unitcell.init(-10*bx,10*bx,-10*by,10*by,-10*bz,10*bz);
 	int i,j,l=1;
 	while(l<20) {
+		cout << l << endl;
 		if(unit_cell_intersect(l)) {
 			unit_cell_apply(l,0,0);
 			for(i=1;i<l;i++) {
@@ -95,6 +99,7 @@ void container_periodic_base<r_option>::compute_unit_cell() {
 			}
 			for(i=-l;i<=l;i++) for(j=-l;j<=l;j++) unit_cell_apply(i,j,l);
 		} else return;
+		l++;
 	}
 	voropp_fatal_error("Periodic cell computation failed",VOROPP_INTERNAL_ERROR);
 }
@@ -116,12 +121,12 @@ bool container_periodic_base<r_option>::unit_cell_intersect(int l) {
 	}
 	for(i=-l;i<=l;i++) if(unit_cell_test(i,l,0)) return true;
 	for(i=1;i<l;i++) for(j=-l+1;j<=l;j++) {
-		if(unit_cell_apply(l,j,i)) return true;
-		if(unit_cell_apply(-j,l,i)) return true;
-		if(unit_cell_apply(-l,-j,i)) return true;
-		if(unit_cell_apply(j,-l,i)) return true;
+		if(unit_cell_test(l,j,i)) return true;
+		if(unit_cell_test(-j,l,i)) return true;
+		if(unit_cell_test(-l,-j,i)) return true;
+		if(unit_cell_test(j,-l,i)) return true;
 	}
-	for(i=-l;i<=l;i++) for(j=-l;j<=l;j++) if(unit_cell_apply(i,j,l)) return true;
+	for(i=-l;i<=l;i++) for(j=-l;j<=l;j++) if(unit_cell_test(i,j,l)) return true;
 	return false;
 }
 
