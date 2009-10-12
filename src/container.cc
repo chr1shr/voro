@@ -62,11 +62,11 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 
 	reg=new int[edmem];
 	regp=new int[edmem]; 
-	for(l=0;l<nxyz;l++) {
+	for(l=0;l<edmem;l++) {
 		ed[l]=new int[4];
 		nu[l]=0;numem[l]=4;
 	}
-	for(l=0;l<nxyz;l++) raded[l]=new double[4];
+	for(l=0;l<edmem;l++) raded[l]=new double[4];
 
 	nett=new int[init_vertices];
 	netmem=init_vertices;
@@ -156,6 +156,8 @@ void container_periodic_base<r_option>::add_network_memory(int l) {
 /** Increase edge network memory. */
 template<class r_option>
 void container_periodic_base<r_option>::add_edge_network_memory() {
+	int i;
+	cout << "add ed net mem\n";
 	edmem<<=1;
 	int **ned(new int*[edmem]);
 	double **nraded(new double*[edmem]);
@@ -163,13 +165,18 @@ void container_periodic_base<r_option>::add_edge_network_memory() {
 	int *nnumem(new int[edmem]);
 	int *nreg(new int[edmem]);
 	int *nregp(new int[edmem]);
-	for(int i=0;i<edc;i++) {
+	for(i=0;i<edc;i++) {
 		ned[i]=ed[i];
 		nraded[i]=raded[i];
 		nnu[i]=nu[i];
 		nnumem[i]=numem[i];
 		nreg[i]=reg[i];
 		nregp[i]=regp[i];
+	}
+	while(i<edmem) {
+		ed[i]=new int[4];
+		nu[i]=0;numem[i]=4;
+		raded[i++]=new double[4];
 	}
 	delete [] ed;ed=ned;
 	delete [] raded;raded=nraded;
@@ -590,7 +597,7 @@ void container_periodic_base<r_option>::print_network(ostream &os) {
 		}
 	}
 	for(l=0;l<edc;l++) {
-		cout << l << " : " << nu[l] << endl;
+		cout << l << " : " << nu[l] << " " << numem[l] << endl;
 		for(q=0;q<nu[l];q++) {
 			cout << "->" << ed[l][q] << endl;
 			if(ed[l][q]<l) continue;
