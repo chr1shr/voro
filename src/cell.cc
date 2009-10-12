@@ -575,6 +575,8 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	int *edp,*edd;
 	fpoint u,l,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
 
+	cout << x << " " << y << " " << z << " " << rsq << " " << p_id << " " << volume() << " " << p << endl;
+
 	//Initialize the safe testing routine
 	sure.init(x,y,z,rsq);
 
@@ -750,6 +752,13 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	// it.
 	if(p==current_vertices) add_memory_vertices();
 
+	cout << up << " " << pts[3*up] << " " << pts[3*up+1] << " " << pts[3*up+2] << endl;
+	cout << "Begin cell:\n";
+	draw_gnuplot(cout,0,0,0);
+	cout << "Begin vertex:\n";
+	print_edges();
+	cout << "End\n";
+
 	if(complicated_setup) {
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
@@ -765,6 +774,7 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 		lp=ed[up][0];
 		lw=sure.test(lp,l);
 		if(lw!=-1) {
+			cout << lw << " " << lp << " " << l << endl;
 
 			// The first edge is either inside the cutting space,
 			// or lies within the cutting plane. Test the edges
@@ -780,8 +790,10 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 				if(i==nu[up]) return false;
 				lp=ed[up][i];
 				lw=sure.test(lp,l);
+				cout << lw << " " << lp << " " << l << endl;
 			} while (lw!=-1);
 			j=i+1;
+			cout << "yo\n";
 
 			// We found an edge outside the cutting space. Keep
 			// moving through these edges until we find one that's

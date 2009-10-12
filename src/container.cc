@@ -33,6 +33,7 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 	co(new int[nxyz]),mem(new int[nxyz]),mrad(new fpoint[hgridsq*seq_length]),
 	walls(new wall*[init_wall_size]),id(new int*[nxyz]),p(new fpoint*[nxyz]) {
 	int l;
+
 	for(l=0;l<nxyz;l++) co[l]=0;
 	for(l=0;l<nxyz;l++) mem[l]=memi;
 	hx=2*nx+1;hy=2*ny+1;hz=2*nz+1;hxy=hx*hy;hxyz=hxy*hz;
@@ -72,7 +73,28 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 	netmem=init_vertices;
 
 	compute_unit_cell();
-	unitcell.draw_gnuplot("unitc.gnu",0,0,0);
+	if(unitcell.p==0) voropp_fatal_error("Periodic cell vanished",VOROPP_INTERNAL_ERROR);
+	fpoint *pts=unitcell.pts;
+	fpoint mx=pts[0],my=pts[1],mz=pts[2];
+	for(l=3;l<3*unitcell.p;l+=3) {
+		if(pts[l]>mx) mx=pts[l];
+		if(pts[l+1]>my) my=pts[l+1];
+		if(pts[l+2]>mz) mz=pts[l+2];
+	}
+	hx=3+2*int(mx*xsp);
+	hy=3+2*int(my*ysp);
+	hz=3+2*int(mz*zsp);
+	hxy=hx*hy;hxyz=hxy*hz;
+	s_size=3*(3+hxy+hz*(hx+hy));
+	sl=new int[s_size];
+	mask=new unsigned int[hxyz];
+	for(l=0;l<hxyz;l++) mask[l]=0;
+	imageid=new int*[nx*hy*hz];
+	image=new fpoint*[nx*hy*hz];
+	for(l=0;l<nx*hy*hz;l++) {
+		imageid[l]=NULL;
+		image[l]=NULL;
+	}
 
 	// Precompute the radius table used in the cell construction
 	initialize_radii();
@@ -289,17 +311,17 @@ void container_periodic_base<r_option>::draw_particles_pov(const char *filename)
 template<class r_option>
 void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
 	int i=step_int(x*xsp),j=step_int(y*ysp),k=step_int(z*zsp);
-	if(i<0||i>=nx) {
-		int ai=step_div(i,nx);
-		x-=ai*bx;i-=ai*nx;
+	if(k<0||k>=nz) {
+		int ak=step_div(k,nz);
+		z-=ak*bz;y-=ak*byz;x-=ak*bxz;k-=ak*nz;
 	}
 	if(j<0||j>=ny) {
 		int aj=step_div(j,ny);
-		y-=aj*by;j-=aj*ny;
+		y-=aj*by;x-=aj*bxy;j-=aj*ny;
 	}
-	if(k<0||k>=nz) {
-		int ak=step_div(k,nz);
-		z-=ak*bz;k-=ak*nz;
+	if(i<0||i>=nx) {
+		int ai=step_div(i,nx);
+		x-=ai*bx;i-=ai*nx;
 	}
 	i+=nx*j+nxy*k;
 	if(co[i]==mem[i]) add_particle_memory(i);
@@ -445,8 +467,9 @@ void container_periodic_base<r_option>::draw_cells_gnuplot(const char *filename)
 	os.open(filename,ofstream::out|ofstream::trunc);
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,s++) {
 		for(q=0;q<co[s];q++) if(compute_cell(c,i,j,k,s,q)) {
+			cout << "Success" << id[s][q] << endl;
 			c.draw_gnuplot(os,p[s][sz*q],p[s][sz*q+1],p[s][sz*q+2]);
-		}
+		} else cout << "Failed" << id[s][q] << endl;
 	}
 	os.close();
 }
@@ -1048,7 +1071,7 @@ template<class r_option>
 template<class n_option>
 inline bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
 	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
-	return  compute_cell(c,i,j,k,ijk,s,x,y,z);
+	return compute_cell(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** This routine computes a Voronoi cell for a single particle in the
@@ -1343,7 +1366,7 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 		} else if((q&b5)==b5) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
 	}
 
-	// Do a check to see if we've reach the radius cutoff
+	// Do a check to see if we've reached the radius cutoff
 	if(mrs<radius.cutoff(radp[g])) return true;
 
 	// Update the mask counter, and if it has wrapped around, then

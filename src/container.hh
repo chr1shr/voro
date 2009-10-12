@@ -170,6 +170,8 @@ class container_periodic_base {
 		/** This array is used during the cell computation to determine
 		 * which blocks have been considered. */
 		unsigned int *mask;
+		int **imageid;
+		fpoint **image;
 		/** This array is used to store the list of blocks to test during
 		 * the Voronoi cell computation. */
 		int *sl;		

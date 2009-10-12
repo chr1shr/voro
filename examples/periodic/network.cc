@@ -16,12 +16,14 @@ int main() {
 	// eight particles within each computational block
 	container_periodic con(6.926,0,6.926,0,0,6.41,n_x,n_y,n_z,8);
 
+	cout.precision(15);
+
 	//Randomly add particles into the container
 	con.import("EDI");
 
 	// Save the Voronoi network of all the particles to text files
 	// in gnuplot and POV-Ray formats
-	con.print_network("EDI.network");
+//	con.print_network("EDI.network");
 	
 	con.draw_particles("EDI.par");
 	con.draw_cells_gnuplot("EDI.out");
