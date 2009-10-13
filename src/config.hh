@@ -81,7 +81,7 @@ typedef double fpoint;
 #ifdef VOROPP_SINGLE_PRECISION
 const fpoint tolerance=1e-5;
 #else
-const fpoint tolerance=1e-10;
+const fpoint tolerance=1e-8;
 #endif
 
 /** If a point is within this distance of a cutting plane, then the code stores
@@ -91,7 +91,7 @@ const fpoint tolerance=1e-10;
 #ifdef VOROPP_SINGLE_PRECISION
 const fpoint tolerance2=2e-5;
 #else
-const fpoint tolerance2=2e-10;
+const fpoint tolerance2=2e-8;
 #endif
 
 /** The square of the tolerance, used when deciding whether some squared

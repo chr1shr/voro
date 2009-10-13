@@ -36,11 +36,6 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 
 	for(l=0;l<nxyz;l++) co[l]=0;
 	for(l=0;l<nxyz;l++) mem[l]=memi;
-	hx=2*nx+1;hy=2*ny+1;hz=2*nz+1;hxy=hx*hy;hxyz=hxy*hz;
-	s_size=3*(3+hxy+hz*(hx+hy));
-	sl=new int[s_size];
-	mask=new unsigned int[hxyz];
-	for(l=0;l<hxyz;l++) mask[l]=0;
 	for(l=0;l<nxyz;l++) id[l]=new int[memi];
 	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
 
@@ -179,7 +174,6 @@ void container_periodic_base<r_option>::add_network_memory(int l) {
 template<class r_option>
 void container_periodic_base<r_option>::add_edge_network_memory() {
 	int i;
-	cout << "add ed net mem\n";
 	edmem<<=1;
 	int **ned(new int*[edmem]);
 	double **nraded(new double*[edmem]);
