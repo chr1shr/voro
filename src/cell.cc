@@ -751,6 +751,14 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 	if(p==current_vertices) add_memory_vertices();
 
 	if(complicated_setup) {
+
+		// We want to be strict about reaching the conclusion that the
+		// cell is entirely within the cutting plane. It's not enough
+		// to find a vertex that has edges which are all inside or on
+		// the plane. If the vertex has neighbors that are also on the
+		// plane, we should check those too.
+		if(!search_for_outside_edge(up)) return false;
+
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
 		// the same location.
@@ -1448,6 +1456,34 @@ inline bool voronoicell_base<n_option>::delete_connection(int j,int k,bool hand)
 	ed[j]=edp;
 	nu[j]=i;
 	return true;
+}
+
+template<class n_option>
+inline bool voronoicell_base<n_option>::search_for_outside_edge(int &up) {
+	int i,j=0,lp,lw;fpoint l;
+	ds2[stack2++]=up;int iup=up;
+	while(j<stack2) {
+		up=ds2[j];
+		for(i=0;i<nu[up];i++) {
+			lp=ed[up][i];
+			lw=sure.test(lp,l);
+			if(lw==-1) {
+				stack2=0;
+				if(iup!=up) cout << "Switched " << iup << " to " << up << endl;
+				return true;
+			} else if(lw==0) add_to_stack(lp);
+		}
+		j++;
+	}
+	stack2=0;
+	return false;
+}
+
+template<class n_option>
+inline void voronoicell_base<n_option>::add_to_stack(int lp) {
+	for(int k=0;k<stack2;k++) if(ds2[k]==lp) return;
+	if(stack2==current_delete2_size) add_memory_ds2();
+	ds2[stack2++]=lp;
 }
 
 /** Cuts a Voronoi cell using the influence of a particle at (x,y,z), first

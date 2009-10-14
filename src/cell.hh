@@ -255,6 +255,8 @@ class voronoicell_base {
 		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,fpoint g);
 		inline void reset_edges();
 		inline void output_normals_search(ostream &os,int i,int j,int k);
+		inline bool search_for_outside_edge(int &up);
+		inline void add_to_stack(int lp);
 		friend class neighbor_track;
 };
 
