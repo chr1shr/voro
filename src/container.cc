@@ -30,14 +30,9 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 	nxy(xn*yn),nxyz(xn*yn*zn),
 	mv(0),wall_number(0),current_wall_size(init_wall_size),radius(this),
 	sz(radius.mem_size),
-	co(new int[nxyz]),mem(new int[nxyz]),mrad(new fpoint[hgridsq*seq_length]),
-	walls(new wall*[init_wall_size]),id(new int*[nxyz]),p(new fpoint*[nxyz]) {
-	int l;
-
-	for(l=0;l<nxyz;l++) co[l]=0;
-	for(l=0;l<nxyz;l++) mem[l]=memi;
-	for(l=0;l<nxyz;l++) id[l]=new int[memi];
-	for(l=0;l<nxyz;l++) p[l]=new fpoint[sz*memi];
+	,mrad(new fpoint[hgridsq*seq_length]),
+	walls(new wall*[init_wall_size]),
+	int i,j,k,l;
 
 	// Additional memory allocation for network
 	pts=new double*[nxyz];
@@ -76,20 +71,40 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 		if(pts[l+1]>my) my=pts[l+1];
 		if(pts[l+2]>mz) mz=pts[l+2];
 	}
-	hx=3+2*int(mx*xsp);
-	hy=3+2*int(my*ysp);
-	hz=3+2*int(mz*zsp);
+
+	ey=1+int(my*ysp);
+	ez=1+int(mz*zsp);
+
+	wy=ny+ey;
+	wz=nz+ez;
+
+	oy=ny+2*ey;
+	oz=nz+2*ez;
+	oxy=nx*oy;
+	oxyz=nx*oy*oz;
+
+	hx=1+2*nx;
+	hy=1+2*ey;
+	hz=1+2*ez;
 	hxy=hx*hy;hxyz=hxy*hz;
+
+	id=new int*[oxyz];
+	p=new fpoint*[oxyz];
+	co=new int[oxyz];
+	mem=new int[oxyz];
+	
+	for(l=0;l<oxyz;l++) co[l]=mem[l]=0;
+	for(i=ez;i<wz;i++) for(j=ey;j<wy;j++) for(k=0;k<nx;k++) {
+		l=k+nx*(j+oy*ny);
+		mem[l]=memi;
+		id[l]=new int[memi];
+		p[l]=new int[sz*memi];
+	}
+
 	s_size=3*(3+hxy+hz*(hx+hy));
 	sl=new int[s_size];
 	mask=new unsigned int[hxyz];
 	for(l=0;l<hxyz;l++) mask[l]=0;
-	imageid=new int*[nx*hy*hz];
-	image=new fpoint*[nx*hy*hz];
-	for(l=0;l<nx*hy*hz;l++) {
-		imageid[l]=NULL;
-		image[l]=NULL;
-	}
 
 	// Precompute the radius table used in the cell construction
 	initialize_radii();
@@ -241,11 +256,14 @@ container_periodic_base<r_option>::~container_periodic_base() {
  * \param[in] os an output stream to write to. */
 template<class r_option>
 void container_periodic_base<r_option>::draw_particles(ostream &os) {
-	int c,l,i;
-	for(l=0;l<nxyz;l++) for(c=0;c<co[l];c++) {
-		os << id[l][c];
-		for(i=sz*c;i<sz*(c+1);i++) os << " " << p[l][i];
-		os << "\n";
+	int c,l,i,j,k,ll;
+	for(i=ez;i<wz;i++) for(j=ey;j<wy;j++) for(k=0;k<nx;k++) {
+		l=k+nx*(j+oy*ny);
+		for(c=0;c<co[l];c++) {
+			os << id[l][c];
+			for(ll=sz*c;ll<sz*(c+1);ll++) os << " " << p[l][ll];
+			os << "\n";
+		}
 	}
 }
 
@@ -271,8 +289,10 @@ void container_periodic_base<r_option>::draw_particles(const char *filename) {
  * \param[in] os an output stream to write to. */
 template<class r_option>
 void container_periodic_base<r_option>::draw_particles_pov(ostream &os) {
-	int l,c;
-	for(l=0;l<nxyz;l++) for(c=0;c<co[l];c++) {
+	int c,i,j,k,l;
+	for(i=ez;i<wz;i++) for(j=ey;j<wy;j++) for(k=0;k<nx;k++) {
+		l=k+nx*(j+oy*ny);
+		for(c=0;c<co[l];c++) {
 		os << "// id " << id[l][c] << "\n";
 		os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
 		   << p[l][sz*c+2] << ">,";
@@ -330,7 +350,8 @@ void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
  * \param[in] r the radius of the particle.*/
 template<class r_option>
 void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
-	if(x>0&&y>0&&z>0) {
+	voropp_fatal_error("Not supported at present",VOROPP_INTERNAL_ERROR);
+/*	if(x>0&&y>0&&z>0) {
 		int i,j,k;
 		i=int(x*xsp);j=int(y*ysp);k=int(z*zsp);
 		if(i<nx&&j<ny&&k<nz) {
@@ -340,7 +361,7 @@ void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpo
 			radius.store_radius(i,co[i],r);
 			id[i][co[i]++]=n;
 		}
-	}
+	}*/
 }
 
 /** Increase memory for a particular region.
@@ -411,16 +432,17 @@ inline void container_periodic_base<r_option>::import(const char *filename) {
 /** Outputs the number of particles within each region. */
 template<class r_option>
 void container_periodic_base<r_option>::region_count() {
-	int i,j,k,ijk=0;
+	int i,j,k;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
-		cout << "Region (" << i << "," << j << "," << k << "): " << co[ijk++] << " particles" << endl;
+		cout << "Region (" << i+ez << "," << j+ey << "," << k << "): " << co[i+nx*(j+oy*k)] << " particles" << endl;
 }
 
 /** Clears a container of particles. */
 template<class r_option>
 void container_periodic_base<r_option>::clear() {
-	for(int ijk=0;ijk<nxyz;ijk++) co[ijk]=0;
-	radius.clear_max();
+	voropp_fatal_error("Not supported at present",VOROPP_INTERNAL_ERROR);
+/*	for(int ijk=0;ijk<oxyz;ijk++) co[ijk]=0;
+	radius.clear_max();*/
 }
 
 /** Computes the Voronoi cells for all particles within a rectangular box,
@@ -431,21 +453,21 @@ void container_periodic_base<r_option>::clear() {
  * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box. */
 template<class r_option>
 void container_periodic_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
-	fpoint x,y,z,px,py,pz;
+	fpoint x,y,z,px;
 	voropp_loop l1(this);
 	int q,s;
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
+	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px);
 	do {
 		for(q=0;q<co[s];q++) {
-			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
+			x=p[s][sz*q]+px;y=p[s][sz*q+1];z=p[s][sz*q+2];
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				if(compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_gnuplot(os,x,y,z);
 			}
 		}
-	} while((s=l1.inc(px,py,pz))!=-1);
+	} while((s=l1.inc(px))!=-1);
 	os.close();
 }
 
@@ -459,7 +481,8 @@ void container_periodic_base<r_option>::draw_cells_gnuplot(const char *filename)
 	int i,j,k,s=0,q;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,s++) {
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		s=i+nx*(j+oy*k);
 		for(q=0;q<co[s];q++) if(compute_cell(c,i,j,k,s,q)) {
 			cout << "Success" << id[s][q] << endl;
 			c.draw_gnuplot(os,p[s][sz*q],p[s][sz*q+1],p[s][sz*q+2]);
@@ -476,22 +499,22 @@ void container_periodic_base<r_option>::draw_cells_gnuplot(const char *filename)
  * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box. */
 template<class r_option>
 void container_periodic_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
-	fpoint x,y,z,px,py,pz;
+	fpoint x,y,z,px;
 	voropp_loop l1(this);
 	int q,s;
 	voronoicell c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
+	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px);
 	do {
 		for(q=0;q<co[s];q++) {
 			os << "// cell " << id[s][q] << "\n";
-			x=p[s][sz*q]+px;y=p[s][sz*q+1]+py;z=p[s][sz*q+2]+pz;
+			x=p[s][sz*q]+px;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				if(compute_cell(c,l1.ip,l1.jp,l1.kp,s,q,x,y,z)) c.draw_pov(os,x,y,z);
 			}
 		}
-	} while((s=l1.inc(px,py,pz))!=-1);
+	} while((s=l1.inc(px))!=-1);
 	os.close();
 }
 
@@ -511,8 +534,9 @@ void container_periodic_base<r_option>::draw_cells_pov(const char *filename) {
 template<class r_option>
 void container_periodic_base<r_option>::compute_all_cells() {
 	voronoicell c;
-	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+	int i,j,k,ijk,q;
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		ijk=i+nx*(j+oy*k);
 		for(q=0;q<co[ijk];q++) compute_cell(c,i,j,k,ijk,q);
 	}
 }
@@ -527,8 +551,9 @@ void container_periodic_base<r_option>::compute_all_cells() {
 template<class r_option>
 void container_periodic_base<r_option>::store_cell_volumes(fpoint *bb) {
 	voronoicell c;
-	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+	int i,j,k,ijk,q;
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		ijk=i+nx*(j+oy*k);
 		for(q=0;q<co[ijk];q++) bb[id[ijk][q]]=compute_cell(c,i,j,k,ijk,q)?c.volume():0;
 	}
 }
@@ -544,20 +569,20 @@ void container_periodic_base<r_option>::store_cell_volumes(fpoint *bb) {
 template<class r_option>
 fpoint container_periodic_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r) {
 	voropp_loop l1(this);
-	fpoint px,py,pz,x,y,z,rsq=r*r,pvol=0,vvol=0;
+	fpoint px,x,y,z,rsq=r*r,pvol=0,vvol=0;
 	int q,s;
-	s=l1.init(cx,cy,cz,r,px,py,pz);
+	s=l1.init(cx,cy,cz,r,px);
 	do {
 		for(q=0;q<co[s];q++) {
 			x=p[s][sz*q]+px-cx;
-			y=p[s][sz*q+1]+py-cy;
-			z=p[s][sz*q+2]+pz-cz;
+			y=p[s][sz*q+1]-cy;
+			z=p[s][sz*q+2]-cz;
 			if(x*x+y*y+z*z<rsq) {
 				pvol+=radius.volume(s,q);
 				vvol+=bb[id[s][q]];
 			}
 		}
-	} while((s=l1.inc(px,py,pz))!=-1);
+	} while((s=l1.inc(px))!=-1);
 	return vvol>tolerance?pvol/vvol*4.1887902047863909846168578443726:0;
 }
 
@@ -571,20 +596,20 @@ fpoint container_periodic_base<r_option>::packing_fraction(fpoint *bb,fpoint cx,
 template<class r_option>
 fpoint container_periodic_base<r_option>::packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax) {
 	voropp_loop l1(this);
-	fpoint x,y,z,px,py,pz,pvol=0,vvol=0;
+	fpoint x,y,z,px,pvol=0,vvol=0;
 	int q,s;
-	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px,py,pz);
+	s=l1.init(xmin,xmax,ymin,ymax,zmin,zmax,px);
 	do {
 		for(q=0;q<co[s];q++) {
 			x=p[s][sz*q]+px;
-			y=p[s][sz*q+1]+py;
-			z=p[s][sz*q+2]+pz;
+			y=p[s][sz*q+1];
+			z=p[s][sz*q+2];
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax&&z>zmin&&z<zmax) {
 				pvol+=radius.volume(s,q);
 				vvol+=bb[id[s][q]];
 			}
 		}
-	} while((s=l1.inc(px,py,pz))!=-1);
+	} while((s=l1.inc(px))!=-1);
 	return vvol>tolerance?pvol/vvol*4.1887902047863909846168578443726:0;
 }
 
@@ -606,17 +631,17 @@ void container_periodic_base<r_option>::print_network(ostream &os) {
 	voronoicell c;
 	int i,j,k,l,ijk=0,q;
 	double x,y,z;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		ijk=i+nx*(j+oy*k);
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
-			//cout << x << " " << y << " " << z << " " << edc << endl;
 			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) add_to_network(c,x,y,z);
 		}
 	}
 	for(l=0;l<edc;l++) {
 		cout << l << " : " << nu[l] << " " << numem[l] << endl;
 		for(q=0;q<nu[l];q++) {
-			cout << "->" << ed[l][q] << endl;
+			cout << "-> " << ed[l][q] << endl;
 			if(ed[l][q]<l) continue;
 		//	if(ed[l][q]==l) voropp_fatal_error("Self-connecting vertex",VOROPP_INTERNAL_ERROR);
 			i=reg[l];j=3*regp[l];
@@ -648,17 +673,17 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 			i=step_int(vx*xsp);
 			j=step_int(vy*ysp);
 			k=step_int(vz*zsp);
-			if(i<0||i>=nx) {
-				int ai=step_div(i,nx);
-				vx-=ai*bx;i-=ai*nx;
+			if(k<0||k>=nz) {
+				int ak=step_div(k,nz);
+				vz-=ak*bz;vy-=ak*byz;vx-=ak*bxz;k-=ak*nz;
 			}
 			if(j<0||j>=ny) {
 				int aj=step_div(j,ny);
-				vy-=aj*by;j-=aj*ny;
+				vy-=aj*by;vx-=aj*bxy;j-=aj*ny;
 			}
-			if(k<0||k>=nz) {
-				int ak=step_div(k,nz);
-				vz-=ak*bz;k-=ak*nz;
+			if(i<0||i>=nx) {
+				int ai=step_div(i,nx);
+				vx-=ai*bx;i-=ai*nx;
 			}
 			ijk=i+nx*(j+ny*k);
 			if(edc==edmem) add_edge_network_memory();
@@ -694,15 +719,15 @@ bool container_periodic_base<r_option>::not_already_there(int k,int j) {
 template<class r_option>
 bool container_periodic_base<r_option>::search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q) {
 	voropp_loop l(this);
-	fpoint px,py,pz;
-	ijk=l.init(x,y,z,tolerance,px,py,pz); 
+	fpoint px;
+	ijk=l.init(x,y,z,tolerance,px); 
 	do {
 		for(q=0;q<ptsc[ijk];q++) {
 			if(abs(pts[ijk][3*q]+px-x)<tolerance
-			 &&abs(pts[ijk][3*q+1]+py-y)<tolerance
-			 &&abs(pts[ijk][3*q+2]+pz-z)<tolerance) return true;
+			 &&abs(pts[ijk][3*q+1]-y)<tolerance
+			 &&abs(pts[ijk][3*q+2]-z)<tolerance) return true;
 		}
-	} while((ijk=l.inc(px,py,pz))!=-1);
+	} while((ijk=l.inc(px))!=-1);
 	return false;
 }
 
@@ -714,8 +739,9 @@ bool container_periodic_base<r_option>::search_previous(fpoint x,fpoint y,fpoint
 template<class r_option>
 fpoint container_periodic_base<r_option>::sum_cell_volumes() {
 	voronoicell c;
-	int i,j,k,ijk=0,q;fpoint vol=0;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+	int i,j,k,ijk,q;fpoint vol=0;
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		ijk=i+nx*(j+oy*k);
 		for(q=0;q<co[ijk];q++) if (compute_cell(c,i,j,k,ijk,q)) vol+=c.volume();
 	}
 	return vol;
@@ -790,7 +816,7 @@ template<class n_option>
 void container_periodic_base<r_option>::print_all_custom_internal(voronoicell_base<n_option> &c,const char *format,ostream &os) {
 	fpoint x,y,z;
 	int i,j,k,ijk=0,q,fp;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) for(q=0;q<co[ijk];q++) {
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) for(ijk=i+nx*(j+oy*k),q=0;q<co[ijk];q++) {
 		x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
 		if(!compute_cell(c,i,j,k,ijk,q,x,y,z)) continue;
 		fp=0;
@@ -867,8 +893,9 @@ template<class r_option>
 template<class n_option>
 inline void container_periodic_base<r_option>::print_all_internal(voronoicell_base<n_option> &c,ostream &os) {
 	fpoint x,y,z;
-	int i,j,k,ijk=0,q;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+	int i,j,k,ijk,q;
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		ijk=i+nx*(j+oy*k);
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
 			os << id[ijk][q] << " " << x << " " << y << " " << z;
@@ -1007,7 +1034,7 @@ bool container_periodic_base<r_option>::compute_cell_sphere(voronoicell_base<n_o
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
 	const fpoint length_scale=1;
-	fpoint x1,y1,z1,qx,qy,qz,lr=0,lrs=0,ur,urs,rs;
+	fpoint x1,y1,z1,qx,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	voropp_loop l(this);
 	if(!initialize_voronoicell(c,x,y,z)) return false;
@@ -1018,16 +1045,16 @@ bool container_periodic_base<r_option>::compute_cell_sphere(voronoicell_base<n_o
 	radius.init(ijk,s);
 	while(radius.cutoff(lrs)<c.max_radius_squared()) {
 		ur=lr+0.5*length_scale;urs=ur*ur;
-		t=l.init(x,y,z,ur,qx,qy,qz);
+		t=l.init(x,y,z,ur,qx);
 		do {
 			for(q=0;q<co[t];q++) {
-				x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
+				x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]-y;z1=p[t][sz*q+2]-z;
 				rs=x1*x1+y1*y1+z1*z1;
 				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ijk!=t)) {
 					if(!c.nplane(x1,y1,z1,radius.scale(rs,t,q),id[t][q])) return false;
 				}
 			}
-		} while((t=l.inc(qx,qy,qz))!=-1);
+		} while((t=l.inc(qx))!=-1);
 		lr=ur;lrs=urs;
 	}
 	return true;
@@ -1097,7 +1124,7 @@ template<class r_option>
 template<class n_option>
 bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z) {
 	const fpoint boxx=bx/nx,boxy=by/ny,boxz=bz/nz;
-	fpoint x1,y1,z1,qx=0,qy=0,qz=0;
+	fpoint x1,y1,z1,qx=0;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
 	int ci,cj,ck,di,dj,dk,dijk,ei,ej,ek,eijk,si,sj,sk,sijk;
 	fpoint gxs,gys,gzs,*radp;
@@ -1202,8 +1229,8 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 
 		// Check that the worklist position is in range
 		if(di<-nx) continue;else if(di>nx) continue;
-		if(dj<-ny) continue;else if(dj>ny) continue;
-		if(dk<-nz) continue;else if(dk>nz) continue;
+		if(dj<-ey) continue;else if(dj>ey) continue;
+		if(dk<-ez) continue;else if(dk>ez) continue;
 
 		// Call the compute_min_max_radius() function. This returns
 		// true if the minimum distance to the block is bigger than the
@@ -1215,10 +1242,9 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		di+=i;dj+=j;dk+=k;
-		if(di<0) {qx=-bx;di+=nx;} else if(di>=nx) {qx=bx;di-=nx;} else qx=0;
-		if(dj<0) {qy=-by;dj+=ny;} else if(dj>=ny) {qy=by;dj-=ny;} else qy=0;
-		if(dk<0) {qz=-bz;dk+=nz;} else if(dk>=nz) {qz=bz;dk-=nz;} else qz=0;
-		dijk=di+nx*(dj+ny*dk);
+		iv=step_div(di,nx);if(iv!=0) {qx=iv*bx;di-=nx*iv;} else qx=0;
+		dijk=di+nx*(dj+oy*dk);
+		create_periodic_image(di,dj,dk);
 
 		// If mrs is bigger than the maximum distance to the block,
 		// then we have to test all particles in the block for
@@ -1227,16 +1253,16 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 		if(mrs>radius.cutoff(crs)) {
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
-				y1=p[dijk][sz*l+1]+qy-y;
-				z1=p[dijk][sz*l+2]+qz-z;
+				y1=p[dijk][sz*l+1]-y;
+				z1=p[dijk][sz*l+2]-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
 				if(!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
 			}
 		} else {
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
-				y1=p[dijk][sz*l+1]+qy-y;
-				z1=p[dijk][sz*l+2]+qz-z;
+				y1=p[dijk][sz*l+1]-y;
+				z1=p[dijk][sz*l+2]-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
 				if(rs<mrs) {
 					if(!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
@@ -1254,8 +1280,8 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 	// block are not also on the worklist, and we start storing those
 	// points in a list in case we have to go block by block.
 	ci=nx;
-	cj=ny;
-	ck=nz;
+	cj=ey;
+	ck=ez;
 
 	// Update the mask counter, and if it wraps around then reset the
 	// whole mask; that will only happen once every 2^32 tries
@@ -1312,10 +1338,9 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		di+=i;dj+=j;dk+=k;
-		if(di<0) {qx=-bx;di+=nx;} else if(di>=nx) {qx=bx;di-=nx;} else qx=0;
-		if(dj<0) {qy=-by;dj+=ny;} else if(dj>=ny) {qy=by;dj-=ny;} else qy=0;
-		if(dk<0) {qz=-bz;dk+=nz;} else if(dk>=nz) {qz=bz;dk-=nz;} else qz=0;
-		dijk=di+nx*(dj+ny*dk);
+		iv=step_div(di,nx);if(iv!=0) {qx=iv*bx;di-=nx*iv;} else qx=0;
+		dijk=di+nx*(dj+oy*dk);
+		create_periodic_image(di,dj,dk);
 
 		// If mrs is bigger than the maximum distance to the block,
 		// then we have to test all particles in the block for
@@ -1324,16 +1349,16 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 		if(mrs>radius.cutoff(crs)) {
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
-				y1=p[dijk][sz*l+1]+qy-y;
-				z1=p[dijk][sz*l+2]+qz-z;
+				y1=p[dijk][sz*l+1]-y;
+				z1=p[dijk][sz*l+2]-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
 				if(!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
 			}
 		} else {
 			for(l=0;l<co[dijk];l++) {
 				x1=p[dijk][sz*l]+qx-x;
-				y1=p[dijk][sz*l+1]+qy-y;
-				z1=p[dijk][sz*l+2]+qz-z;
+				y1=p[dijk][sz*l+1]-y;
+				z1=p[dijk][sz*l+2]-z;
 				rs=radius.scale(x1*x1+y1*y1+z1*z1,dijk,l);
 				if(rs<mrs) {
 					if(!c.nplane(x1,y1,z1,rs,id[dijk][l])) return false;
@@ -1465,10 +1490,11 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 
 		// Now compute the region that we are going to test over, and
 		// set a displacement vector for the periodic cases
-		ei=i+di-nx;if(ei<0) {qx=-bx;ei+=nx;} else if(ei>=nx) {qx=bx;ei-=nx;} else qx=0;
-		ej=j+dj-ny;if(ej<0) {qy=-by;ej+=ny;} else if(ej>=ny) {qy=by;ej-=ny;} else qy=0;
-		ek=k+dk-nz;if(ek<0) {qz=-bz;ek+=nz;} else if(ek>=nz) {qz=bz;ek-=nz;} else qz=0;
-		eijk=ei+nx*(ej+ny*ek);
+		ei=i+di-nx;
+		iv=step_div(ei,nx);if(iv!=0) {qx=iv*bx;ei-=nx*iv;} else qx=0;
+		ej=j+dj-ey;
+		ek=k+dk-ez;
+		eijk=ei+nx*(ej+oy*ek);
 
 		// Loop over all the elements in the block to test for cuts. It
 		// would be possible to exclude some of these cases by testing
@@ -1666,21 +1692,19 @@ voropp_loop::voropp_loop(container_periodic_base<r_option> *q) : sx(q->bx), sy(q
  * \param[out] (px,py,pz) the periodic displacement vector for the first block
  *                        to be tested.
  * \return The index of the first block to be tested. */
-inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
+inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px) {
 	ai=step_int((vx-r)*xsp);
 	bi=step_int((vx+r)*xsp);
-	aj=step_int((vy-r)*ysp);
-	bj=step_int((vy+r)*ysp);
-	ak=step_int((vz-r)*zsp);
-	bk=step_int((vz+r)*zsp);
+	aj=step_int((vy-r)*ysp)+ey;if(aj<0) aj=0;
+	bj=step_int((vy+r)*ysp)+ey;if(bj>=oy) bj=oy-1;
+	ak=step_int((vz-r)*zsp)+ez;if(ak<0) ak=0;
+	bk=step_int((vz+r)*zsp)+ez;if(bk>=oz) bk=oz-1;
 	i=ai;j=aj;k=ak;
 	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
-	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
-	akp=kp=step_mod(k,nz);apz=pz=step_div(k,nz)*sz;
 	inc1=aip-step_mod(bi,nx);
-	inc2=nx*(ny+ajp-step_mod(bj,ny))+inc1;
+	inc2=nx*(oy+aj-bj)+inc1;
 	inc1+=nx;
-	s=aip+nx*(ajp+ny*akp);
+	s=aip+nx*(aj+oy*ak);
 	return s;
 }
 
@@ -1693,21 +1717,19 @@ inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,f
  * \param[out] (px,py,pz) the periodic displacement vector for the first block
  *                        to be tested.
  * \return The index of the first block to be tested. */
-inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
+inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px) {
 	ai=step_int(xmin*xsp);
 	bi=step_int(xmax*xsp);
-	aj=step_int(ymin*ysp);
-	bj=step_int(ymax*ysp);
-	ak=step_int(zmin*zsp);
-	bk=step_int(zmax*zsp);
+	aj=step_int(ymin*ysp);if(aj<0) aj=0;
+	bj=step_int(ymax*ysp);if(bj>=oy) bj=oy-1;
+	ak=step_int(zmin*zsp);if(ak<0) ak=0;
+	bk=step_int(zmax*zsp);if(bk>=oz) bk=oz-1;
 	i=ai;j=aj;k=ak;
 	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
-	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
-	akp=kp=step_mod(k,nz);apz=pz=step_div(k,nz)*sz;
 	inc1=aip-step_mod(bi,nx);
-	inc2=nx*(ny+ajp-step_mod(bj,ny))+inc1;
+	inc2=nx*(oy+aj-bj)+inc1;
 	inc1+=nx;
-	s=aip+nx*(ajp+ny*akp);
+	s=aip+nx*(aj+oy*ak);
 	return s;
 }
 
@@ -1716,18 +1738,18 @@ inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpo
  * \param[in,out] (px,py,pz) the current block on entering the function, which
  *                           is updated to the next block on exiting the
  *                           function. */
-inline int voropp_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
+inline int voropp_loop::inc(fpoint &px) {
 	if(i<bi) {
 		i++;
 		if(ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}
 		return s;
 	} else if(j<bj) {
 		i=ai;ip=aip;px=apx;j++;
-		if(jp<ny-1) {jp++;s+=inc1;} else {jp=0;s+=inc1-nxy;py+=sy;}
+		s+=inc1;
 		return s;
 	} else if(k<bk) {
-		i=ai;ip=aip;j=aj;jp=ajp;px=apx;py=apy;k++;
-		if(kp<nz-1) {kp++;s+=inc2;} else {kp=0;s+=inc2-nxyz;pz+=sz;}
+		i=ai;ip=aip;j=aj;px=apx;k++;
+		s+=inc2;
 		return s;
 	} else return -1;
 }

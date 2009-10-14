@@ -126,6 +126,9 @@ class container_periodic_base {
 		/** A constant, set to the value of hx*hy*hz, which is used in
 		 * the routines which step through mask boxes in sequence. */
 		int hxyz;
+		int ey,ez;
+		int wy,ez;
+		int oy,oz;
 		/** This sets the current value being used to mark tested blocks
 		 * in the mask. */
 		unsigned int mv;
