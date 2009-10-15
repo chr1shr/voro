@@ -92,8 +92,12 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 	p=new fpoint*[oxyz];
 	co=new int[oxyz];
 	mem=new int[oxyz];
+	img=new char[oxyz];
 	
-	for(l=0;l<oxyz;l++) co[l]=mem[l]=0;
+	for(l=0;l<oxyz;l++) {
+		co[l]=mem[l]=0;
+		img[l]=0;
+	}
 	for(i=ez;i<wz;i++) for(j=ey;j<wy;j++) for(k=0;k<nx;k++) {
 		l=k+nx*(j+oy*ny);
 		mem[l]=memi;
@@ -1675,6 +1679,27 @@ inline bool container_periodic_base<r_option>::face_z_test(voronoicell_base<n_op
 	if(c.plane_intersects(x1,y0,zl,radius.cutoff(zl*zl))) return false;
 	return true;
 }
+
+template<class r_option>
+inline void container_periodic_base<r_option>::check_periodic_image(int di,int dj,int dk) {
+	if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
+		voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_FATAL_ERROR);
+	if(dk>ez&&dk<wz) {
+		if(dj<ey||dj>=wy) create_side_image(int di,int dj,int dk); 
+	} else create_vertical_image(di,dj,dk);
+}
+
+template<class t_option>
+void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) {
+	dijk=di+nx*(dj+oy*dk);
+	if(img[dijk]) {
+
+	}
+
+
+}
+
+
 
 /** Creates a voropp_loop object, by setting the necessary constants about the
  * container geometry from a pointer to the current container class.
