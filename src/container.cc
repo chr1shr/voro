@@ -1685,18 +1685,36 @@ inline void container_periodic_base<r_option>::check_periodic_image(int di,int d
 	if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
 		voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_FATAL_ERROR);
 	if(dk>ez&&dk<wz) {
-		if(dj<ey||dj>=wy) create_side_image(int di,int dj,int dk); 
+		if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
 	} else create_vertical_image(di,dj,dk);
 }
 
 template<class t_option>
 void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) {
 	dijk=di+nx*(dj+oy*dk);
-	if(img[dijk]) {
+
+	ima=step_div(dj-ey,ny);
+
+	fi=step_mod(int(-ima*bxy*xsp)-ex,nx)+ex;
+	fj=dj-ima*ny;
+
+	fijk=fi+nx*(fj+oy*dk);
+
+	if(img[dijk]&1) {
+		// Copy fijk to dijk-1 and dijk
+		img[fijk]=
+	}
+	if(img[dijk]&2) {
+		// Copy fijk+1 to dijk and dijk+1
+	}
+}
+
+template<class t_option>
+void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int dk) {
+	dijk=di+nx*(dj+oy*dk);
+	if(img[dijk]&1) {
 
 	}
-
-
 }
 
 
