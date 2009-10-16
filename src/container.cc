@@ -27,7 +27,7 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 		fpoint xzb,fpoint yzb,fpoint zb,int xn,int yn,int zn,int memi)
 	: bx(xb),bxy(xyb),by(yb),bxz(xzb),byz(yzb),bz(zb),
 	xsp(xn/xb),ysp(yn/yb),zsp(zn/zb),nx(xn),ny(yn),nz(zn),
-	nxy(xn*yn),nxyz(xn*yn*zn),
+	nxy(xn*yn),nxyz(xn*yn*zn),init_mem(memi),
 	mv(0),wall_number(0),current_wall_size(init_wall_size),radius(this),
 	sz(radius.mem_size),
 	,mrad(new fpoint[hgridsq*seq_length]),
@@ -72,8 +72,11 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 		if(pts[l+2]>mz) mz=pts[l+2];
 	}
 
-	ey=1+int(my*ysp);
-	ez=1+int(mz*zsp);
+	ey=12;
+	ez=1;
+
+//	ey=1+int(my*ysp);
+//	ez=1+int(mz*zsp);
 
 	wy=ny+ey;
 	wz=nz+ez;
@@ -98,11 +101,11 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 		co[l]=mem[l]=0;
 		img[l]=0;
 	}
-	for(i=ez;i<wz;i++) for(j=ey;j<wy;j++) for(k=0;k<nx;k++) {
-		l=k+nx*(j+oy*ny);
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		l=i+nx*(j+oy*k);
 		mem[l]=memi;
 		id[l]=new int[memi];
-		p[l]=new int[sz*memi];
+		p[l]=new fpoint[sz*memi];
 	}
 
 	s_size=3*(3+hxy+hz*(hx+hy));
@@ -261,8 +264,10 @@ container_periodic_base<r_option>::~container_periodic_base() {
 template<class r_option>
 void container_periodic_base<r_option>::draw_particles(ostream &os) {
 	int c,l,i,j,k,ll;
-	for(i=ez;i<wz;i++) for(j=ey;j<wy;j++) for(k=0;k<nx;k++) {
-		l=k+nx*(j+oy*ny);
+	for(k=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++) {
+//	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		l=i+nx*(j+oy*k);
+		if(mem[l]==0) continue;
 		for(c=0;c<co[l];c++) {
 			os << id[l][c];
 			for(ll=sz*c;ll<sz*(c+1);ll++) os << " " << p[l][ll];
@@ -294,8 +299,8 @@ void container_periodic_base<r_option>::draw_particles(const char *filename) {
 template<class r_option>
 void container_periodic_base<r_option>::draw_particles_pov(ostream &os) {
 	int c,i,j,k,l;
-	for(i=ez;i<wz;i++) for(j=ey;j<wy;j++) for(k=0;k<nx;k++) {
-		l=k+nx*(j+oy*ny);
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		l=i+nx*(j+oy*k);
 		for(c=0;c<co[l];c++) {
 		os << "// id " << id[l][c] << "\n";
 		os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
@@ -372,6 +377,12 @@ void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpo
  * \param[in] i the index of the region to reallocate. */
 template<class r_option>
 void container_periodic_base<r_option>::add_particle_memory(int i) {
+	if(mem[i]==0) {
+		mem[l]=init_mem;
+		id[l]=new int[init_mem];
+		p[l]=new fpoint[sz*init_mem];
+		return
+	}
 	int *idp;fpoint *pp;
 	int l,nmem=2*mem[i];
 #if VOROPP_VERBOSE >=3
@@ -1691,22 +1702,53 @@ inline void container_periodic_base<r_option>::check_periodic_image(int di,int d
 
 template<class t_option>
 void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) {
+	fpoint boxx=bx/nx;
 	dijk=di+nx*(dj+oy*dk);
 
 	ima=step_div(dj-ey,ny);
+	qua=di+int(-ima*bxy*xsp);
+	quadiv=step_div(qua,nx);
+	
+	switchx=di*boxx-ima*bxy-quadiv*bx;
 
-	fi=step_mod(int(-ima*bxy*xsp)-ex,nx)+ex;
+	fi=qua-quadiv*nx;
 	fj=dj-ima*ny;
 
 	fijk=fi+nx*(fj+oy*dk);
 
-	if(img[dijk]&1) {
+	if(img[dijk]&1==0) {
 		// Copy fijk to dijk-1 and dijk
-		img[fijk]=
+		odijk=di>0?dijk-1:dijk+nx-1;
+		img[odijk]|=2;
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+		}
 	}
-	if(img[dijk]&2) {
+	if(img[dijk]&2==0) {
 		// Copy fijk+1 to dijk and dijk+1
+		if(fijk==nx-1) {
+			fijk+=1-nx;
+			switchx+=(1-nx)*boxx;
+		} else {
+			fijk++;switchx+=boxx;
+		}
+		odijk=di==nx-1?dijk-nx+1:dijk+1;
+		img[odijk]|=1;
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+		}
 	}
+	img[dijk]=3;
+}
+
+
+
+template<class t_option>
+inline void container_periodic_base<r_option>::quick_put(int reg,int id,fpoint x,fpoint y,fpoint z) {
+	if(co[reg]==mem[reg]) add_region_memor
+
 }
 
 template<class t_option>

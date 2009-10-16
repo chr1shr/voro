@@ -113,6 +113,7 @@ class container_periodic_base {
 		/** A constant, set to the value of nx*ny*nz, which is used in
 		 * the routines which step through boxes in sequence. */
 		const int nxyz;
+		const int init_mem;
 		/** The number of boxes in the x direction for the searching mask. */
 		int hx;
 		/** The number of boxes in the y direction for the searching mask. */

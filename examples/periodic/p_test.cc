@@ -8,28 +8,32 @@
 
 // Set up the number of blocks that the container is divided into
 const int n_x=4,n_y=4,n_z=4;
+const fpoint 
 
 // This function returns a random double between 0 and 1
-double rnd() {return double(rand())/RAND_MAX;}
+fpoint rnd() {return fpoint(rand())/RAND_MAX;}
 
 int main() {
 
 	int i;
-	fpoint x,y,z;
+	fpoint r,theta,x,y,z;
 
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
 	// eight particles within each computational block
-	container_periodic con(10,0.3,1,0.4,0.2,1,n_x,n_y,n_z,8);
+	container_periodic con(10,0.3,10,0.4,0.2,10,n_x,n_y,1,8);
 
-/*	for(i=0;i<20;i++) {
-		x=rnd();
-		y=rnd();
-		z=rnd();
-		con.put(i,x,y,z);
+	for(r=0.5;r<5;r+=1) {
+		for(theta=pi/50;theta<2*pi;theta++) {
+			x=5+r*cos(theta);
+			y=5+r*sin(theta);
+			z=5;
+			con.put(i,x,y,z);
+			i++;
+		}
 	}
 
-	con.print_network("ptest.network");
+//	con.print_network("ptest.network");
 	con.draw_particles("ptest.par");
-	con.draw_cells_gnuplot("ptest.out");*/
+//	con.draw_cells_gnuplot("ptest.out");
 }
