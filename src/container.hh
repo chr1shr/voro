@@ -106,10 +106,6 @@ class container_periodic_base {
 		const int ny;
 		/** The number of boxes in the z direction. */
 		const int nz;
-		/** A constant, set to the value of nx multiplied by ny, which
-		 * is used in the routines which step through boxes in
-		 * sequence. */
-		const int nxy;
 		/** A constant, set to the value of nx*ny*nz, which is used in
 		 * the routines which step through boxes in sequence. */
 		const int nxyz;
@@ -128,7 +124,7 @@ class container_periodic_base {
 		 * the routines which step through mask boxes in sequence. */
 		int hxyz;
 		int ey,ez;
-		int wy,ez;
+		int wy,wz;
 		int oy,oz;
 		/** This sets the current value being used to mark tested blocks
 		 * in the mask. */
@@ -248,6 +244,10 @@ class container_periodic_base {
 		inline void unit_cell_apply(int i,int j,int k);
 		bool unit_cell_intersect(int l);
 		inline bool unit_cell_test(int i,int j,int k);
+		inline void create_periodic_image(int di,int dj,int dk);
+		void create_side_image(int di,int dj,int dk);
+		void create_vertical_image(int di,int dj,int dk);
+		inline void quick_put(int reg,int i,fpoint x,fpoint y,fpoint z);
 		friend class voropp_loop;
 		friend class radius_poly;
 };

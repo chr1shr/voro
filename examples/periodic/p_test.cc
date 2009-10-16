@@ -12,6 +12,7 @@ const fpoint
 
 // This function returns a random double between 0 and 1
 fpoint rnd() {return fpoint(rand())/RAND_MAX;}
+fpoint pi=3.1415926535897932384626433832795;
 
 int main() {
 

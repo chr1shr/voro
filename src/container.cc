@@ -27,11 +27,10 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 		fpoint xzb,fpoint yzb,fpoint zb,int xn,int yn,int zn,int memi)
 	: bx(xb),bxy(xyb),by(yb),bxz(xzb),byz(yzb),bz(zb),
 	xsp(xn/xb),ysp(yn/yb),zsp(zn/zb),nx(xn),ny(yn),nz(zn),
-	nxy(xn*yn),nxyz(xn*yn*zn),init_mem(memi),
+	nxyz(xn*yn*zn),init_mem(memi),
 	mv(0),wall_number(0),current_wall_size(init_wall_size),radius(this),
-	sz(radius.mem_size),
-	,mrad(new fpoint[hgridsq*seq_length]),
-	walls(new wall*[init_wall_size]),
+	sz(radius.mem_size),mrad(new fpoint[hgridsq*seq_length]),
+	walls(new wall*[init_wall_size]) {
 	int i,j,k,l;
 
 	// Additional memory allocation for network
@@ -83,8 +82,7 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 
 	oy=ny+2*ey;
 	oz=nz+2*ez;
-	oxy=nx*oy;
-	oxyz=nx*oy*oz;
+	int oxyz=nx*oy*oz;
 
 	hx=1+2*nx;
 	hy=1+2*ey;
@@ -302,11 +300,12 @@ void container_periodic_base<r_option>::draw_particles_pov(ostream &os) {
 	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
 		l=i+nx*(j+oy*k);
 		for(c=0;c<co[l];c++) {
-		os << "// id " << id[l][c] << "\n";
-		os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
-		   << p[l][sz*c+2] << ">,";
-		radius.rad(os,l,c);
-		os << "}\n";
+			os << "// id " << id[l][c] << "\n";
+			os << "sphere{<" << p[l][sz*c] << "," << p[l][sz*c+1] << ","
+			   << p[l][sz*c+2] << ">,";
+			radius.rad(os,l,c);
+		 	os << "}\n";
+		}
 	}
 }
 
@@ -346,7 +345,7 @@ void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
 		int ai=step_div(i,nx);
 		x-=ai*bx;i-=ai*nx;
 	}
-	i+=nx*j+nxy*k;
+	i+=nx*(j+ny*k);
 	if(co[i]==mem[i]) add_particle_memory(i);
 	p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
 	radius.store_radius(i,co[i],0.5);
@@ -378,10 +377,10 @@ void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpo
 template<class r_option>
 void container_periodic_base<r_option>::add_particle_memory(int i) {
 	if(mem[i]==0) {
-		mem[l]=init_mem;
-		id[l]=new int[init_mem];
-		p[l]=new fpoint[sz*init_mem];
-		return
+		mem[i]=init_mem;
+		id[i]=new int[init_mem];
+		p[i]=new fpoint[sz*init_mem];
+		return;
 	}
 	int *idp;fpoint *pp;
 	int l,nmem=2*mem[i];
@@ -1141,7 +1140,7 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 	const fpoint boxx=bx/nx,boxy=by/ny,boxz=bz/nz;
 	fpoint x1,y1,z1,qx=0;
 	fpoint xlo,ylo,zlo,xhi,yhi,zhi,rs;
-	int ci,cj,ck,di,dj,dk,dijk,ei,ej,ek,eijk,si,sj,sk,sijk;
+	int ci,cj,ck,di,dj,dk,dijk,ei,ej,ek,eijk,si,sj,sk,sijk,iv;
 	fpoint gxs,gys,gzs,*radp;
 	int f,g,l;unsigned int q,*e;
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
@@ -1516,8 +1515,8 @@ bool container_periodic_base<r_option>::compute_cell(voronoicell_base<n_option> 
 		// against mrs, but this will probably not save time.
 		for(l=0;l<co[eijk];l++) {
 			x1=p[eijk][sz*l]+qx-x;
-			y1=p[eijk][sz*l+1]+qy-y;
-			z1=p[eijk][sz*l+2]+qz-z;
+			y1=p[eijk][sz*l+1]-y;
+			z1=p[eijk][sz*l+2]-z;
 			rs=radius.scale(x1*x1+y1*y1+z1*z1,eijk,l);
 			if(!c.nplane(x1,y1,z1,rs,id[eijk][l])) return false;
 		}
@@ -1692,9 +1691,9 @@ inline bool container_periodic_base<r_option>::face_z_test(voronoicell_base<n_op
 }
 
 template<class r_option>
-inline void container_periodic_base<r_option>::check_periodic_image(int di,int dj,int dk) {
+inline void container_periodic_base<r_option>::create_periodic_image(int di,int dj,int dk) {
 	if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
-		voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_FATAL_ERROR);
+		voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
 	if(dk>ez&&dk<wz) {
 		if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
 	} else create_vertical_image(di,dj,dk);
@@ -1703,33 +1702,30 @@ inline void container_periodic_base<r_option>::check_periodic_image(int di,int d
 template<class t_option>
 void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) {
 	fpoint boxx=bx/nx;
-	dijk=di+nx*(dj+oy*dk);
-
-	ima=step_div(dj-ey,ny);
-	qua=di+int(-ima*bxy*xsp);
-	quadiv=step_div(qua,nx);
-	
-	switchx=di*boxx-ima*bxy-quadiv*bx;
-
-	fi=qua-quadiv*nx;
-	fj=dj-ima*ny;
-
-	fijk=fi+nx*(fj+oy*dk);
+	int dijk=di+nx*(dj+oy*dk),odijk;
+	int ima=step_div(dj-ey,ny);
+	int qua=di+int(-ima*bxy*xsp);
+	int quadiv=step_div(qua,nx);
+	int fi=qua-quadiv*nx,fj=dj-ima*ny,fijk=fi+nx*(fj+oy*dk);
+	fpoint disp,switchx=di*boxx-ima*bxy-quadiv*bx;
 
 	if(img[dijk]&1==0) {
 		// Copy fijk to dijk-1 and dijk
-		odijk=di>0?dijk-1:dijk+nx-1;
+		if(di>0) {
+			odijk=dijk-1;disp=0;
+		} else {
+			odijk=dijk+nx-1;disp=bx;
+		}
 		img[odijk]|=2;
 		for(l=0;l<co[fijk];l++) {
 			if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
-			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+bxy*ima+disp,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
 		}
 	}
 	if(img[dijk]&2==0) {
 		// Copy fijk+1 to dijk and dijk+1
-		if(fijk==nx-1) {
-			fijk+=1-nx;
-			switchx+=(1-nx)*boxx;
+		if(fi==nx-1) {
+			fijk+=1-nx;switchx+=(1-nx)*boxx;
 		} else {
 			fijk++;switchx+=boxx;
 		}
@@ -1746,17 +1742,21 @@ void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) 
 
 
 template<class t_option>
-inline void container_periodic_base<r_option>::quick_put(int reg,int id,fpoint x,fpoint y,fpoint z) {
-	if(co[reg]==mem[reg]) add_region_memor
-
+inline void container_periodic_base<r_option>::quick_put(int reg,int i,fpoint x,fpoint y,fpoint z) {
+	if(co[reg]==mem[reg]) add_particle_memory(reg);
+	p[reg][3*co[reg]]=x;
+	p[reg][3*co[reg]+1]=y;
+	p[reg][3*co[reg]+2]=z;
+	id[reg][co[reg]++]=i;
 }
 
 template<class t_option>
 void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int dk) {
-	dijk=di+nx*(dj+oy*dk);
-	if(img[dijk]&1) {
-
-	}
+	return;
+//	dijk=di+nx*(dj+oy*dk);
+//	if(img[dijk]&1) {
+//
+//	}
 }
 
 
