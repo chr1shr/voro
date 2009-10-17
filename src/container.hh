@@ -216,6 +216,7 @@ class container_periodic_base {
 		void add_particular_vertex_memory(int l);
 		void add_edge_network_memory();
 		void add_network_memory(int l);
+		void check_compartmentalized();
 		void compute_unit_cell();
 	private:
 #include "worklist.hh"
@@ -334,9 +335,9 @@ class voropp_loop {
 	public:
 		template<class r_option>
 		voropp_loop(container_periodic_base<r_option> *q);
-		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
-		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
-		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
+		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px);
+		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px);
+		inline int inc(fpoint &px);
 		/** The current block index in the x direction, referencing a
 		 * real cell in the range 0 to nx-1. */
 		int ip;
@@ -347,14 +348,14 @@ class voropp_loop {
 		 * real cell in the range 0 to nz-1. */
 		int kp;
 	private:
+		const int nx,ny,nz,nxyz,ey,ez,oy,oz;
 		int i,j,k,ai,bi,aj,bj,ak,bk,s;
-		int aip,ajp,akp,inc1,inc2;
+		int aip,inc1,inc2;
 		inline int step_mod(int a,int b);
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);
-		fpoint apx,apy,apz;
+		fpoint apx;
 		const fpoint sx,sy,sz,xsp,ysp,zsp;
-		const int nx,ny,nz,nxy,nxyz;
 };
 
 /** \brief Pure virtual class from which wall objects are derived.

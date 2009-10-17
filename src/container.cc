@@ -99,6 +99,7 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 		co[l]=mem[l]=0;
 		img[l]=0;
 	}
+	printf("%d %d %d %d %d\n",ez,wz,ey,wy,nz);
 	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
 		l=i+nx*(j+oy*k);
 		mem[l]=memi;
@@ -262,15 +263,37 @@ container_periodic_base<r_option>::~container_periodic_base() {
 template<class r_option>
 void container_periodic_base<r_option>::draw_particles(ostream &os) {
 	int c,l,i,j,k,ll;
+	for(i=nx-1;i>=0;i--) for(j=wy;j<wy+ny*3;j++) create_periodic_image(i,j,ez);
+	check_compartmentalized();
 	for(k=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++) {
 //	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
 		l=i+nx*(j+oy*k);
+//		printf("%d %d %d %d %d\n",i,j,k,l,mem[l]);
 		if(mem[l]==0) continue;
 		for(c=0;c<co[l];c++) {
 			os << id[l][c];
 			for(ll=sz*c;ll<sz*(c+1);ll++) os << " " << p[l][ll];
 			os << "\n";
 		}
+	}
+}
+
+/** Dumps all the particle positions and identifies to a file.
+ * \param[in] os an output stream to write to. */
+template<class r_option>
+void container_periodic_base<r_option>::check_compartmentalized() {
+	const fpoint boxx=bx/nx,boxy=by/ny,boxz=bz/nz;	
+	int c,l,i,j,k;
+	fpoint mix,miy,miz,max,may,maz;
+	for(k=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++) {
+		l=i+nx*(j+oy*k);
+		if(mem[l]==0) continue;
+		mix=i*boxx-tolerance;max=mix+boxx+tolerance;
+		miy=(j-ey)*boxy-tolerance;may=miy+boxy+tolerance;
+		miz=(k-ez)*boxz-tolerance;maz=miz+boxz+tolerance;
+		for(c=0;c<co[l];c++) if(p[l][sz*c]<mix||p[l][sz*c]>max
+				      ||p[l][sz*c+1]<miy||p[l][sz*c+1]>may
+				      ||p[l][sz*c+2]<miz||p[l][sz*c+2]>maz) printf("%d %d %d %f %f %f %f %f %f %f %f %f\n",i,j,k,p[l][sz*c],p[l][sz*c+1],p[l][sz*c+2],mix,max,miy,may,miz,maz);
 	}
 }
 
@@ -345,7 +368,8 @@ void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
 		int ai=step_div(i,nx);
 		x-=ai*bx;i-=ai*nx;
 	}
-	i+=nx*(j+ny*k);
+	j+=ey;k+=ez;
+	i+=nx*(j+oy*k);
 	if(co[i]==mem[i]) add_particle_memory(i);
 	p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
 	radius.store_radius(i,co[i],0.5);
@@ -1694,22 +1718,24 @@ template<class r_option>
 inline void container_periodic_base<r_option>::create_periodic_image(int di,int dj,int dk) {
 	if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
 		voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
-	if(dk>ez&&dk<wz) {
+	if(dk>=ez&&dk<wz) {
 		if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
 	} else create_vertical_image(di,dj,dk);
 }
 
-template<class t_option>
+template<class r_option>
 void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) {
+//	printf("di=%d dj=%d dk=%d\n",di,dj,dk);
 	fpoint boxx=bx/nx;
-	int dijk=di+nx*(dj+oy*dk),odijk;
+	int l,dijk=di+nx*(dj+oy*dk),odijk;
 	int ima=step_div(dj-ey,ny);
-	int qua=di+int(-ima*bxy*xsp);
+	int qua=di+step_int(-ima*bxy*xsp);
 	int quadiv=step_div(qua,nx);
 	int fi=qua-quadiv*nx,fj=dj-ima*ny,fijk=fi+nx*(fj+oy*dk);
-	fpoint disp,switchx=di*boxx-ima*bxy-quadiv*bx;
+	fpoint disp,dis=ima*bxy+quadiv*bx,switchx=di*boxx-ima*bxy-quadiv*bx;
+//	printf("dijk=%d ima=%d qua=%d quadiv=%d fi=%d fj=%d fijk=%d switchx=%f\n",dijk,ima,qua,quadiv,fi,fj,fijk,switchx);
 
-	if(img[dijk]&1==0) {
+	if((img[dijk]&1)==0) {
 		// Copy fijk to dijk-1 and dijk
 		if(di>0) {
 			odijk=dijk-1;disp=0;
@@ -1717,23 +1743,29 @@ void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) 
 			odijk=dijk+nx-1;disp=bx;
 		}
 		img[odijk]|=2;
+//		printf("1: %d %d %d %d\n",odijk,dijk,fijk,co[fijk]);
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
-			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+bxy*ima+disp,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+dis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+dis+disp,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
 		}
 	}
-	if(img[dijk]&2==0) {
+	if((img[dijk]&2)==0) {
 		// Copy fijk+1 to dijk and dijk+1
 		if(fi==nx-1) {
-			fijk+=1-nx;switchx+=(1-nx)*boxx;
+			fijk+=1-nx;switchx+=(1-nx)*boxx;dis+=bx;
 		} else {
 			fijk++;switchx+=boxx;
 		}
-		odijk=di==nx-1?dijk-nx+1:dijk+1;
+		if(di==nx-1) {
+			odijk=dijk-nx+1;disp=-bx;
+		} else {
+			odijk=dijk+1;disp=0;
+		}
 		img[odijk]|=1;
+//		printf("2: %d %d %d %d\n",odijk,dijk,fijk,co[fijk]);
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
-			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+bxy*ima,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			if(p[fijk][3*l]<switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+dis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+dis+disp,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
 		}
 	}
 	img[dijk]=3;
@@ -1741,7 +1773,7 @@ void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) 
 
 
 
-template<class t_option>
+template<class r_option>
 inline void container_periodic_base<r_option>::quick_put(int reg,int i,fpoint x,fpoint y,fpoint z) {
 	if(co[reg]==mem[reg]) add_particle_memory(reg);
 	p[reg][3*co[reg]]=x;
@@ -1750,7 +1782,7 @@ inline void container_periodic_base<r_option>::quick_put(int reg,int i,fpoint x,
 	id[reg][co[reg]++]=i;
 }
 
-template<class t_option>
+template<class r_option>
 void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int dk) {
 	return;
 //	dijk=di+nx*(dj+oy*dk);
@@ -1759,15 +1791,14 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 //	}
 }
 
-
-
 /** Creates a voropp_loop object, by setting the necessary constants about the
  * container geometry from a pointer to the current container class.
  * \param[in] q a pointer to the current container class. */
 template<class r_option>
 voropp_loop::voropp_loop(container_periodic_base<r_option> *q) : sx(q->bx), sy(q->by), sz(q->bz),
 	xsp(q->xsp),ysp(q->ysp),zsp(q->zsp),
-	nx(q->nx),ny(q->ny),nz(q->nz),nxy(q->nxy),nxyz(q->nxyz) {}
+	nx(q->nx),ny(q->ny),nz(q->nz),nxyz(q->nxyz),
+	ey(q->ey),ez(q->ez),oy(q->oy),oz(q->oz) {}
 
 /** Initializes a voropp_loop object, by finding all blocks which are within a
  * given sphere. It calculates the index of the first block that needs to be
