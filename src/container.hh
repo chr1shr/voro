@@ -248,7 +248,7 @@ class container_periodic_base {
 		inline void create_periodic_image(int di,int dj,int dk);
 		void create_side_image(int di,int dj,int dk);
 		void create_vertical_image(int di,int dj,int dk);
-		inline void quick_put(int reg,int i,fpoint x,fpoint y,fpoint z);
+		inline void quick_put(int reg,int fijk,int l,fpoint dx,fpoint dy,fpoint dz);
 		friend class voropp_loop;
 		friend class radius_poly;
 };

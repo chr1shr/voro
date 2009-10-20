@@ -71,11 +71,8 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 		if(pts[l+2]>mz) mz=pts[l+2];
 	}
 
-	ey=12;
-	ez=1;
-
-//	ey=1+int(my*ysp);
-//	ez=1+int(mz*zsp);
+	ey=1+int(my*ysp);
+	ez=1+int(mz*zsp);
 
 	wy=ny+ey;
 	wz=nz+ez;
@@ -263,7 +260,9 @@ container_periodic_base<r_option>::~container_periodic_base() {
 template<class r_option>
 void container_periodic_base<r_option>::draw_particles(ostream &os) {
 	int c,l,i,j,k,ll;
-	for(i=nx-1;i>=0;i--) for(j=wy;j<wy+ny*3;j++) create_periodic_image(i,j,ez);
+	for(i=0;i<nx;i++) for(j=0;j<oy;j++) for(k=0;k<oz;k++) {
+		create_periodic_image(i,j,k);
+	}
 	check_compartmentalized();
 	for(k=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++) {
 //	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
@@ -470,9 +469,11 @@ inline void container_periodic_base<r_option>::import(const char *filename) {
 /** Outputs the number of particles within each region. */
 template<class r_option>
 void container_periodic_base<r_option>::region_count() {
-	int i,j,k;
-	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
-		cout << "Region (" << i+ez << "," << j+ey << "," << k << "): " << co[i+nx*(j+oy*k)] << " particles" << endl;
+	int i,j,k,ijk;
+	for(k=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++) {
+		ijk=i+nx*(j+oy*k);
+		printf("Region (%d,%d,%d): ijk=%d, p=%d, mem=%d, img=%d\n",i,j-ey,k-ez,ijk,co[ijk],mem[ijk],img[ijk]);
+	}
 }
 
 /** Clears a container of particles. */
@@ -1739,8 +1740,8 @@ void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) 
 		}
 		img[odijk]|=2;
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+dis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
-			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+adis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			if(p[fijk][3*l]>switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
+			else quick_put(odijk,fijk,l,adis,by*ima,0);
 		}
 	}
 	if((img[dijk]&2)==0) {
@@ -1756,49 +1757,51 @@ void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) 
 		}
 		img[odijk]|=1;
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l]<switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+dis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
-			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+adis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			if(p[fijk][3*l]<switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
+			else quick_put(odijk,fijk,l,adis,by*ima,0);
 		}
 	}
 	img[dijk]=3;
 }
 
-
-
 template<class r_option>
-inline void container_periodic_base<r_option>::quick_put(int reg,int i,fpoint x,fpoint y,fpoint z) {
+inline void container_periodic_base<r_option>::quick_put(int reg,int fijk,int l,fpoint dx,fpoint dy,fpoint dz) {
 	if(co[reg]==mem[reg]) add_particle_memory(reg);
-	p[reg][3*co[reg]]=x;
-	p[reg][3*co[reg]+1]=y;
-	p[reg][3*co[reg]+2]=z;
-	id[reg][co[reg]++]=i;
+	p[reg][3*co[reg]]=p[fijk][3*l]+dx;
+	p[reg][3*co[reg]+1]=p[fijk][3*l+1]+dy;
+	p[reg][3*co[reg]+2]=p[fijk][3*l+2]+dz;
+	id[reg][co[reg]++]=id[fijk][l];
 }
 
 template<class r_option>
 void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int dk) {
 	fpoint boxx=bx/nx,boxy=by/ny;
 	int l,dijk=di+nx*(dj+oy*dk),dijkl,dijkr,ima=step_div(dk-ez,nz);
-
-	int qj=dj+step_int(-ima*byz*ysp),qjdiv=step_div(qj,ny);
-	int qi=di+step_int(-(ima*bxz+qjdiv*bxy)*xsp),qidiv=step_div(qi,nx);
-	int fi=qi-qidiv*nx,fj=qj-qjdiv*ny,fijk=fi+nx*(fj+oy*ima),fijk2;
-	fpoint disy=ima*byz+qjdiv*by,switchy=dj*boxy-ima*byz-qjdiv*by;
+	int qj=dj+step_int(-ima*byz*ysp),qjdiv=step_div(qj-ey,ny);
+	int qi=di+step_int((-ima*bxz-qjdiv*bxy)*xsp),qidiv=step_div(qi,nx);
+	int fi=qi-qidiv*nx,fj=qj-qjdiv*ny,fijk=fi+nx*(fj+oy*(dk-ima*nz)),fijk2;
+	fpoint disy=ima*byz+qjdiv*by,switchy=(dj-ey)*boxy-ima*byz-qjdiv*by;
 	fpoint disx=ima*bxz+qjdiv*bxy+qidiv*bx,switchx=di*boxx-ima*bxz-qjdiv*bxy-qidiv*bx,switchx2,disxl,disxr,disx2,disxr2;
 
-	if(di>0) {
-		dijkl=dijk-1;disxl=disx;
-	} else {
+	printf("%d %d %d %d ima=%d qi=%d qidiv=%d qj=%d qjdiv=%d fi=%d fj=%d fijk=%d\n",di,dj,dk,dijk,ima,qi,qidiv,qj,qjdiv,fi,fj,fijk);
+
+	if(di==0) {
 		dijkl=dijk+nx-1;disxl=disx+bx;
+	} else {
+		dijkl=dijk-1;disxl=disx;
 	}
 
 	if(di==nx-1) {
-		dijkr=dijk+1;disxr=disx;
-	} else {
 		dijkr=dijk-nx+1;disxr=disx-bx;
+	} else {
+		dijkr=dijk+1;disxr=disx;
 	}
 
 	bool y_exist=dj!=0;
 
+	printf("%d %d %d\n",dijkl,dijk,dijkr);
+	printf("%f %f %f %f %f\n",disxl,disx,disy,switchx,switchy);
+	
 	if((img[dijk]&1)==0) {
 		img[dijkl]|=2;
 		if(y_exist) {
@@ -1807,12 +1810,12 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 		}
 		for(l=0;l<co[fijk];l++) {
 			if(p[fijk][3*l+1]>switchy) {
-				if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+disx,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
-				else quick_put(dijkl,id[fijk][l],p[fijk][3*l]+disxl,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				if(p[fijk][3*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
+				else quick_put(dijkl,fijk,l,disxl,disy,bz*ima);
 			} else {
 				if(!y_exist) continue;
-				if(p[fijk][3*l]>switchx) quick_put(dijk-nx,id[fijk][l],p[fijk][3*l]+disx,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
-				else quick_put(dijkl-nx,id[fijk][l],p[fijk][3*l]+disxl,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				if(p[fijk][3*l]>switchx) quick_put(dijk-nx,fijk,l,disx,disy,bz*ima);
+				else quick_put(dijkl-nx,fijk,l,disxl,disy,bz*ima);
 			}
 		}
 	}
@@ -1820,7 +1823,7 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 		if(fi==nx-1) {
 			fijk2=fijk+1-nx;switchx2=switchx+(1-nx)*boxx;disx2=disx+bx;disxr2=disxr+bx;
 		} else {
-			fijk2=fijk+1;switchx2=switchx+boxx;disx2=disx+bx;disxr2=disxr+bx;
+			fijk2=fijk+1;switchx2=switchx+boxx;disx2=disx;disxr2=disxr;
 		}
 		img[dijkr]|=1;
 		if(y_exist) {
@@ -1829,12 +1832,12 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 		}
 		for(l=0;l<co[fijk2];l++) {
 			if(p[fijk2][3*l+1]>switchy) {
-				if(p[fijk2][3*l]>switchx2) quick_put(dijkr,id[fijk2][l],p[fijk2][3*l]+disxr2,p[fijk2][3*l+1]+disy,p[fijk2][3*l+2]+bz*ima);
-				else quick_put(dijk,id[fijk2][l],p[fijk2][3*l]+disx2,p[fijk2][3*l+1]+disy,p[fijk2][3*l+2]+bz*ima);
+				if(p[fijk2][3*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
+				else quick_put(dijk,fijk2,l,disx2,disy,bz*ima);
 			} else {
 				if(!y_exist) continue;
-				if(p[fijk2][3*l]>switchx2) quick_put(dijkr-nx,id[fijk2][l],p[fijk2][3*l]+disxr2,p[fijk2][3*l+1]+disy,p[fijk2][3*l+2]+bz*ima);
-				else quick_put(dijk-nx,id[fijk2][l],p[fijk2][3*l]+disx2,p[fijk2][3*l+1]+disy,p[fijk2][3*l+2]+bz*ima);
+				if(p[fijk2][3*l]>switchx2) quick_put(dijkr-nx,fijk2,l,disxr2,disy,bz*ima);
+				else quick_put(dijk-nx,fijk2,l,disx2,disy,bz*ima);
 			}
 		}
 	}
@@ -1842,19 +1845,20 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 
 
 //Recomputation of some stuff
-	if(fj==ny-1) {
+	if(fj==wy-1) {
 		fijk+=nx*(1-ny)-fi;
 		switchy+=(1-ny)*boxy;
 		disy+=by;
 	//	int qj=dj+step_int(-ima*byz*ysp),qjdiv=step_div(qj,ny);
 		qi=di+step_int(-(ima*bxz+(qjdiv+1)*bxy)*xsp);
 		int dqidiv=step_div(qi,nx)-qidiv;qidiv+=dqidiv;
-		int fi=qi-qidiv*nx;
+		fi=qi-qidiv*nx;
 		fijk+=fi;
 		disx+=bxy+bx*dqidiv;
 		disxl+=bxy+bx*dqidiv;
 		disxr+=bxy+bx*dqidiv;
-		switchx-=bxy+dqidiv*bx;
+		switchx-=bxy+bx*dqidiv;
+	//	switchx=di*boxx-ima*bxz+qjdiv*bxy-qidiv*bx;
 	} else {
 		fijk+=nx;switchy+=boxy;
 	}
@@ -1870,11 +1874,11 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 		for(l=0;l<co[fijk];l++) {
 			if(p[fijk][3*l+1]>switchy) {
 				if(!y_exist) continue;
-				if(p[fijk][3*l]>switchx) quick_put(dijk+nx,id[fijk][l],p[fijk][3*l]+disx,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
-				else quick_put(dijkl+nx,id[fijk][l],p[fijk][3*l]+disxl,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				if(p[fijk][3*l]>switchx) quick_put(dijk+nx,fijk,l,disx,disy,bz*ima);
+				else quick_put(dijkl+nx,fijk,l,disxl,disy,bz*ima);
 			} else {
-				if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+disx,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
-				else quick_put(dijkl,id[fijk][l],p[fijk][3*l]+disxl,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				if(p[fijk][3*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
+				else quick_put(dijkl,fijk,l,disxl,disy,bz*ima);
 			}
 		}
 	}
@@ -1882,21 +1886,21 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 		if(fi==nx-1) {
 			fijk2=fijk+1-nx;switchx2=switchx+(1-nx)*boxx;disx2=disx+bx;disxr2=disxr+bx;
 		} else {
-			fijk2=fijk+1;switchx2=switchx+boxx;disx2=disx+bx;disxr2=disxr+bx;
+			fijk2=fijk+1;switchx2=switchx+boxx;disx2=disx;disxr2=disxr;
 		}
 		img[dijkr]|=4;
 		if(y_exist) {
 			img[dijkr+nx]|=1;
 			img[dijk+nx]|=2;
 		}
-		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l+1]>switchy) {
+		for(l=0;l<co[fijk2];l++) {
+			if(p[fijk2][3*l+1]>switchy) {
 				if(!y_exist) continue;
-				if(p[fijk][3*l]>switchx) quick_put(dijkr+nx,id[fijk][l],p[fijk][3*l]+disxr2,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
-				else quick_put(dijk+nx,id[fijk][l],p[fijk][3*l]+disx2,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				if(p[fijk2][3*l]>switchx2) quick_put(dijkr+nx,fijk2,l,disxr2,disy,bz*ima);
+				else quick_put(dijk+nx,fijk2,l,disx2,disy,bz*ima);
 			} else {
-				if(p[fijk][3*l]>switchx) quick_put(dijkr,id[fijk][l],p[fijk][3*l]+disxr2,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
-				else quick_put(dijk,id[fijk][l],p[fijk][3*l]+disx2,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				if(p[fijk2][3*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
+				else quick_put(dijk,fijk2,l,disx2,disy,bz*ima);
 			}
 		}
 	}
