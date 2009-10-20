@@ -1725,47 +1725,39 @@ inline void container_periodic_base<r_option>::create_periodic_image(int di,int 
 
 template<class r_option>
 void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) {
-//	printf("di=%d dj=%d dk=%d\n",di,dj,dk);
 	fpoint boxx=bx/nx;
-	int l,dijk=di+nx*(dj+oy*dk),odijk;
-	int ima=step_div(dj-ey,ny);
-	int qua=di+step_int(-ima*bxy*xsp);
-	int quadiv=step_div(qua,nx);
-	int fi=qua-quadiv*nx,fj=dj-ima*ny,fijk=fi+nx*(fj+oy*dk);
-	fpoint disp,dis=ima*bxy+quadiv*bx,switchx=di*boxx-ima*bxy-quadiv*bx;
-//	printf("dijk=%d ima=%d qua=%d quadiv=%d fi=%d fj=%d fijk=%d switchx=%f\n",dijk,ima,qua,quadiv,fi,fj,fijk,switchx);
+	int l,dijk=di+nx*(dj+oy*dk),odijk,ima=step_div(dj-ey,ny);
+	int qua=di+step_int(-ima*bxy*xsp),quadiv=step_div(qua,nx);
+	int fi=qua-quadiv*nx,fijk=fi+nx*(dj-ima*ny+oy*dk);
+	fpoint dis=ima*bxy+quadiv*bx,switchx=di*boxx-ima*bxy-quadiv*bx,adis;
 
 	if((img[dijk]&1)==0) {
-		// Copy fijk to dijk-1 and dijk
 		if(di>0) {
-			odijk=dijk-1;disp=0;
+			odijk=dijk-1;adis=dis;
 		} else {
-			odijk=dijk+nx-1;disp=bx;
+			odijk=dijk+nx-1;adis=dis+bx;
 		}
 		img[odijk]|=2;
-//		printf("1: %d %d %d %d\n",odijk,dijk,fijk,co[fijk]);
 		for(l=0;l<co[fijk];l++) {
 			if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+dis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
-			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+dis+disp,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+adis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
 		}
 	}
 	if((img[dijk]&2)==0) {
-		// Copy fijk+1 to dijk and dijk+1
 		if(fi==nx-1) {
 			fijk+=1-nx;switchx+=(1-nx)*boxx;dis+=bx;
 		} else {
 			fijk++;switchx+=boxx;
 		}
 		if(di==nx-1) {
-			odijk=dijk-nx+1;disp=-bx;
+			odijk=dijk-nx+1;adis=dis-bx;
 		} else {
-			odijk=dijk+1;disp=0;
+			odijk=dijk+1;adis=dis;
 		}
 		img[odijk]|=1;
-//		printf("2: %d %d %d %d\n",odijk,dijk,fijk,co[fijk]);
 		for(l=0;l<co[fijk];l++) {
 			if(p[fijk][3*l]<switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+dis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
-			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+dis+disp,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
+			else quick_put(odijk,id[fijk][l],p[fijk][3*l]+adis,p[fijk][3*l+1]+by*ima,p[fijk][3*l+2]);
 		}
 	}
 	img[dijk]=3;
@@ -1784,11 +1776,132 @@ inline void container_periodic_base<r_option>::quick_put(int reg,int i,fpoint x,
 
 template<class r_option>
 void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int dk) {
-	return;
-//	dijk=di+nx*(dj+oy*dk);
-//	if(img[dijk]&1) {
-//
-//	}
+	fpoint boxx=bx/nx,boxy=by/ny;
+	int l,dijk=di+nx*(dj+oy*dk),dijkl,dijkr,ima=step_div(dk-ez,nz);
+
+	int qj=dj+step_int(-ima*byz*ysp),qjdiv=step_div(qj,ny);
+	int qi=di+step_int(-(ima*bxz+qjdiv*bxy)*xsp),qidiv=step_div(qi,nx);
+	int fi=qi-qidiv*nx,fj=qj-qjdiv*ny,fijk=fi+nx*(fj+oy*ima),fijk2;
+	fpoint disy=ima*byz+qjdiv*by,switchy=dj*boxy-ima*byz-qjdiv*by;
+	fpoint disx=ima*bxz+qjdiv*bxy+qidiv*bx,switchx=di*boxx-ima*bxz-qjdiv*bxy-qidiv*bx,switchx2,disxl,disxr,disx2,disxr2;
+
+	if(di>0) {
+		dijkl=dijk-1;disxl=disx;
+	} else {
+		dijkl=dijk+nx-1;disxl=disx+bx;
+	}
+
+	if(di==nx-1) {
+		dijkr=dijk+1;disxr=disx;
+	} else {
+		dijkr=dijk-nx+1;disxr=disx-bx;
+	}
+
+	bool y_exist=dj!=0;
+
+	if((img[dijk]&1)==0) {
+		img[dijkl]|=2;
+		if(y_exist) {
+			img[dijkl-nx]|=8;
+			img[dijk-nx]|=4;
+		}
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][3*l+1]>switchy) {
+				if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+disx,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				else quick_put(dijkl,id[fijk][l],p[fijk][3*l]+disxl,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+			} else {
+				if(!y_exist) continue;
+				if(p[fijk][3*l]>switchx) quick_put(dijk-nx,id[fijk][l],p[fijk][3*l]+disx,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				else quick_put(dijkl-nx,id[fijk][l],p[fijk][3*l]+disxl,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+			}
+		}
+	}
+	if((img[dijk]&2)==0) {
+		if(fi==nx-1) {
+			fijk2=fijk+1-nx;switchx2=switchx+(1-nx)*boxx;disx2=disx+bx;disxr2=disxr+bx;
+		} else {
+			fijk2=fijk+1;switchx2=switchx+boxx;disx2=disx+bx;disxr2=disxr+bx;
+		}
+		img[dijkr]|=1;
+		if(y_exist) {
+			img[dijkr-nx]|=4;
+			img[dijk-nx]|=8;
+		}
+		for(l=0;l<co[fijk2];l++) {
+			if(p[fijk2][3*l+1]>switchy) {
+				if(p[fijk2][3*l]>switchx2) quick_put(dijkr,id[fijk2][l],p[fijk2][3*l]+disxr2,p[fijk2][3*l+1]+disy,p[fijk2][3*l+2]+bz*ima);
+				else quick_put(dijk,id[fijk2][l],p[fijk2][3*l]+disx2,p[fijk2][3*l+1]+disy,p[fijk2][3*l+2]+bz*ima);
+			} else {
+				if(!y_exist) continue;
+				if(p[fijk2][3*l]>switchx2) quick_put(dijkr-nx,id[fijk2][l],p[fijk2][3*l]+disxr2,p[fijk2][3*l+1]+disy,p[fijk2][3*l+2]+bz*ima);
+				else quick_put(dijk-nx,id[fijk2][l],p[fijk2][3*l]+disx2,p[fijk2][3*l+1]+disy,p[fijk2][3*l+2]+bz*ima);
+			}
+		}
+	}
+
+
+
+//Recomputation of some stuff
+	if(fj==ny-1) {
+		fijk+=nx*(1-ny)-fi;
+		switchy+=(1-ny)*boxy;
+		disy+=by;
+	//	int qj=dj+step_int(-ima*byz*ysp),qjdiv=step_div(qj,ny);
+		qi=di+step_int(-(ima*bxz+(qjdiv+1)*bxy)*xsp);
+		int dqidiv=step_div(qi,nx)-qidiv;qidiv+=dqidiv;
+		int fi=qi-qidiv*nx;
+		fijk+=fi;
+		disx+=bxy+bx*dqidiv;
+		disxl+=bxy+bx*dqidiv;
+		disxr+=bxy+bx*dqidiv;
+		switchx-=bxy+dqidiv*bx;
+	} else {
+		fijk+=nx;switchy+=boxy;
+	}
+
+	y_exist=dj!=oy-1;
+	
+	if((img[dijk]&4)==0) {
+		img[dijkl]|=8;
+		if(y_exist) {
+			img[dijkl+nx]|=2;
+			img[dijk+nx]|=1;
+		}
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][3*l+1]>switchy) {
+				if(!y_exist) continue;
+				if(p[fijk][3*l]>switchx) quick_put(dijk+nx,id[fijk][l],p[fijk][3*l]+disx,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				else quick_put(dijkl+nx,id[fijk][l],p[fijk][3*l]+disxl,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+			} else {
+				if(p[fijk][3*l]>switchx) quick_put(dijk,id[fijk][l],p[fijk][3*l]+disx,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				else quick_put(dijkl,id[fijk][l],p[fijk][3*l]+disxl,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+			}
+		}
+	}
+	if((img[dijk]&8)==0) {
+		if(fi==nx-1) {
+			fijk2=fijk+1-nx;switchx2=switchx+(1-nx)*boxx;disx2=disx+bx;disxr2=disxr+bx;
+		} else {
+			fijk2=fijk+1;switchx2=switchx+boxx;disx2=disx+bx;disxr2=disxr+bx;
+		}
+		img[dijkr]|=4;
+		if(y_exist) {
+			img[dijkr+nx]|=1;
+			img[dijk+nx]|=2;
+		}
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][3*l+1]>switchy) {
+				if(!y_exist) continue;
+				if(p[fijk][3*l]>switchx) quick_put(dijkr+nx,id[fijk][l],p[fijk][3*l]+disxr2,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				else quick_put(dijk+nx,id[fijk][l],p[fijk][3*l]+disx2,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+			} else {
+				if(p[fijk][3*l]>switchx) quick_put(dijkr,id[fijk][l],p[fijk][3*l]+disxr2,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+				else quick_put(dijk,id[fijk][l],p[fijk][3*l]+disx2,p[fijk][3*l+1]+disy,p[fijk][3*l+2]+bz*ima);
+			}
+		}
+	}
+	
+	img[dijk]=15;
 }
 
 /** Creates a voropp_loop object, by setting the necessary constants about the

@@ -21,7 +21,7 @@ int main() {
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
 	// eight particles within each computational block
-	container_periodic con(10,2,10,0.4,0.2,10,n_x,n_y,1,8);
+	container_periodic con(10,2.5,10,0.4,0.2,10,n_x,n_y,1,8);
 
 	for(r=0.5;r<5;r+=1) {
 		for(theta=pi/100;theta<2*pi;theta+=pi/50) {
