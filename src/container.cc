@@ -723,7 +723,7 @@ template<class r_option>
 template<class n_option>
 void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	int i,j,k,ijk,l,q,ai,aj,ak,bi,bj,bk;unsigned int cper;
-	fpoint vx,vy,vz;
+	fpoint vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;fpoint *pp;
 	if(c.p>netmem) {
 		do {
 			netmem<<=1;
@@ -769,14 +769,26 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 	}
 	for(l=0;l<c.p;l++) {
 		k=nett[l];
+		pp=pts[reg[k]]+(3*regp[k]);vx=pp[0];vy=pp[1];vz=pp[2];
 		unpack_periodicity(perio[l],ai,aj,ak);
 		for(q=0;q<c.nu[l];q++) {
 			j=nett[c.ed[l][q]];
 			unpack_periodicity(perio[c.ed[l][q]],bi,bj,bk);
 			cper=pack_periodicity(bi-ai,bj-aj,bk-ak);
 			if(not_already_there(k,j,cper)) {
+				pp=pts[reg[j]]+(3*regp[j]);wx=pp[0];wy=pp[1];wz=pp[2];
+				dx=wx-vx;dy=wy-vy;dz=wz-vz;
+				dis=(x-vx)*dx+(y-vy)*dy+(z-vz)*dz;
+				dis/=dx*dx+dy*dy+dz*dz;
+				cout << x << " " << y << " " << z << endl;
+				cout << vx << " " << vy << " " << vz << endl;
+				cout << wx << " " << wy << " " << wz << endl;
+				cout << dis << endl;
+				if(dis<0) dis=0;if(dis>1) dis=1;
+				wx=vx+dis*dx;wy=vy+dis*dy;wz=vz+dis*dz;
 				if(nu[k]==numem[k]) add_particular_vertex_memory(k);
 				ed[k][nu[k]]=j;
+				raded[k][nu[k]]=sqrt(wx*wx+wy*wy+wz*wz);
 				pered[k][nu[k]++]=cper;
 			}
 		}
