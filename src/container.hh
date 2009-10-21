@@ -81,6 +81,7 @@ class container_periodic_base {
 		void add_wall(wall &w);
 		bool point_inside(fpoint x,fpoint y,fpoint z);
 		bool point_inside_walls(fpoint x,fpoint y,fpoint z);
+		void create_all_images();
 	protected:
 		/** The maximum x coordinate of the container. */
 		const fpoint bx;
@@ -196,12 +197,14 @@ class container_periodic_base {
 
 		int **ed;
 		double **raded;
+		unsigned int **pered;
 		int edc,edmem;
 		int *nu;
 		int *numem;
 		int *reg;
 		int *regp;
 		int *nett;
+		unsigned int *perio;
 		int netmem;
 		voronoicell unitcell;
 
@@ -223,8 +226,9 @@ class container_periodic_base {
 		inline int step_mod(int a,int b);
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);		
-		bool not_already_there(int k,int j);
-		bool search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q);
+		bool not_already_there(int k,int j,unsigned int cper);
+		bool search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
+		bool safe_search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
 		template<class n_option>
 		inline bool corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
 		template<class n_option>
@@ -249,6 +253,8 @@ class container_periodic_base {
 		void create_side_image(int di,int dj,int dk);
 		void create_vertical_image(int di,int dj,int dk);
 		inline void quick_put(int reg,int fijk,int l,fpoint dx,fpoint dy,fpoint dz);
+		inline unsigned int pack_periodicity(int i,int j,int k);
+		inline void unpack_periodicity(unsigned int pa,int &i,int &j,int &k);
 		friend class voropp_loop;
 		friend class radius_poly;
 };

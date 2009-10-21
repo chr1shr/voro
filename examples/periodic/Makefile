@@ -20,10 +20,10 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
 EXECUTABLES=network p_test
 
 # Makefile rules
-all: p_test
+all: p_test network
 
 network: $(SOURCE) network.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o network network.cc
+	$(CC) $(INCLUDE) -ggdb -o network network.cc
 
 p_test: $(SOURCE) p_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o p_test p_test.cc
