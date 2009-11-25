@@ -39,7 +39,7 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 	ptsc=new int[nxyz];
 	ptsmem=new int[nxyz];
 	for(l=0;l<nxyz;l++) {
-		pts[l]=new double[3*memi];
+		pts[l]=new double[4*memi];
 		idmem[l]=new int[memi];
 		ptsc[l]=0;ptsmem[l]=memi;
 	}
@@ -66,12 +66,12 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 
 	compute_unit_cell();
 	if(unitcell.p==0) voropp_fatal_error("Periodic cell vanished",VOROPP_INTERNAL_ERROR);
-	fpoint *pts=unitcell.pts;
-	fpoint mx=pts[0],my=pts[1],mz=pts[2];
+	fpoint *upts=unitcell.pts;
+	fpoint mx=upts[0],my=upts[1],mz=upts[2];
 	for(l=3;l<3*unitcell.p;l+=3) {
-		if(pts[l]>mx) mx=pts[l];
-		if(pts[l+1]>my) my=pts[l+1];
-		if(pts[l+2]>mz) mz=pts[l+2];
+		if(upts[l]>mx) mx=upts[l];
+		if(upts[l+1]>my) my=upts[l+1];
+		if(upts[l+2]>mz) mz=upts[l+2];
 	}
 
 	ey=1+int(my*ysp);
@@ -181,9 +181,9 @@ void container_periodic_base<r_option>::add_network_memory(int l) {
 	ptsmem[l]<<=1;
 	if(ptsmem[l]>max_container_vertex_memory)
 		voropp_fatal_error("Container vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
-	double *npts(new double[3*ptsmem[l]]);
+	double *npts(new double[4*ptsmem[l]]);
 	int *nidmem(new int[ptsmem[l]]);
-	for(int i=0;i<3*ptsc[l];i++) npts[i]=pts[l][i];
+	for(int i=0;i<4*ptsc[l];i++) npts[i]=pts[l][i];
 	for(int i=0;i<ptsc[l];i++) nidmem[i]=idmem[l][i];
 	delete [] pts[l];
 	delete [] idmem[l];
@@ -695,12 +695,8 @@ template<class r_option>
 void container_periodic_base<r_option>::clear_network() {
 	int l;
 	edc=0;
-	for(l=0;l<nxyz;l++) {
-		ptsc[l]=0;
-	}
-	for(l=0;l<edmem;l++) {
-		nu[l]=0;
-	}
+	for(l=0;l<nxyz;l++) ptsc[l]=0;
+	for(l=0;l<edmem;l++) nu[l]=0;
 }
 
 template<class r_option>
@@ -733,7 +729,7 @@ void container_periodic_base<r_option>::draw_network(ostream &os) {
 		for(q=0;q<nu[l];q++) {
 			unpack_periodicity(pered[l][q],ai,aj,ak);
 			if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
-			i=reg[l];j=3*regp[l];
+			i=reg[l];j=4*regp[l];
 			os << pts[i][j] << " " << pts[i][j+1] << " " << pts[i][j+2] << "\n";
 			i=reg[ed[l][q]];j=3*regp[ed[l][q]];
 			os << pts[i][j]+bx*ai+bxy*aj+bxz*ak << " " << pts[i][j+1]+by*aj+byz*ak << " " << pts[i][j+2]+bz*ak << "\n\n\n";
@@ -758,6 +754,7 @@ template<class r_option>
 void container_periodic_base<r_option>::print_network(ostream &os) {
 	voronoicell c;
 	int i,j,k,l,ijk=0,q,ai,aj,ak;
+	double *ptsp;
 	double x,y,z;
 	clear_network();
 	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
@@ -769,8 +766,8 @@ void container_periodic_base<r_option>::print_network(ostream &os) {
 	}
 	os << "Vertex table:\n";
 	for(l=0;l<edc;l++) {
-		i=reg[l];j=3*regp[l];
-		os << l << " " << pts[i][j] << " " << pts[i][j+1] << " " << pts[i][j+2] << "\n";
+		ptsp=pts[reg[l]];j=4*regp[l];
+		os << l << " " << ptsp[j] << " " << ptsp[j+1] << " " << ptsp[j+2] << " " << ptsp[j+3] << "\n";
 	}
 	
 	os << "\nEdge table:\n";
@@ -841,9 +838,10 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 			if(edc==edmem) add_edge_network_memory();
 			if(ptsc[ijk]==ptsmem[ijk]) add_network_memory(ijk);
 			reg[edc]=ijk;regp[edc]=ptsc[ijk];
-			pts[ijk][3*ptsc[ijk]]=vx;
-			pts[ijk][3*ptsc[ijk]+1]=vy;
-			pts[ijk][3*ptsc[ijk]+2]=vz;
+			pts[ijk][4*ptsc[ijk]]=vx;
+			pts[ijk][4*ptsc[ijk]+1]=vy;
+			pts[ijk][4*ptsc[ijk]+2]=vz;
+			pts[ijk][4*ptsc[ijk]+3]=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2]);
 			idmem[ijk][ptsc[ijk]++]=edc;
 			nett[l]=edc++;
 		}
@@ -851,14 +849,14 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 	for(l=0;l<c.p;l++) {
 		k=nett[l];
 		unpack_periodicity(perio[l],ai,aj,ak);
-		pp=pts[reg[k]]+(3*regp[k]);
+		pp=pts[reg[k]]+(4*regp[k]);
 		vx=pp[0]+ai*bx+aj*bxy+ak*bxz;vy=pp[1]+aj*by+ak*byz;vz=pp[2]+ak*bz;
 		for(q=0;q<c.nu[l];q++) {
 			j=nett[c.ed[l][q]];
 			unpack_periodicity(perio[c.ed[l][q]],bi,bj,bk);
 			cper=pack_periodicity(bi-ai,bj-aj,bk-ak);
 			if(not_already_there(k,j,cper)) {
-				pp=pts[reg[j]]+(3*regp[j]);
+				pp=pts[reg[j]]+(4*regp[j]);
 				wx=pp[0]+bi*bx+bj*bxy+bk*bxz;wy=pp[1]+bj*by+bk*byz;wz=pp[2]+bk*bz;
 				dx=wx-vx;dy=wy-vy;dz=wz-vz;
 				dis=(x-vx)*dx+(y-vy)*dy+(z-vz)*dz;
@@ -919,7 +917,7 @@ bool container_periodic_base<r_option>::search_previous(fpoint x,fpoint y,fpoint
 
 	ijk=i+nx*(j+ny*k);
 	
-	for(q=0;q<ptsc[ijk];q++) if(abs(pts[ijk][3*q]-x)<tolerance&&abs(pts[ijk][3*q+1]-y)<tolerance&&abs(pts[ijk][3*q+2]-z)<tolerance) {
+	for(q=0;q<ptsc[ijk];q++) if(abs(pts[ijk][4*q]-x)<tolerance&&abs(pts[ijk][4*q+1]-y)<tolerance&&abs(pts[ijk][4*q+2]-z)<tolerance) {
 		cper=pack_periodicity(ai,aj,ak);
 		return true;
 	}
