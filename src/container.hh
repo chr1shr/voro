@@ -45,6 +45,7 @@ class container_periodic_base {
 		inline void import(const char *filename);
 		void region_count();
 		void clear();
+		void draw_domain(const char *filename);
 		void draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		inline void draw_cells_gnuplot(const char *filename);
 		void draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
@@ -63,9 +64,13 @@ class container_periodic_base {
 		void print_all_custom(const char *format,ostream &os);
 		void print_all_custom(const char *format);
 		void print_all_custom(const char *format,const char *filename);
+		void clear_network();
 		void print_network(ostream &os);
 		void print_network();
 		void print_network(const char *filename);
+		void draw_network(ostream &os);
+		void draw_network();
+		void draw_network(const char *filename);
 		template<class n_option>
 		void add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);		
 		template<class n_option>

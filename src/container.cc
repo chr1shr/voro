@@ -283,6 +283,33 @@ void container_periodic_base<r_option>::draw_particles(ostream &os) {
 }
 
 template<class r_option>
+void container_periodic_base<r_option>::draw_domain(const char* filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	os << "0 0 0\n";
+	os << bx << " 0 0\n";
+	os << bx+bxy << " " << by << " 0\n";
+	os << bxy << " " << by << " 0\n";
+	os << bxy+bxz << " " << by+byz << " " << bz << "\n";
+	os << bx+bxy+bxz << " " << by+byz << " " << bz << "\n";
+	os << bx+bxz << " " << byz << " " << bz << "\n";
+	os << bxz << " " << byz << " " << bz << "\n";
+	os << "0 0 0\n";
+	os << bxy << " " << by << " 0\n\n";
+	
+	os << bxz << " " << byz << " " << bz << "\n";
+	os << bxy+bxz << " " << by+byz << " " << bz << "\n\n";
+	
+	os << bx << " 0 0\n";
+	os << bx+bxz << " " << byz << " " << bz << "\n\n";
+	
+	os << bx+bxy << " " << by << " 0\n";
+	os << bx+bxy+bxz << " " << by+byz << " " << bz << "\n\n";
+	
+	os.close();
+}
+
+template<class r_option>
 void container_periodic_base<r_option>::create_all_images() {
 	int i,j,k;
 	for(k=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++) create_periodic_image(i,j,k);
@@ -365,21 +392,20 @@ void container_periodic_base<r_option>::draw_particles_pov(const char *filename)
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 template<class r_option>
 void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
-	int i=step_int(x*xsp),j=step_int(y*ysp),k=step_int(z*zsp);
+	int k=step_int(z*zsp);
 	if(k<0||k>=nz) {
 		int ak=step_div(k,nz);
 		z-=ak*bz;y-=ak*byz;x-=ak*bxz;k-=ak*nz;
-		cout << "wrap z\n";
 	}
+	int j=step_int(y*ysp);
 	if(j<0||j>=ny) {
 		int aj=step_div(j,ny);
 		y-=aj*by;x-=aj*bxy;j-=aj*ny;
-		cout << "wrap y\n";
 	}
+	int i=step_int(x*xsp);
 	if(i<0||i>=nx) {
 		int ai=step_div(i,nx);
 		x-=ai*bx;i-=ai*nx;
-		cout << "wrap x\n";
 	}
 	j+=ey;k+=ez;
 	i+=nx*(j+oy*k);
@@ -666,6 +692,56 @@ fpoint container_periodic_base<r_option>::packing_fraction(fpoint *bb,fpoint xmi
 }
 
 template<class r_option>
+void container_periodic_base<r_option>::clear_network() {
+	int l;
+	edc=0;
+	for(l=0;l<nxyz;l++) {
+		ptsc[l]=0;
+	}
+	for(l=0;l<edmem;l++) {
+		nu[l]=0;
+	}
+}
+
+template<class r_option>
+void container_periodic_base<r_option>::draw_network(const char *filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	draw_network(os);
+	os.close();
+}
+
+template<class r_option>
+void container_periodic_base<r_option>::draw_network() {
+	draw_network(cout);
+}
+
+template<class r_option>
+void container_periodic_base<r_option>::draw_network(ostream &os) {
+	voronoicell c;
+	int i,j,k,l,ijk=0,q,ai,aj,ak;
+	double x,y,z;
+	clear_network();
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
+		ijk=i+nx*(j+oy*k);
+		for(q=0;q<co[ijk];q++) {
+			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
+			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) add_to_network(c,x,y,z);
+		}
+	}
+	for(l=0;l<edc;l++) {
+		for(q=0;q<nu[l];q++) {
+			unpack_periodicity(pered[l][q],ai,aj,ak);
+			if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
+			i=reg[l];j=3*regp[l];
+			os << pts[i][j] << " " << pts[i][j+1] << " " << pts[i][j+2] << "\n";
+			i=reg[ed[l][q]];j=3*regp[ed[l][q]];
+			os << pts[i][j]+bx*ai+bxy*aj+bxz*ak << " " << pts[i][j+1]+by*aj+byz*ak << " " << pts[i][j+2]+bz*ak << "\n\n\n";
+		}
+	}
+}
+
+template<class r_option>
 void container_periodic_base<r_option>::print_network(const char *filename) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
@@ -683,6 +759,7 @@ void container_periodic_base<r_option>::print_network(ostream &os) {
 	voronoicell c;
 	int i,j,k,l,ijk=0,q,ai,aj,ak;
 	double x,y,z;
+	clear_network();
 	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
 		ijk=i+nx*(j+oy*k);
 		for(q=0;q<co[ijk];q++) {
@@ -690,16 +767,21 @@ void container_periodic_base<r_option>::print_network(ostream &os) {
 			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) add_to_network(c,x,y,z);
 		}
 	}
+	os << "Vertex table:\n";
 	for(l=0;l<edc;l++) {
-		cout << l << " : " << nu[l] << " " << numem[l] << endl;
+		i=reg[l];j=3*regp[l];
+		os << l << " " << pts[i][j] << " " << pts[i][j+1] << " " << pts[i][j+2] << "\n";
+	}
+	
+	os << "\nEdge table:\n";
+	for(l=0;l<edc;l++) {
 		for(q=0;q<nu[l];q++) {
-			cout << "-> " << ed[l][q] << endl;
 			unpack_periodicity(pered[l][q],ai,aj,ak);
-			if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
-			i=reg[l];j=3*regp[l];
-			os << pts[i][j] << " " << pts[i][j+1] << " " << pts[i][j+2] << "\n";
-			i=reg[ed[l][q]];j=3*regp[ed[l][q]];
-			os << pts[i][j]+bx*ai+bxy*aj+bxz*ak << " " << pts[i][j+1]+by*aj+byz*ak << " " << pts[i][j+2]+bz*ak << "\n\n\n";
+
+			// Uncomment the next line to remove reverse edges
+			// if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
+
+			os << l << " -> " << ed[l][q] << " " << raded[l][q] << " " << ai << " " << aj << " " << ak << "\n"; 
 		}
 	}
 }
@@ -739,24 +821,23 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 			nett[l]=idmem[ijk][q];
 			perio[l]=cper;
 		} else {
-			i=step_int(vx*xsp);
-			j=step_int(vy*ysp);
 			k=step_int(vz*zsp);
 			if(k<0||k>=nz) {
 				ak=step_div(k,nz);
 				vz-=ak*bz;vy-=ak*byz;vx-=ak*bxz;k-=ak*nz;
 			} else ak=0;
+			j=step_int(vy*ysp);
 			if(j<0||j>=ny) {
 				aj=step_div(j,ny);
 				vy-=aj*by;vx-=aj*bxy;j-=aj*ny;
 			} else aj=0;
+			i=step_int(vx*xsp);
 			if(i<0||i>=nx) {
 				ai=step_div(i,nx);
 				vx-=ai*bx;i-=ai*nx;
 			} else ai=0;
 			perio[l]=pack_periodicity(ai,aj,ak);
 			ijk=i+nx*(j+ny*k);
-
 			if(edc==edmem) add_edge_network_memory();
 			if(ptsc[ijk]==ptsmem[ijk]) add_network_memory(ijk);
 			reg[edc]=ijk;regp[edc]=ptsc[ijk];
@@ -769,23 +850,21 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 	}
 	for(l=0;l<c.p;l++) {
 		k=nett[l];
-		pp=pts[reg[k]]+(3*regp[k]);vx=pp[0];vy=pp[1];vz=pp[2];
 		unpack_periodicity(perio[l],ai,aj,ak);
+		pp=pts[reg[k]]+(3*regp[k]);
+		vx=pp[0]+ai*bx+aj*bxy+ak*bxz;vy=pp[1]+aj*by+ak*byz;vz=pp[2]+ak*bz;
 		for(q=0;q<c.nu[l];q++) {
 			j=nett[c.ed[l][q]];
 			unpack_periodicity(perio[c.ed[l][q]],bi,bj,bk);
 			cper=pack_periodicity(bi-ai,bj-aj,bk-ak);
 			if(not_already_there(k,j,cper)) {
-				pp=pts[reg[j]]+(3*regp[j]);wx=pp[0];wy=pp[1];wz=pp[2];
+				pp=pts[reg[j]]+(3*regp[j]);
+				wx=pp[0]+bi*bx+bj*bxy+bk*bxz;wy=pp[1]+bj*by+bk*byz;wz=pp[2]+bk*bz;
 				dx=wx-vx;dy=wy-vy;dz=wz-vz;
 				dis=(x-vx)*dx+(y-vy)*dy+(z-vz)*dz;
 				dis/=dx*dx+dy*dy+dz*dz;
-				cout << x << " " << y << " " << z << endl;
-				cout << vx << " " << vy << " " << vz << endl;
-				cout << wx << " " << wy << " " << wz << endl;
-				cout << dis << endl;
 				if(dis<0) dis=0;if(dis>1) dis=1;
-				wx=vx+dis*dx;wy=vy+dis*dy;wz=vz+dis*dz;
+				wx=vx-x+dis*dx;wy=vy-y+dis*dy;wz=vz-z+dis*dz;
 				if(nu[k]==numem[k]) add_particular_vertex_memory(k);
 				ed[k][nu[k]]=j;
 				raded[k][nu[k]]=sqrt(wx*wx+wy*wy+wz*wz);
@@ -818,18 +897,21 @@ bool container_periodic_base<r_option>::safe_search_previous(fpoint x,fpoint y,f
 template<class r_option>
 bool container_periodic_base<r_option>::search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper) {
 		
-	int i=step_int(x*xsp),j=step_int(y*ysp),k=step_int(z*zsp),ai,aj,ak;
+	int k=step_int(z*zsp);
+	int ai,aj,ak;
 
 	if(k<0||k>=nz) {
 		ak=step_div(k,nz);
 		z-=ak*bz;y-=ak*byz;x-=ak*bxz;k-=ak*nz;
 	} else ak=0;
 
+	int j=step_int(y*ysp);
 	if(j<0||j>=ny) {
 		aj=step_div(j,ny);
 		y-=aj*by;x-=aj*bxy;j-=aj*ny;
 	} else aj=0;
 
+	int i=step_int(x*xsp);
 	if(i<0||i>=nx) {
 		ai=step_div(i,nx);
 		x-=ai*bx;i-=ai*nx;
