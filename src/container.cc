@@ -392,6 +392,7 @@ void container_periodic_base<r_option>::draw_particles_pov(const char *filename)
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 template<class r_option>
 void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
+	x+=1;y+=1;z+=1;
 	int k=step_int(z*zsp);
 	if(k<0||k>=nz) {
 		int ak=step_div(k,nz);
@@ -1172,11 +1173,12 @@ inline void container_periodic_base<r_option>::print_all_neighbor(const char* fi
 template<class r_option>
 template<class n_option>
 inline bool container_periodic_base<r_option>::initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
-	fpoint x1,x2,y1,y2,z1,z2;
+/*	fpoint x1,x2,y1,y2,z1,z2;
 	x1=-(x2=0.5*bx);
 	y1=-(y2=0.5*by);
 	z1=-(z2=0.5*bz);
-	c.init(x1,x2,y1,y2,z1,z2);
+	c.init(x1,x2,y1,y2,z1,z2);*/
+	c.init(unitcell);
 	for(int j=0;j<wall_number;j++) if(!(walls[j]->cut_cell(c,x,y,z))) return false;
 	return true;
 }

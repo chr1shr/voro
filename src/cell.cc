@@ -43,18 +43,18 @@ voronoicell_base<n_option>::voronoicell_base(voronoicell_base<n_option> &c) :
 	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]), neighbor(this) {
 	int i,j;
 	sure.p=pts;
+	p=c.p;
 	for(i=0;i<current_vertex_order;i++) {
 		mem[i]=c.mem[i];
 		if(mem[i]>0) {
-			mep[i]=new double[mem[i]*(2*i+1)];
+			mep[i]=new int[mem[i]*(2*i+1)];
 			mec[i]=c.mec[i];
 			for(j=0;j<mec[i]*(2*i+1);j++) mep[i][j]=c.mep[i][j];
+			for(j=0;j<mec[i]*(2*i+1);j+=2*i+1) ed[mep[i][j+2*i]]=mep[i]+j;
 		} else mec[i]=0;
 	}
-	for(i=0;i<p;i++) {
-		nu[i]=c.nu[i];
-		ed[i]=c.ed[i];
-	}
+	for(i=0;i<p;i++) nu[i]=c.nu[i];
+	for(i=0;i<3*p;i++) pts[i]=c.pts[i];
 }
 
 
@@ -269,6 +269,28 @@ inline void voronoicell_base<n_option>::init_octahedron(fpoint l) {
 	ed[0]=q;ed[1]=q+9;ed[2]=q+18;ed[3]=q+27;ed[4]=q+36;ed[5]=q+45;
 	neighbor.init_octahedron();
 	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
+}
+
+template<class n_option>
+void voronoicell_base<n_option>::init(voronoicell_base<n_option> &c) {
+	int i,j;
+	p=c.p;up=0;
+	for(i=0;i<current_vertex_order;i++) {
+		mec[i]=c.mec[i];
+		for(j=0;j<mec[i]*(2*i+1);j++) mep[i][j]=c.mep[i][j];
+		for(j=0;j<mec[i]*(2*i+1);j+=2*i+1) ed[mep[i][j+2*i]]=mep[i]+j;
+	}
+	for(i=0;i<p;i++) nu[i]=c.nu[i];
+	for(i=0;i<3*p;i++) pts[i]=c.pts[i];
+	neighbor.init(c);
+}
+
+inline void neighbor_track::init(voronoicell_base<neighbor_track> &c) {
+	int i,j;
+	for(i=0;i<c.current_vertex_order;i++) {
+		for(j=0;j<c.mec[i]*i;j++) mne[i][j]=c.neighbor.mne[i][j];
+		for(j=0;j<c.mec[i];j++) ne[c.mep[i][(2*i+1)*j+2*i]]=mne[i]+(j*i);
+	}
 }
 
 /** Initializes a Voronoi cell as a tetrahedron. It assumes that the normal to
@@ -2391,11 +2413,13 @@ neighbor_track::neighbor_track(voronoicell_base<neighbor_track> *ivc,voronoicell
 	int i,j;
 	mne=new int*[vc->current_vertex_order];
 	ne=new int*[vc->current_vertices];
-	for(i=0;i<c.p;i++) ne[i]=c.neighbor.ne[i];
 	for(i=0;i<c.current_vertex_order;i++) {
 		if(c.mem[i]>0) {
 			mne[i]=new int[(c.mem[i])*i];
-			for(j=0;j<c.mec[i];j++) mne[i][j]=c.neighbor.mne[i][j];
+			for(j=0;j<c.mec[i]*i;j++) mne[i][j]=c.neighbor.mne[i][j];
+			for(j=0;j<c.mec[i];j++) {
+				ne[c.mep[i][(2*i+1)*j+2*i]]=mne[i]+(j*i);
+			}
 		}
 	}
 }

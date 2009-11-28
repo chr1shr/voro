@@ -161,6 +161,7 @@ class voronoicell_base {
 		voronoicell_base(voronoicell_base<n_option> &c);
 		~voronoicell_base();
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		void init(voronoicell_base<n_option> &c);
 		inline void init_octahedron(fpoint l);
 		inline void init_tetrahedron(fpoint x0,fpoint y0,fpoint z0,fpoint x1,fpoint y1,fpoint z1,fpoint x2,fpoint y2,fpoint z2,fpoint x3,fpoint y3,fpoint z3);
 		void draw_pov(ostream &os,fpoint x,fpoint y,fpoint z);
@@ -283,6 +284,8 @@ class neighbor_none {
 		/** This is a blank placeholder function that does nothing. */
 		inline void init() {};
 		/** This is a blank placeholder function that does nothing. */
+		inline void init(voronoicell_base<neighbor_none> &c) {};
+		/** This is a blank placeholder function that does nothing. */
 		inline void init_octahedron() {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void init_tetrahedron() {};
@@ -358,6 +361,7 @@ class neighbor_track {
 		inline void add_memory_vertices(int i);
 		inline void add_memory_vorder(int i);
 		inline void init();
+		inline void init(voronoicell_base<neighbor_track> &c);
 		inline void init_octahedron();
 		inline void init_tetrahedron();
 		inline void set_pointer(int p,int n);
