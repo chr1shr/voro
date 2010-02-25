@@ -773,13 +773,26 @@ void container_periodic_base<r_option>::print_network(ostream &os) {
 	
 	os << "\nEdge table:\n";
 	for(l=0;l<edc;l++) {
+		ptsp=pts[reg[l]];j=4*regp[l];
+		x=ptsp[j];y=ptsp[j+1];z=ptsp[j+2];
+
 		for(q=0;q<nu[l];q++) {
 			unpack_periodicity(pered[l][q],ai,aj,ak);
 
 			// Uncomment the next line to remove reverse edges
 			// if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
 
-			os << l << " -> " << ed[l][q] << " " << raded[l][q] << " " << ai << " " << aj << " " << ak << "\n"; 
+			os << l << " -> " << ed[l][q] << " " << raded[l][q] << " " << ai << " " << aj << " " << ak;
+
+			// This section computes the length of the edge
+			{
+				ptsp=pts[reg[ed[l][q]]];j=4*regp[ed[l][q]];
+				double x2=ptsp[j]+ai*bx+aj*bxy+ak*bxz-x,
+				       y2=ptsp[j+1]+aj*by+ak*byz-y,
+				       z2=ptsp[j+2]+ak*bz-z;
+				os << " " << (sqrt(x2*x2+y2*y2+z2*z2));
+			}
+			os << "\n"; 
 		}
 	}
 }
