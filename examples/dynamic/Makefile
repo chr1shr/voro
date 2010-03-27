@@ -17,13 +17,16 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/voro++.hh ../../src/dynamic.hh ../../src/dynamic.cc
 
 # List of executables
-EXECUTABLES=acc_sphere dyn_test square_test packing_gen best_gen helix yeast
+EXECUTABLES=acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig
 
 # Makefile rules
-all: acc_sphere dyn_test square_test packing_gen best_gen helix yeast
+all: acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig
 
 quick_gofr: $(SOURCE) quick_gofr.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o quick_gofr quick_gofr.cc
+
+stz_fig: $(SOURCE) stz_fig.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o stz_fig stz_fig.cc
 
 dyn_test: $(SOURCE) dyn_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o dyn_test dyn_test.cc

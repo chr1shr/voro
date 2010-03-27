@@ -583,7 +583,7 @@ void container_dynamic_base<r_option>::move(v_class &vcl) {
 		l=0;
 		while(l<gh[ijk]) {
 			x=p[ijk][sz*l];y=p[ijk][sz*l+1];z=p[ijk][sz*l+2];
-			vcl.vel(ijk,l,x,y,z);
+			if(id[ijk][l]>=16) vcl.vel(ijk,l,x,y,z);
 			ni=step_int((x-ax)*xsp);
 			nj=step_int((y-ay)*ysp);
 			nk=step_int((z-az)*zsp);
