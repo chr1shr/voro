@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#include "cell2d.cc"
+#include "cell_2d.cc"
 
 // This function returns a random floating point number between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}

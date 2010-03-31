@@ -1,4 +1,4 @@
-#include "cell2d.hh"
+#include "cell_2d.hh"
 
 voronoicell_2d::voronoicell_2d() :
 	current_vertices(init_vertices), ed(new int*[current_vertices]),

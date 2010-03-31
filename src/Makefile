@@ -8,7 +8,7 @@
 include ../config.mk
 
 # List of the common source files
-SOURCE=config.hh cell2d.cc cell2d.hh
+SOURCE=config.hh cell_2d.cc cell_2d.hh
 
 # Lists of the command line utilities
 EXECUTABLES=test_2d
