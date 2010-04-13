@@ -5,6 +5,7 @@
 // Date     : July 1st 2008
 
 #include "voro++.cc"
+#include "r_table.cc"
 
 // A guess for the memory allocation per region
 const int memory=8;
@@ -16,34 +17,42 @@ const int max_regions=16777216;
 // A buffer size
 const int bsize=2048;
 
+// Output routine
+template<class c_option>
+void output(c_option &con,char *buffer,int bp);
+
 int main(int argc,char **argv) {
 
-	char *bu,buffer[bsize];
-	int i,n,bp;
+	char *farg,buffer[bsize];
+	bool radial;int i,n,bp;
 	fpoint bx,bxy,by,bxz,byz,bz,x,y,z;
 
 	// Check the command line syntax
-	if(argc!=2) {
-		cerr << "Syntax: ./network <filename.v1>" << endl;
+	if(argc==2) {
+		radial=false;farg=argv[1];
+	} else if(argc==3&&strcmp(argv[1],"-r")==0) {
+		radial=true;farg=argv[2];
+	} else {
+		cerr << "Syntax: ./network [-r] <filename.v1>" << endl;
 		return VOROPP_CMD_LINE_ERROR;
 	}
 
 	// Check that the file has a ".v1" extension
 	for(bp=0;bp<bsize-1;bp++) {
-		if(argv[1][bp]==0) break;
+		if(farg[bp]==0) break;
 	}
 	if(bp==bsize-1) {
 		cerr << "Filename too long" << endl;
 		return VOROPP_CMD_LINE_ERROR;
 	}
-	if(argv[1][bp-3]!='.'||argv[1][bp-2]!='v'||argv[1][bp-1]!='1') {
+	if(farg[bp-3]!='.'||farg[bp-2]!='v'||farg[bp-1]!='1') {
 		cerr << "Filename must end in '.v1'" << endl;
 		return VOROPP_CMD_LINE_ERROR;
 	}
 
 	// Try opening the file
 	ifstream is;
-	is.open(argv[1],ifstream::in);
+	is.open(farg,ifstream::in);
 	if(is.fail()) voropp_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
 
 	// Read header line
@@ -100,22 +109,50 @@ int main(int argc,char **argv) {
 	int nz=int(nzf);
 	printf("Total particles = %d\n\nInternal grid size = (%d %d %d)\n\n",n,nx,ny,nz);
 
-	// Create a container with the geometry given above
-	container_periodic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
+	if(radial) {
 
-	// Read in the particles from the file
-	for(i=0;i<n;i++) {
-		is >> buffer;
-		is >> x >> y >> z;
-		con.put(i,x,y,z);
+		// Create a container with the geometry given above
+		container_periodic_poly con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
+
+		// Read in the particles from the file
+		for(i=0;i<n;i++) {
+			is >> buffer;
+			is >> x >> y >> z;
+			con.put(i,x,y,z,radial_lookup(buffer));
+		}
+
+		// Carry out the volume check
+		printf("Volume check:\n  Total domain volume  = %f\n",bx*by*bz);
+		printf("  Total Voronoi volume = %f\n",con.sum_cell_volumes());;
+
+		// Copy the output filename
+		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
+		output(con,buffer,bp);
+	} else {
+
+		// Create a container with the geometry given above
+		container_periodic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
+
+		// Read in the particles from the file
+		for(i=0;i<n;i++) {
+			is >> buffer;
+			is >> x >> y >> z;
+			con.put(i,x,y,z);
+		}
+
+		// Carry out the volume check
+		printf("Volume check:\n  Total domain volume  = %f\n",bx*by*bz);
+		printf("  Total Voronoi volume = %f\n",con.sum_cell_volumes());;
+
+		// Copy the output filename
+		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
+		output(con,buffer,bp);
 	}
+}
 
-	// Carry out the volume check
-	printf("Volume check:\n  Total domain volume  = %f\n",bx*by*bz);
-	printf("  Total Voronoi volume = %f\n",con.sum_cell_volumes());;
-
-	// Copy the output filename
-	for(i=0;i<bp-2;i++) buffer[i]=argv[1][i];
+template<class c_option>
+void output(c_option &con,char *buffer,int bp) {
+	char *bu;
 
 	// Output the particles and any constructed periodic images
 	bu=buffer+(bp-2);*(bu++)='p';*(bu++)='a';*(bu++)='r';*(bu++)=0;

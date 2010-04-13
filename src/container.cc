@@ -392,7 +392,15 @@ void container_periodic_base<r_option>::draw_particles_pov(const char *filename)
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 template<class r_option>
 void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
-	x+=1;y+=1;z+=1;
+	put(n,x,y,z,0.5);
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle.
+ * \param[in] r the radius of the particle.*/
+template<class r_option>
+void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
 	int k=step_int(z*zsp);
 	if(k<0||k>=nz) {
 		int ak=step_div(k,nz);
@@ -412,28 +420,9 @@ void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
 	i+=nx*(j+oy*k);
 	if(co[i]==mem[i]) add_particle_memory(i);
 	p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
-	radius.store_radius(i,co[i],0.5);
+	radius.store_radius(i,co[i],r);
+	cout << p[i][sz*co[i]] << " " << p[i][sz*co[i]+1] << " " << p[i][sz*co[i]+2] << " " << p[i][sz*co[i]+3] << endl;
 	id[i][co[i]++]=n;
-}
-
-/** Put a particle into the correct region of the container.
- * \param[in] n the numerical ID of the inserted particle.
- * \param[in] (x,y,z) the position vector of the inserted particle.
- * \param[in] r the radius of the particle.*/
-template<class r_option>
-void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z,fpoint r) {
-	voropp_fatal_error("Not supported at present",VOROPP_INTERNAL_ERROR);
-/*	if(x>0&&y>0&&z>0) {
-		int i,j,k;
-		i=int(x*xsp);j=int(y*ysp);k=int(z*zsp);
-		if(i<nx&&j<ny&&k<nz) {
-			i+=nx*j+nxy*k;
-			if(co[i]==mem[i]) add_particle_memory(i);
-			p[i][sz*co[i]]=x;p[i][sz*co[i]+1]=y;p[i][sz*co[i]+2]=z;
-			radius.store_radius(i,co[i],r);
-			id[i][co[i]++]=n;
-		}
-	}*/
 }
 
 /** Increase memory for a particular region.
@@ -1910,7 +1899,7 @@ void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) 
 		}
 		img[odijk]|=2;
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l]>switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
+			if(p[fijk][sz*l]>switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
 			else quick_put(odijk,fijk,l,adis,by*ima,0);
 		}
 	}
@@ -1927,7 +1916,7 @@ void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) 
 		}
 		img[odijk]|=1;
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l]<switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
+			if(p[fijk][sz*l]<switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
 			else quick_put(odijk,fijk,l,adis,by*ima,0);
 		}
 	}
@@ -1937,9 +1926,10 @@ void container_periodic_base<r_option>::create_side_image(int di,int dj,int dk) 
 template<class r_option>
 inline void container_periodic_base<r_option>::quick_put(int reg,int fijk,int l,fpoint dx,fpoint dy,fpoint dz) {
 	if(co[reg]==mem[reg]) add_particle_memory(reg);
-	p[reg][3*co[reg]]=p[fijk][3*l]+dx;
-	p[reg][3*co[reg]+1]=p[fijk][3*l+1]+dy;
-	p[reg][3*co[reg]+2]=p[fijk][3*l+2]+dz;
+	p[reg][sz*co[reg]]=p[fijk][sz*l]+dx;
+	p[reg][sz*co[reg]+1]=p[fijk][sz*l+1]+dy;
+	p[reg][sz*co[reg]+2]=p[fijk][sz*l+2]+dz;
+	if(sz==4) p[reg][sz*co[reg]+3]=p[fijk][sz*l+3];
 	id[reg][co[reg]++]=id[fijk][l];
 }
 
@@ -1979,12 +1969,12 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 			img[dijk-nx]|=4;
 		}
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l+1]>switchy) {
-				if(p[fijk][3*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
+			if(p[fijk][sz*l+1]>switchy) {
+				if(p[fijk][sz*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
 				else quick_put(dijkl,fijk,l,disxl,disy,bz*ima);
 			} else {
 				if(!y_exist) continue;
-				if(p[fijk][3*l]>switchx) quick_put(dijk-nx,fijk,l,disx,disy,bz*ima);
+				if(p[fijk][sz*l]>switchx) quick_put(dijk-nx,fijk,l,disx,disy,bz*ima);
 				else quick_put(dijkl-nx,fijk,l,disxl,disy,bz*ima);
 			}
 		}
@@ -2001,12 +1991,12 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 			img[dijk-nx]|=8;
 		}
 		for(l=0;l<co[fijk2];l++) {
-			if(p[fijk2][3*l+1]>switchy) {
-				if(p[fijk2][3*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
+			if(p[fijk2][sz*l+1]>switchy) {
+				if(p[fijk2][sz*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
 				else quick_put(dijk,fijk2,l,disx2,disy,bz*ima);
 			} else {
 				if(!y_exist) continue;
-				if(p[fijk2][3*l]>switchx2) quick_put(dijkr-nx,fijk2,l,disxr2,disy,bz*ima);
+				if(p[fijk2][sz*l]>switchx2) quick_put(dijkr-nx,fijk2,l,disxr2,disy,bz*ima);
 				else quick_put(dijk-nx,fijk2,l,disx2,disy,bz*ima);
 			}
 		}
@@ -2042,12 +2032,12 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 			img[dijk+nx]|=1;
 		}
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][3*l+1]>switchy) {
+			if(p[fijk][sz*l+1]>switchy) {
 				if(!y_exist) continue;
-				if(p[fijk][3*l]>switchx) quick_put(dijk+nx,fijk,l,disx,disy,bz*ima);
+				if(p[fijk][sz*l]>switchx) quick_put(dijk+nx,fijk,l,disx,disy,bz*ima);
 				else quick_put(dijkl+nx,fijk,l,disxl,disy,bz*ima);
 			} else {
-				if(p[fijk][3*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
+				if(p[fijk][sz*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
 				else quick_put(dijkl,fijk,l,disxl,disy,bz*ima);
 			}
 		}
@@ -2064,12 +2054,12 @@ void container_periodic_base<r_option>::create_vertical_image(int di,int dj,int 
 			img[dijk+nx]|=2;
 		}
 		for(l=0;l<co[fijk2];l++) {
-			if(p[fijk2][3*l+1]>switchy) {
+			if(p[fijk2][sz*l+1]>switchy) {
 				if(!y_exist) continue;
-				if(p[fijk2][3*l]>switchx2) quick_put(dijkr+nx,fijk2,l,disxr2,disy,bz*ima);
+				if(p[fijk2][sz*l]>switchx2) quick_put(dijkr+nx,fijk2,l,disxr2,disy,bz*ima);
 				else quick_put(dijk+nx,fijk2,l,disx2,disy,bz*ima);
 			} else {
-				if(p[fijk2][3*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
+				if(p[fijk2][sz*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
 				else quick_put(dijk,fijk2,l,disx2,disy,bz*ima);
 			}
 		}
