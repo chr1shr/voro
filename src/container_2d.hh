@@ -2,7 +2,6 @@
 #define VOROPP_CONTAINER_2D_HH
 
 #include "config.hh"
-#include "cell.hh"
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -10,9 +9,11 @@
 #include <cmath>
 using namespace std;
 
+class voropp_loop_2d;
+
 class container_2d {
 	public:
-		container_2d(fpoint xa,fpoint xb,fpoint ya,fpoint yb,int xn,int yn,int memi);
+		container_2d(fpoint xa,fpoint xb,fpoint ya,fpoint yb,int xn,int yn,bool xper,bool yper,int memi);
 		~container_2d();
 		void draw_particles(const char *filename);
 		void draw_particles();
@@ -20,15 +21,15 @@ class container_2d {
 		void import(istream &is);
 		inline void import();
 		inline void import(const char *filename);
-		void draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		void draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax);
 		inline void draw_cells_gnuplot(const char *filename);
-		template<class n_option>
-		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
-		template<class n_option>
-		bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
-		void put(int n,fpoint x,fpoint y,fpoint z);
-		void put(int n,fpoint x,fpoint y,fpoint z,fpoint r);
+		inline bool compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s);
+		bool compute_cell_sphere(voronoicell_2d	&c,int i,int j,int ij,int s,fpoint x,fpoint y);
+		bool initialize_voronoicell(voronoicell_2d &c,fpoint x,fpoint y);
+		void put(int n,fpoint x,fpoint y);
+		void clear();
 	private:
+		void add_particle_memory(int i);
 		/** The minimum x coordinate of the container. */
 		const fpoint ax;
 		/** The maximum x coordinate of the container. */
@@ -47,15 +48,16 @@ class container_2d {
 		const int nx;
 		/** The number of boxes in the y direction. */
 		const int ny;
-		/** The number of boxes in the z direction. */
-		const int nz;
 		/** A constant, set to the value of nx multiplied by ny, which
 		 * is used in the routines which step through boxes in
 		 * sequence. */
 		const int nxy;
-		/** A constant, set to the value of nx*ny*nz, which is used in
-		 * the routines which step through boxes in sequence. */
-		const int nxyz;
+		/** A boolean value that determines if the x coordinate in
+		 * periodic or not. */
+		const bool xperiodic;
+		/** A boolean value that determines if the y coordinate in
+		 * periodic or not. */
+		const bool yperiodic;
 		/** This array holds the number of particles within each
 		 * computational box of the container. */
 		int *co;
@@ -71,7 +73,44 @@ class container_2d {
 		/** A two dimensional array holding particle positions. For the
 		 * derived container_poly class, this also holds particle
 		 * radii. */
-		fpoint **p;		
+		fpoint **p;
+		friend class voropp_loop_2d;	
+};
+
+
+/** \brief A class to handle loops on regions of the container handling
+ * non-periodic and periodic boundary conditions.
+ *
+ * Many of the container routines require scanning over a rectangular sub-grid
+ * of blocks, and the routines for handling this are stored in the
+ * voropp_loop_2d class. A voropp_loop_2d class can first be initialized to
+ * either calculate the subgrid which is within a distance r of a vector
+ * (vx,vy,vz), or a subgrid corresponding to a rectangular box. The routine
+ * inc() can then be successively called to step through all the blocks within
+ * this subgrid.
+ */
+class voropp_loop_2d {
+	public:
+		voropp_loop_2d(container_2d *q);
+		inline int init(fpoint vx,fpoint vy,fpoint r,fpoint &px,fpoint &py);
+		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint &px,fpoint &py);
+		inline int inc(fpoint &px,fpoint &py);
+		/** The current block index in the x direction, referencing a
+		 * real cell in the range 0 to nx-1. */
+		int ip;
+		/** The current block index in the y direction, referencing a
+		 * real cell in the range 0 to ny-1. */
+		int jp;
+	private:
+		int i,j,ai,bi,aj,bj,s;
+		int aip,ajp,inc1;
+		inline int step_mod(int a,int b);
+		inline int step_div(int a,int b);
+		inline int step_int(fpoint a);
+		fpoint apx,apy;
+		const fpoint sx,sy,xsp,ysp,ax,ay;
+		const int nx,ny,nxy;
+		const bool xperiodic,yperiodic;
 };
 
 #endif

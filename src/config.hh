@@ -10,6 +10,9 @@ const int init_vertices=256;
 /** The maximum memory allocation for the number of vertices. */
 const int max_vertices=16777216;
 
+/** The maximum amount of particle memory allocated for a single region. */
+const int max_particle_memory=16777216;
+
 #ifndef VOROPP_VERBOSE
 /** Voro++ can print a number of different status and debugging messages to
  * notify the user of special behavior, and this macro sets the amount which
@@ -39,5 +42,23 @@ const fpoint tolerance=1e-5;
 #else
 const fpoint tolerance=1e-10;
 #endif
+
+/** Voro++ returns this status code if there is a file-related error, such as
+ * not being able to open file. */
+#define VOROPP_FILE_ERROR 1
+
+/** Voro++ returns this status code if there is a memory allocation error, if
+ * one of the safe memory limits is exceeded. */
+#define VOROPP_MEMORY_ERROR 2
+
+/** Voro++ returns this status code if there is any type of internal error, if
+ * it detects that representation of the Voronoi cell is inconsistent. This
+ * status code will generally indicate a bug, and the developer should be
+ * contacted. */
+#define VOROPP_INTERNAL_ERROR 3
+
+/** Voro++ returns this status code if it could not interpret the command line
+ * arguments passed to the command line utility. */
+#define VOROPP_CMD_LINE_ERROR 4
 
 #endif

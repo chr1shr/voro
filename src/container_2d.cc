@@ -1,4 +1,4 @@
-
+#include "container_2d.hh"
 
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
@@ -10,12 +10,11 @@
  * \param[in] (xn,yn) the number of grid blocks in each of the three
  *                       coordinate directions.
  * \param[in] memi the initial memory allocation for each block. */
-container_2d::container_base(fpoint xa,fpoint xb,fpoint ya,
-		fpoint yb,int xn,int yn,int memi)
-	: ax(xa),bx(xb),ay(ya),by(yb),
-	xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),nx(xn),ny(yn),
-	nxy(xn*yn),co(new int[nxyz]),mem(new int[nxyz]),
-	id(new int*[nxyz]),p(new fpoint*[nxyz]) {
+container_2d::container_2d(fpoint xa,fpoint xb,fpoint ya,
+		fpoint yb,int xn,int yn,bool xper,bool yper,int memi)
+	: ax(xa),bx(xb),ay(ya),by(yb),xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),
+	nx(xn),ny(yn),nxy(xn*yn),xperiodic(xper),yperiodic(yper),
+	co(new int[nxy]),mem(new int[nxy]),id(new int*[nxy]),p(new fpoint*[nxy]) {
 	int l;
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=memi;
@@ -62,7 +61,6 @@ void container_2d::draw_particles(const char *filename) {
 	os.close();
 }
 
-
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y) the position vector of the inserted particle. */
@@ -82,8 +80,7 @@ void container_2d::put(int n,fpoint x,fpoint y) {
 
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
-template<class r_option>
-void container_base<r_option>::add_particle_memory(int i) {
+void container_2d::add_particle_memory(int i) {
 	int *idp;fpoint *pp;
 	int l,nmem(2*mem[i]);
 #if VOROPP_VERBOSE >=3
@@ -129,12 +126,11 @@ void container_2d::clear() {
  * \param[in] filename the name of the file to write to.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box. */
-template<class r_option>
-void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
+void container_2d::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
 	fpoint x,y,px,py;
-	voropp_loop l1(this);
+	voropp_loop_2d l1(this);
 	int q,s;
-	voronoicell_2d c;  //BIG FIXME
+	voronoicell_2d c;
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	s=l1.init(xmin,xmax,ymin,ymax,px,py);
@@ -142,7 +138,9 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xm
 		for(q=0;q<co[s];q++) {
 			x=p[s][2*q]+px;y=p[s][2*q+1]+py;
 			if(x>xmin&&x<xmax&&y>ymin&&y<ymax) {
-				if(compute_cell_sphere(c,l1.ip,l1.jp,s,q,x,y)) c.draw_gnuplot(os,x,y);
+				if(compute_cell_sphere(c,l1.ip,l1.jp,s,q,x,y)) {
+					c.draw_gnuplot(os,x,y);os << endl;
+				}
 			}
 		}
 	} while((s=l1.inc(px,py))!=-1);
@@ -153,8 +151,7 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xm
  * cells for the entire simulation region and saves the output in gnuplot
  * format.
  * \param[in] filename the name of the file to write to. */
-template<class r_option>
-void container_base<r_option>::draw_cells_gnuplot(const char *filename) {
+void container_2d::draw_cells_gnuplot(const char *filename) {
 	draw_cells_gnuplot(filename,ax,bx,ay,by);
 }
 
@@ -166,7 +163,7 @@ inline bool container_2d::initialize_voronoicell(voronoicell_2d &c,fpoint x,fpoi
 	return true;
 }
 
-bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int ij,int s,fpoint x,fpoint y) {
+bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s,fpoint x,fpoint y) {
 
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
@@ -174,21 +171,21 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 	fpoint x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	voropp_loop_2d l(this);
+
 	if(!initialize_voronoicell(c,x,y)) return false;
 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
-	radius.init(ij,s);
-	while(radius.cutoff(lrs)<c.max_radius_squared()) {
+	while(lrs<c.max_radius_squared()) {
 		ur=lr+0.5*length_scale;urs=ur*ur;
 		t=l.init(x,y,ur,qx,qy);
 		do {
 			for(q=0;q<co[t];q++) {
-				x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;
-				rs=x1*x1+y1*y1+z1*z1;
+				x1=p[t][2*q]+qx-x;y1=p[t][2*q+1]+qy-y;
+				rs=x1*x1+y1*y1;
 				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {
-					if(!c.nplane(x1,y1,rs)) return false;
+					if(!c.plane(x1,y1,rs)) return false;
 				}
 			}
 		} while((t=l.inc(qx,qy))!=-1);
@@ -198,5 +195,105 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 }
 
 
+/** Creates a voropp_loop_2d object, by setting the necessary constants about the
+ * container geometry from a pointer to the current container class.
+ * \param[in] q a pointer to the current container class. */
+voropp_loop_2d::voropp_loop_2d(container_2d *q) : sx(q->bx-q->ax), sy(q->by-q->ay),
+	xsp(q->xsp),ysp(q->ysp),
+	ax(q->ax),ay(q->ay),nx(q->nx),ny(q->ny),nxy(q->nxy),
+	xperiodic(q->xperiodic),yperiodic(q->yperiodic) {}
 
+/** Initializes a voropp_loop_2d object, by finding all blocks which are within a
+ * given sphere. It calculates the index of the first block that needs to be
+ * tested and sets the periodic displacement vector accordingly.
+ * \param[in] (vx,vy,vz) the position vector of the center of the sphere.
+ * \param[in] r the radius of the sphere.
+ * \param[out] (px,py,pz) the periodic displacement vector for the first block
+ *                        to be tested.
+ * \return The index of the first block to be tested. */
+inline int voropp_loop_2d::init(fpoint vx,fpoint vy,fpoint r,fpoint &px,fpoint &py) {
+	ai=step_int((vx-ax-r)*xsp);
+	bi=step_int((vx-ax+r)*xsp);
+	if(!xperiodic) {
+		if(ai<0) {ai=0;if(bi<0) bi=0;}
+		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;}
+	}
+	aj=step_int((vy-ay-r)*ysp);
+	bj=step_int((vy-ay+r)*ysp);
+	if(!yperiodic) {
+		if(aj<0) {aj=0;if(bj<0) bj=0;}
+		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;}
+	}
+	i=ai;j=aj;
+	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
+	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
+	inc1=aip-step_mod(bi,nx)+nx;
+	s=aip+nx*ajp;
+	return s;
+}
 
+/** Initializes a voropp_loop_2d object, by finding all blocks which overlap a given
+ * rectangular box. It calculates the index of the first block that needs to be
+ * tested and sets the periodic displacement vector (px,py,pz) accordingly.
+ * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
+ * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
+ * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box.
+ * \param[out] (px,py,pz) the periodic displacement vector for the first block
+ *                        to be tested.
+ * \return The index of the first block to be tested. */
+inline int voropp_loop_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint &px,fpoint &py) {
+	ai=step_int((xmin-ax)*xsp);
+	bi=step_int((xmax-ax)*xsp);
+	if(!xperiodic) {
+		if(ai<0) {ai=0;if(bi<0) bi=0;}
+		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;}
+	}
+	aj=step_int((ymin-ay)*ysp);
+	bj=step_int((ymax-ay)*ysp);
+	if(!yperiodic) {
+		if(aj<0) {aj=0;if(bj<0) bj=0;}
+		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;}
+	}
+	i=ai;j=aj;
+	aip=ip=step_mod(i,nx);apx=px=step_div(i,nx)*sx;
+	ajp=jp=step_mod(j,ny);apy=py=step_div(j,ny)*sy;
+	inc1=aip-step_mod(bi,nx)+nx;
+	s=aip+nx*ajp;
+	return s;
+}
+
+/** Returns the next block to be tested in a loop, and updates the periodicity
+ * vector if necessary.
+ * \param[in,out] (px,py,pz) the current block on entering the function, which
+ *                           is updated to the next block on exiting the
+ *                           function. */
+inline int voropp_loop_2d::inc(fpoint &px,fpoint &py) {
+	if(i<bi) {
+		i++;
+		if(ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}
+		return s;
+	} else if(j<bj) {
+		i=ai;ip=aip;px=apx;j++;
+		if(jp<ny-1) {jp++;s+=inc1;} else {jp=0;s+=inc1-nxy;py+=sy;}
+		return s;
+	} else return -1;
+}
+
+/** Custom int function, that gives consistent stepping for negative numbers.
+ * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
+ * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1). */
+inline int voropp_loop_2d::step_int(fpoint a) {
+	return a<0?int(a)-1:int(a);
+}
+
+/** Custom modulo function, that gives consistent stepping for negative
+ * numbers. */
+inline int voropp_loop_2d::step_mod(int a,int b) {
+	return a>=0?a%b:b-1-(b-1-a)%b;
+}
+
+/** Custom integer division function, that gives consistent stepping for
+ * negative numbers. */
+inline int voropp_loop_2d::step_div(int a,int b) {
+	return a>=0?a/b:-1+(a+1)/b;
+}

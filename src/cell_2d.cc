@@ -63,22 +63,39 @@ inline void voronoicell_2d::draw_gnuplot(fpoint x,fpoint y) {
 	draw_gnuplot(cout,x,y);
 }
 
+/** Computes the maximum radius squared of a vertex from the center of the
+ * cell. It can be used to determine when enough particles have been testing an
+ * all planes that could cut the cell have been considered.
+ * \return The maximum radius squared of a vertex.*/
+fpoint voronoicell_2d::max_radius_squared() {
+	int i;fpoint r,s;
+	r=pts[0]*pts[0]+pts[1]*pts[1];
+	for(i=2;i<2*p;i+=2) {
+		s=pts[i]*pts[i]+pts[i+1]*pts[i+1];
+		if(s>r) r=s;
+	}
+	return r;
+}
+
 inline fpoint voronoicell_2d::pos(fpoint x,fpoint y,fpoint rsq,int qp) {
 	cout << qp << ": " << x << " " << pts[2*qp] << " " << y << " " << pts[2*qp+1] << " " << rsq << " " <<  x*pts[2*qp]+y*pts[2*qp+1]-rsq << endl;
 	return x*pts[2*qp]+y*pts[2*qp+1]-rsq;
 }
 
 bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
+	cout << "call " << x << " " << y << " " << rsq << " " << p << endl;
 	int cp,lp,up=0,up2,up3,stack=0;fpoint fac,l,u,u2,u3;
 	
 	// Finish this section with an inside vertex if there is one
 	u=pos(x,y,rsq,up);
 	cout << up << " " << u << endl;
+	cout << "P1" << endl;
 	if(u<tolerance) {
 		up2=ed[up][0];u2=pos(x,y,rsq,up2);
 		up3=ed[up][1];u3=pos(x,y,rsq,up3);
 		if(u2>u3) {
 			while(u2<tolerance) {
+				cout << up2 << " -> " << ed[up2][0] << endl;
 				up2=ed[up2][0];
 				u2=pos(x,y,rsq,up2);
 				if(up2==up3) return true;
@@ -86,6 +103,7 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 			up=up2;u=u2;
 		} else {
 			while(u3<tolerance) {
+				cout << up3 << " => " << ed[up3][1] << endl;
 				up3=ed[up3][1];
 				u3=pos(x,y,rsq,up3);
 				if(up2==up3) return true;
@@ -94,6 +112,7 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		}
 	}
 	cout << up << " " << u << endl;
+	cout << "P2" << endl;
 
 	ds[stack++]=up;
 	l=u;up2=ed[up][0];
@@ -107,6 +126,7 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		if(up2==up) return false;
 	}
 	
+	cout << "P3" << endl;
 	if(u2>-tolerance) {
 		// Adjust existing vertex
 		cp=up2;
@@ -122,6 +142,7 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		cp=p++;
 	}
 
+	cout << "P4" << endl;
 	l=u;up3=ed[up][1];u3=pos(x,y,rsq,up3);
 	while(u3>tolerance) {
 		ds[stack++]=up3;
@@ -131,6 +152,7 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		if(up3==up2) break;
 	}
 
+	cout << "P5" << endl;
 	if(u3>tolerance) {
 		// Adjust existing vertex
 		ed[cp][1]=up3;
@@ -149,23 +171,40 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 	}
 
 
+	for(int i=0;i<p;i++) {
+		printf("%d <- %d -> %d\n",ed[i][0],i,ed[i][1]);
+	}
+
+	cout << "P6" << endl;
 	for(int i=0;i<stack;i++) {
 		cout << ds[i] << endl;
 		ed[ds[i]][0]=-1;
 	}
 	
+	cout << "P7" << endl;
 	while(stack>0) {
+		while(ed[--p][0]==-1);
 		up=ds[--stack];
+		cout << "del " << up << " " << p-1 << " " << ed[p-1][0] << " " << ed[p-1][1] << endl;
 		if(up<p) {
-			p--;
-			while(ed[p][0]==-1) p--;
 			ed[ed[p][0]][1]=up;
 			ed[ed[p][1]][0]=up;
 			pts[2*up]=pts[2*p];
 			pts[2*up+1]=pts[2*p+1];
 			ed[up][0]=ed[p][0];
 			ed[up][1]=ed[p][1];
-		}
+		} else p++;
+	}
+
+	cout << "P8" << endl;
+	for(int i=0;i<p;i++) {
+		printf("%d <- %d -> %d\n",ed[i][0],i,ed[i][1]);
+	}
+
+	for(int i=0;i<p;i++) {
+		if(ed[ed[i][0]][1]!=i) exit(1);
+		if(ed[i][0]==i||ed[i][1]==i) exit(1);
+		if(ed[i][0]>=p||ed[i][1]>=p) exit(1);
 	}
 	return true;
 }
