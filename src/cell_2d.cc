@@ -1,5 +1,9 @@
+/** \file cell_2d.cc
+ * \brief Function implementations for the voronoicell_2d class. */
+
 #include "cell_2d.hh"
 
+/** Constructs a 2D Voronoic ell and sets up the initial memory. */
 voronoicell_2d::voronoicell_2d() :
 	current_vertices(init_vertices), ed(new int*[current_vertices]),
 	pts(new fpoint[2*current_vertices]), ds(new int[current_delete_size])
@@ -7,9 +11,24 @@ voronoicell_2d::voronoicell_2d() :
 	ed[0]=new int[2*current_vertices];
 }
 
+/** The voronoicell_2d destructor deallocates all of the dynamic memory. */
 voronoicell_2d::~voronoicell_2d() {
 	delete [] ed[0];
 	delete [] ed;
+}
+
+/** Doubles the storage for the vertices, by reallocating the pts and ed
+ * arrays. If the allocation exceeds the absolute maximum set in max_vertices,
+ * then the routine exits with a fatal error. */
+void voronoicell_2d::add_memory_vertices() {
+	int i=(current_vertices<<1);
+	if(i>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+#if VOROPP_VERBOSE >=2
+	cerr << "Vertex memory scaled up to " << i << endl
+#endif
+	fpoint *ppts;
+	for(j=0;j<current_vertices;j++) ppts[j];
+
 }
 
 /** Initializes a Voronoi cell as a rectangle with the given dimensions.
@@ -28,7 +47,8 @@ void voronoicell_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
 	q[6]=0;q[7]=2;ed[3]=q+6;
 }
 
-/** Outputs the edges of the Voronoi cell in gnuplot format to an output stream.
+/** Outputs the edges of the Voronoi cell in gnuplot format to an output
+ * stream.
  * \param[in] os a reference to an output stream to write to.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
  */
@@ -41,6 +61,23 @@ void voronoicell_2d::draw_gnuplot(ostream &os,fpoint x,fpoint y) {
 		k=ed[k][0];
 	} while (k!=0);
 	os << x+0.5*pts[0] << " " << y+0.5*pts[1] << "\n";
+}
+
+/** Outputs the edges of the Voronoi cell in POV-Ray format to an open file
+ * stream, displacing the cell by given vector.
+ * \param[in] os a output stream to write to.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
+ */
+template<class n_option>
+void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
+	if(p==0) return;
+	int k=0;
+	do {
+		os << "sphere{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,r}\n";
+		os << "cylinder{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,";
+		k=ed[k][0];
+		os << "<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">}\n";
+	} while (k!=0);
 }
 
 /** An overloaded version of the draw_gnuplot routine that writes directly to
@@ -208,3 +245,19 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 	}
 	return true;
 }
+
+/** Calculates the perimeter of the Voronoi cell.
+ * \return A floating point number holding the calculated distance. */
+fpoint voronoicell_2d::perimeter() {
+	if(p==0) return;
+	int k=0,l;fpoint perim=0,dx,dy;
+	do {
+		l=ed[k][0];
+		dx=pts[2*k]-pts[2*l];
+		dy=pts[2*k+1]-pts[2*l+1];
+		perim+=sqrt(dx*dx+dy*dy);
+		k=l;
+	} while (k!=0);
+	return perim;
+}
+
