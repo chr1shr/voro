@@ -12,15 +12,15 @@ double rnd() {return double(rand())/RAND_MAX;}
 
 int main() {
 	int i;double x,y;
-	container_2d con(0,1,0,1,4,4,false,false,8);
+	container_2d con(0,1,0,1,4,4,true,true,8);
 x=rnd();
 	// Cut the cell by 1000 random planes which are all a distance 1 away
 	// from the origin, to make an approximation to a sphere
 	for(i=0;i<1000;i++) {
-		x=rnd();
-		y=rnd();
-//		x=0.5+(i*0.0008)*sin(i*0.01);
-//		y=0.5+(i*0.0008)*cos(i*0.01);
+//		x=rnd();
+//		y=rnd();
+		x=0.5+(i*i*0.0000008)*sin(i*0.1);
+		y=0.5+(i*i*0.0000008)*cos(i*0.1);
 		con.put(i,x,y);
 	}
 
