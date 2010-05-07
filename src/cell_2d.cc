@@ -3,7 +3,7 @@
 
 #include "cell_2d.hh"
 
-/** Constructs a 2D Voronoic ell and sets up the initial memory. */
+/** Constructs a 2D Voronoic cell and sets up the initial memory. */
 voronoicell_2d::voronoicell_2d() :
 	current_vertices(init_vertices), ed(new int*[current_vertices]),
 	pts(new fpoint[2*current_vertices]), ds(new int[current_delete_size])
@@ -21,14 +21,19 @@ voronoicell_2d::~voronoicell_2d() {
  * arrays. If the allocation exceeds the absolute maximum set in max_vertices,
  * then the routine exits with a fatal error. */
 void voronoicell_2d::add_memory_vertices() {
-	int i=(current_vertices<<1);
+	int i=(current_vertices<<1),j;
 	if(i>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
-	cerr << "Vertex memory scaled up to " << i << endl
+	cerr << "Vertex memory scaled up to " << i << endl;
 #endif
-	fpoint *ppts;
-	for(j=0;j<current_vertices;j++) ppts[j];
-
+	fpoint *ppts(new fpoint[2*i]);
+	int *ped(new int[2*i]);
+	for(j=0;j<2*current_vertices;j++) ped[j]=ed[0][j];
+	delete [] ed;
+	ed=new int*[i];
+	for(j=0;j<current_vertices;j++) ed[j]=ped+(2*j);
+	for(j=0;j<2*current_vertices;j++) ppts[j]=pts[j];
+	current_vertices=i;
 }
 
 /** Initializes a Voronoi cell as a rectangle with the given dimensions.
@@ -63,23 +68,6 @@ void voronoicell_2d::draw_gnuplot(ostream &os,fpoint x,fpoint y) {
 	os << x+0.5*pts[0] << " " << y+0.5*pts[1] << "\n";
 }
 
-/** Outputs the edges of the Voronoi cell in POV-Ray format to an open file
- * stream, displacing the cell by given vector.
- * \param[in] os a output stream to write to.
- * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
- */
-template<class n_option>
-void voronoicell_base<n_option>::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
-	if(p==0) return;
-	int k=0;
-	do {
-		os << "sphere{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,r}\n";
-		os << "cylinder{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,";
-		k=ed[k][0];
-		os << "<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">}\n";
-	} while (k!=0);
-}
-
 /** An overloaded version of the draw_gnuplot routine that writes directly to
  * a file.
  * \param[in] filename The name of the file to write to.
@@ -98,6 +86,42 @@ inline void voronoicell_2d::draw_gnuplot(const char *filename,fpoint x,fpoint y)
  */
 inline void voronoicell_2d::draw_gnuplot(fpoint x,fpoint y) {
 	draw_gnuplot(cout,x,y);
+}
+
+/** Outputs the edges of the Voronoi cell in POV-Ray format to an open file
+ * stream, displacing the cell by given vector.
+ * \param[in] os a output stream to write to.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
+ */
+void voronoicell_2d::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
+	if(p==0) return;
+	int k=0;
+	do {
+		os << "sphere{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,r}\n";
+		os << "cylinder{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,<";
+		k=ed[k][0];
+		os << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">}\n";
+	} while (k!=0);
+}
+
+/** An overloaded version of the draw_pov routine that writes directly to
+ * a file.
+ * \param[in] filename The name of the file to write to.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
+ */
+inline void voronoicell_2d::draw_pov(const char *filename,fpoint x,fpoint y,fpoint z) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	draw_pov(os,x,y,z);
+	os.close();
+}
+
+/** An overloaded version of the draw_pov routine, that prints to the
+ * standard output.
+ * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
+ */
+inline void voronoicell_2d::draw_pov(fpoint x,fpoint y,fpoint z) {
+	draw_pov(cout,x,y,z);
 }
 
 /** Computes the maximum radius squared of a vertex from the center of the
@@ -249,15 +273,55 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 /** Calculates the perimeter of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
 fpoint voronoicell_2d::perimeter() {
-	if(p==0) return;
+	if(p==0) return 0;
 	int k=0,l;fpoint perim=0,dx,dy;
 	do {
 		l=ed[k][0];
 		dx=pts[2*k]-pts[2*l];
 		dy=pts[2*k+1]-pts[2*l+1];
+		printf("[%g %g]\n",dx,dy);
 		perim+=sqrt(dx*dx+dy*dy);
 		k=l;
 	} while (k!=0);
-	return perim;
+	return 0.5*perim;
 }
 
+/** Calculates the area of the Voronoi cell.
+ * \return A floating point number holding the calculated distance. */
+fpoint voronoicell_2d::area() {
+	if(p==0) return 0;
+	int k=ed[0][0];fpoint area=0,x=pts[0],y=pts[1],dx1,dy1,dx2,dy2;
+	dx1=pts[2*k]-x;dy1=pts[2*k+1]-y;
+	k=ed[k][0];
+	while(k!=0) {
+		dx2=pts[2*k]-x;dy2=pts[2*k+1]-y;
+		printf("(%g %g) (%g %g)\n",dx1,dy1,dx2,dy2);
+		area+=sqrt(dx1*dy2-dx2*dy1);
+		dx1=dx2;dy1=dy2;
+		k=ed[k][0];
+	}
+	return 0.25*area;
+}
+
+/** Calculates the centroid of the Voronoi cell.
+ * \param[out] (cx,cy) The coordinates of the centroid. */
+void voronoicell_2d::centroid(fpoint &cx,fpoint &cy) {
+	static const fpoint third=1/3.0;
+	if(p==0) return;
+	int k=ed[0][0];
+	fpoint area,tarea=0,x=pts[0],y=pts[1],dx1,dy1,dx2,dy2;
+	dx1=pts[2*k]-x;dy1=pts[2*k+1]-y;
+	k=ed[k][0];
+	while(k!=0) {
+		dx2=pts[2*k]-x;dy2=pts[2*k+1]-y;
+		area=sqrt(dx1*dy2-dx2*dy1);
+		tarea+=area;
+		cx+=area*(dx1+dx2);
+		cy+=area*(dx1+dx2);
+		dx1=dx2;dy1=dy2;
+		k=ed[k][0];
+	}
+	tarea=third/tarea;
+	cx=0.5*(x+cx*tarea);
+	cy=0.5*(y+cy*tarea);
+}

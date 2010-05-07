@@ -1,3 +1,6 @@
+/** \file container_2d.cc
+ * \brief Function implementations for the container_2d class. */
+
 #include "container_2d.hh"
 
 /** The class constructor sets up the geometry of container, initializing the
@@ -155,6 +158,9 @@ void container_2d::draw_cells_gnuplot(const char *filename) {
 	draw_cells_gnuplot(filename,ax,bx,ay,by);
 }
 
+/** Initializes a voronoicell_2d class to fill the entire container.
+ * \param[in] c a reference to a voronoicell_2d class.
+ * \param[in] (x,y) the position of the particle that . */
 inline bool container_2d::initialize_voronoicell(voronoicell_2d &c,fpoint x,fpoint y) {
 	fpoint x1,x2,y1,y2;
 	if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}

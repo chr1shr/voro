@@ -1,3 +1,6 @@
+/** \file config.hh
+ * \brief Master configuration file for setting various compile-time options. */
+
 #ifndef VOROPP_CONFIG_HH
 #define VOROPP_CONFIG_HH
 
@@ -21,7 +24,7 @@ const int max_particle_memory=16777216;
  * plane routine bails out due to floating point problems. At level 2, general
  * messages about memory expansion are printed. At level 3, technical details
  * about memory management are printed. */
-#define VOROPP_VERBOSE 0
+#define VOROPP_VERBOSE 3
 #endif
 
 /** The declaration of fpoint allows that code to be compiled both using single

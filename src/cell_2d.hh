@@ -33,12 +33,16 @@ class voronoicell_2d {
 		void draw_gnuplot(ostream &os,fpoint x,fpoint y);
 		inline void draw_gnuplot(const char *filename,fpoint x,fpoint y);
 		inline void draw_gnuplot(fpoint x,fpoint y);
-		fpoint area();
+		void draw_pov(ostream &os,fpoint x,fpoint y,fpoint z=0);
+		inline void draw_pov(const char *filename,fpoint x,fpoint y,fpoint z=0);
+		inline void draw_pov(fpoint x,fpoint y,fpoint z=0);
+		inline bool plane(fpoint x,fpoint y,fpoint rs);
 		fpoint max_radius_squared();
 		fpoint perimeter();
+		fpoint area();
 		void centroid(fpoint &cx,fpoint &cy);
-		inline bool plane(fpoint x,fpoint y,fpoint rs);
 	private:
+		void add_memory_vertices();
 		inline fpoint pos(fpoint x,fpoint y,fpoint rsq,int qp); 
 		int *ds;
 };

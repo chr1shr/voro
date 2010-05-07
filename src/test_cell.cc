@@ -1,8 +1,4 @@
 // Single Voronoi cell example code
-//
-// Author   : Chris H. Rycroft (LBL / UC Berkeley)
-// Email    : chr@alum.mit.edu
-// Date     : July 1st 2008
 
 #include "cell_2d.cc"
 #include "container_2d.cc"
@@ -29,6 +25,12 @@ int main() {
 			v.plane(x,y,1);
 		}
 	}
+
+	// Print out several statistics about the computed cell
+	cout << "Perimeter is " << v.perimeter() << endl;
+	cout << "Area is " << v.area() << endl;
+	v.centroid(x,y);
+	cout << "Centroid is (" << x << "," << y << ")" << endl;
 
 	// Output the Voronoi cell to a file, in the gnuplot format
 	v.draw_gnuplot("single_cell.gnu",0,0);
