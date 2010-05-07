@@ -26,14 +26,22 @@ class container_2d {
 	public:
 		container_2d(fpoint xa,fpoint xb,fpoint ya,fpoint yb,int xn,int yn,bool xper,bool yper,int memi);
 		~container_2d();
-		void draw_particles(const char *filename);
-		void draw_particles();
-		void draw_particles(ostream &os);
 		void import(istream &is);
 		inline void import();
 		inline void import(const char *filename);
+		void draw_particles(const char *filename);
+		void draw_particles();
+		void draw_particles(ostream &os);
+		void draw_particles_pov(const char *filename);
+		void draw_particles_pov();
+		void draw_particles_pov(ostream &os);		
 		void draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax);
 		inline void draw_cells_gnuplot(const char *filename);
+		void draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax);
+		inline void draw_cells_pov(const char *filename);
+		inline void print_all_custom(const char *format,const char *filename);
+		inline void print_all_custom(const char *format);
+		void print_all_custom(const char *format,ostream &os);
 		inline bool compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s);
 		bool compute_cell_sphere(voronoicell_2d	&c,int i,int j,int ij,int s,fpoint x,fpoint y);
 		bool initialize_voronoicell(voronoicell_2d &c,fpoint x,fpoint y);

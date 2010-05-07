@@ -301,6 +301,7 @@ fpoint voronoicell_2d::area() {
 /** Calculates the centroid of the Voronoi cell.
  * \param[out] (cx,cy) The coordinates of the centroid. */
 void voronoicell_2d::centroid(fpoint &cx,fpoint &cy) {
+	cx=cy=0;
 	static const fpoint third=1/3.0;
 	if(p==0) return;
 	int k=ed[0][0];

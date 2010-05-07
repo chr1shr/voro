@@ -38,7 +38,6 @@ container_2d::~container_2d() {
 	delete [] co;
 }
 
-
 /** Dumps all the particle positions and identifies to a file.
  * \param[in] os an output stream to write to. */
 void container_2d::draw_particles(ostream &os) {
@@ -101,7 +100,6 @@ void container_2d::add_particle_memory(int i) {
 	delete [] id[i];id[i]=idp;
 	delete [] p[i];p[i]=pp;
 }
-
 
 /** An overloaded version of the import routine, that reads the standard input.
  */
@@ -169,6 +167,147 @@ void container_2d::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xm
  * \param[in] filename the name of the file to write to. */
 void container_2d::draw_cells_gnuplot(const char *filename) {
 	draw_cells_gnuplot(filename,ax,bx,ay,by);
+}
+
+/** Computes the Voronoi cells for all particles within a rectangular box, and
+ * saves the output in POV-Ray format.
+ * \param[in] filename the name of the file to write to.
+ * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
+ * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box. */
+void container_2d::draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
+	fpoint x,y,px,py;
+	voropp_loop_2d l1(this);
+	int q,s;
+	voronoicell_2d c;
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	s=l1.init(xmin,xmax,ymin,ymax,px,py);
+	do {
+		for(q=0;q<co[s];q++) {
+			os << "// cell " << id[s][q] << "\n";
+			x=p[s][2*q]+px;y=p[s][2*q+1]+py;
+			if(x>xmin&&x<xmax&&y>ymin&&y<ymax) {
+				if(compute_cell_sphere(c,l1.ip,l1.jp,s,q,x,y)) {
+					c.draw_pov(os,x,y);os << endl;
+				}
+			}
+		}
+	} while((s=l1.inc(px,py))!=-1);
+	os.close();
+}
+
+/** An overloaded version of draw_cells_pov() that computes the Voronoi
+ * cells for the entire simulation region and saves the output in POV-Ray
+ * format.
+ * \param[in] filename the name of the file to write to. */
+void container_2d::draw_cells_pov(const char *filename) {
+	draw_cells_pov(filename,ax,bx,ay,by);
+}
+
+/** Dumps all the particle positions in POV-Ray format.
+ * \param[in] os an output stream to write to. */
+void container_2d::draw_particles_pov(ostream &os) {
+	int l,c;
+	for(l=0;l<nxy;l++) for(c=0;c<co[l];c++) {
+		os << "// id " << id[l][c] << "\n";
+		os << "sphere{<" << p[l][2*c] << "," << p[l][2*c+1] << ",0>,s}\n";
+	}
+}
+
+/** An overloaded version of the draw_particles_pov() routine, that just prints
+ * to standard output. */
+void container_2d::draw_particles_pov() {
+	draw_particles_pov(cout);
+}
+
+/** An overloaded version of the draw_particles_pov() routine, that outputs
+ * the particle positions to a file.
+ * \param[in] filename the file to write to. */
+void container_2d::draw_particles_pov(const char *filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	draw_particles_pov(os);
+	os.close();
+}
+
+/** Computes the Voronoi cells for all particles in the container, and for each
+ * cell, outputs a line containing custom information about the cell structure.
+ * The output format is specified using an input string with control sequences
+ * similar to the standard C printf() routine.
+ * \param[in] format the format of the output lines, using control sequences to
+ *                   denote the different cell statistics.
+ * \param[in] os an open output stream to write to. */
+void container_2d::print_all_custom(const char *format,ostream &os) {
+	int i,j,ij=0,fp,q;
+	fpoint x,y;
+	voronoicell_2d c;
+	for(j=0;j<ny;j++) for(i=0;i<nx;i++,ij++) for(q=0;q<co[ij];q++) {
+		x=p[ij][2*q];y=p[ij][2*q+1];
+		if(!compute_cell_sphere(c,i,j,ij,q,x,y)) continue;
+		fp=0;
+		while(format[fp]!=0) {
+			if(format[fp]=='%') {
+				fp++;
+				switch(format[fp]) {
+
+					// Particle-related output
+					case 'i': os << id[ij][q];break;
+					case 'x': os << x;break;
+					case 'y': os << y;break;
+					case 'q': os << x << " " << y;break;
+
+					// Vertex-related output
+					case 'w': os << c.p;break;
+					case 'm': os << 0.25*c.max_radius_squared();break;
+
+					// Edge-related output
+					case 'p': os << c.perimeter();break;
+
+					// Area-related output
+					case 'v': os << c.area();break;
+					case 'c': {
+							  fpoint cx,cy;
+							  c.centroid(cx,cy);
+							  os << cx << " " << cy;
+						  } break;
+					case 'C': {
+							  fpoint cx,cy;
+							  c.centroid(cx,cy);
+							  os << x+cx << " " << y+cy;
+						  } break;
+
+					// End-of-string reached
+					case 0: fp--;break;
+
+					// The percent sign is not part of a
+					// control sequence
+					default: os << '%' << format[fp];
+				}
+			} else os << format[fp];
+			fp++;
+		}
+		os << "\n";
+	}
+}
+
+/** An overloaded version of the print_all_custom routine, that prints to the
+ * standard output.
+ * \param[in] format the format of the output lines, using control sequences to
+ *                   denote the different cell statistics. */
+inline void container_2d::print_all_custom(const char *format) {
+	print_all_custom(format,cout);
+}
+
+/** An overloaded version of the print_all_custom routine that writes directly to a
+ * file.
+ * \param[in] filename The name of the file to write to.
+ * \param[in] format the format of the output lines, using control sequences to
+ *                   denote the different cell statistics. */
+inline void container_2d::print_all_custom(const char *format,const char *filename) {
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	print_all_custom(format,os);
+	os.close();
 }
 
 /** Initializes a voronoicell_2d class to fill the entire container.
