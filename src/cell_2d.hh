@@ -57,6 +57,7 @@ class voronoicell_2d {
 		void centroid(fpoint &cx,fpoint &cy);
 	private:
 		void add_memory_vertices();
+		void add_memory_ds();
 		inline fpoint pos(fpoint x,fpoint y,fpoint rsq,int qp);
 		/** This is the delete stack, used to store the vertices which
 		 * are going to be deleted during the plane cutting procedure.

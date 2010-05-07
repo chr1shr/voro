@@ -14,9 +14,9 @@ int main() {
 	// on the origin
 	v.init(-1,1,-1,1);
 
-	// Cut the cell by 250 random planes which are all a distance 1 away
+	// Cut the cell by 1000 random planes which are all a distance 1 away
 	// from the origin, to make an approximation to a sphere
-	for(int i=0;i<100;i++) {
+	for(int i=0;i<10000;i++) {
 		x=2*rnd()-1;
 		y=2*rnd()-1;
 		rsq=x*x+y*y;
@@ -25,6 +25,8 @@ int main() {
 			v.plane(x,y,1);
 		}
 	}
+
+	v.plane(1,1,0);
 
 	// Print out several statistics about the computed cell
 	cout << "Perimeter is " << v.perimeter() << endl;

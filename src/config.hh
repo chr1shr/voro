@@ -7,11 +7,15 @@
 // These constants set the initial memory allocation for the Voronoi cell
 /** The initial memory allocation for the number of vertices. */
 const int init_vertices=256;
+/** The initial size for the delete stack. */
+const int init_delete_size=256;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
 /** The maximum memory allocation for the number of vertices. */
 const int max_vertices=16777216;
+/** The maximum size for the delete stack. */
+const int max_delete_size=16777216;
 
 /** The maximum amount of particle memory allocated for a single region. */
 const int max_particle_memory=16777216;

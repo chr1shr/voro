@@ -5,9 +5,11 @@
 
 /** Constructs a 2D Voronoic cell and sets up the initial memory. */
 voronoicell_2d::voronoicell_2d() :
-	current_vertices(init_vertices), ed(new int*[current_vertices]),
-	pts(new fpoint[2*current_vertices]), ds(new int[current_delete_size]) {
+	current_vertices(init_vertices), current_delete_size(init_delete_size),
+	ed(new int*[current_vertices]), pts(new fpoint[2*current_vertices]),
+	ds(new int[current_delete_size]) {
 	ed[0]=new int[2*current_vertices];
+	for(int i=1;i<current_vertices;i++) ed[i]=ed[i-1]+2;
 }
 
 /** The voronoicell_2d destructor deallocates all of the dynamic memory. */
@@ -20,19 +22,37 @@ voronoicell_2d::~voronoicell_2d() {
  * arrays. If the allocation exceeds the absolute maximum set in max_vertices,
  * then the routine exits with a fatal error. */
 void voronoicell_2d::add_memory_vertices() {
-	int i=(current_vertices<<1),j;
+	int i=(current_vertices<<1);
 	if(i>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	cerr << "Vertex memory scaled up to " << i << endl;
 #endif
 	fpoint *ppts(new fpoint[2*i]);
-	int *ped(new int[2*i]);
+	int j,*ped(new int[2*i]);
 	for(j=0;j<2*current_vertices;j++) ped[j]=ed[0][j];
+	delete [] ed[0];
 	delete [] ed;
 	ed=new int*[i];
-	for(j=0;j<current_vertices;j++) ed[j]=ped+(2*j);
+	for(j=0;j<i;j++) ed[j]=ped+(2*j);
 	for(j=0;j<2*current_vertices;j++) ppts[j]=pts[j];
+	delete [] pts;
+	pts=ppts;
 	current_vertices=i;
+}
+
+/** Doubles the size allocation of the delete stack. If the allocation exceeds
+ * the absolute maximum set in max_delete_size, then routine causes a fatal
+ * error. */
+void voronoicell_2d::add_memory_ds() {
+	int i(current_delete_size<<1);
+	if(i>max_delete_size) voropp_fatal_error("Delete stack memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+#if VOROPP_VERBOSE >=2
+	cerr << "Delete stack memory scaled up to " << i << endl;
+#endif
+	int j,*pds(new int[i]);
+	for(j=0;j<current_delete_size;j++) pds[j]=ds[j];
+	delete [] ds;ds=pds;
+	current_delete_size=i;
 }
 
 /** Initializes a Voronoi cell as a rectangle with the given dimensions.
@@ -46,9 +66,9 @@ void voronoicell_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
 	pts[6]=xmin;pts[7]=ymax;
 	int *q=ed[0];
 	q[0]=1;q[1]=3;
-	q[2]=2;q[3]=0;ed[1]=q+2;
-	q[4]=3;q[5]=1;ed[2]=q+4;
-	q[6]=0;q[7]=2;ed[3]=q+6;
+	q[2]=2;q[3]=0;
+	q[4]=3;q[5]=1;
+	q[6]=0;q[7]=2;
 }
 
 /** Outputs the edges of the Voronoi cell in gnuplot format to an output
@@ -61,7 +81,6 @@ void voronoicell_2d::draw_gnuplot(ostream &os,fpoint x,fpoint y) {
 	int k=0;
 	do {
 		os << x+0.5*pts[2*k] << " " << y+0.5*pts[2*k+1] << "\n";
-		cout << k << endl;
 		k=ed[k][0];
 	} while (k!=0);
 	os << x+0.5*pts[0] << " " << y+0.5*pts[1] << "\n";
@@ -142,7 +161,6 @@ fpoint voronoicell_2d::max_radius_squared() {
  * \param[in] rsq the distance along this vector of the plane.
  * \param[in] qp the index of the vertex to consider. */
 inline fpoint voronoicell_2d::pos(fpoint x,fpoint y,fpoint rsq,int qp) {
-	cout << qp << ": " << x << " " << pts[2*qp] << " " << y << " " << pts[2*qp+1] << " " << rsq << " " <<  x*pts[2*qp]+y*pts[2*qp+1]-rsq << endl;
 	return x*pts[2*qp]+y*pts[2*qp+1]-rsq;
 }
 
@@ -153,19 +171,15 @@ inline fpoint voronoicell_2d::pos(fpoint x,fpoint y,fpoint rsq,int qp) {
  * \param[in] rsq the distance along this vector of the plane.
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
 bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
-	cout << "call " << x << " " << y << " " << rsq << " " << p << endl;
 	int cp,lp,up=0,up2,up3,stack=0;fpoint fac,l,u,u2,u3;
 	
 	// Finish this section with an inside vertex if there is one
 	u=pos(x,y,rsq,up);
-	cout << up << " " << u << endl;
-	cout << "P1" << endl;
 	if(u<tolerance) {
 		up2=ed[up][0];u2=pos(x,y,rsq,up2);
 		up3=ed[up][1];u3=pos(x,y,rsq,up3);
 		if(u2>u3) {
 			while(u2<tolerance) {
-				cout << up2 << " -> " << ed[up2][0] << endl;
 				up2=ed[up2][0];
 				u2=pos(x,y,rsq,up2);
 				if(up2==up3) return true;
@@ -173,7 +187,6 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 			up=up2;u=u2;
 		} else {
 			while(u3<tolerance) {
-				cout << up3 << " => " << ed[up3][1] << endl;
 				up3=ed[up3][1];
 				u3=pos(x,y,rsq,up3);
 				if(up2==up3) return true;
@@ -181,14 +194,12 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 			up=up3;u=u3;
 		}
 	}
-	cout << up << " " << u << endl;
-	cout << "P2" << endl;
 
 	ds[stack++]=up;
 	l=u;up2=ed[up][0];
-	cout << up2 << endl;
 	u2=pos(x,y,rsq,up2);
 	while(u2>tolerance) {
+		if(stack==current_delete_size) add_memory_ds();
 		ds[stack++]=up2;
 		up2=ed[up2][0];
 		l=u2;
@@ -196,13 +207,12 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		if(up2==up) return false;
 	}
 	
-	cout << "P3" << endl;
 	if(u2>-tolerance) {
 		// Adjust existing vertex
 		cp=up2;
 	} else {
 		// Create new vertex
-		ed[p]=ed[0]+(p<<1);
+		if(p==current_vertices) add_memory_vertices();
 		lp=ed[up2][1];
 		fac=1/(u2-l);
 		pts[2*p]=(pts[2*lp]*u2-pts[2*up2]*l)*fac;
@@ -212,9 +222,9 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		cp=p++;
 	}
 
-	cout << "P4" << endl;
 	l=u;up3=ed[up][1];u3=pos(x,y,rsq,up3);
 	while(u3>tolerance) {
+		if(stack==current_delete_size) add_memory_ds();
 		ds[stack++]=up3;
 		up3=ed[up3][1];
 		l=u3;
@@ -222,14 +232,13 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		if(up3==up2) break;
 	}
 
-	cout << "P5" << endl;
 	if(u3>tolerance) {
 		// Adjust existing vertex
 		ed[cp][1]=up3;
 		ed[up3][0]=cp;
 	} else {
 		// Create new vertex
-		ed[p]=ed[0]+(p<<1);
+		if(p==current_vertices) add_memory_vertices();
 		lp=ed[up3][0];
 		fac=1/(u3-l);
 		pts[2*p]=(pts[2*lp]*u3-pts[2*up3]*l)*fac;
@@ -240,22 +249,11 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		ed[up3][0]=p++;
 	}
 
-
-	for(int i=0;i<p;i++) {
-		printf("%d <- %d -> %d\n",ed[i][0],i,ed[i][1]);
-	}
-
-	cout << "P6" << endl;
-	for(int i=0;i<stack;i++) {
-		cout << ds[i] << endl;
-		ed[ds[i]][0]=-1;
-	}
+	for(int i=0;i<stack;i++) ed[ds[i]][0]=-1;
 	
-	cout << "P7" << endl;
 	while(stack>0) {
 		while(ed[--p][0]==-1);
 		up=ds[--stack];
-		cout << "del " << up << " " << p-1 << " " << ed[p-1][0] << " " << ed[p-1][1] << endl;
 		if(up<p) {
 			ed[ed[p][0]][1]=up;
 			ed[ed[p][1]][0]=up;
@@ -266,16 +264,6 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		} else p++;
 	}
 
-	cout << "P8" << endl;
-	for(int i=0;i<p;i++) {
-		printf("%d <- %d -> %d\n",ed[i][0],i,ed[i][1]);
-	}
-
-	for(int i=0;i<p;i++) {
-		if(ed[ed[i][0]][1]!=i) exit(1);
-		if(ed[i][0]==i||ed[i][1]==i) exit(1);
-		if(ed[i][0]>=p||ed[i][1]>=p) exit(1);
-	}
 	return true;
 }
 
@@ -288,7 +276,6 @@ fpoint voronoicell_2d::perimeter() {
 		l=ed[k][0];
 		dx=pts[2*k]-pts[2*l];
 		dy=pts[2*k+1]-pts[2*l+1];
-		printf("[%g %g]\n",dx,dy);
 		perim+=sqrt(dx*dx+dy*dy);
 		k=l;
 	} while (k!=0);
@@ -304,8 +291,7 @@ fpoint voronoicell_2d::area() {
 	k=ed[k][0];
 	while(k!=0) {
 		dx2=pts[2*k]-x;dy2=pts[2*k+1]-y;
-		printf("(%g %g) (%g %g)\n",dx1,dy1,dx2,dy2);
-		area+=sqrt(dx1*dy2-dx2*dy1);
+		area+=dx1*dy2-dx2*dy1;
 		dx1=dx2;dy1=dy2;
 		k=ed[k][0];
 	}
@@ -323,10 +309,10 @@ void voronoicell_2d::centroid(fpoint &cx,fpoint &cy) {
 	k=ed[k][0];
 	while(k!=0) {
 		dx2=pts[2*k]-x;dy2=pts[2*k+1]-y;
-		area=sqrt(dx1*dy2-dx2*dy1);
+		area=dx1*dy2-dx2*dy1;
 		tarea+=area;
 		cx+=area*(dx1+dx2);
-		cy+=area*(dx1+dx2);
+		cy+=area*(dy1+dy2);
 		dx1=dx2;dy1=dy2;
 		k=ed[k][0];
 	}
