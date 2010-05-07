@@ -12,6 +12,8 @@
  * \param[in] (ya,yb) the minimum and maximum y coordinates.
  * \param[in] (xn,yn) the number of grid blocks in each of the three
  *                       coordinate directions.
+ * \param[in] (xper,yper) flags setting whether the container is periodic
+ *                        in each coordinate direction.
  * \param[in] memi the initial memory allocation for each block. */
 container_2d::container_2d(fpoint xa,fpoint xb,fpoint ya,
 		fpoint yb,int xn,int yn,bool xper,bool yper,int memi)
@@ -118,14 +120,25 @@ inline void container_2d::import(const char *filename) {
 	is.close();
 }
 
+/** Imports a list of particles from an input stream.
+ * \param[in] is an input stream to read from. */
+inline void container_2d::import(istream &is) {
+	int n;fpoint x,y;
+	is >> n >> x >> y;
+	while(!is.eof()) {
+		put(n,x,y);
+		is >> n >> x >> y;
+	}
+}
+
 /** Clears a container of particles. */
 void container_2d::clear() {
 	for(int ij=0;ij<nxy;ij++) co[ij]=0;
 }
 
 
-/** Computes the Voronoi cells for all particles within a rectangular box,
- * and saves the output in gnuplot format.
+/** Computes the Voronoi cells for all particles within a rectangular box, and
+ * saves the output in gnuplot format.
  * \param[in] filename the name of the file to write to.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box. */
@@ -169,11 +182,40 @@ inline bool container_2d::initialize_voronoicell(voronoicell_2d &c,fpoint x,fpoi
 	return true;
 }
 
+/** An overloaded version of the compute_cell_sphere routine, that sets up the x
+ * and y variables.
+ \param[in,out] c a reference to a voronoicell object.
+ * \param[in] (i,j) the coordinates of the block that the test particle is
+ *                  in.
+ * \param[in] ij the index of the block that the test particle is in, set to
+ *               i+nx*j.
+ * \param[in] s the index of the particle within the test block.
+ * \return False if the Voronoi cell was completely removed during the
+ *         computation and has zero volume, true otherwise. */
+inline bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s) {
+	fpoint x=p[s][2*ij],y=p[s][2*ij+1];
+	return compute_cell_sphere(c,i,j,ij,s,x,y);
+}
+
+/** This routine computes the Voronoi cell for a give particle, by successively
+ * testing over particles within larger and larger concentric circles. This
+ * routine is simple and fast, although it may not work well for anisotropic
+ * arrangements of particles.
+ * \param[in,out] c a reference to a voronoicell object.
+ * \param[in] (i,j) the coordinates of the block that the test particle is
+ *                  in.
+ * \param[in] ij the index of the block that the test particle is in, set to
+ *               i+nx*j.
+ * \param[in] s the index of the particle within the test block.
+ * \param[in] (x,y) the coordinates of the particle.
+ * \return False if the Voronoi cell was completely removed during the
+ *         computation and has zero volume, true otherwise. */
 bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s,fpoint x,fpoint y) {
 
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
-	const fpoint length_scale=1;
+	const fpoint length_scale=0.5*sqrt((bx-ax)*(by-ay)/nx/ny);
+	
 	fpoint x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	voropp_loop_2d l(this);
@@ -212,10 +254,10 @@ voropp_loop_2d::voropp_loop_2d(container_2d *q) : sx(q->bx-q->ax), sy(q->by-q->a
 /** Initializes a voropp_loop_2d object, by finding all blocks which are within a
  * given sphere. It calculates the index of the first block that needs to be
  * tested and sets the periodic displacement vector accordingly.
- * \param[in] (vx,vy,vz) the position vector of the center of the sphere.
+ * \param[in] (vx,vy) the position vector of the center of the sphere.
  * \param[in] r the radius of the sphere.
- * \param[out] (px,py,pz) the periodic displacement vector for the first block
- *                        to be tested.
+ * \param[out] (px,py) the periodic displacement vector for the first block to
+ *                     be tested.
  * \return The index of the first block to be tested. */
 inline int voropp_loop_2d::init(fpoint vx,fpoint vy,fpoint r,fpoint &px,fpoint &py) {
 	ai=step_int((vx-ax-r)*xsp);
@@ -243,9 +285,8 @@ inline int voropp_loop_2d::init(fpoint vx,fpoint vy,fpoint r,fpoint &px,fpoint &
  * tested and sets the periodic displacement vector (px,py,pz) accordingly.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
- * \param[in] (zmin,zmax) the minimum and maximum z coordinates of the box.
- * \param[out] (px,py,pz) the periodic displacement vector for the first block
- *                        to be tested.
+ * \param[out] (px,py) the periodic displacement vector for the first block
+ *                     to be tested.
  * \return The index of the first block to be tested. */
 inline int voropp_loop_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint &px,fpoint &py) {
 	ai=step_int((xmin-ax)*xsp);
@@ -270,9 +311,8 @@ inline int voropp_loop_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,
 
 /** Returns the next block to be tested in a loop, and updates the periodicity
  * vector if necessary.
- * \param[in,out] (px,py,pz) the current block on entering the function, which
- *                           is updated to the next block on exiting the
- *                           function. */
+ * \param[in,out] (px,py) the current block on entering the function, which is
+ *                        updated to the next block on exiting the function. */
 inline int voropp_loop_2d::inc(fpoint &px,fpoint &py) {
 	if(i<bi) {
 		i++;

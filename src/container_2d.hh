@@ -1,3 +1,6 @@
+/** \file container_2d.hh
+ * \brief Header file for the container_2d class. */
+
 #ifndef VOROPP_CONTAINER_2D_HH
 #define VOROPP_CONTAINER_2D_HH
 
@@ -11,6 +14,14 @@ using namespace std;
 
 class voropp_loop_2d;
 
+/** \brief A class representing the whole 2D simulation region.
+ *
+ * The container class represents the whole simulation region. The
+ * container constructor sets up the geometry and periodicity, and divides
+ * the geometry into rectangular grid of blocks, each of which handles the
+ * particles in a particular area. Routines exist for putting in particles,
+ * importing particles from standard input, and carrying out Voronoi
+ * calculations. */
 class container_2d {
 	public:
 		container_2d(fpoint xa,fpoint xb,fpoint ya,fpoint yb,int xn,int yn,bool xper,bool yper,int memi);

@@ -1,3 +1,6 @@
+/** \file cell_2d.hh
+ * \brief Header file for the voronoicell_2d class. */
+
 #ifndef VOROPP_CELL_2D_HH
 #define VOROPP_CELL_2D_HH
 
@@ -19,13 +22,24 @@ void voropp_fatal_error(const char *p,int status) {
 	exit(status);
 }
 
+/** \brief A class encapsulating all the routines for storing and calculating a
+ * single Voronoi cell. */
 class voronoicell_2d {
 	public:
+		/** This holds the current size of the arrays ed and nu, which
+		 * hold the vertex information. If more vertices are created
+		 * than can fit in this array, then it is dynamically extended
+		 * using the add_memory_vertices routine. */
 		int current_vertices;
+		/** This sets the size of the current delete stack. */
 		int current_delete_size;
+		/** The total nuber of vertices in the current cell. */
 		int p;
-		int up;
+		/** This a two dimensional array that holds information about
+		 * edge connections between vertices.*/
 		int **ed;
+		/** This in an array with size 2*current_vertices for holding
+		 * the positions of the vertices. */
 		fpoint *pts;
 		voronoicell_2d();
 		~voronoicell_2d();
@@ -43,7 +57,10 @@ class voronoicell_2d {
 		void centroid(fpoint &cx,fpoint &cy);
 	private:
 		void add_memory_vertices();
-		inline fpoint pos(fpoint x,fpoint y,fpoint rsq,int qp); 
+		inline fpoint pos(fpoint x,fpoint y,fpoint rsq,int qp);
+		/** This is the delete stack, used to store the vertices which
+		 * are going to be deleted during the plane cutting procedure.
+		 */	
 		int *ds;
 };
 

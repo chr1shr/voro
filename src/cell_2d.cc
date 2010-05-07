@@ -6,8 +6,7 @@
 /** Constructs a 2D Voronoic cell and sets up the initial memory. */
 voronoicell_2d::voronoicell_2d() :
 	current_vertices(init_vertices), ed(new int*[current_vertices]),
-	pts(new fpoint[2*current_vertices]), ds(new int[current_delete_size])
-{
+	pts(new fpoint[2*current_vertices]), ds(new int[current_delete_size]) {
 	ed[0]=new int[2*current_vertices];
 }
 
@@ -68,8 +67,8 @@ void voronoicell_2d::draw_gnuplot(ostream &os,fpoint x,fpoint y) {
 	os << x+0.5*pts[0] << " " << y+0.5*pts[1] << "\n";
 }
 
-/** An overloaded version of the draw_gnuplot routine that writes directly to
- * a file.
+/** An overloaded version of the draw_gnuplot routine that writes directly to a
+ * file.
  * \param[in] filename The name of the file to write to.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
  */
@@ -116,8 +115,8 @@ inline void voronoicell_2d::draw_pov(const char *filename,fpoint x,fpoint y,fpoi
 	os.close();
 }
 
-/** An overloaded version of the draw_pov routine, that prints to the
- * standard output.
+/** An overloaded version of the draw_pov routine, that prints to the standard
+ * output.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
 inline void voronoicell_2d::draw_pov(fpoint x,fpoint y,fpoint z) {
@@ -138,11 +137,21 @@ fpoint voronoicell_2d::max_radius_squared() {
 	return r;
 }
 
+/** Computes this distance of a Voronoi cell vertex to a plane.
+ * \param[in] (x,y) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \param[in] qp the index of the vertex to consider. */
 inline fpoint voronoicell_2d::pos(fpoint x,fpoint y,fpoint rsq,int qp) {
 	cout << qp << ": " << x << " " << pts[2*qp] << " " << y << " " << pts[2*qp+1] << " " << rsq << " " <<  x*pts[2*qp]+y*pts[2*qp+1]-rsq << endl;
 	return x*pts[2*qp]+y*pts[2*qp+1]-rsq;
 }
 
+/** Cuts the Voronoi cell by a particle whose center is at a separation of
+ * (x,y) from the cell center. The value of rsq should be initially set to
+ * \f$x^2+y^2\f$.
+ * \param[in] (x,y) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \return False if the plane cut deleted the cell entirely, true otherwise. */
 bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 	cout << "call " << x << " " << y << " " << rsq << " " << p << endl;
 	int cp,lp,up=0,up2,up3,stack=0;fpoint fac,l,u,u2,u3;
