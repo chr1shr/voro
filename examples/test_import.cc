@@ -1,0 +1,17 @@
+#include "cell_2d.cc"
+#include "container_2d.cc"
+
+int main() {
+
+	// Initialize the container class to be the unit square, with
+	// non-periodic boundary conditions. Divide it into a 6 by 6 grid, with
+	// an initial memory allocation of 16 particles per grid square.
+	container_2d con(0,1,0,1,6,6,false,false,16);
+	
+	// Import the helix data set
+	con.import("particles_helix");
+
+	// Do a custom computation on the Voronoi cells, printing the IDs,
+	// positions, and Voronoi cell areas to a file
+	con.print_all_custom("%i %x %y %a","particles_helix.out");
+}
