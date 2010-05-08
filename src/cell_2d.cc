@@ -173,7 +173,9 @@ inline fpoint voronoicell_2d::pos(fpoint x,fpoint y,fpoint rsq,int qp) {
 bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 	int cp,lp,up=0,up2,up3,stack=0;fpoint fac,l,u,u2,u3;
 	
-	// Finish this section with an inside vertex if there is one
+	// First try and find a vertex that is within the cutting plane, if
+	// there is one. If one can't be found, then the cell is not cut by
+	// this plane and the routine immediately returns true.
 	u=pos(x,y,rsq,up);
 	if(u<tolerance) {
 		up2=ed[up][0];u2=pos(x,y,rsq,up2);
@@ -195,6 +197,8 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		}
 	}
 
+	// Add this point to the delete stack, and search clockwise
+	// to find additional points that need to be deleted.
 	ds[stack++]=up;
 	l=u;up2=ed[up][0];
 	u2=pos(x,y,rsq,up2);
@@ -207,11 +211,12 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		if(up2==up) return false;
 	}
 	
+	// Consider the first point that was found in the clockwise direction
+	// that was not inside the cutting plane. If it lies on the cutting
+	// plane then do nothing. Otherwise, introduce a new vertex.
 	if(u2>-tolerance) {
-		// Adjust existing vertex
 		cp=up2;
 	} else {
-		// Create new vertex
 		if(p==current_vertices) add_memory_vertices();
 		lp=ed[up2][1];
 		fac=1/(u2-l);
@@ -222,6 +227,8 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		cp=p++;
 	}
 
+	// Search counter-clockwise for additional points that need to be
+	// deleted
 	l=u;up3=ed[up][1];u3=pos(x,y,rsq,up3);
 	while(u3>tolerance) {
 		if(stack==current_delete_size) add_memory_ds();
@@ -232,12 +239,13 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		if(up3==up2) break;
 	}
 
+	// Either adjust the existing vertex or create new one, and connect it
+	// with the vertex found on the previous search in the clockwise
+	// direction
 	if(u3>tolerance) {
-		// Adjust existing vertex
 		ed[cp][1]=up3;
 		ed[up3][0]=cp;
 	} else {
-		// Create new vertex
 		if(p==current_vertices) add_memory_vertices();
 		lp=ed[up3][0];
 		fac=1/(u3-l);
@@ -249,8 +257,10 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 		ed[up3][0]=p++;
 	}
 
+	// Mark points on the delete stack
 	for(int i=0;i<stack;i++) ed[ds[i]][0]=-1;
 	
+	// Remove them from the memory structure
 	while(stack>0) {
 		while(ed[--p][0]==-1);
 		up=ds[--stack];
@@ -263,7 +273,6 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 			ed[up][1]=ed[p][1];
 		} else p++;
 	}
-
 	return true;
 }
 
@@ -295,7 +304,7 @@ fpoint voronoicell_2d::area() {
 		dx1=dx2;dy1=dy2;
 		k=ed[k][0];
 	}
-	return 0.25*area;
+	return 0.125*area;
 }
 
 /** Calculates the centroid of the Voronoi cell.

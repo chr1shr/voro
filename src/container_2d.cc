@@ -264,7 +264,7 @@ void container_2d::print_all_custom(const char *format,ostream &os) {
 					case 'p': os << c.perimeter();break;
 
 					// Area-related output
-					case 'v': os << c.area();break;
+					case 'a': os << c.area();break;
 					case 'c': {
 							  fpoint cx,cy;
 							  c.centroid(cx,cy);
