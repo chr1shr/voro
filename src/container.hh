@@ -232,7 +232,7 @@ class container_periodic_base {
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);		
 		bool not_already_there(int k,int j,unsigned int cper);
-		bool search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
+		bool search_previous(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
 		template<class n_option>
 		inline bool corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
 		template<class n_option>
