@@ -690,20 +690,20 @@ void container_periodic_base<r_option>::clear_network() {
 }
 
 template<class r_option>
-void container_periodic_base<r_option>::draw_network(const char *filename) {
+void container_periodic_base<r_option>::draw_network(const char *filename,bool slanted) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	draw_network(os);
+	draw_network(os,slanted);
 	os.close();
 }
 
 template<class r_option>
-void container_periodic_base<r_option>::draw_network() {
-	draw_network(cout);
+void container_periodic_base<r_option>::draw_network(bool slanted) {
+	draw_network(cout,slanted);
 }
 
 template<class r_option>
-void container_periodic_base<r_option>::draw_network(ostream &os) {
+void container_periodic_base<r_option>::draw_network(ostream &os,bool slanted) {
 	voronoicell c;
 	int i,j,k,l,ijk=0,q,ai,aj,ak;
 	double x,y,z;
@@ -712,7 +712,10 @@ void container_periodic_base<r_option>::draw_network(ostream &os) {
 		ijk=i+nx*(j+oy*k);
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
-			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) add_to_network(c,x,y,z);
+			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) {
+				if(slanted) add_to_network_slanted(c,x,y,z);
+				else add_to_network(c,x,y,z);
+			}
 		}
 	}
 	for(l=0;l<edc;l++) {
@@ -728,20 +731,20 @@ void container_periodic_base<r_option>::draw_network(ostream &os) {
 }
 
 template<class r_option>
-void container_periodic_base<r_option>::print_network(const char *filename) {
+void container_periodic_base<r_option>::print_network(const char *filename,bool slanted) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
-	print_network(os);
+	print_network(os,slanted);
 	os.close();
 }
 
 template<class r_option>
-void container_periodic_base<r_option>::print_network() {
-	print_network(cout);
+void container_periodic_base<r_option>::print_network(bool slanted) {
+	print_network(cout,slanted);
 }
 
 template<class r_option>
-void container_periodic_base<r_option>::print_network(ostream &os) {
+void container_periodic_base<r_option>::print_network(ostream &os,bool slanted) {
 	voronoicell c;
 	int i,j,k,l,ijk=0,q,ai,aj,ak;
 	double *ptsp;
@@ -751,7 +754,10 @@ void container_periodic_base<r_option>::print_network(ostream &os) {
 		ijk=i+nx*(j+oy*k);
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
-			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) add_to_network(c,x,y,z);
+			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) {
+				if(slanted) add_to_network_slanted(c,x,y,z);
+				else add_to_network(c,x,y,z);
+			}
 		}
 	}
 	os << "Vertex table:\n";
@@ -803,7 +809,7 @@ inline void container_periodic_base<r_option>::unpack_periodicity(unsigned int p
 
 template<class r_option>
 template<class n_option>
-void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+void container_periodic_base<r_option>::add_to_network_slanted(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
 	int i,j,k,ijk,l,q,ai,aj,ak,bi,bj,bk;unsigned int cper;
 	fpoint gx,gy,vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;fpoint *pp;
 	if(c.p>netmem) {
@@ -819,15 +825,13 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
 		gx=vx-vy*(bxy/by)+vz*(bxy*byz-by*bxz)/(by*bz);
 		gy=vy-vz*(byz/bz);
-		if(search_previous(gx,gy,vx,vy,vz,ijk,q,cper)) {
+		if(search_previous_slanted(gx,gy,vx,vy,vz,ijk,q,cper)) {
 			nett[l]=idmem[ijk][q];
 			perio[l]=cper;
 		} else {
-			printf("(%g,%g,%g) (%g,%g,%g)\n",vx,vy,vz,gx,gy,vz);
 			k=step_int(vz*zsp);if(k<0||k>=nz) {ak=step_div(k,nz);vx-=bxz*ak;vy-=byz*ak;vz-=bz*ak;k-=ak*nz;} else ak=0;
 			j=step_int(gy*ysp);if(j<0||j>=ny) {aj=step_div(j,ny);vx-=bxy*aj;vy-=by*aj;j-=aj*ny;} else aj=0;
 			i=step_int(gx*xsp);if(i<0||i>=nx) {ai=step_div(i,nx);vx-=bx*ai;i-=ai*nx;} else ai=0;
-			printf("(%g,%g,%g) (%g,%g,%g)\n\n",vx,vy,vz,gx,gy,vz);
 
 			perio[l]=pack_periodicity(ai,aj,ak);
 			ijk=i+nx*(j+ny*k);
@@ -872,6 +876,80 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 	}
 }
 
+template<class r_option>
+template<class n_option>
+void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+	int i,j,k,ijk,l,q,ai,aj,ak,bi,bj,bk;unsigned int cper;
+	fpoint vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;fpoint *pp;
+	if(c.p>netmem) {
+		do {
+			netmem<<=1;
+		} while(netmem<c.p);
+		delete [] nett;
+		delete [] perio;
+		nett=new int[netmem];
+		perio=new unsigned int[netmem];
+	}
+	for(l=0;l<c.p;l++) {
+		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
+		if(safe_search_previous(vx,vy,vz,ijk,q,cper)) {
+			nett[l]=idmem[ijk][q];
+			perio[l]=cper;
+		} else {
+			k=step_int(vz*zsp);
+			if(k<0||k>=nz) {
+				ak=step_div(k,nz);
+				vz-=ak*bz;vy-=ak*byz;vx-=ak*bxz;k-=ak*nz;
+			} else ak=0;
+			j=step_int(vy*ysp);
+			if(j<0||j>=ny) {
+				aj=step_div(j,ny);
+				vy-=aj*by;vx-=aj*bxy;j-=aj*ny;
+			} else aj=0;
+			i=step_int(vx*xsp);
+			if(i<0||i>=nx) {
+				ai=step_div(i,nx);
+				vx-=ai*bx;i-=ai*nx;
+			} else ai=0;
+			perio[l]=pack_periodicity(ai,aj,ak);
+			ijk=i+nx*(j+ny*k);
+			if(edc==edmem) add_edge_network_memory();
+			if(ptsc[ijk]==ptsmem[ijk]) add_network_memory(ijk);
+			reg[edc]=ijk;regp[edc]=ptsc[ijk];
+			pts[ijk][4*ptsc[ijk]]=vx;
+			pts[ijk][4*ptsc[ijk]+1]=vy;
+			pts[ijk][4*ptsc[ijk]+2]=vz;
+			pts[ijk][4*ptsc[ijk]+3]=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2]);
+			idmem[ijk][ptsc[ijk]++]=edc;
+			nett[l]=edc++;
+		}
+	}
+	for(l=0;l<c.p;l++) {
+		k=nett[l];
+		unpack_periodicity(perio[l],ai,aj,ak);
+		pp=pts[reg[k]]+(4*regp[k]);
+		vx=pp[0]+ai*bx+aj*bxy+ak*bxz;vy=pp[1]+aj*by+ak*byz;vz=pp[2]+ak*bz;
+		for(q=0;q<c.nu[l];q++) {
+			j=nett[c.ed[l][q]];
+			unpack_periodicity(perio[c.ed[l][q]],bi,bj,bk);
+			cper=pack_periodicity(bi-ai,bj-aj,bk-ak);
+			if(not_already_there(k,j,cper)) {
+				pp=pts[reg[j]]+(4*regp[j]);
+				wx=pp[0]+bi*bx+bj*bxy+bk*bxz;wy=pp[1]+bj*by+bk*byz;wz=pp[2]+bk*bz;
+				dx=wx-vx;dy=wy-vy;dz=wz-vz;
+				dis=(x-vx)*dx+(y-vy)*dy+(z-vz)*dz;
+				dis/=dx*dx+dy*dy+dz*dz;
+				if(dis<0) dis=0;if(dis>1) dis=1;
+				wx=vx-x+dis*dx;wy=vy-y+dis*dy;wz=vz-z+dis*dz;
+				if(nu[k]==numem[k]) add_particular_vertex_memory(k);
+				ed[k][nu[k]]=j;
+				raded[k][nu[k]]=sqrt(wx*wx+wy*wy+wz*wz);
+				pered[k][nu[k]++]=cper;
+			}
+		}
+	}
+}
+
 template<class r_option> 
 bool container_periodic_base<r_option>::not_already_there(int k,int j,unsigned int cper) {
 	for(int i=0;i<nu[k];i++) if(ed[k][i]==j&&pered[k][i]==cper) return false;
@@ -879,7 +957,7 @@ bool container_periodic_base<r_option>::not_already_there(int k,int j,unsigned i
 }
 
 template<class r_option>
-bool container_periodic_base<r_option>::search_previous(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper) {
+bool container_periodic_base<r_option>::search_previous_slanted(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper) {
 	int ai=step_int((gx-tolerance)*xsp),bi=step_int((gx+tolerance)*xsp);
 	int aj=step_int((gy-tolerance)*ysp),bj=step_int((gy+tolerance)*ysp);
 	int ak=step_int((z-tolerance)*zsp),bk=step_int((z+tolerance)*zsp);
@@ -899,6 +977,52 @@ bool container_periodic_base<r_option>::search_previous(fpoint gx,fpoint gy,fpoi
 				}
 			}
 		}
+	}
+	return false;
+}
+
+template<class r_option>
+bool container_periodic_base<r_option>::safe_search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper) {
+	const fpoint tol=0.5*tolerance;
+	if(search_previous(x+tol,y+tol,z+tol,ijk,q,cper)) return true;
+	if(search_previous(x-tol,y+tol,z+tol,ijk,q,cper)) return true;
+	if(search_previous(x+tol,y-tol,z+tol,ijk,q,cper)) return true;
+	if(search_previous(x-tol,y-tol,z+tol,ijk,q,cper)) return true;
+	if(search_previous(x+tol,y+tol,z-tol,ijk,q,cper)) return true;
+	if(search_previous(x-tol,y+tol,z-tol,ijk,q,cper)) return true;
+	if(search_previous(x+tol,y-tol,z-tol,ijk,q,cper)) return true;
+	return search_previous(x-tolerance,y-tolerance,z-tolerance,ijk,q,cper);
+}
+
+
+template<class r_option>
+bool container_periodic_base<r_option>::search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper) {
+		
+	int k=step_int(z*zsp);
+	int ai,aj,ak;
+
+	if(k<0||k>=nz) {
+		ak=step_div(k,nz);
+		z-=ak*bz;y-=ak*byz;x-=ak*bxz;k-=ak*nz;
+	} else ak=0;
+
+	int j=step_int(y*ysp);
+	if(j<0||j>=ny) {
+		aj=step_div(j,ny);
+		y-=aj*by;x-=aj*bxy;j-=aj*ny;
+	} else aj=0;
+
+	int i=step_int(x*xsp);
+	if(i<0||i>=nx) {
+		ai=step_div(i,nx);
+		x-=ai*bx;i-=ai*nx;
+	} else ai=0;
+
+	ijk=i+nx*(j+ny*k);
+	
+	for(q=0;q<ptsc[ijk];q++) if(abs(pts[ijk][4*q]-x)<tolerance&&abs(pts[ijk][4*q+1]-y)<tolerance&&abs(pts[ijk][4*q+2]-z)<tolerance) {
+		cper=pack_periodicity(ai,aj,ak);
+		return true;
 	}
 	return false;
 }

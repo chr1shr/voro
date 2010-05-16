@@ -65,12 +65,14 @@ class container_periodic_base {
 		void print_all_custom(const char *format);
 		void print_all_custom(const char *format,const char *filename);
 		void clear_network();
-		void print_network(ostream &os);
-		void print_network();
-		void print_network(const char *filename);
-		void draw_network(ostream &os);
-		void draw_network();
-		void draw_network(const char *filename);
+		void print_network(ostream &os,bool slanted=false);
+		void print_network(bool slanted=false);
+		void print_network(const char *filename,bool slanted=false);
+		void draw_network(ostream &os,bool slanted=false);
+		void draw_network(bool slanted=false);
+		void draw_network(const char *filename,bool slanted=false);
+		template<class n_option>
+		void add_to_network_slanted(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);		
 		template<class n_option>
 		void add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);		
 		template<class n_option>
@@ -232,7 +234,9 @@ class container_periodic_base {
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);		
 		bool not_already_there(int k,int j,unsigned int cper);
-		bool search_previous(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
+		bool search_previous_slanted(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
+		bool safe_search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
+		bool search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
 		template<class n_option>
 		inline bool corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
 		template<class n_option>

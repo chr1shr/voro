@@ -163,12 +163,20 @@ void output(c_option &con,char *buffer,int bp) {
 //	con.draw_cells_gnuplot(buffer);
 	
 	// Draw the network in gnuplot format
-	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='d';*(bu++)='2';*(bu++)=0;
+	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='t';*(bu++)='d';*(bu++)=0;
 	con.draw_network(buffer);
 
 	// Output the network diagnostic file
-	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='t';*(bu++)='2';*(bu++)=0;
+	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='e';*(bu++)='t';*(bu++)=0;
 	con.print_network(buffer);
+
+	// Draw the network in gnuplot format (slanted cell)
+	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='d';*(bu++)='2';*(bu++)=0;
+	con.draw_network(buffer,true);
+
+	// Output the network diagnostic file (slanted cell)
+	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='t';*(bu++)='2';*(bu++)=0;
+	con.print_network(buffer,true);
 
 	// Output the unit cell in gnuplot format
 //	bu=buffer+(bp-2);*(bu++)='d';*(bu++)='o';*(bu++)='m';*(bu++)=0;
