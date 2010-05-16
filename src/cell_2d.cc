@@ -118,7 +118,7 @@ void voronoicell_2d::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
 		os << "sphere{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,r}\n";
 		os << "cylinder{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,<";
 		k=ed[k][0];
-		os << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">}\n";
+		os << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,r}\n";
 	} while (k!=0);
 }
 
