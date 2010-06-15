@@ -21,6 +21,42 @@ class voropp_loop;
 class radius_poly;
 class wall;
 
+class neigh_list {
+	public:
+		int n;
+		int mem;
+		int *l;
+		neigh_list() : n(0), mem(4), l(new int[mem]) {};
+		void copy(neigh_list &q) {
+			if(mem<q.mem) {
+				delete [] l;mem=q.mem;l=new int[mem];
+			}
+			for(int i=0;i<n;i++) l[i]=q.l[i];
+		}
+		~neigh_list() {delete [] l;}
+		void add(int k) {
+			int i;
+			for(i=0;i<n;i++) if(l[i]==k) return;
+			if(n==mem) {
+				int nmem(mem<<1);
+				int *nl(new int[nmem]);
+				for(i=0;i<mem;i++) nl[i]=l[i];
+				delete [] l;
+				l=nl;
+				mem=nmem;
+			}
+			l[n++]=k;
+		}
+		void output(ostream &os) {
+			os << "[";
+			for(int i=0;i<n-1;i++) {
+				os << l[i] << ",";
+			}
+			if(n!=0) os << l[n-1];
+			os << "]";
+		}
+};
+
 /** \brief A class representing the whole simulation region.
  *
  * The container class represents the whole simulation region. The
@@ -72,9 +108,9 @@ class container_periodic_base {
 		void draw_network(bool slanted=false);
 		void draw_network(const char *filename,bool slanted=false);
 		template<class n_option>
-		void add_to_network_slanted(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);		
+		void add_to_network_slanted(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn);		
 		template<class n_option>
-		void add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);		
+		void add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn);		
 		template<class n_option>
 		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
@@ -199,6 +235,7 @@ class container_periodic_base {
 		
 		fpoint **pts;
 		int **idmem;
+		neigh_list **neighmem;
 		int *ptsc;
 		int *ptsmem;
 

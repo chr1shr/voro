@@ -36,11 +36,13 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 	// Additional memory allocation for network
 	pts=new double*[nxyz];
 	idmem=new int*[nxyz];
+	neighmem=new neigh_list*[nxyz];
 	ptsc=new int[nxyz];
 	ptsmem=new int[nxyz];
 	for(l=0;l<nxyz;l++) {
 		pts[l]=new double[4*memi];
 		idmem[l]=new int[memi];
+		neighmem[l]=new neigh_list[memi];
 		ptsc[l]=0;ptsmem[l]=memi;
 	}
 
@@ -183,12 +185,18 @@ void container_periodic_base<r_option>::add_network_memory(int l) {
 		voropp_fatal_error("Container vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 	double *npts(new double[4*ptsmem[l]]);
 	int *nidmem(new int[ptsmem[l]]);
+	neigh_list *nneighmem(new neigh_list[ptsmem[l]]);
 	for(int i=0;i<4*ptsc[l];i++) npts[i]=pts[l][i];
 	for(int i=0;i<ptsc[l];i++) nidmem[i]=idmem[l][i];
+	for(int i=0;i<ptsc[l];i++) {
+		nneighmem[i].copy(neighmem[l][i]);
+	}
 	delete [] pts[l];
 	delete [] idmem[l];
+	delete [] neighmem[l];
 	pts[l]=npts;
 	idmem[l]=nidmem;
+	neighmem[l]=nneighmem;
 }
 
 /** Increase edge network memory. */
@@ -713,8 +721,8 @@ void container_periodic_base<r_option>::draw_network(ostream &os,bool slanted) {
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
 			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) {
-				if(slanted) add_to_network_slanted(c,x,y,z);
-				else add_to_network(c,x,y,z);
+				if(slanted) add_to_network_slanted(c,x,y,z,id[ijk][q]);
+				else add_to_network(c,x,y,z,id[ijk][q]);
 			}
 		}
 	}
@@ -755,15 +763,17 @@ void container_periodic_base<r_option>::print_network(ostream &os,bool slanted) 
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
 			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) {
-				if(slanted) add_to_network_slanted(c,x,y,z);
-				else add_to_network(c,x,y,z);
+				if(slanted) add_to_network_slanted(c,x,y,z,id[ijk][q]);
+				else add_to_network(c,x,y,z,id[ijk][q]);
 			}
 		}
 	}
 	os << "Vertex table:\n";
 	for(l=0;l<edc;l++) {
 		ptsp=pts[reg[l]];j=4*regp[l];
-		os << l << " " << ptsp[j] << " " << ptsp[j+1] << " " << ptsp[j+2] << " " << ptsp[j+3] << "\n";
+		os << l << " " << ptsp[j] << " " << ptsp[j+1] << " " << ptsp[j+2] << " " << ptsp[j+3] << " ";
+		neighmem[reg[l]][regp[l]].output(os);
+		os << "\n";
 	}
 	
 	os << "\nEdge table:\n";
@@ -809,7 +819,7 @@ inline void container_periodic_base<r_option>::unpack_periodicity(unsigned int p
 
 template<class r_option>
 template<class n_option>
-void container_periodic_base<r_option>::add_to_network_slanted(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+void container_periodic_base<r_option>::add_to_network_slanted(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn) {
 	int i,j,k,ijk,l,q,ai,aj,ak,bi,bj,bk;unsigned int cper;
 	fpoint gx,gy,vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;fpoint *pp;
 	if(c.p>netmem) {
@@ -827,6 +837,7 @@ void container_periodic_base<r_option>::add_to_network_slanted(voronoicell_base<
 		gy=vy-vz*(byz/bz);
 		if(search_previous_slanted(gx,gy,vx,vy,vz,ijk,q,cper)) {
 			nett[l]=idmem[ijk][q];
+			neighmem[ijk][q].add(idn);
 			perio[l]=cper;
 		} else {
 			k=step_int(vz*zsp);if(k<0||k>=nz) {ak=step_div(k,nz);vx-=bxz*ak;vy-=byz*ak;vz-=bz*ak;k-=ak*nz;} else ak=0;
@@ -844,7 +855,8 @@ void container_periodic_base<r_option>::add_to_network_slanted(voronoicell_base<
 			pts[ijk][4*ptsc[ijk]+1]=vy;
 			pts[ijk][4*ptsc[ijk]+2]=vz;
 			pts[ijk][4*ptsc[ijk]+3]=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2]);
-			idmem[ijk][ptsc[ijk]++]=edc;
+			idmem[ijk][ptsc[ijk]]=edc;
+			neighmem[ijk][ptsc[ijk]++].add(idn);
 			nett[l]=edc++;
 		}
 	}
@@ -858,6 +870,7 @@ void container_periodic_base<r_option>::add_to_network_slanted(voronoicell_base<
 		for(q=0;q<c.nu[l];q++) {
 			j=nett[c.ed[l][q]];
 			unpack_periodicity(perio[c.ed[l][q]],bi,bj,bk);
+			if(j==k&&bi==ai&&bj==aj&&bk==ak) continue;	// New check to prevent self-connecting edges
 			cper=pack_periodicity(bi-ai,bj-aj,bk-ak);
 			if(not_already_there(k,j,cper)) {
 				pp=pts[reg[j]]+(4*regp[j]);
@@ -878,7 +891,7 @@ void container_periodic_base<r_option>::add_to_network_slanted(voronoicell_base<
 
 template<class r_option>
 template<class n_option>
-void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z) {
+void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn) {
 	int i,j,k,ijk,l,q,ai,aj,ak,bi,bj,bk;unsigned int cper;
 	fpoint vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;fpoint *pp;
 	if(c.p>netmem) {
@@ -894,6 +907,7 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
 		if(safe_search_previous(vx,vy,vz,ijk,q,cper)) {
 			nett[l]=idmem[ijk][q];
+			neighmem[ijk][q].add(idn);
 			perio[l]=cper;
 		} else {
 			k=step_int(vz*zsp);
@@ -920,7 +934,8 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 			pts[ijk][4*ptsc[ijk]+1]=vy;
 			pts[ijk][4*ptsc[ijk]+2]=vz;
 			pts[ijk][4*ptsc[ijk]+3]=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2]);
-			idmem[ijk][ptsc[ijk]++]=edc;
+			idmem[ijk][ptsc[ijk]]=edc;
+			neighmem[ijk][ptsc[ijk]++].add(idn);
 			nett[l]=edc++;
 		}
 	}
@@ -1065,9 +1080,10 @@ void container_periodic_base<r_option>::print_all_custom(const char *format,ostr
 				// need neighbor information during the custom
 				// output, so use the voronoicell_neighbor
 				// class
-				voronoicell_neighbor c;
-				print_all_custom_internal(c,format,os);
-				return;
+				voropp_fatal_error("Neighbor tracking is currently disabled in this version",VOROPP_INTERNAL_ERROR);
+				//voronoicell_neighbor c;
+				//print_all_custom_internal(c,format,os);
+				//return;
 			} else if(format[fp]==0) break;
 		}
 		fp++;
