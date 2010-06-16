@@ -47,6 +47,9 @@ class neigh_list {
 			}
 			l[n++]=k;
 		}
+		void setup(int k) {
+			n=1;l[0]=k;
+		}
 		void output(ostream &os) {
 			os << "[";
 			for(int i=0;i<n-1;i++) {

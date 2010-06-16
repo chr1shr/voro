@@ -856,7 +856,7 @@ void container_periodic_base<r_option>::add_to_network_slanted(voronoicell_base<
 			pts[ijk][4*ptsc[ijk]+2]=vz;
 			pts[ijk][4*ptsc[ijk]+3]=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2]);
 			idmem[ijk][ptsc[ijk]]=edc;
-			neighmem[ijk][ptsc[ijk]++].add(idn);
+			neighmem[ijk][ptsc[ijk]++].setup(idn);
 			nett[l]=edc++;
 		}
 	}
@@ -935,7 +935,7 @@ void container_periodic_base<r_option>::add_to_network(voronoicell_base<n_option
 			pts[ijk][4*ptsc[ijk]+2]=vz;
 			pts[ijk][4*ptsc[ijk]+3]=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2]);
 			idmem[ijk][ptsc[ijk]]=edc;
-			neighmem[ijk][ptsc[ijk]++].add(idn);
+			neighmem[ijk][ptsc[ijk]++].setup(idn);
 			nett[l]=edc++;
 		}
 	}
