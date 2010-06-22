@@ -54,6 +54,14 @@ const int max_container_vertex_memory=16777216;
 /** The maximum size for the wall pointer array. */
 const int max_wall_size=2048;
 
+/** The maximum limit on the shell of periodic images to consider when
+ * constructing the periodic cell. This limit would only be exceeded for very
+ * skewed unit cells, that should not  */
+const int max_uc_shells=10;
+
+/** Initial memory allocation */
+const int init_edge_alloc=4;
+
 #ifndef VOROPP_VERBOSE
 /** Voro++ can print a number of different status and debugging messages to
  * notify the user of special behavior, and this macro sets the amount which

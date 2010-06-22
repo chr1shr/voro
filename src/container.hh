@@ -11,6 +11,8 @@
 #define VOROPP_CONTAINER_HH
 
 #include "config.hh"
+#include "cell.hh"
+#include "v_network.hh"
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -20,45 +22,6 @@ using namespace std;
 class voropp_loop;
 class radius_poly;
 class wall;
-
-class neigh_list {
-	public:
-		int n;
-		int mem;
-		int *l;
-		neigh_list() : n(0), mem(4), l(new int[mem]) {};
-		void copy(neigh_list &q) {
-			if(mem<q.mem) {
-				delete [] l;mem=q.mem;l=new int[mem];
-			}
-			for(int i=0;i<n;i++) l[i]=q.l[i];
-		}
-		~neigh_list() {delete [] l;}
-		void add(int k) {
-			int i;
-			for(i=0;i<n;i++) if(l[i]==k) return;
-			if(n==mem) {
-				int nmem(mem<<1);
-				int *nl(new int[nmem]);
-				for(i=0;i<mem;i++) nl[i]=l[i];
-				delete [] l;
-				l=nl;
-				mem=nmem;
-			}
-			l[n++]=k;
-		}
-		void setup(int k) {
-			n=1;l[0]=k;
-		}
-		void output(ostream &os) {
-			os << "[";
-			for(int i=0;i<n-1;i++) {
-				os << l[i] << ",";
-			}
-			if(n!=0) os << l[n-1];
-			os << "]";
-		}
-};
 
 /** \brief A class representing the whole simulation region.
  *
@@ -104,16 +67,8 @@ class container_periodic_base {
 		void print_all_custom(const char *format);
 		void print_all_custom(const char *format,const char *filename);
 		void clear_network();
-		void print_network(ostream &os,bool slanted=false);
-		void print_network(bool slanted=false);
-		void print_network(const char *filename,bool slanted=false);
-		void draw_network(ostream &os,bool slanted=false);
-		void draw_network(bool slanted=false);
-		void draw_network(const char *filename,bool slanted=false);
-		template<class n_option>
-		void add_to_network_slanted(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn);		
-		template<class n_option>
-		void add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn);		
+		void compute_network(voronoi_network &vn);
+		void compute_network_rectangular(voronoi_network &vn);
 		template<class n_option>
 		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
 		template<class n_option>
@@ -235,26 +190,12 @@ class container_periodic_base {
 		 * derived container_poly class, this also holds particle
 		 * radii. */
 		fpoint **p;
-		
-		fpoint **pts;
-		int **idmem;
-		neigh_list **neighmem;
-		int *ptsc;
-		int *ptsmem;
-
-		int **ed;
-		double **raded;
-		unsigned int **pered;
-		int edc,edmem;
-		int *nu;
-		int *numem;
-		int *reg;
-		int *regp;
-		int *nett;
-		unsigned int *perio;
-		int netmem;
+		/** The Voronoi cell of a single particle in this container
+		 * class, with faces made by considering periodic images. This
+		 * is used to determine how many periodic images need to be
+		 * considered, and is also used as the base for all cell
+		 * computations. */ 
 		voronoicell unitcell;
-
 		template<class n_option>
 		inline void print_all_internal(voronoicell_base<n_option> &c,ostream &os);
 		template<class n_option>
@@ -263,9 +204,6 @@ class container_periodic_base {
 		inline bool initialize_voronoicell(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
 		void add_particle_memory(int i);
 		void add_list_memory();
-		void add_particular_vertex_memory(int l);
-		void add_edge_network_memory();
-		void add_network_memory(int l);
 		void check_compartmentalized();
 		void compute_unit_cell();
 	private:
@@ -273,10 +211,6 @@ class container_periodic_base {
 		inline int step_mod(int a,int b);
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);		
-		bool not_already_there(int k,int j,unsigned int cper);
-		bool search_previous_slanted(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
-		bool safe_search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
-		bool search_previous(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
 		template<class n_option>
 		inline bool corner_test(voronoicell_base<n_option> &c,fpoint xl,fpoint yl,fpoint zl,fpoint xh,fpoint yh,fpoint zh);
 		template<class n_option>
@@ -301,8 +235,6 @@ class container_periodic_base {
 		void create_side_image(int di,int dj,int dk);
 		void create_vertical_image(int di,int dj,int dk);
 		inline void quick_put(int reg,int fijk,int l,fpoint dx,fpoint dy,fpoint dz);
-		inline unsigned int pack_periodicity(int i,int j,int k);
-		inline void unpack_periodicity(unsigned int pa,int &i,int &j,int &k);
 		friend class voropp_loop;
 		friend class radius_poly;
 };

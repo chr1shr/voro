@@ -20,6 +20,8 @@ const int bsize=2048;
 // Output routine
 template<class c_option>
 void output(c_option &con,char *buffer,int bp);
+template<class c_option>
+void output(c_option &con,char *buffer,int bp);
 
 int main(int argc,char **argv) {
 
@@ -38,14 +40,12 @@ int main(int argc,char **argv) {
 	}
 
 	// Check that the file has a ".v1" extension
-	for(bp=0;bp<bsize-1;bp++) {
-		if(farg[bp]==0) break;
-	}
-	if(bp==bsize-1) {
+	bp=strlen(farg);
+	if(bp+2>bsize) {
 		cerr << "Filename too long" << endl;
 		return VOROPP_CMD_LINE_ERROR;
 	}
-	if(farg[bp-3]!='.'||farg[bp-2]!='v'||farg[bp-1]!='1') {
+	if(bp<3||farg[bp-3]!='.'||farg[bp-2]!='v'||farg[bp-1]!='1') {
 		cerr << "Filename must end in '.v1'" << endl;
 		return VOROPP_CMD_LINE_ERROR;
 	}
@@ -123,7 +123,7 @@ int main(int argc,char **argv) {
 
 		// Carry out the volume check
 		printf("Volume check:\n  Total domain volume  = %f\n",bx*by*bz);
-		printf("  Total Voronoi volume = %f\n",con.sum_cell_volumes());;
+		printf("  Total Voronoi volume = %f\n",con.sum_cell_volumes());
 
 		// Copy the output filename
 		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
@@ -150,35 +150,33 @@ int main(int argc,char **argv) {
 	}
 }
 
+inline void extension(const char *ext,char *bu) {
+	char *ep=ext;while(*ep!=0) *(bu++)=*(ep++);*bu=*ep;	
+}
+
 template<class c_option>
 void output(c_option &con,char *buffer,int bp) {
-	char *bu;
+	char *bu(buffer+bp-2);
+	voronoi_network vn(con);
+
+	// Compute non-rectangular cell network, and print gnuplot and network
+	// files
+	con.compute_network(vn);
+	extension("nd2",bu);vn.draw_network(buffer);
+	extension("nt2",bu);vn.print_network(buffer);
+
+	// Compute rectangular cell network, and print gnuplot and network
+	// files
+	con.compute_network_rectangular(vn);
+	extension("ntd",bu);vn.draw_network(buffer);
+	extension("net",bu);vn.print_network(buffer);
 
 	// Output the particles and any constructed periodic images
-//	bu=buffer+(bp-2);*(bu++)='p';*(bu++)='a';*(bu++)='r';*(bu++)=0;
-//	con.draw_particles(buffer);
+	extension("par",bu);con.draw_particles(buffer);
 
 	// Output the Voronoi cells in gnuplot format
-//	bu=buffer+(bp-2);*(bu++)='o';*(bu++)='u';*(bu++)='t';*(bu++)=0;
-//	con.draw_cells_gnuplot(buffer);
+	extension("out");con.draw_cells_gnuplot(buffer);
 	
-	// Draw the network in gnuplot format
-	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='t';*(bu++)='d';*(bu++)=0;
-	con.draw_network(buffer);
-
-	// Output the network diagnostic file
-	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='e';*(bu++)='t';*(bu++)=0;
-	con.print_network(buffer);
-
-	// Draw the network in gnuplot format (slanted cell)
-	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='d';*(bu++)='2';*(bu++)=0;
-	con.draw_network(buffer,true);
-
-	// Output the network diagnostic file (slanted cell)
-	bu=buffer+(bp-2);*(bu++)='n';*(bu++)='t';*(bu++)='2';*(bu++)=0;
-	con.print_network(buffer,true);
-
 	// Output the unit cell in gnuplot format
-//	bu=buffer+(bp-2);*(bu++)='d';*(bu++)='o';*(bu++)='m';*(bu++)=0;
-//	con.draw_domain(buffer);
+	extension("dom");con.draw_domain(buffer);
 }
