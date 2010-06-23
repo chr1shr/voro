@@ -14,7 +14,8 @@ INCLUDE=-I../../src
 SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/cell.hh ../../src/cell.cc ../../src/wall.cc ../../src/wall.hh \
        ../../src/worklist.cc ../../src/worklist.hh ../../src/voro++.cc \
-       ../../src/r_table.cc ../../src/voro++.hh
+       ../../src/r_table.cc ../../src/voro++.hh ../../src/v_network.cc \
+       ../../src/v_network.hh
 
 # List of executables
 EXECUTABLES=network p_test copy_test
@@ -23,7 +24,7 @@ EXECUTABLES=network p_test copy_test
 all: p_test network copy_test
 
 network: $(SOURCE) network.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o network network.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o network network.cc -ggdb
 
 p_test: $(SOURCE) p_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o p_test p_test.cc

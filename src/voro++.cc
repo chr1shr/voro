@@ -9,4 +9,5 @@
 
 #include "cell.cc"
 #include "container.cc"
+#include "v_network.cc"
 #include "wall.cc"

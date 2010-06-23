@@ -10,6 +10,7 @@
 
 #include "cell.hh"
 #include "container.hh"
+#include "v_network.hh"
 
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
@@ -27,7 +28,7 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 		fpoint xzb,fpoint yzb,fpoint zb,int xn,int yn,int zn,int memi)
 	: bx(xb),bxy(xyb),by(yb),bxz(xzb),byz(yzb),bz(zb),
 	xsp(xn/xb),ysp(yn/yb),zsp(zn/zb),nx(xn),ny(yn),nz(zn),
-	nxyz(xn*yn*zn),init_mem(memi),
+	nxyz(xn*yn*zn), init_mem(memi),
 	mv(0),wall_number(0),current_wall_size(init_wall_size),radius(this),
 	sz(radius.mem_size),mrad(new fpoint[hgridsq*seq_length]),
 	walls(new wall*[init_wall_size]) {
@@ -86,6 +87,23 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 
 	// Precompute the radius table used in the cell construction
 	initialize_radii();
+}
+
+/** The container destructor frees the dynamically allocated memory. */
+template<class r_option>
+container_periodic_base<r_option>::~container_periodic_base() {
+	int l;
+	for(l=0;l<nxyz;l++) delete [] p[l];
+	for(l=0;l<nxyz;l++) delete [] id[l];
+	delete [] p;
+	delete [] id;
+	delete [] walls;
+	delete [] mrad;
+	delete [] sl;
+	delete [] mask;
+	delete [] mem;
+	delete [] co;
+	delete [] img;
 }
 
 /** Computes the periodic unit cell for this container. This is the
@@ -174,22 +192,6 @@ inline bool container_periodic_base<r_option>::unit_cell_test(int i,int j,int k)
 	double x=i*bx+j*bxy+k*bxz,y=j*by+k*byz,z=k*bz;
 	double rsq=x*x+y*y+z*z;
 	return unitcell.plane_intersects(x,y,z,rsq);
-}
-
-/** The container destructor frees the dynamically allocated memory. */
-template<class r_option>
-container_periodic_base<r_option>::~container_periodic_base() {
-	int l;
-	for(l=0;l<nxyz;l++) delete [] p[l];
-	for(l=0;l<nxyz;l++) delete [] id[l];
-	delete [] p;
-	delete [] id;
-	delete [] walls;
-	delete [] mrad;
-	delete [] sl;
-	delete [] mask;
-	delete [] mem;
-	delete [] co;
 }
 
 /** Dumps all the particle positions and identifies to a file.
@@ -327,7 +329,7 @@ void container_periodic_base<r_option>::put(int n,fpoint x,fpoint y,fpoint z) {
 template<class r_option>
 void container_periodic_base<r_option>::compute_network(voronoi_network &vn) {
 	voronoicell c;
-	int i,j,k,l,ijk=0,q;
+	int i,j,k,ijk=0,q;
 	double x,y,z;
 	vn.clear_network();
 	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
@@ -345,7 +347,7 @@ void container_periodic_base<r_option>::compute_network(voronoi_network &vn) {
 template<class r_option>
 void container_periodic_base<r_option>::compute_network_rectangular(voronoi_network &vn) {
 	voronoicell c;
-	int i,j,k,l,ijk=0,q;
+	int i,j,k,ijk=0,q;
 	double x,y,z;
 	vn.clear_network();
 	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {

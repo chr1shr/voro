@@ -151,7 +151,8 @@ int main(int argc,char **argv) {
 }
 
 inline void extension(const char *ext,char *bu) {
-	char *ep=ext;while(*ep!=0) *(bu++)=*(ep++);*bu=*ep;	
+	char *ep((char*) ext);
+	while(*ep!=0) *(bu++)=*(ep++);*bu=*ep;	
 }
 
 template<class c_option>
@@ -175,8 +176,8 @@ void output(c_option &con,char *buffer,int bp) {
 	extension("par",bu);con.draw_particles(buffer);
 
 	// Output the Voronoi cells in gnuplot format
-	extension("out");con.draw_cells_gnuplot(buffer);
+	extension("out",bu);con.draw_cells_gnuplot(buffer);
 	
 	// Output the unit cell in gnuplot format
-	extension("dom");con.draw_domain(buffer);
+	extension("dom",bu);con.draw_domain(buffer);
 }

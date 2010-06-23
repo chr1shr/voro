@@ -281,6 +281,7 @@
 
 #include "cell.hh"
 #include "container.hh"
+#include "v_network.hh"
 #include "wall.hh"
 
 #endif

@@ -12,7 +12,6 @@
 
 #include "config.hh"
 #include "cell.hh"
-#include "v_network.hh"
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -21,6 +20,7 @@ using namespace std;
 
 class voropp_loop;
 class radius_poly;
+class voronoi_network;
 class wall;
 
 /** \brief A class representing the whole simulation region.
@@ -237,6 +237,7 @@ class container_periodic_base {
 		inline void quick_put(int reg,int fijk,int l,fpoint dx,fpoint dy,fpoint dz);
 		friend class voropp_loop;
 		friend class radius_poly;
+		friend class voronoi_network;
 };
 
 /** \brief A class encapsulating all routines specifically needed in
