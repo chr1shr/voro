@@ -93,8 +93,8 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 template<class r_option>
 container_periodic_base<r_option>::~container_periodic_base() {
 	int l;
-	for(l=0;l<nxyz;l++) delete [] p[l];
-	for(l=0;l<nxyz;l++) delete [] id[l];
+	for(l=0;l<nxyz;l++) if(mem[l]>0) delete [] p[l];
+	for(l=0;l<nxyz;l++) if(mem[l]>0) delete [] id[l];
 	delete [] p;
 	delete [] id;
 	delete [] walls;
@@ -401,7 +401,7 @@ void container_periodic_base<r_option>::add_particle_memory(int i) {
 		return;
 	}
 	int *idp;fpoint *pp;
-	int l,nmem=2*mem[i];
+	int l,nmem(mem[i]<<1);
 #if VOROPP_VERBOSE >=3
 	cerr << "Particle memory in region " << i << " scaled up to " << nmem << endl;
 #endif

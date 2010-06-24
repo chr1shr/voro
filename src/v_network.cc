@@ -1,5 +1,8 @@
 #include "v_network.hh"
 
+/** Initializes the Voronoi network object. The geometry is set up to match a
+ * corresponding container class, and memory is allocated for the network.
+ * \param[in] c a reference to a container or container_poly class. */
 template<class r_option>
 voronoi_network::voronoi_network(container_periodic_base<r_option> &c) :
 	 bx(c.bx), bxy(c.bxy), by(c.by), bxz(c.bxz), byz(c.byz), bz(c.bz),
@@ -154,15 +157,18 @@ void voronoi_network::add_edge_network_memory() {
 void voronoi_network::add_particular_vertex_memory(int l) {
 	numem[l]<<=1;
 
-	// Check that the vertex allocation
+	// Check that the vertex allocation does not exceed a maximum safe
+	// limit
 	if(numem[l]>max_vertex_order)
 		voropp_fatal_error("Particular vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 	
-	// 
+	// Allocate new arrays
 	int *ned(new int[2*numem[l]]);
 	int *nne(ned+numem[l]);
 	fpoint *nraded(new fpoint[numem[l]]);
 	unsigned int *npered(new unsigned int[numem[l]]);
+
+	// Copy the contents of the old arrays into the new ones 
 	for(int i=0;i<nu[l];i++) {
 		ned[i]=ed[l][i];
 		nraded[i]=raded[l][i];
@@ -170,13 +176,15 @@ void voronoi_network::add_particular_vertex_memory(int l) {
 	}
 	for(int i=0;i<nec[l];i++) nne[i]=ne[l][i];
 	
+	// Delete old arrays and update pointers to the new ones
 	delete [] ed[l];ed[l]=ned;ne[l]=nne;
 	delete [] raded[l];raded[l]=nraded;
 	delete [] pered[l];pered[l]=npered;
 }
 
 
-/** Increases the memory for the vertex mapping. */
+/** Increases the memory for the vertex mapping.
+ * \param[in] pmem the amount of memory needed. */
 void voronoi_network::add_mapping_memory(int pmem) {
 	do {netmem<<=1;} while(netmem<pmem);
 	delete [] vper;delete [] vmap;
@@ -277,6 +285,12 @@ inline void voronoi_network::unpack_periodicity(unsigned int pa,int &i,int &j,in
 	k=((signed int) (pa&255))-127;
 }
 
+/** Adds a Voronoi cell to the network structure. The routine first checks all
+ * of the Voronoi cell vertices and merges them with existing ones where
+ * possible. Edges are then added to the structure.
+ * \param[in] c a reference to a Voronoi cell.
+ * \param[in] (x,y,z) the position of the Voronoi cell.
+ * \param[in] idn the ID number of the particle associated with the cell. */
 template<class n_option>
 void voronoi_network::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn) {
 	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;

@@ -6,8 +6,16 @@
 
 class voronoi_network {
 	public:
-		const fpoint bx,bxy,by,bxz,byz,bz;
-		const int nx,ny,nz,nxyz;
+		const fpoint bx;
+		const fpoint bxy;
+		const fpoint by;
+		const fpoint bxz;
+		const fpoint byz;
+		const fpoint bz;
+		const int nx;
+		const int ny;
+		const int nz;
+		const int nxyz;
 		const fpoint xsp,ysp,zsp;
 		fpoint **pts;
 		int **idmem;
