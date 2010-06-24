@@ -93,8 +93,8 @@ container_periodic_base<r_option>::container_periodic_base(fpoint xb,fpoint xyb,
 template<class r_option>
 container_periodic_base<r_option>::~container_periodic_base() {
 	int l;
-	for(l=0;l<oxyz;l++) if(mem[l]>0) delete [] p[l];
-	for(l=0;l<oxyz;l++) if(mem[l]>0) delete [] id[l];
+	for(l=0;l<nx*oy*oz;l++) if(mem[l]>0) delete [] p[l];
+	for(l=0;l<nx*oy*oz;l++) if(mem[l]>0) delete [] id[l];
 	delete [] p;
 	delete [] id;
 	delete [] walls;
