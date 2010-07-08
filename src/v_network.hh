@@ -4,6 +4,23 @@
 #include "cell.hh"
 #include "container.hh"
 
+struct block {
+	fpoint e[6];
+	int n;
+	void first(fpoint v) {
+		n=1;e[0]=v;
+	}
+	void add(fpoint v) {
+		if(n==6) {cerr << "Radius overflow" << endl;return;}
+		e[n++]=v;
+	}
+	void print(ostream &os) {
+		os << "(";
+		for(int i=0;i<n-1;i++) os << e[i] << ",";
+		os << e[n-1] << ")";
+	}
+};
+
 class voronoi_network {
 	public:
 		const fpoint bx;
@@ -23,7 +40,7 @@ class voronoi_network {
 		int *ptsmem;
 		int **ed;
 		int **ne;
-		fpoint **raded;
+		block **raded;
 		unsigned int **pered;
 		int edc,edmem;
 		int *nu;
@@ -48,9 +65,9 @@ class voronoi_network {
 			draw_network(os);os.close();
 		}
 		template<class n_option>
-		void add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn);	
+		void add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn,fpoint rad);	
 		template<class n_option>
-		void add_to_network_rectangular(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn);
+		void add_to_network_rectangular(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn,fpoint rad);
 		void clear_network();
 	private:
 		inline int step_div(int a,int b);
@@ -63,8 +80,8 @@ class voronoi_network {
 		inline unsigned int pack_periodicity(int i,int j,int k);
 		inline void unpack_periodicity(unsigned int pa,int &i,int &j,int &k);
 		template<class n_option>
-		void add_edges_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
-		bool not_already_there(int k,int j,unsigned int cper);
+		void add_edges_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,fpoint rad);
+		int not_already_there(int k,int j,unsigned int cper);
 		bool search_previous(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
 		bool safe_search_previous_rect(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);
 		bool search_previous_rect(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper);		

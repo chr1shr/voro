@@ -337,7 +337,7 @@ void container_periodic_base<r_option>::compute_network(voronoi_network &vn) {
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
 			if(compute_cell(c,i,j,k,ijk,q,x,y,z))
-				vn.add_to_network(c,x,y,z,id[ijk][q]);
+				vn.add_to_network(c,x,y,z,id[ijk][q],radius.rad_val(ijk,q));
 		}
 	}
 }
@@ -355,7 +355,7 @@ void container_periodic_base<r_option>::compute_network_rectangular(voronoi_netw
 		for(q=0;q<co[ijk];q++) {
 			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
 			if(compute_cell(c,i,j,k,ijk,q,x,y,z))
-				vn.add_to_network_rectangular(c,x,y,z,id[ijk][q]);
+				vn.add_to_network_rectangular(c,x,y,z,id[ijk][q],radius.rad_val(ijk,q));
 		}
 	}
 }

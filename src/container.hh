@@ -272,6 +272,9 @@ class radius_mono {
 		/** This is a blank placeholder function that does nothing. */
 		inline void print(ostream &os,int ijk,int q,bool later=true) {};
 		inline void rad(ostream &os,int l,int c);
+		inline fpoint rad_val(int ijk,int s) {
+			return 0;
+		}
 	private:
 		container_periodic_base<radius_mono> *cc;
 };
@@ -303,6 +306,9 @@ class radius_poly {
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q,bool later=true);
 		inline void rad(ostream &os,int l,int c);
+		inline fpoint rad_val(int ijk,int s) {
+			return cc->p[ijk][4*s+3];
+		}
 	private:
 		container_periodic_base<radius_poly> *cc;
 		fpoint max_radius,crad,mul;

@@ -15,7 +15,7 @@ const char rad_ctable[][4]={
 
 const double rad_table[]={
 	0.8,
-	0.2
+	0.5
 };
 
 double radial_lookup(char *buffer) {
