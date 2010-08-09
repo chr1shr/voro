@@ -18,4 +18,3 @@ help:
 # Clean up the executable files
 clean:
 	cd examples && make clean
-	cd src && make clean
