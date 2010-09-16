@@ -5,20 +5,13 @@
 #include "container.hh"
 
 struct block {
-	fpoint e[6];
-	int n;
-	void first(fpoint v) {
-		n=1;e[0]=v;
+	fpoint e;
+	inline void first(fpoint v) {e=v>0?v:0;}
+	inline void add(fpoint v) {
+		if(v<0) e=0;
+		else if(v<e) {e=v;}
 	}
-	void add(fpoint v) {
-		if(n==6) {cerr << "Radius overflow" << endl;return;}
-		e[n++]=v;
-	}
-	void print(ostream &os) {
-		os << "(";
-		for(int i=0;i<n-1;i++) os << e[i] << ",";
-		os << e[n-1] << ")";
-	}
+	inline void print(ostream &os) {os << e;}
 };
 
 class voronoi_network {
