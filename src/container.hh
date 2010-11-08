@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <vector>
 using namespace std;
 
 class voropp_loop;
@@ -34,6 +35,7 @@ class container_base {
 	public:
 		container_base(fpoint xa,fpoint xb,fpoint ya,fpoint yb,fpoint za,fpoint zb,int xn,int yn,int zn,bool xper,bool yper,bool zper,int memi);
 		~container_base();
+		void print_cell_vertices();
 		void draw_particles(const char *filename);
 		void draw_particles();
 		void draw_particles(ostream &os);
@@ -41,14 +43,37 @@ class container_base {
 		void draw_particles_pov();
 		void draw_particles_pov(ostream &os);
 		void import(istream &is);
+		/** An overloaded version of the import routine, that reads the
+		 * standard input. */
 		inline void import();
-		inline void import(const char *filename);
+		/** An overloaded version of the import routine, that reads in
+		 * particles from a particular file.
+		 * \param[in] filename the name of the file to read from. */
+		inline void import(const char *filename) {
+			ifstream is;
+			is.open(filename,ifstream::in);
+			if(is.fail()) voropp_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
+			import(is);
+			is.close();
+		}
 		void region_count();
 		void clear();
 		void draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
-		inline void draw_cells_gnuplot(const char *filename);
+		/** An overloaded version of draw_cells_gnuplot() that computes
+		 * the Voronoi cells for the entire simulation region and saves
+		 * the output in gnuplot format.
+		 * \param[in] filename the name of the file to write to. */
+		inline void draw_cells_gnuplot(const char *filename) {
+			draw_cells_gnuplot(filename,ax,bx,ay,by,az,bz);
+		}
 		void draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
-		inline void draw_cells_pov(const char *filename);
+		/** An overloaded version of draw_cells_pov() that computes the
+		 * Voronoi cells for the entire simulation region and saves the
+		 * output in POV-Ray format.
+		 * \param[in] filename the name of the file to write to. */
+		inline void draw_cells_pov(const char *filename) {
+			draw_cells_pov(filename,ax,bx,ay,by,az,bz);
+		}
 		void store_cell_volumes(fpoint *bb);
 		fpoint packing_fraction(fpoint *bb,fpoint cx,fpoint cy,fpoint cz,fpoint r);
 		fpoint packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
@@ -63,12 +88,45 @@ class container_base {
 		void print_all_custom(const char *format,ostream &os);
 		void print_all_custom(const char *format);
 		void print_all_custom(const char *format,const char *filename);
+		void find_within_radius(fpoint rd,fpoint x,fpoint y,fpoint z,vector<int> &vd);
+		/** A overloaded version of compute_cell_sphere(), that sets up
+		 * the x, y, and z variables.
+		 * \param[in,out] c a reference to a voronoicell object.
+		 * \param[in] (i,j,k) the coordinates of the block that the
+		 *                    test particle is in.
+		 * \param[in] ijk the index of the block that the test particle
+		 *                is in, set to i+nx*(j+ny*k).
+		 * \param[in] s the index of the particle within the test
+		 *              block.
+		 * \return False if the Voronoi cell was completely removed
+		 *         during the computation and has zero volume, true
+		 *         otherwise. */
 		template<class n_option>
-		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
+		inline bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+			fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
+			return compute_cell_sphere(c,i,j,k,ijk,s,x,y,z);
+		}
 		template<class n_option>
 		bool compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
+		/** A overloaded version of compute_cell, that sets up the x,
+		 * y, and z variables. It can be run by the user, and it is
+		 * also called multiple times by the functions print_all(),
+		 * store_cell_volumes(), and the output routines.
+		 * \param[in,out] c a reference to a voronoicell object.
+		 * \param[in] (i,j,k) the coordinates of the block that the
+		 *                    test particle is in.
+		 * \param[in] ijk the index of the block that the test particle
+		 *                is in, set to i+nx*(j+ny*k).
+		 * \param[in] s the index of the particle within the test
+		 *              block.
+		 * \return False if the Voronoi cell was completely removed
+		 *         during the computation and has zero volume, true
+		 *         otherwise. */
 		template<class n_option>
-		inline bool compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s);
+		inline bool compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
+			fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
+			return  compute_cell(c,i,j,k,ijk,s,x,y,z);
+		}
 		template<class n_option>
 		bool compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s,fpoint x,fpoint y,fpoint z);
 		void put(int n,fpoint x,fpoint y,fpoint z);
@@ -98,12 +156,14 @@ class container_base {
 		/** The inverse box length in the z direction, set to
 		 * nz/(bz-az). */
 		const fpoint zsp;
+	public:
 		/** The number of boxes in the x direction. */
 		const int nx;
 		/** The number of boxes in the y direction. */
 		const int ny;
 		/** The number of boxes in the z direction. */
 		const int nz;
+	protected:
 		/** A constant, set to the value of nx multiplied by ny, which
 		 * is used in the routines which step through boxes in
 		 * sequence. */
@@ -164,10 +224,12 @@ class container_base {
 		 * considered. */
 		int s_end;
 		/** The current size of the search list. */
-		int s_size;		
+		int s_size;
+	public:
 		/** This array holds the number of particles within each
 		 * computational box of the container. */
 		int *co;
+	protected:
 		/** This array holds the maximum amount of particle memory for
 		 * each computational box of the container. If the number of
 		 * particles in a particular box ever approaches this limit,
@@ -187,9 +249,11 @@ class container_base {
 		/** This array holds pointers to any wall objects that have
 		 * been added to the container. */
 		wall **walls;
+	public:
 		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
+	protected:
 		/** A two dimensional array holding particle positions. For the
 		 * derived container_poly class, this also holds particle
 		 * radii. */
@@ -252,12 +316,21 @@ class radius_mono {
 		inline void clear_max() {};
 		/** This is a blank placeholder function that does nothing. */
 		inline void init(int s,int i) {};
-		inline fpoint volume(int ijk,int s);
+		/** Returns the scaled volume of a particle, which is always
+		 * set to 0.125 for the monodisperse case where particles are
+		 * taken to have unit diameter.
+		 * \param[in] ijk the region to consider.
+		 * \param[in] s the number of the particle within the region.
+		 * \return The cube of the radius of the particle, which is
+		 * 0.125 in this case. */
+		inline fpoint volume(int ijk,int s) {return 0.125;}
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		/** This is a blank placeholder function that does nothing. */
 		inline void print(ostream &os,int ijk,int q,bool later=true) {};
 		inline void rad(ostream &os,int l,int c);
+		inline fpoint max() {return 0.5;}
+		inline fpoint specific(int l,int c) {return 0.5;}
 	private:
 		container_base<radius_mono> *cc;
 };
@@ -284,11 +357,20 @@ class radius_poly {
 		inline void store_radius(int i,int j,fpoint r);
 		inline void clear_max();
 		inline void init(int ijk,int s);
-		inline fpoint volume(int ijk,int s);
+		/** Returns the scaled volume of a particle.
+		 * \param[in] ijk the region to consider.
+		 * \param[in] s the number of the particle within the region.
+		 * \return The cube of the radius of the particle. */
+		inline fpoint volume(int ijk,int s) {
+			fpoint a=cc->p[ijk][4*s+3];
+			return a*a*a;
+		}
 		inline fpoint cutoff(fpoint lrs);
 		inline fpoint scale(fpoint rs,int t,int q);
 		inline void print(ostream &os,int ijk,int q,bool later=true);
 		inline void rad(ostream &os,int l,int c);
+		inline fpoint max() {return max_radius;}
+		inline fpoint specific(int l,int c) {return cc->p[l][4*c+3];}
 	private:
 		container_base<radius_poly> *cc;
 		fpoint max_radius,crad,mul;
@@ -308,9 +390,9 @@ class voropp_loop {
 	public:
 		template<class r_option>
 		voropp_loop(container_base<r_option> *q);
-		inline int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
-		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
-		inline int inc(fpoint &px,fpoint &py,fpoint &pz);
+		int init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz);
+		int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz);
+		int inc(fpoint &px,fpoint &py,fpoint &pz);
 		/** The current block index in the x direction, referencing a
 		 * real cell in the range 0 to nx-1. */
 		int ip;

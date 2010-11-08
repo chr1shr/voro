@@ -210,23 +210,10 @@ void container_base<r_option>::import(istream &is) {
 	radius.import(is);
 }
 
-/** An overloaded version of the import routine, that reads the standard input.
- */
+
 template<class r_option>
 inline void container_base<r_option>::import() {
 	import(cin);
-}
-
-/** An overloaded version of the import routine, that reads in particles from
- * a particular file.
- * \param[in] filename the name of the file to read from. */
-template<class r_option>
-inline void container_base<r_option>::import(const char *filename) {
-	ifstream is;
-	is.open(filename,ifstream::in);
-	if(is.fail()) voropp_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
-	import(is);
-	is.close();
 }
 
 /** Outputs the number of particles within each region. */
@@ -270,15 +257,6 @@ void container_base<r_option>::draw_cells_gnuplot(const char *filename,fpoint xm
 	os.close();
 }
 
-/** An overloaded version of draw_cells_gnuplot() that computes the Voronoi
- * cells for the entire simulation region and saves the output in gnuplot
- * format.
- * \param[in] filename the name of the file to write to. */
-template<class r_option>
-void container_base<r_option>::draw_cells_gnuplot(const char *filename) {
-	draw_cells_gnuplot(filename,ax,bx,ay,by,az,bz);
-}
-
 /** Computes the Voronoi cells for all particles within a rectangular box,
  * and saves the output in POV-Ray format.
  * \param[in] filename the name of the file to write to.
@@ -306,14 +284,23 @@ void container_base<r_option>::draw_cells_pov(const char *filename,fpoint xmin,f
 	os.close();
 }
 
-/** An overloaded version of draw_cells_pov() that computes the Voronoi
- * cells for the entire simulation region and saves the output in POV-Ray
- * format.
- * \param[in] filename the name of the file to write to. */
 template<class r_option>
-void container_base<r_option>::draw_cells_pov(const char *filename) {
-	draw_cells_pov(filename,ax,bx,ay,by,az,bz);
+void container_base<r_option>::print_cell_vertices() {
+	voronoicell c;
+	double x,y,z;
+	int i,j,k,s=0,q,qq;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,s++) {
+		for(q=0;q<co[s];q++) {
+			x=p[s][sz*q];y=p[s][sz*q+1];z=p[s][sz*q+2];
+			if(compute_cell(c,i,j,k,s,q,x,y,z)) {
+				cout << "Particle " << id[s][q] << ":\n";
+				for(qq=0;qq<3*c.p;qq+=3) cout << x+c.pts[qq]*0.5 << " " << y+c.pts[qq+1]*0.5 << " " << z+c.pts[qq+2]*0.5 << "\n";
+				cout << "\n";
+			}
+		}
+	}
 }
+
 
 /** Computes all of the Voronoi cells in the container, but does nothing
  * with the output. It is useful for measuring the pure computation time
@@ -503,7 +490,7 @@ void container_base<r_option>::print_all_custom_internal(voronoicell_base<n_opti
 					case 'w': os << c.p;break;
 					case 'p': c.output_vertices(os);break;
 					case 'P': c.output_vertices(os,x,y,z);break;
-					case 'o': c.output_vertex_orders(os);
+					case 'o': c.output_vertex_orders(os);break;
 					case 'm': os << 0.25*c.max_radius_squared();break;
 
 					// Edge-related output
@@ -676,6 +663,28 @@ bool container_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpoint z) {
 	return true;
 }
 
+/** Finds all the particles that overlap with a given particle and stores
+ * their IDs on a vector.
+ * \param[in] rd the radius of the particle to consider.
+ * \param[in] (x,y,z) the position of the particle.
+ * \param[in] vd a vector in which to store their IDs. */
+template<class r_option>
+void container_base<r_option>::find_within_radius(fpoint rd,fpoint x,fpoint y,fpoint z,vector<int> &vd) {
+	voropp_loop l(this);
+	int t,q;
+	fpoint mrad(radius.max()),rdsq(rd*rd),qx,qy,qz,x1,y1,z1,r1,rs;
+	vd.clear();
+	t=l.init(x,y,z,rd+mrad,qx,qy,qz);
+	do {
+		for(q=0;q<co[t];q++) {
+			x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]+qy-y;z1=p[t][sz*q+2]+qz-z;
+			r1=radius.specific(t,q);
+			rs=x1*x1+y1*y1+z1*z1;
+			if(rs<rdsq+r1*(2*rd+r1)) vd.push_back(id[t][q]);
+		}
+	} while((t=l.inc(qx,qy,qz))!=-1);
+}
+
 /** This routine is a simpler alternative to compute_cell(), that constructs
  * the cell by testing over successively larger spherical shells of particles.
  * For a container that is homogeneously filled with particles, this routine
@@ -723,41 +732,6 @@ bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c
 		lr=ur;lrs=urs;
 	}
 	return true;
-}
-
-/** A overloaded version of compute_cell_sphere(), that sets up the x, y, and z
- * variables.
- * \param[in,out] c a reference to a voronoicell object.
- * \param[in] (i,j,k) the coordinates of the block that the test particle is
- *                    in.
- * \param[in] ijk the index of the block that the test particle is in, set to
- *                i+nx*(j+ny*k).
- * \param[in] s the index of the particle within the test block.
- * \return False if the Voronoi cell was completely removed during the
- *         computation and has zero volume, true otherwise. */
-template<class r_option>
-template<class n_option>
-inline bool container_base<r_option>::compute_cell_sphere(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
-	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
-	return compute_cell_sphere(c,i,j,k,ijk,s,x,y,z);
-}
-
-/** A overloaded version of compute_cell, that sets up the x, y, and z variables.
- * It can be run by the user, and it is also called multiple times by the
- * functions print_all(), store_cell_volumes(), and the output routines.
- * \param[in,out] c a reference to a voronoicell object.
- * \param[in] (i,j,k) the coordinates of the block that the test particle is
- *                    in.
- * \param[in] ijk the index of the block that the test particle is in, set to
- *                i+nx*(j+ny*k).
- * \param[in] s the index of the particle within the test block.
- * \return False if the Voronoi cell was completely removed during the
- *         computation and has zero volume, true otherwise. */
-template<class r_option>
-template<class n_option>
-inline bool container_base<r_option>::compute_cell(voronoicell_base<n_option> &c,int i,int j,int k,int ijk,int s) {
-	fpoint x=p[ijk][sz*s],y=p[ijk][sz*s+1],z=p[ijk][sz*s+2];
-	return  compute_cell(c,i,j,k,ijk,s,x,y,z);
 }
 
 /** This routine computes a Voronoi cell for a single particle in the
@@ -1363,7 +1337,7 @@ voropp_loop::voropp_loop(container_base<r_option> *q) : sx(q->bx-q->ax), sy(q->b
  * \param[out] (px,py,pz) the periodic displacement vector for the first block
  *                        to be tested.
  * \return The index of the first block to be tested. */
-inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
+int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
 	if(!xperiodic) {
@@ -1402,7 +1376,7 @@ inline int voropp_loop::init(fpoint vx,fpoint vy,fpoint vz,fpoint r,fpoint &px,f
  * \param[out] (px,py,pz) the periodic displacement vector for the first block
  *                        to be tested.
  * \return The index of the first block to be tested. */
-inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
+int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax,fpoint &px,fpoint &py,fpoint &pz) {
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
 	if(!xperiodic) {
@@ -1437,7 +1411,7 @@ inline int voropp_loop::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpo
  * \param[in,out] (px,py,pz) the current block on entering the function, which
  *                           is updated to the next block on exiting the
  *                           function. */
-inline int voropp_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
+int voropp_loop::inc(fpoint &px,fpoint &py,fpoint &pz) {
 	if(i<bi) {
 		i++;
 		if(ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}
@@ -1571,25 +1545,6 @@ inline void radius_mono::rad(ostream &os,int l,int c) {
  * \param[in] c the number of the particle within the region. */
 inline void radius_poly::rad(ostream &os,int l,int c) {
 	os << cc->p[l][4*c+3];
-}
-
-/** Returns the scaled volume of a particle, which is always set to 0.125 for
- * the monodisperse case where particles are taken to have unit diameter.
- * \param[in] ijk the region to consider.
- * \param[in] s the number of the particle within the region.
- * \return The cube of the radius of the particle, which is 0.125 in this case.
- */
-inline fpoint radius_mono::volume(int ijk,int s) {
-	return 0.125;
-}
-
-/** Returns the scaled volume of a particle.
- * \param[in] ijk the region to consider.
- * \param[in] s the number of the particle within the region.
- * \return The cube of the radius of the particle. */
-inline fpoint radius_poly::volume(int ijk,int s) {
-	fpoint a=cc->p[ijk][4*s+3];
-	return a*a*a;
 }
 
 /** Scales the position of a plane according to the relative sizes

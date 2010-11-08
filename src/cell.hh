@@ -17,15 +17,7 @@
 #include <cmath>
 using namespace std;
 
-/** \brief Function for printing fatal error messages and exiting.
- *
- * Function for printing fatal error messages and exiting.
- * \param[in] p a pointer to the message to print.
- * \param[in] status the status code to return with. */
-void voropp_fatal_error(const char *p,int status) {
-	cerr << "voro++: " << p << endl;
-	exit(status);
-}
+void voropp_fatal_error(const char *p,int status);
 
 /** \brief A class to reliably carry out floating point comparisons, storing
  * marginal cases for future reference.
@@ -156,7 +148,15 @@ class voronoicell_base {
 		/** This is a class used in the plane routine for carrying out
 		 * reliable comparisons of whether points in the cell are
 		 * inside, outside, or on the current cutting plane. */
-		suretest sure;	
+		suretest sure;
+		/** This object contains all the functions required to carry
+		 * out the neighbor computation. If the neighbor_none class is
+		 * used for n_option, then all these functions are blank. If
+		 * the neighbor_track class is used, then the neighbor tracking
+		 * is enabled. All the functions for the n_option classes are
+		 * declared inline, so that they should all be completely
+		 * integrated into the routine during compilation. */
+		n_option neighbor;
 		voronoicell_base();
 		~voronoicell_base();
 		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
@@ -189,24 +189,60 @@ class voronoicell_base {
 		void output_normals(ostream &os);
 		void output_neighbors(ostream &os,bool later=false);
 		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
-		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id);
-		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rs);
-		inline bool plane(fpoint x,fpoint y,fpoint z);
+		/** This routine calculates the modulus squared of the vector
+		 * before passing it to the main nplane() routine with full
+		 * arguments.
+		 * \param[in] (x,y,z) the vector to cut the cell by.
+		 * \param[in] p_id the plane ID (for neighbor tracking only).
+		 * \return False if the plane cut deleted the cell entirely,
+		 *         true otherwise. */
+		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id) {
+			fpoint rsq=x*x+y*y+z*z;
+			return nplane(x,y,z,rsq,p_id);
+		}
+		/** This version of the plane routine just makes up the plane
+		 * ID to be zero. It will only be referenced if neighbor
+		 * tracking is enabled.
+		 * \param[in] (x,y,z) the vector to cut the cell by.
+		 * \param[in] rsq the modulus squared of the vector.
+		 * \return False if the plane cut deleted the cell entirely,
+		 *         true otherwise. */
+		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
+			return nplane(x,y,z,rsq,0);
+		}
+		/** Cuts a Voronoi cell using the influence of a particle at
+		 * (x,y,z), first calculating the modulus squared of this
+		 * vector before passing it to the main nplane() routine. Zero
+		 * is supplied as the plane ID, which will be ignored unless
+		 * neighbor tracking is enabled.
+		 * \param[in] (x,y,z) the vector to cut the cell by.
+		 * \return False if the plane cut deleted the cell entirely,
+		 *         true otherwise. */
+		inline bool plane(fpoint x,fpoint y,fpoint z) {
+			fpoint rsq=x*x+y*y+z*z;
+			return nplane(x,y,z,rsq,0);
+		}
 		bool plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rs);
 		bool plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rs);
-		inline void init_test(int n);
-		void add_vertex(fpoint x,fpoint y,fpoint z,int a);
-		void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b);
-		void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c);
-		void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d);
-		void add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e);
 		void construct_relations();
 		void check_relations();
 		void check_duplicates();
 		void print_edges();
 		void label_facets();
 		void check_facets();
-		inline void perturb(fpoint r);
+		void perturb(fpoint r);
+		/** This is a simple inline function for picking out the index
+		 * of the next edge counterclockwise at the current vertex.
+		 * \param[in] a the index of an edge of the current vertex.
+		 * \param[in] p the number of the vertex.
+		 * \return 0 if a=nu[p]-1, or a+1 otherwise. */
+		inline int cycle_up(int a,int p) {return a==nu[p]-1?0:a+1;}
+		/** This is a simple inline function for picking out the index
+		 * of the next edge clockwise from the current vertex.
+		 * \param[in] a the index of an edge of the current vertex.
+		 * \param[in] p the number of the vertex.
+		 * \return nu[p]-1 if a=0, or a-1 otherwise. */
+		inline int cycle_down(int a,int p) {return a==0?nu[p]-1:a-1;}
 	private:
 		/** This a one dimensional array that holds the current sizes
 		 * of the memory allocations for them mep array.*/
@@ -233,16 +269,6 @@ class voronoicell_base {
 		/** This holds the number of points currently on the auxiliary
 		 * delete stack. */
 		int stack2;
-		/** This object contains all the functions required to carry
-		 * out the neighbor computation. If the neighbor_none class is
-		 * used for n_option, then all these functions are blank. If
-		 * the neighbor_track class is used, then the neighbor tracking
-		 * is enabled. All the functions for the n_option classes are
-		 * declared inline, so that they should all be completely
-		 * integrated into the routine during compilation. */
-		n_option neighbor;
-		inline int cycle_up(int a,int p);
-		inline int cycle_down(int a,int p);
 		void add_memory(int i);
 		void add_memory_vertices();
 		void add_memory_vorder();

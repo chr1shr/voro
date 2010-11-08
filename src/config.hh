@@ -112,8 +112,8 @@ const fpoint large_number=1e30;
  * contacted. */
 #define VOROPP_INTERNAL_ERROR 3
 
-/** Voro++ returns this status code if it could not interpret to the command
- * line arguments passed to the command line utility. */
+/** Voro++ returns this status code if it could not interpret the command line
+ * arguments passed to the command line utility. */
 #define VOROPP_CMD_LINE_ERROR 4
 
 #endif

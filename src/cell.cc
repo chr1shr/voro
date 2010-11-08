@@ -10,15 +10,25 @@
 
 #include "cell.hh"
 
+/** \brief Function for printing fatal error messages and exiting.
+ *
+ * Function for printing fatal error messages and exiting.
+ * \param[in] p a pointer to the message to print.
+ * \param[in] status the status code to return with. */
+void voropp_fatal_error(const char *p,int status) {
+	cerr << "voro++: " << p << endl;
+	exit(status);
+}
+
 /** Constructs a Voronoi cell and sets up the initial memory. */
 template<class n_option>
 voronoicell_base<n_option>::voronoicell_base() :
 	current_vertices(init_vertices), current_vertex_order(init_vertex_order),
 	current_delete_size(init_delete_size), current_delete2_size(init_delete2_size),
 	ed(new int*[current_vertices]), nu(new int[current_vertices]),
-	pts(new fpoint[3*current_vertices]), mem(new int[current_vertex_order]),
+	pts(new fpoint[3*current_vertices]), neighbor(this), mem(new int[current_vertex_order]),
 	mec(new int[current_vertex_order]), mep(new int*[current_vertex_order]),
-	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]), neighbor(this) {
+	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]) {
 	int i;
 	sure.p=pts;
 	for(i=0;i<3;i++) {
@@ -268,235 +278,6 @@ inline void voronoicell_base<n_option>::init_tetrahedron(fpoint x0,fpoint y0,fpo
 	ed[0]=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
 	neighbor.init_tetrahedron();
 	nu[0]=nu[1]=nu[2]=nu[3]=3;
-}
-
-/** Initializes an arbitrary test object using the add_vertex() and
- * construct_relations() routines. See the source code for information about
- * the specific objects.
- * \param[in] n the number of the test object (from 0 to 9). */
-template<class n_option>
-inline void voronoicell_base<n_option>::init_test(int n) {
-	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=p=0;
-	switch(n) {
-		case 0:
-			// A peaked object, with a high vertex 6, and a ridge
-			// at z=0 from vertex 1 to 2. This can be used to test
-			// the order 1 vertex collapse routine.
-			add_vertex(1,-2,-1,3,1,5);
-			add_vertex(0,-1,1,5,0,2);
-			add_vertex(0,1,0,1,3,6,4);
-			add_vertex(1,4,-1,4,6,2,0);
-			add_vertex(-1,4,-1,3,5,2,6);
-			add_vertex(-1,-2,-1,4,0,1);
-			add_vertex(0,3,0,4,2,3);
-			break;
-		case 1:
-			// A truncated pyramid shape, with vertex 4 in the z=0
-			// plane. This can be used to test order 4 vertex
-			// generation.
-			add_vertex(-2,2,-1,3,4,1);
-			add_vertex(2,2,-1,0,5,2);
-			add_vertex(2,-2,-1,1,6,3);
-			add_vertex(-2,-2,-1,2,7,0);
-			add_vertex(-1,1,0,0,7,5);
-			add_vertex(1,1,1,1,4,6);
-			add_vertex(1,-1,1,7,2,5);
-			add_vertex(-1,-1,1,4,3,6);
-			break;
-		case 2:
-			// An object with two peaks at vertices 4 and 6,
-			// connected with a trough at vertex 5. It can be used
-			// to test the part of the routine that deals with
-			// augmenting existing vertices.
-			add_vertex(1,-2,-1,1,3,4);
-			add_vertex(-1,-2,-1,2,0,4,5);
-			add_vertex(-1,2,-1,1,6,3);
-			add_vertex(1,2,-1,2,6,5,0);
-			add_vertex(0,-1,1,5,1,0);
-			add_vertex(0,0,0,1,4,3,6);
-			add_vertex(0,1,1,2,5,3);
-			break;
-		case 3:
-			// A box with a pyramid on top of it. This a good
-			// test object to make sure that the code can handle
-			// object with vertices of different orders.
-			add_vertex(-1,-1,-1,4,3,1);
-			add_vertex(1,-1,-1,0,2,5);
-			add_vertex(1,1,-1,6,1,3);
-			add_vertex(-1,1,-1,2,0,7);
-			add_vertex(-1,-1,1,7,0,5,8);
-			add_vertex(1,-1,1,4,1,6,8);
-			add_vertex(1,1,1,5,2,7,8);
-			add_vertex(-1,1,1,6,3,4,8);
-			add_vertex(0,0,2,7,4,5,6);
-			break;
-		case 4:
-			// A shape with two peaks (vertices 6 and 9) connected
-			// with a trough (vertices 7 and 8). It can be used as
-			// a basic test of the double edge skipping in the plane
-			// generation routine, whereby an edge is omitted if
-			// the routine is tracing along a part it has already
-			// been down.
-			add_vertex(1,-3,-1,5,6,1);
-			add_vertex(-1,-3,-1,0,6,2);
-			add_vertex(-3,0,-1,1,7,8,3);
-			add_vertex(-1,3,-1,2,9,4);
-			add_vertex(1,3,-1,3,9,5);
-			add_vertex(3,0,-1,4,8,7,0);
-			add_vertex(0,-2,1,7,1,0);
-			add_vertex(0,-1,0,8,2,6,5);
-			add_vertex(0,1,0,9,2,7,5);
-			add_vertex(0,2,1,3,8,4);
-			break;
-		case 5:
-			// An object with four peaks (vertices 8 to 11)
-			// connected by a trough (vertex 16). It can be used to
-			// the test multiple augmentation of edges of a
-			// particular vertex.
-			add_vertex(-1,-3,-1,7,1,8,12);
-			add_vertex(1,-3,-1,2,12,8,0);
-			add_vertex(3,-1,-1,3,9,13,1);
-			add_vertex(3,1,-1,4,13,9,2);
-			add_vertex(1,3,-1,5,10,14,3);
-			add_vertex(-1,3,-1,6,14,10,4);
-			add_vertex(-3,1,-1,7,11,15,5);
-			add_vertex(-3,-1,-1,0,15,11,6);
-			add_vertex(0,-2,1,0,1,12);
-			add_vertex(2,0,1,2,3,13);
-			add_vertex(0,2,1,14,4,5);
-			add_vertex(-2,0,1,7,15,6);
-			add_vertex(0,-1,0.5,0,8,1,16);
-			add_vertex(1,0,0.5,2,9,3,16);
-			add_vertex(0,1,0.5,4,10,5,16);
-			add_vertex(-1,0,0.5,6,11,7,16);
-			add_vertex(0,0,0,15,12,13,14);
-			break;
-		case 6:
-			// An object with four peaks (vertices 8 to 11)
-			// connected by a sequence of ridges. It can be used to
-			// the test multiple cases of double edge skipping
-			// on the same vertex.
-			add_vertex(-1,-3,-1,7,1,8,12);
-			add_vertex(1,-3,-1,2,12,8,0);
-			add_vertex(3,-1,-1,3,9,13,1);
-			add_vertex(3,1,-1,4,13,9,2);
-			add_vertex(1,3,-1,5,10,14,3);
-			add_vertex(-1,3,-1,6,14,10,4);
-			add_vertex(-3,1,-1,7,11,15,5);
-			add_vertex(-3,-1,-1,0,15,11,6);
-			add_vertex(0,-2,1,0,1,12);
-			add_vertex(2,0,1,2,3,13);
-			add_vertex(0,2,1,14,4,5);
-			add_vertex(-2,0,1,7,15,6);
-			add_vertex(0,-1,0,0,8,1,16);
-			add_vertex(1,0,0,2,9,3,16);
-			add_vertex(0,1,0,4,10,5,16);
-			add_vertex(-1,0,0,6,11,7,16);
-			add_vertex(0,0,0,15,12,13,14);
-			break;
-		case 7:
-			// A variation on the zeroth test shape, with a peak
-			// (vertices 7 and 8) connected to a ridge at z=0
-			// (vertices 4 and 5)
-			add_vertex(2,-3,-1,3,4,1);
-			add_vertex(-2,-3,-1,0,4,2);
-			add_vertex(-2,3,-1,1,7,3);
-			add_vertex(2,3,-1,2,6,0);
-			add_vertex(0,-2,0,0,5,1);
-			add_vertex(0,1,0,4,6,7);
-			add_vertex(1,2,1,7,5,3);
-			add_vertex(-1,2,1,5,6,2);
-			break;
-		case 8:
-			// A triangular object with a skewed peak, that can be used to
-			// test the order two vertex removal routine
-			add_vertex(3,-2,-1,2,3,1);
-			add_vertex(-3,-2,-1,0,4,2);
-			add_vertex(0,4,-1,1,5,0);
-			add_vertex(1.5,-1,0,7,0,6);
-			add_vertex(-1.5,-1,0,1,7,8);
-			add_vertex(0,2,0,8,6,2);
-			add_vertex(0.75,0.5,0,9,3,5);
-			add_vertex(0,-1,0,4,3,9);
-			add_vertex(-0.75,0.5,0,4,9,5);
-			add_vertex(0,0,1,8,7,6);
-			break;
-		case 9:
-			// This a tetrahedron with some low-order extraneous edges, and can
-			// be used to test the order 1 and order 2 removal routines
-			add_vertex(0,0,0,3,1,2);
-			add_vertex(1,0,1,3,2,0);
-			add_vertex(1,1,0,3,0,1);
-			add_vertex(2,0,0,6,4,2,1,0);
-			add_vertex(3,1,0,3,6,8,5);
-			add_vertex(3,2,0,4);
-			add_vertex(4,0,0,4,3,7,8);
-			add_vertex(5,0,0,6);
-			add_vertex(4,1,0,6,4);
-	}
-
-	construct_relations();
-	neighbor.label_facets();
-}
-
-/** Adds an order one vertex to the memory structure, and specifies its edge.
- * \param[in] (x,y,z) are the coordinates of the vertex.
- * \param[in] a is the first and only edge of this vertex. */
-template<class n_option>
-void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a) {
-	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=1;
-	if(mem[1]==mec[1]) add_memory(1);
-	neighbor.set_pointer(p,1);
-	int *q=mep[1]+3*mec[1]++;ed[p]=q;
-	q[0]=a;q[2]=p++;
-}
-
-/** Adds an order 2 vertex to the memory structure, and specifies its edges.
- * \param[in] (x,y,z) are the coordinates of the vertex.
- * \param[in] (a,b) are the edges of this vertex. */
-template<class n_option>
-void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b) {
-	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=2;
-	if(mem[2]==mec[2]) add_memory(2);
-	neighbor.set_pointer(p,2);
-	int *q=mep[2]+5*mec[2]++;ed[p]=q;
-	q[0]=a;q[1]=b;q[4]=p++;
-}
-
-/** Adds an order 3 vertex to the memory structure, and specifies its edges.
- * \param[in] (x,y,z) are the coordinates of the vertex.
- * \param[in] (a,b,c) are the edges of this vertex. */
-template<class n_option>
-void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c) {
-	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=3;
-	if(mem[3]==mec[3]) add_memory(3);
-	neighbor.set_pointer(p,3);
-	int *q=mep[3]+7*mec[3]++;ed[p]=q;
-	q[0]=a;q[1]=b;q[2]=c;q[6]=p++;
-}
-
-/** Adds an order 4 vertex to the memory structure, and specifies its edges.
- * \param[in] (x,y,z) are the coordinates of the vertex.
- * \param[in] (a,b,c,d) are the edges of this vertex. */
-template<class n_option>
-void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d) {
-	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=4;
-	if(mem[4]==mec[4]) add_memory(4);
-	neighbor.set_pointer(p,4);
-	int *q=mep[4]+9*mec[4]++;ed[p]=q;
-	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[8]=p++;
-}
-
-/** Adds an order 5 vertex to the memory structure, and specifies its edges.
- * \param[in] (x,y,z) are the coordinates of the vertex.
- * \param[in] (a,b,c,d,e) are the edges of this vertex. */
-template<class n_option>
-void voronoicell_base<n_option>::add_vertex(fpoint x,fpoint y,fpoint z,int a,int b,int c,int d,int e) {
-	pts[3*p]=x;pts[3*p+1]=y;pts[3*p+2]=z;nu[p]=5;
-	if(mem[5]==mec[5]) add_memory(5);
-	neighbor.set_pointer(p,5);
-	int *q=mep[5]+11*mec[5]++;ed[p]=q;
-	q[0]=a;q[1]=b;q[2]=c;q[3]=d;q[4]=e;q[10]=p++;
 }
 
 /** Checks that the relational table of the Voronoi cell is accurate, and
@@ -1425,59 +1206,6 @@ inline bool voronoicell_base<n_option>::delete_connection(int j,int k,bool hand)
 	return true;
 }
 
-/** Cuts a Voronoi cell using the influence of a particle at (x,y,z), first
- * calculating the modulus squared of this vector before passing it to the
- * main nplane() routine. Zero is supplied as the plane ID, which will be
- * ignored unless neighbor tracking is enabled.
- * \param[in] (x,y,z) the vector to cut the cell by.
- * \return False if the plane cut deleted the cell entirely, true otherwise. */
-template<class n_option>
-inline bool voronoicell_base<n_option>::plane(fpoint x,fpoint y,fpoint z) {
-	fpoint rsq=x*x+y*y+z*z;
-	return nplane(x,y,z,rsq,0);
-}
-
-/** This version of the plane routine just makes up the plane ID to be zero. It
- * will only be referenced if neighbor tracking is enabled.
- * \param[in] (x,y,z) the vector to cut the cell by.
- * \param[in] rsq the modulus squared of the vector.
- * \return False if the plane cut deleted the cell entirely, true otherwise. */
-template<class n_option>
-inline bool voronoicell_base<n_option>::plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
-	return nplane(x,y,z,rsq,0);
-}
-
-/** This routine calculates the modulus squared of the vector before passing it
- * to the main nplane() routine with full arguments.
- * \param[in] (x,y,z) the vector to cut the cell by.
- * \param[in] p_id the plane ID (for neighbor tracking only).
- * \return False if the plane cut deleted the cell entirely, true otherwise. */
-template<class n_option>
-inline bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,int p_id) {
-	fpoint rsq=x*x+y*y+z*z;
-	return nplane(x,y,z,rsq,p_id);
-}
-
-/** This is a simple inline function for picking out the index of the next edge
- * counterclockwise at the current vertex.
- * \param[in] a the index of an edge of the current vertex.
- * \param[in] p the number of the vertex.
- * \return 0 if a=nu[p]-1, or a+1 otherwise. */
-template<class n_option>
-inline int voronoicell_base<n_option>::cycle_up(int a,int p) {
-	return a==nu[p]-1?0:a+1;
-}
-
-/** This is a simple inline function for picking out the index of the next edge
- * clockwise from the current vertex.
- * \param[in] a the index of an edge of the current vertex.
- * \param[in] p the number of the vertex.
- * \return nu[p]-1 if a=0, or a-1 otherwise. */
-template<class n_option>
-inline int voronoicell_base<n_option>::cycle_down(int a,int p) {
-	return a==0?nu[p]-1:a-1;
-}
-
 /** Calculates the volume of the Voronoi cell, by decomposing the cell into
  * tetrahedra extending outward from the zeroth vertex, whose volumes are
  * evaluated using a scalar triple product.
@@ -1824,7 +1552,7 @@ inline void voronoicell_base<n_option>::draw_pov_mesh(fpoint x,fpoint y,fpoint z
 /** Randomly perturbs the points in the Voronoi cell by an amount r.
  * \param[in] r the amount to perturb each coordinate by. */
 template<class n_option>
-inline void voronoicell_base<n_option>::perturb(fpoint r) {
+void voronoicell_base<n_option>::perturb(fpoint r) {
 	for(int i=0;i<3*p;i++) pts[i]+=(2*fpoint(rand())/RAND_MAX-1)*r;
 }
 
