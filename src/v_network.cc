@@ -296,7 +296,7 @@ inline void voronoi_network::unpack_periodicity(unsigned int pa,int &i,int &j,in
 template<class n_option>
 void voronoi_network::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn,fpoint rad) {
 	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;
-	fpoint gx,gy,vx,vy,vz;
+	fpoint gx,gy,vx,vy,vz,crad;
 	
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
@@ -310,6 +310,9 @@ void voronoi_network::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoi
 		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
 		gx=vx-vy*(bxy/by)+vz*(bxy*byz-by*bxz)/(by*bz);
 		gy=vy-vz*(byz/bz);
+
+		// Compute the adjusted radius, which will be needed either way
+		crad=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2])-rad;
 	
 		// Check to see if a vertex very close to this one already
 		// exists in the network 
@@ -319,6 +322,10 @@ void voronoi_network::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoi
 			// vertex to it
 			vmap[l]=idmem[ijk][q];
 			vper[l]=cper;
+			
+			// Store this radius if it smaller than the current
+			// value
+			if(pts[ijk][4*q+3]>crad) pts[ijk][4*q+3]=crad;
 		} else {
 			k=step_int(vz*zsp);if(k<0||k>=nz) {ak=step_div(k,nz);vx-=bxz*ak;vy-=byz*ak;vz-=bz*ak;k-=ak*nz;} else ak=0;
 			j=step_int(gy*ysp);if(j<0||j>=ny) {aj=step_div(j,ny);vx-=bxy*aj;vy-=by*aj;j-=aj*ny;} else aj=0;
@@ -334,7 +341,7 @@ void voronoi_network::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoi
 			pts[ijk][4*ptsc[ijk]]=vx;
 			pts[ijk][4*ptsc[ijk]+1]=vy;
 			pts[ijk][4*ptsc[ijk]+2]=vz;
-			pts[ijk][4*ptsc[ijk]+3]=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2]);
+			pts[ijk][4*ptsc[ijk]+3]=crad;
 			idmem[ijk][ptsc[ijk]++]=edc;
 			vmap[l]=edc++;
 		}
