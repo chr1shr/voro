@@ -1770,6 +1770,17 @@ void voronoicell_base<n_option>::output_vertices(ostream &os) {
 }
 
 
+template<class n_option>
+void voronoicell_base<n_option>::output_step(ostream &os,int &val,double x,double y,double z) {
+	int i,j,v2=val+p;
+	for(i=0;i<3*p;i+=3) os << "#" << val+(i/3) << " = CARTESIAN_POINT ( 'NONE', (" << x+pts[i]*0.5 << ", " << y+pts[i+1]*0.5 << ", " << z+pts[i+2]*0.5 << " ) ) ;\n";
+	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) if(ed[i][j]>i) {
+		os << "#" << v2 << " = LINE ( 'NONE', #" << val+i << ", #" << val+ed[i][j] << " ) ) ;\n";
+		v2++;
+	}
+	val=v2;
+}
+
 /** Outputs the vertex vectors to an open output stream using the global
  * coordinate system.
  * \param[in] os the output stream to write to.
@@ -2218,7 +2229,7 @@ inline void neighbor_track::set_to_aux1_offset(int k,int m) {
 void neighbor_track::check_facets() {
 	int **edp,*nup;edp=vc->ed;nup=vc->nu;
 	int i,j,k,l,m,q;
-	for(i=0;i<vc->p;i++) for(j=0;j<nup[i];j++) {
+	for(i=1;i<vc->p;i++) for(j=0;j<nup[i];j++) {
 		k=edp[i][j];
 		if(k>=0) {
 			edp[i][j]=-1-k;
@@ -2243,7 +2254,7 @@ void neighbor_track::check_facets() {
 void neighbor_track::neighbors(ostream &os,bool later) {
 	int **edp=vc->ed,*nup=vc->nu;
 	int i,j,k,l,m;
-	for(i=0;i<vc->p;i++) for(j=0;j<nup[i];j++) {
+	for(i=1;i<vc->p;i++) for(j=0;j<nup[i];j++) {
 		k=edp[i][j];
 		if(k>=0) {
 			if(later) os << " ";else later=true;
@@ -2265,7 +2276,7 @@ void neighbor_track::neighbors(ostream &os,bool later) {
 void neighbor_track::label_facets() {
 	int **edp,*nup;edp=vc->ed;nup=vc->nu;
 	int i,j,k,l,m,q=1;
-	for(i=0;i<vc->p;i++) for(j=0;j<nup[i];j++) {
+	for(i=1;i<vc->p;i++) for(j=0;j<nup[i];j++) {
 		k=edp[i][j];
 		if(k>=0) {
 			edp[i][j]=-1-k;

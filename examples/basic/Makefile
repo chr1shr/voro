@@ -34,6 +34,9 @@ random_points: $(SOURCE) random_points.cc
 import: $(SOURCE) import.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o import import.cc
 
+nearest: $(SOURCE) nearest.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o nearest nearest.cc
+
 clean:
 	rm -f $(EXECUTABLES)
 

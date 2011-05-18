@@ -178,6 +178,7 @@ class voronoicell_base {
 		void centroid(fpoint &cx,fpoint &cy,fpoint &cz);
 		int number_of_faces();
 		int number_of_edges();
+		void output_step(ostream &os,int &val,double x,double y,double z);
 		void output_vertex_orders(ostream &os);
 		void output_vertices(ostream &os);
 		void output_vertices(ostream &os,fpoint x,fpoint y,fpoint z);

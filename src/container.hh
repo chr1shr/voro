@@ -79,6 +79,9 @@ class container_base {
 		fpoint packing_fraction(fpoint *bb,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
 		fpoint sum_cell_volumes();
 		void compute_all_cells();
+		void print_all_step(ostream &os);
+		void print_all_step();
+		void print_all_step(const char *filename);
 		void print_all(ostream &os);
 		void print_all();
 		void print_all(const char *filename);
@@ -134,6 +137,7 @@ class container_base {
 		void add_wall(wall &w);
 		bool point_inside(fpoint x,fpoint y,fpoint z);
 		bool point_inside_walls(fpoint x,fpoint y,fpoint z);
+		int find_nearest(fpoint x,fpoint y,fpoint z,double &rx,double &ry,double &rz);
 	protected:
 		/** The minimum x coordinate of the container. */
 		const fpoint ax;

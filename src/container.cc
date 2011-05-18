@@ -400,6 +400,38 @@ fpoint container_base<r_option>::sum_cell_volumes() {
 	return vol;
 }
 
+template<class r_option>
+int container_base<r_option>::find_nearest(fpoint x,fpoint y,fpoint z,double &rx,double &ry,double &rz) {
+	voropp_loop l(this);
+	const fpoint boxx(bx/nx),boxy(by/ny),boxz(bz/nz);
+	const fpoint mboxt(boxx>boxy?boxy:boxx),mbox(mboxt<boxz?mboxt:boxz);
+	fpoint cr(0),mrs(1e30),crs,rs,mqx(0),mqy(0),mqz(0),x1,y1,z1,qx,qy,qz;
+	int t,mt(0),mq(0),q;
+
+	// Loop over progressively larger boxes, until the minimum radius is
+	// smaller than the box size
+	do {
+		cr+=mbox;crs=cr*cr;
+		t=l.init(x,y,z,cr,qx,qy,qz);
+		do {
+			for(q=0;q<co[t];q++) {
+				x1=p[t][sz*q]+qx-x;
+				y1=p[t][sz*q+1]+qy-y;
+				z1=p[t][sz*q+2]+qz-z;
+				rs=x1*x1+y1*y1+z1*z1;
+				if(rs<mrs) {
+					mrs=rs;mt=t;mq=q;
+					mqx=qx;mqy=qy;mqz=qz;
+				}
+			}
+		} while((t=l.inc(qx,qy,qz))!=-1);
+	} while(mrs>crs);
+
+	// Compute the coordinates of the nearest particle, and return the ID
+	rx=p[mt][sz*mq]+mqx;ry=p[mt][sz*mq+1]+mqy;rz=p[mt][sz*mq+2]+mqz;
+	return id[mt][mq];
+}
+
 /** Computes the Voronoi cells for all particles in the container, and for each
  * cell, outputs a line containing custom information about the cell structure.
  * The output format is specified using an input string with control sequences
@@ -557,6 +589,33 @@ inline void container_base<r_option>::print_all_internal(voronoicell_base<n_opti
 				c.output_neighbors(os,true);
 				os << "\n";
 			} else os << " 0\n";
+		}
+	}
+}
+
+template<class r_option>
+inline void container_base<r_option>::print_all_step(const char* filename) {
+	voronoicell c;
+	ofstream os;
+	os.open(filename,ofstream::out|ofstream::trunc);
+	print_all_step(os);
+	os.close();
+}
+
+template<class r_option>
+inline void container_base<r_option>::print_all_step() {
+	print_all_step(cout);
+}
+
+template<class r_option>
+void container_base<r_option>::print_all_step(ostream &os) {
+	fpoint x,y,z;
+	voronoicell c;
+	int i,j,k,ijk=0,q,val=1;
+	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
+		for(q=0;q<co[ijk];q++) {
+			x=p[ijk][sz*q];y=p[ijk][sz*q+1];z=p[ijk][sz*q+2];
+			if(compute_cell(c,i,j,k,ijk,q,x,y,z)) c.output_step(os,val,x,y,z);
 		}
 	}
 }
