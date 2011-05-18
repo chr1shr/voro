@@ -1,3 +1,12 @@
+Version 0.4 (November, 2010)
+============================
+* Fixed a bug in the print_all_custom() routine, affecting "%P" output. Thanks
+  to David Waroquiers (Université Catholique de Louvain, Belgium) for pointing
+  this out.
+* Removed the add_vertex() and init_test() routines, which were mainly used for
+  debugging
+* Updated Doxyfile to 1.7.2
+
 Version 0.3.1 (September 29, 2009)
 ==================================
 * Carried out a major overhaul of the source code comments that are used by
