@@ -1,12 +1,15 @@
 Version 0.4 (May 2011)
 ============================
 * All output routines have been switched from using C++ iostreams to using the C
-  cstdio library. This has been done for increased performance: in tests, the
-  cstdio routines run about XXX% faster than the comparable iostream routines.
-  Since many people use Voro++ to batch process large numbers of input files,
-  this increase in input/output speed seemed desirable.
+  cstdio library. This has been done for increased performance. In general the
+  cstdio routines run significantly faster than the comparable iostream
+  routines: one file import test, using fscanf from cstdio was five times as
+  fast as the comparable << operator from iostream. Since many people use
+  Voro++ to batch process large numbers of input files, this increase in
+  input/output speed seemed desirable.
 * The Gnuplot output routines now merge individual lines into contiguous paths
-  wherever possible, resulting in a ~35% reduction in their file size
+  wherever possible, resulting in a ~35% reduction in their file size and
+  noticeably smoother plotting performance
 * Previously, the POV-Ray output routines could create cylinders where the start
   and end points matched. This was a benign problem, due to the fact the vertex
   positions within Voro++ were held to higher precision than the POV-Ray output
