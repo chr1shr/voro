@@ -7,9 +7,9 @@
 #include "voro++.cc"
 
 // Set up constants for the container geometry
-const fpoint x_min=-6.5,x_max=6.5;
-const fpoint y_min=-6.5,y_max=6.5;
-const fpoint z_min=0,z_max=18.5;
+const double x_min=-6.5,x_max=6.5;
+const double y_min=-6.5,y_max=6.5;
+const double z_min=0,z_max=18.5;
 
 // Set the computational grid size
 const int n_x=7,n_y=7,n_z=14;
@@ -26,11 +26,11 @@ int main() {
 	con.add_wall(cyl);
 
 	// Import the particles from a file
-	con.import("pack_cylinder");
+	for(int i=0;i<500;i++) con.import("pack_cylinder");
 
 	// Output the particle positions in POV-Ray format
-	con.draw_particles_pov("cylinder_p.pov");
+	//con.draw_particles_pov("cylinder_p.pov");
 
 	// Output the Voronoi cells in POV-Ray format
-	con.draw_cells_pov("cylinder_v.pov");
+	//con.draw_cells_pov("cylinder_v.pov");
 }
