@@ -14,13 +14,16 @@ SOURCE=container.cc container.hh config.hh cell.hh cell.cc wall.cc wall.hh workl
 EXECUTABLES=../bin/voro++
 
 # Makefile rules
-all: single_cell random_points
+all: single_cell random_points uc_test
 
 single_cell: single_cell.cc $(SOURCE)
 	$(CC) $(CFLAGS) -o single_cell single_cell.cc
 
 random_points: random_points.cc $(SOURCE)
 	$(CC) $(CFLAGS) -o random_points random_points.cc
+
+uc_test: uc_test.cc $(SOURCE)
+	$(CC) $(CFLAGS) -o uc_test uc_test.cc
 
 ../bin/voro++: $(SOURCE) cmd_line.cc
 	$(CC) $(CFLAGS) -o ../bin/voro++ cmd_line.cc

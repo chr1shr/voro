@@ -91,6 +91,9 @@ const double large_number=1e30;
 /** A radius to use as a placeholder when no other information is available. */
 const double default_radius=0.5;
 
+/** The maximum number of shells of periodic images to test over. */
+const int max_unit_voro_shells=10;
+
 //#define VOROPP_REPORT_OUT_OF_BOUNDS
 
 /** Voro++ returns this status code if there is a file-related error, such as
