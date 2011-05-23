@@ -3,7 +3,7 @@
 #
 # Author   : Chris H. Rycroft (LBL / UC Berkeley)
 # Email    : chr@alum.mit.edu
-# Date     : July 1st 2008
+# Date     : May 18th 2011
 #
 # worklist_gen.pl - this perl script is used to automatically generate the
 # worklists of blocks that are stored in worklist.cc, that are used by the
@@ -35,7 +35,7 @@ print W <<EOF;
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr\@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : May 18th 2011
 
 /** \\file worklist.hh
  * \\brief Header file for setting constants used in the block worklists that are
@@ -59,7 +59,7 @@ print W <<EOF;
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr\@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : May 18th 2011
 
 /** \\file worklist.cc
  * \\brief The table of block worklists that are used during the cell
@@ -69,8 +69,7 @@ print W <<EOF;
  * intended to be edited by hand. */
 
 EOF
-printf W "template<class r_option>\n";
-printf W "const unsigned int container_base<r_option>::wl[%d]={\n",($ls+1)*$hr*$hr*$hr;
+printf W "const unsigned int voropp_base::wl[%d]={\n",($ls+1)*$hr*$hr*$hr;
 
 # Now create a worklist for each subregion
 for($kk=0;$kk<$hr;$kk++) {

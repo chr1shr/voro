@@ -1,11 +1,28 @@
-Version 0.4 (November, 2010)
+Version 0.4 (May 2011)
 ============================
+* All output routines have been switched from using C++ iostreams to using the C
+  cstdio library. This has been done for increased performance: in tests, the
+  cstdio routines run about XXX% faster than the comparable iostream routines.
+  Since many people use Voro++ to batch process large numbers of input files,
+  this increase in input/output speed seemed desirable.
+* The Gnuplot output routines now merge individual lines into contiguous paths
+  wherever possible, resulting in a ~35% reduction in their file size
+* Previously, the POV-Ray output routines could create cylinders where the start
+  and end points matched. This was a benign problem, due to the fact the vertex
+  positions within Voro++ were held to higher precision than the POV-Ray output
+  file, meaning that distinct vertices could appear to be at the same position;
+  a perl script was provided to post-process and remove these. However, Voro++
+  now scans each cylinder before saving to file to automatically remove these
+  cases from consideration.
 * Fixed a bug in the print_all_custom() routine, affecting "%P" output. Thanks
   to David Waroquiers (Université Catholique de Louvain, Belgium) for pointing
   this out.
+* Fixed a bug that caused the neighbor list not to be outputted in the same
+  order as the other plane diagnostic routines.  Thanks to Olufemi Olorode
+  (Texas A&M University) for pointing this out.
 * Removed the add_vertex() and init_test() routines, which were mainly used for
   debugging
-* Updated Doxyfile to 1.7.2
+* Updated Doxyfile to 1.7.4
 
 Version 0.3.1 (September 29, 2009)
 ==================================

@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : July 1st 2008
 
 /** \file cell.hh
  * \brief Header file for the voronoicell_base template and related classes. */
@@ -10,13 +10,14 @@
 #ifndef VOROPP_CELL_HH
 #define VOROPP_CELL_HH
 
-#include <cstdio>
+#include "config.hh"
 #include <cstdlib>
+#include <iostream>
+#include <fstream>
 #include <cmath>
-#include <vector>
 using namespace std;
 
-#include "config.hh"
+void voropp_fatal_error(const char *p,int status);
 
 /** \brief A class to reliably carry out floating point comparisons, storing
  * marginal cases for future reference.
@@ -48,13 +49,13 @@ class suretest {
 	public:
 		/** This is a pointer to the array in the voronoicell class
 		 * which holds the vertex coordinates.*/
-		double *p;
+		fpoint *p;
 		suretest();
 		~suretest();
-		inline void init(double x,double y,double z,double rsq);
-		inline int test(int n,double &ans);
+		inline void init(fpoint x,fpoint y,fpoint z,fpoint rsq);
+		inline int test(int n,fpoint &ans);
 	private:
-		int check_marginal(int n,double &ans);
+		int check_marginal(int n,fpoint &ans);
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
 		int current_marginal;
@@ -65,13 +66,13 @@ class suretest {
 		 * the outcomes of the marginal tests. */
 		int *sn;
 		/** The x coordinate of the normal vector to the test plane. */
-		double px;
+		fpoint px;
 		/** The y coordinate of the normal vector to the test plane. */
-		double py;
+		fpoint py;
 		/** The z coordinate of the normal vector to the test plane. */
-		double pz;
+		fpoint pz;
 		/** The magnitude of the normal vector to the test plane. */
-		double prsq;
+		fpoint prsq;
 };
 
 class neighbor_track;
@@ -143,7 +144,7 @@ class voronoicell_base {
 		int *nu;
 		/** This in an array with size 3*current_vertices for holding
 		 * the positions of the vertices. */
-		double *pts;
+		fpoint *pts;
 		/** This is a class used in the plane routine for carrying out
 		 * reliable comparisons of whether points in the cell are
 		 * inside, outside, or on the current cutting plane. */
@@ -158,51 +159,37 @@ class voronoicell_base {
 		n_option neighbor;
 		voronoicell_base();
 		~voronoicell_base();
-		void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
-		inline void init_octahedron(double l);
-		inline void init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3);
-		void translate(double x,double y,double z);
-		void draw_pov(double x,double y,double z,FILE *fp=stdout);
-		inline void draw_pov(double x,double y,double z,const char *filename) {
-			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
-			draw_pov(x,y,z,fp);
-			fclose(fp);
-		};
-		void draw_pov_mesh(double x,double y,double z,FILE *fp=stdout);
-		inline void draw_pov_mesh(double x,double y,double z,const char *filename) {
-			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
-			draw_pov_mesh(x,y,z,fp);
-			fclose(fp);
-		}
-		void draw_gnuplot(double x,double y,double z,FILE *fp=stdout);
-		inline void draw_gnuplot(double x,double y,double z,const char *filename) {
-			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
-			draw_gnuplot(x,y,z,fp);
-			fclose(fp);
-		}
-		double volume();
-		double max_radius_squared();
-		double total_edge_distance();
-		double surface_area();
-		void centroid(double &cx,double &cy,double &cz);
+		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint zmin,fpoint zmax);
+		inline void init_octahedron(fpoint l);
+		inline void init_tetrahedron(fpoint x0,fpoint y0,fpoint z0,fpoint x1,fpoint y1,fpoint z1,fpoint x2,fpoint y2,fpoint z2,fpoint x3,fpoint y3,fpoint z3);
+		void draw_pov(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov(const char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov(fpoint x,fpoint y,fpoint z);
+		void draw_pov_mesh(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov_mesh(const char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_pov_mesh(fpoint x,fpoint y,fpoint z);
+		void draw_gnuplot(ostream &os,fpoint x,fpoint y,fpoint z);
+		inline void draw_gnuplot(const char *filename,fpoint x,fpoint y,fpoint z);
+		inline void draw_gnuplot(fpoint x,fpoint y,fpoint z);
+		fpoint volume();
+		fpoint max_radius_squared();
+		fpoint total_edge_distance();
+		fpoint surface_area();
+		void centroid(fpoint &cx,fpoint &cy,fpoint &cz);
 		int number_of_faces();
 		int number_of_edges();
-		void vertex_orders(vector<int> &v);
-		void vertices(vector<double> &v);
-		void vertices(vector<double> &v,double x,double y,double z);
-		void face_areas(vector<double> &v);
-		void face_orders(vector<int> &v);
-		void face_freq_table(vector<int> &v);
-		void face_vertices(vector<int> &v);
-		void face_perimeters(vector<double> &v);
-		void normals(vector<double> &v);
-		void neighbors(vector<int> &v);
-		inline void output_custom(const char *format) {output_custom(format,0,0,0,0,0.5,stdout);}
-		void output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp=stdout);
-		bool nplane(double x,double y,double z,double rs,int p_id);
+		void output_step(ostream &os,int &val,double x,double y,double z);
+		void output_vertex_orders(ostream &os);
+		void output_vertices(ostream &os);
+		void output_vertices(ostream &os,fpoint x,fpoint y,fpoint z);
+		void output_face_areas(ostream &os);
+		void output_face_orders(ostream &os);
+		void output_face_freq_table(ostream &os);
+		void output_face_vertices(ostream &os);
+		void output_face_perimeters(ostream &os);
+		void output_normals(ostream &os);
+		void output_neighbors(ostream &os,bool later=false);
+		bool nplane(fpoint x,fpoint y,fpoint z,fpoint rs,int p_id);
 		/** This routine calculates the modulus squared of the vector
 		 * before passing it to the main nplane() routine with full
 		 * arguments.
@@ -210,8 +197,8 @@ class voronoicell_base {
 		 * \param[in] p_id the plane ID (for neighbor tracking only).
 		 * \return False if the plane cut deleted the cell entirely,
 		 *         true otherwise. */
-		inline bool nplane(double x,double y,double z,int p_id) {
-			double rsq=x*x+y*y+z*z;
+		inline bool nplane(fpoint x,fpoint y,fpoint z,int p_id) {
+			fpoint rsq=x*x+y*y+z*z;
 			return nplane(x,y,z,rsq,p_id);
 		}
 		/** This version of the plane routine just makes up the plane
@@ -221,7 +208,7 @@ class voronoicell_base {
 		 * \param[in] rsq the modulus squared of the vector.
 		 * \return False if the plane cut deleted the cell entirely,
 		 *         true otherwise. */
-		inline bool plane(double x,double y,double z,double rsq) {
+		inline bool plane(fpoint x,fpoint y,fpoint z,fpoint rsq) {
 			return nplane(x,y,z,rsq,0);
 		}
 		/** Cuts a Voronoi cell using the influence of a particle at
@@ -232,17 +219,19 @@ class voronoicell_base {
 		 * \param[in] (x,y,z) the vector to cut the cell by.
 		 * \return False if the plane cut deleted the cell entirely,
 		 *         true otherwise. */
-		inline bool plane(double x,double y,double z) {
-			double rsq=x*x+y*y+z*z;
+		inline bool plane(fpoint x,fpoint y,fpoint z) {
+			fpoint rsq=x*x+y*y+z*z;
 			return nplane(x,y,z,rsq,0);
 		}
-		bool plane_intersects(double x,double y,double z,double rs);
-		bool plane_intersects_guess(double x,double y,double z,double rs);
+		bool plane_intersects(fpoint x,fpoint y,fpoint z,fpoint rs);
+		bool plane_intersects_guess(fpoint x,fpoint y,fpoint z,fpoint rs);
 		void construct_relations();
 		void check_relations();
 		void check_duplicates();
 		void print_edges();
+		void label_facets();
 		void check_facets();
+		void perturb(fpoint r);
 		/** This is a simple inline function for picking out the index
 		 * of the next edge counterclockwise at the current vertex.
 		 * \param[in] a the index of an edge of the current vertex.
@@ -289,11 +278,139 @@ class voronoicell_base {
 		inline bool collapse_order1();
 		inline bool collapse_order2();
 		inline bool delete_connection(int j,int k,bool hand);
-		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
+		inline bool plane_intersects_track(fpoint x,fpoint y,fpoint z,fpoint rs,fpoint g);
 		inline void reset_edges();
-		inline void normals_search(vector<double> &v,int i,int j,int k);
-		inline bool search_edge(int l,int &m,int &k);
+		inline void output_normals_search(ostream &os,int i,int j,int k);
 		friend class neighbor_track;
 };
 
+/** \brief A class passed to the voronoicell_base template to switch off
+ * neighbor computation.
+ *
+ * This is a class full of empty routines for neighbor computation. If the
+ * voronoicell_base template is instantiated with this class, then it
+ * has the effect of switching off all neighbor computation. Since all these
+ * routines are declared inline, it should have the effect of a zero speed
+ * overhead in the resulting code. */
+class neighbor_none {
+	public:
+		/** This is a blank constructor. */
+		neighbor_none(voronoicell_base<neighbor_none> *ivc) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void allocate(int i,int m) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void add_memory_vertices(int i) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void add_memory_vorder(int i) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void init() {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void init_octahedron() {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void init_tetrahedron() {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void set_pointer(int p,int n) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void copy(int a,int b,int c,int d) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void set(int a,int b,int c) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void set_aux1(int k) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void copy_aux1(int a,int b) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void copy_aux1_shift(int a,int b) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void set_aux2_copy(int a,int b) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void copy_pointer(int a,int b) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void set_to_aux1(int j) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void set_to_aux2(int j) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void print_edges(int i) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void allocate_aux1(int i) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void switch_to_aux1(int i) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void copy_to_aux1(int i,int m) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void set_to_aux1_offset(int k,int m) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void neighbors(ostream &os,bool later) {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void label_facets() {};
+		/** This is a blank placeholder function that does nothing. */
+		inline void check_facets() {};
+};
+
+/** \brief A class passed to the voronoicell_base template to switch on the
+ * neighbor computation.
+ *
+ * This class encapsulates all the routines which are required to carry out the
+ * neighbor tracking. If the voronoicell_base template is instantiated with
+ * this class, then the neighbor computation is enabled. All these routines are
+ * simple and declared inline, so they should be directly integrated into the
+ * functions in the voronoicell class during compilation, without zero function
+ * call overhead. */
+class neighbor_track {
+	public:
+		/** This two dimensional array holds the neighbor information
+		 * associated with each vertex. mne[p] is a one dimensional
+		 * array which holds all of the neighbor information for
+		 * vertices of order p. */
+		int **mne;
+		/** This is a two dimensional array that holds the neighbor
+		 * information associated with each vertex. ne[i] points to a
+		 * one-dimensional array in mne[nu[i]]. ne[i][j] holds the
+		 * neighbor information associated with the jth edge of vertex
+		 * i. It is set to the ID number of the plane that made the
+		 * face that is clockwise from the jth edge. */
+		int **ne;
+		neighbor_track(voronoicell_base<neighbor_track> *ivc);
+		~neighbor_track();
+		/** This is a pointer back to the voronoicell class which
+		 * created this class. It is used to reference the members of
+		 * that class in computations. */
+		voronoicell_base<neighbor_track> *vc;
+		inline void allocate(int i,int m);
+		inline void add_memory_vertices(int i);
+		inline void add_memory_vorder(int i);
+		inline void init();
+		inline void init_octahedron();
+		inline void init_tetrahedron();
+		inline void set_pointer(int p,int n);
+		inline void copy(int a,int b,int c,int d);
+		inline void set(int a,int b,int c);
+		inline void set_aux1(int k);
+		inline void copy_aux1(int a,int b);
+		inline void copy_aux1_shift(int a,int b);
+		inline void set_aux2_copy(int a,int b);
+		inline void copy_pointer(int a,int b);
+		inline void set_to_aux1(int j);
+		inline void set_to_aux2(int j);
+		inline void print_edges(int i);
+		inline void allocate_aux1(int i);
+		inline void switch_to_aux1(int i);
+		inline void copy_to_aux1(int i,int m);
+		inline void set_to_aux1_offset(int k,int m);
+		inline void neighbors(ostream &os,bool later);
+		inline void label_facets();
+		inline void check_facets();
+	private:
+		/** This is an auxiliary pointer which is used in some of the
+		 * low level neighbor operations. */
+		int *paux1;
+		/** This is a second auxiliary pointer which is used in some
+		 * of the low level neighbor operations. */
+		int *paux2;
+};
+
+/** The basic voronoicell class. */
+typedef voronoicell_base<neighbor_none> voronoicell;
+
+/** A neighbor-tracking version of the voronoicell. */
+typedef voronoicell_base<neighbor_track> voronoicell_neighbor;
 #endif

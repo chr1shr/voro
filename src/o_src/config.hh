@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : July 1st 2008
 
 /** \file config.hh
  * \brief Master configuration file for setting various compile-time options. */
@@ -27,12 +27,10 @@ const int init_marginal=256;
 const int init_delete_size=256;
 /** The initial size for the auxiliary delete stack. */
 const int init_delete2_size=256;
+/** The initial size for the facets evaluation. */
+const int init_facet_size=32;
 /** The initial size for the wall pointer array. */
 const int init_wall_size=32;
-/** The default initial size for the ordering class. */
-const int init_ordering_size=4096;
-/** The initial size of the pre_container chunk index. */
-const int init_chunk_size=128;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
@@ -52,13 +50,6 @@ const int max_delete2_size=16777216;
 const int max_particle_memory=16777216;
 /** The maximum size for the wall pointer array. */
 const int max_wall_size=2048;
-/** The maximum size for the ordering class. */
-const int max_ordering_size=67108864;
-/** The maximum size for the pre_container chunk index. */
-const int max_chunk_size=65536;
-
-/** The chunk size in the pre_container classes. */
-const int pre_container_chunk_size=1024;
 
 #ifndef VOROPP_VERBOSE
 /** Voro++ can print a number of different status and debugging messages to
@@ -71,27 +62,41 @@ const int pre_container_chunk_size=1024;
 #define VOROPP_VERBOSE 0
 #endif
 
+/** The declaration of fpoint allows that code to be compiled both using single
+ * precision numbers and double precision numbers. Under normal usage fpoint is
+ * set be a double precision floating point number, but defining the
+ * preprocessor macro VOROPP_SINGLE_PRECISION will switch it to single
+ * precision and make the code tolerances larger. */
+#ifdef VOROPP_SINGLE_PRECISION
+typedef float fpoint;
+#else
+typedef double fpoint;
+#endif
+
 /** If a point is within this distance of a cutting plane, then the code
  * assumes that point exactly lies on the plane. */
-const double tolerance=1e-10;
+#ifdef VOROPP_SINGLE_PRECISION
+const fpoint tolerance=1e-5;
+#else
+const fpoint tolerance=1e-10;
+#endif
 
 /** If a point is within this distance of a cutting plane, then the code stores
  * whether this point is inside, outside, or exactly on the cutting plane in
  * the marginal cases buffer, to prevent the test giving a different result on
  * a subsequent evaluation due to floating point rounding errors. */
-const double tolerance2=2e-10;
+#ifdef VOROPP_SINGLE_PRECISION
+const fpoint tolerance2=2e-5;
+#else
+const fpoint tolerance2=2e-10;
+#endif
 
 /** The square of the tolerance, used when deciding whether some squared
  * quantities are large enough to be used. */
-const double tolerance_sq=tolerance*tolerance;
+const fpoint tolerance_sq=tolerance*tolerance;
 
 /** A large number that is used in the computation. */
-const double large_number=1e30;
-
-/** A radius to use as a placeholder when no other information is available. */
-const double default_radius=0.5;
-
-//#define VOROPP_REPORT_OUT_OF_BOUNDS
+const fpoint large_number=1e30;
 
 /** Voro++ returns this status code if there is a file-related error, such as
  * not being able to open file. */

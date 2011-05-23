@@ -2,15 +2,13 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : July 1st 2008
 
 /** \file wall.hh
  * \brief Header file for the derived wall classes. */
 
 #ifndef VOROPP_WALL_HH
 #define VOROPP_WALL_HH
-
-#include "cell.hh"
 
 /** \brief A class representing a spherical wall object.
  *
@@ -23,16 +21,16 @@ struct wall_sphere : public wall {
 		 * \param[in] (ixc,iyc,izc) a position vector for the sphere's
 		 * center.
 		 * \param[in] irc the radius of the sphere. */
-		wall_sphere(double ixc,double iyc,double izc,double irc,int iw_id=-99)
+		wall_sphere(fpoint ixc,fpoint iyc,fpoint izc,fpoint irc,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), rc(irc) {};
-		bool point_inside(double x,double y,double z);
+		bool point_inside(fpoint x,fpoint y,fpoint z);
 		template<class n_option>
-		bool cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z);
-		bool cut_cell(voronoicell_base<neighbor_none> &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
-		bool cut_cell(voronoicell_base<neighbor_track> &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
+		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 	private:
 		const int w_id;
-		const double xc,yc,zc,rc;
+		const fpoint xc,yc,zc,rc;
 };
 
 /** \brief A class representing a plane wall object.
@@ -45,16 +43,16 @@ struct wall_plane : public wall {
 		 * \param[in] iac a displacement along the normal vector.
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. */
-		wall_plane(double ixc,double iyc,double izc,double iac,int iw_id=-99)
+		wall_plane(fpoint ixc,fpoint iyc,fpoint izc,fpoint iac,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), ac(iac) {};
-		bool point_inside(double x,double y,double z);
+		bool point_inside(fpoint x,fpoint y,fpoint z);
 		template<class n_option>
-		bool cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z);
-		bool cut_cell(voronoicell_base<neighbor_none> &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
-		bool cut_cell(voronoicell_base<neighbor_track> &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
+		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 	private:
 		const int w_id;
-		const double xc,yc,zc,ac;
+		const fpoint xc,yc,zc,ac;
 };
 
 /** \brief A class representing a cylindrical wall object.
@@ -70,17 +68,17 @@ struct wall_cylinder : public wall {
 		 * \param[in] irc the radius of the cylinder
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. */
-		wall_cylinder(double ixc,double iyc,double izc,double ixa,double iya,double iza,double irc,int iw_id=-99)
+		wall_cylinder(fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint irc,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
 			asi(1/(ixa*ixa+iya*iya+iza*iza)), rc(irc) {};
-		bool point_inside(double x,double y,double z);
+		bool point_inside(fpoint x,fpoint y,fpoint z);
 		template<class n_option>
-		bool cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z);
-		bool cut_cell(voronoicell_base<neighbor_none> &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
-		bool cut_cell(voronoicell_base<neighbor_track> &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
+		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 	private:
 		const int w_id;
-		const double xc,yc,zc,xa,ya,za,asi,rc;
+		const fpoint xc,yc,zc,xa,ya,za,asi,rc;
 };
 
 
@@ -97,18 +95,18 @@ struct wall_cone : public wall {
 		 * from the axis.
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. */
-		wall_cone(double ixc,double iyc,double izc,double ixa,double iya,double iza,double ang,int iw_id=-99)
+		wall_cone(fpoint ixc,fpoint iyc,fpoint izc,fpoint ixa,fpoint iya,fpoint iza,fpoint ang,int iw_id=-99)
 			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
 			asi(1/(ixa*ixa+iya*iya+iza*iza)),
 			gra(tan(ang)), sang(sin(ang)), cang(cos(ang)) {};
-		bool point_inside(double x,double y,double z);
+		bool point_inside(fpoint x,fpoint y,fpoint z);
 		template<class n_option>
-		bool cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z);
-		bool cut_cell(voronoicell_base<neighbor_none> &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
-		bool cut_cell(voronoicell_base<neighbor_track> &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z);
+		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
 	private:
 		const int w_id;
-		const double xc,yc,zc,xa,ya,za,asi,gra,sang,cang;
+		const fpoint xc,yc,zc,xa,ya,za,asi,gra,sang,cang;
 };
 
 #endif
