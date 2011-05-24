@@ -7,9 +7,9 @@
 #include "voro++.cc"
 
 // Set up constants for the container geometry
-const fpoint x_min=-3,x_max=3;
-const fpoint y_min=-3,y_max=3;
-const fpoint z_min=0,z_max=6;
+const double x_min=-3,x_max=3;
+const double y_min=-3,y_max=3;
+const double z_min=0,z_max=6;
 
 // Set up the number of blocks that the container is divided
 // into.

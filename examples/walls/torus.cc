@@ -7,16 +7,16 @@
 #include "voro++.cc"
 
 // Major and minor torus radii
-const fpoint arad=9,brad=3.5;
+const double arad=9,brad=3.5;
 
 // The outer radius of the torus, that determines how big the container should
 // be
-const fpoint crad=arad+brad;
+const double crad=arad+brad;
 
 // Set up constants for the container geometry
-const fpoint x_min=-crad-0.5,x_max=crad+0.5;
-const fpoint y_min=-crad-0.5,y_max=crad+0.5;
-const fpoint z_min=-brad-0.5,z_max=brad+0.5;
+const double x_min=-crad-0.5,x_max=crad+0.5;
+const double y_min=-crad-0.5,y_max=crad+0.5;
+const double z_min=-brad-0.5,z_max=brad+0.5;
 
 // Set the computational grid size
 const int n_x=10,n_y=10,n_z=3;
@@ -36,15 +36,15 @@ class wall_torus : public wall {
 		// only tracked with the voronoicell_neighbor class and is
 		// ignored otherwise. It can be omitted, and then an arbitrary
 		// value of -99 is used.
-		wall_torus(fpoint imjr,fpoint imnr,int iw_id=-99)
+		wall_torus(double imjr,double imnr,int iw_id=-99)
 			: w_id(iw_id), mjr(imjr), mnr(imnr) {};
 
 		// This returns true if a given vector is inside the torus, and
 		// false if it is outside. For the current example, this
 		// routine is not needed, but in general it would be, for use
 		// with the point_inside() routine in the container class.
-		bool point_inside(fpoint x,fpoint y,fpoint z) {
-			fpoint temp=sqrt(x*x+y*y)-mjr;
+		bool point_inside(double x,double y,double z) {
+			double temp=sqrt(x*x+y*y)-mjr;
 			return temp*temp+z*z<mnr*mnr;
 		}
 
@@ -54,10 +54,10 @@ class wall_torus : public wall {
 		// for the toroidal wall
 		template<class n_option>
 		inline bool cut_cell_base(voronoicell_base<n_option> &c,
-				fpoint x,fpoint y,fpoint z) {
-			fpoint orad=sqrt(x*x+y*y);
-			fpoint odis=orad-mjr;
-			fpoint ot=odis*odis+z*z;
+				double x,double y,double z) {
+			double orad=sqrt(x*x+y*y);
+			double odis=orad-mjr;
+			double ot=odis*odis+z*z;
 
 			// Unless the particle is within 1% of the major
 			// radius, then a plane cut is made
@@ -75,17 +75,17 @@ class wall_torus : public wall {
 		// These virtual functions are called during the cell
 		// computation in the container class. They call instances of
 		// the template given above.
-		bool cut_cell(voronoicell_base<neighbor_none> &c,fpoint x,
-				fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
-		bool cut_cell(voronoicell_base<neighbor_track> &c,fpoint x,
-				fpoint y,fpoint z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_none> &c,double x,
+				double y,double z) {return cut_cell_base(c,x,y,z);}
+		bool cut_cell(voronoicell_base<neighbor_track> &c,double x,
+				double y,double z) {return cut_cell_base(c,x,y,z);}
 	private:
 		// The ID number associated with the wall
 		const int w_id;
 		// The major radius of the torus
-		const fpoint mjr;
+		const double mjr;
 		// The minor radius of the torus
-		const fpoint mnr;
+		const double mnr;
 };
 
 int main() {

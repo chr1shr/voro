@@ -18,62 +18,6 @@ using namespace std;
 
 #include "config.hh"
 
-/** \brief A class to reliably carry out floating point comparisons, storing
- * marginal cases for future reference.
- *
- * Floating point comparisons can be unreliable on some processor
- * architectures, and can produce unpredictable results. On a number of popular
- * Intel processors, floating point numbers are held to higher precision when
- * in registers than when in memory. When a register is swapped from a register
- * to memory, a truncation error, and in some situations this can create
- * circumstances where for two numbers c and d, the program finds c>d first,
- * but later c<d. The programmer has no control over when the swaps between
- * memory and registers occur, and recompiling with slightly different code can
- * give different results. One solution to avoid this is to force the compiler
- * to evaluate everything in memory (e.g. by using the -ffloat-store option in
- * the GNU C++ compiler) but this could be viewed overkill, since it slows the
- * code down, and the extra register precision is useful.
- *
- * In the plane cutting routine of the voronoicell class, we need to reliably
- * know whether a vertex lies inside, outside, or on the cutting plane, since
- * if it changed during the tracing process there would be confusion. This
- * class makes these tests reliable, by storing the results of marginal cases,
- * where the vertex lies within tolerance2 of the cutting plane. If that vertex
- * is tested again, then code looks up the value of the table in a buffer,
- * rather than doing the floating point comparison again. Only vertices which
- * are close to the plane are stored and tested, so this routine should create
- * minimal computational overhead.
- */
-class suretest {
-	public:
-		/** This is a pointer to the array in the voronoicell class
-		 * which holds the vertex coordinates.*/
-		double *p;
-		suretest();
-		~suretest();
-		inline void init(double x,double y,double z,double rsq);
-		inline int test(int n,double &ans);
-	private:
-		int check_marginal(int n,double &ans);
-		/** This stores the current memory allocation for the marginal
-		 * cases. */
-		int current_marginal;
-		/** This stores the total number of marginal points which are
-		 * currently in the buffer. */
-		int sc;
-		/** This array contains a list of the marginal points, and also
-		 * the outcomes of the marginal tests. */
-		int *sn;
-		/** The x coordinate of the normal vector to the test plane. */
-		double px;
-		/** The y coordinate of the normal vector to the test plane. */
-		double py;
-		/** The z coordinate of the normal vector to the test plane. */
-		double pz;
-		/** The magnitude of the normal vector to the test plane. */
-		double prsq;
-};
-
 class neighbor_track;
 
 /** \brief A class encapsulating all the routines for storing and calculating
@@ -144,10 +88,6 @@ class voronoicell_base {
 		/** This in an array with size 3*current_vertices for holding
 		 * the positions of the vertices. */
 		double *pts;
-		/** This is a class used in the plane routine for carrying out
-		 * reliable comparisons of whether points in the cell are
-		 * inside, outside, or on the current cutting plane. */
-		suretest sure;
 		/** This object contains all the functions required to carry
 		 * out the neighbor computation. If the neighbor_none class is
 		 * used for n_option, then all these functions are blank. If
@@ -158,9 +98,9 @@ class voronoicell_base {
 		n_option neighbor;
 		voronoicell_base();
 		~voronoicell_base();
-		void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
-		inline void init_octahedron(double l);
-		inline void init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3);
+		void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax); //XXX
+		inline void init_octahedron(double l); //XXX
+		inline void init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3); //XXX
 		void translate(double x,double y,double z);
 		void draw_pov(double x,double y,double z,FILE *fp=stdout);
 		inline void draw_pov(double x,double y,double z,const char *filename) {
@@ -200,9 +140,9 @@ class voronoicell_base {
 		void face_perimeters(vector<double> &v);
 		void normals(vector<double> &v);
 		void neighbors(vector<int> &v);
-		inline void output_custom(const char *format) {output_custom(format,0,0,0,0,0.5,stdout);}
+		inline void output_custom(const char *format,FILE *fp=stdout) {output_custom(format,0,0,0,0,default_radius,fp);}
 		void output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp=stdout);
-		bool nplane(double x,double y,double z,double rs,int p_id);
+		bool nplane(double x,double y,double z,double rs,int p_id); //XXX
 		/** This routine calculates the modulus squared of the vector
 		 * before passing it to the main nplane() routine with full
 		 * arguments.
@@ -281,18 +221,37 @@ class voronoicell_base {
 		/** This holds the number of points currently on the auxiliary
 		 * delete stack. */
 		int stack2;
-		void add_memory(int i);
-		void add_memory_vertices();
-		void add_memory_vorder();
+		/** This stores the current memory allocation for the marginal
+		 * cases. */
+		int current_marginal;
+		/** This stores the total number of marginal points which are
+		 * currently in the buffer. */
+		int n_marg;
+		/** This array contains a list of the marginal points, and also
+		 * the outcomes of the marginal tests. */
+		int *marg;
+		/** The x coordinate of the normal vector to the test plane. */
+		double px;
+		/** The y coordinate of the normal vector to the test plane. */
+		double py;
+		/** The z coordinate of the normal vector to the test plane. */
+		double pz;
+		/** The magnitude of the normal vector to the test plane. */
+		double prsq;
+		void add_memory(int i); //XXX
+		void add_memory_vertices(); //XXX
+		void add_memory_vorder(); //XXX
 		void add_memory_ds();
 		void add_memory_ds2();
-		inline bool collapse_order1();
-		inline bool collapse_order2();
-		inline bool delete_connection(int j,int k,bool hand);
+		inline bool collapse_order1(); //XXX
+		inline bool collapse_order2(); //XXX
+		inline bool delete_connection(int j,int k,bool hand); //XXX
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
 		inline void reset_edges();
 		inline void normals_search(vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);
+		inline int m_test(int n,double &ans);
+		int check_marginal(int n,double &ans);
 		friend class neighbor_track;
 };
 

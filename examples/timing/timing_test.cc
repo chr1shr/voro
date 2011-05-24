@@ -49,9 +49,8 @@ int main() {
 	start=clock();
 
 	// Carry out a dummy computation of all cells in the entire container
-	//con.compute_all_cells();
+	con.compute_all_cells();
 
-	con.print_all_custom("%i %q %v","test");
 	// Calculate the elapsed time and print it
 	end=clock();
 	double runtime=double(end-start)/CLOCKS_PER_SEC;

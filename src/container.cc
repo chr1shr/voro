@@ -58,7 +58,7 @@ container::container(double ax_,double bx_,double ay_,double by_,double az_,doub
 
 container_poly::container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
-	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,3),
+	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,4),
 	max_radius(0), vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_,zperiodic_?2*nz_+1:nz_) {}
 
 /** Put a particle into the correct region of the container.
@@ -241,7 +241,7 @@ void container::draw_particles_pov(v_loop &vl,FILE *fp) {
 	double *pp;
 	if(vl.start()) do {
 		pp=p[vl.ijk]+3*vl.q;
-		printf("// id %d\nsphere{<%g,%g,%g>,r}\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
+		fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,r}\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
 	} while(vl.inc());
 }
 
@@ -252,7 +252,7 @@ void container_poly::draw_particles_pov(v_loop &vl,FILE *fp) {
 	double *pp;
 	if(vl.start()) do {
 		pp=p[vl.ijk]+4*vl.q;
-		printf("// id %d\nsphere{<%g,%g,%g>,%g}\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2],pp[3]);
+		fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,%g}\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2],pp[3]);
 	} while(vl.inc());
 }
 

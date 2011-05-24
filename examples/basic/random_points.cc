@@ -41,9 +41,9 @@ int main() {
 
 	// Sum up the volumes, and check that this matches the container volume
 	double vvol=con.sum_cell_volumes();
-	cout << "Container volume : " << cvol << "\n";
-	cout << "Voronoi volume   : " << vvol << "\n";
-	cout << "Difference       : " << vvol-cvol << endl;
+	printf("Container volume : %g\n",cvol);
+	printf("Voronoi volume   : %g\n",vvol);
+	printf("Difference       : %g\n",vvol-cvol);
 
 	// Output the particle positions in gnuplot format
 	con.draw_particles("random_points_p.gnu");

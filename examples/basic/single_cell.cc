@@ -31,5 +31,5 @@ int main() {
 	}
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.draw_gnuplot("single_cell.gnu",0,0,0);
+	v.draw_gnuplot(0,0,0,"single_cell.gnu");
 }

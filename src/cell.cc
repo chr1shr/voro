@@ -23,9 +23,9 @@ voronoicell_base<n_option>::voronoicell_base() :
 	ed(new int*[current_vertices]), nu(new int[current_vertices]),
 	pts(new double[3*current_vertices]), neighbor(this), mem(new int[current_vertex_order]),
 	mec(new int[current_vertex_order]), mep(new int*[current_vertex_order]),
-	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]) {
+	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]),
+	marg(new int[current_marginal<<1]) {
 	int i;
-	sure.p=pts;
 	for(i=0;i<3;i++) {
 		mem[i]=init_n_vertices;mec[i]=0;
 		mep[i]=new int[init_n_vertices*(2*i+1)];
@@ -41,15 +41,12 @@ voronoicell_base<n_option>::voronoicell_base() :
 /** The voronoicell destructor deallocates all the dynamic memory. */
 template<class n_option>
 voronoicell_base<n_option>::~voronoicell_base() {
-	delete [] ds;
-	delete [] ds2;
 	for(int i=current_vertex_order-1;i>=0;i--) if(mem[i]>0) delete [] mep[i];
-	delete [] mem;
-	delete [] mec;
-	delete [] mep;
-	delete [] ed;
-	delete [] nu;
-	delete [] pts;
+	delete [] marg;
+	delete [] ds2;delete [] ds;
+	delete [] mep;delete [] mec;
+	delete [] mem;delete [] pts;
+	delete [] nu;delete [] ed;
 }
 
 /** Translates the vertices of the Voronoi cell by a given vector.
@@ -144,7 +141,7 @@ void voronoicell_base<n_option>::add_memory_vertices() {
 	delete [] nu;nu=pnu;
 	ppts=new double[3*i];
 	for(j=0;j<3*current_vertices;j++) ppts[j]=pts[j];
-	delete [] pts;sure.p=pts=ppts;
+	delete [] pts;pts=ppts;
 	current_vertices=i;
 }
 
@@ -338,11 +335,11 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 	double u,l,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
 
 	//Initialize the safe testing routine
-	sure.init(x,y,z,rsq);
+	n_marg=0;px=x;py=y;pz=z;prsq=rsq;
 
 	//Test approximately sqrt(n)/4 points for their proximity to the plane
 	//and keep the one which is closest
-	uw=sure.test(up,u);
+	uw=m_test(up,u);
 
 	// Starting from an initial guess, we now move from vertex to vertex,
 	// to try and find an edge which intersects the cutting plane,
@@ -354,7 +351,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 			us=0;
 			do {
 				lp=ed[up][us];
-				lw=sure.test(lp,l);
+				lw=m_test(lp,l);
 				if(l<u) break;
 				us++;
 			} while (us<nu[up]);
@@ -369,14 +366,14 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 				u=l;up=lp;
 				for(us=0;us<ls;us++) {
 					lp=ed[up][us];
-					lw=sure.test(lp,l);
+					lw=m_test(lp,l);
 					if(l<u) break;
 				}
 				if(us==ls) {
 					us++;
 					while(us<nu[up]) {
 						lp=ed[up][us];
-						lw=sure.test(lp,l);
+						lw=m_test(lp,l);
 						if(l<u) break;
 						us++;
 					}
@@ -398,7 +395,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 			us=0;
 			do {
 				qp=ed[up][us];
-				qw=sure.test(qp,q);
+				qw=m_test(qp,q);
 				if(u<q) break;
 				us++;
 			} while (us<nu[up]);
@@ -410,14 +407,14 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 				u=q;up=qp;
 				for(us=0;us<qs;us++) {
 					qp=ed[up][us];
-					qw=sure.test(qp,q);
+					qw=m_test(qp,q);
 					if(u<q) break;
 				}
 				if(us==qs) {
 					us++;
 					while(us<nu[up]) {
 						qp=ed[up][us];
-						qw=sure.test(qp,q);
+						qw=m_test(qp,q);
 						if(u<q) break;
 						us++;
 					}
@@ -450,7 +447,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 #endif
 		qw=1;lw=0;
 		for(qp=0;qp<p;qp++) {
-			qw=sure.test(qp,q);
+			qw=m_test(qp,q);
 			if(qw==1) {
 
 				// The point is inside the cutting space. Now
@@ -458,7 +455,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 				for(us=0;us<nu[qp];us++) {
 					lp=ed[qp][us];
 					if(lp<qp) {
-						lw=sure.test(lp,l);
+						lw=m_test(lp,l);
 						if(lw!=1) break;
 					}
 				}
@@ -480,7 +477,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 				for(ls=0;ls<nu[qp];ls++) {
 					up=ed[qp][ls];
 					if(up<qp) {
-						uw=sure.test(up,u);
+						uw=m_test(up,u);
 						if(uw!=-1) break;
 					}
 				}
@@ -525,7 +522,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 		// zeroth edge.
 		i=0;
 		lp=ed[up][0];
-		lw=sure.test(lp,l);
+		lw=m_test(lp,l);
 		if(lw!=-1) {
 
 			// The first edge is either inside the cutting space,
@@ -541,7 +538,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 				// deleted
 				if(i==nu[up]) return false;
 				lp=ed[up][i];
-				lw=sure.test(lp,l);
+				lw=m_test(lp,l);
 			} while (lw!=-1);
 			j=i+1;
 
@@ -550,7 +547,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 			// inside or on the plane.
 			while(j<nu[up]) {
 				lp=ed[up][j];
-				lw=sure.test(lp,l);
+				lw=m_test(lp,l);
 				if(lw!=-1) break;
 				j++;
 			}
@@ -599,7 +596,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 			// edge until we find an edge which isn't outside.
 			i=nu[up]-1;
 			lp=ed[up][i];
-			lw=sure.test(lp,l);
+			lw=m_test(lp,l);
 			while(lw==-1) {
 				i--;
 
@@ -608,17 +605,17 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 				// the cutting space, so we just exit
 				if(i==0) return true;
 				lp=ed[up][i];
-				lw=sure.test(lp,l);
+				lw=m_test(lp,l);
 			}
 
 			// Now search forwards from zero
 			j=1;
 			qp=ed[up][j];
-			qw=sure.test(qp,q);
+			qw=m_test(qp,q);
 			while(qw==-1) {
 				j++;
 				qp=ed[up][j];
-				qw=sure.test(qp,l);
+				qw=m_test(qp,l);
 			}
 
 			// Compute the number of edges for the new vertex. In
@@ -737,7 +734,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 		// moving around it until we find a point or edge which
 		// intersects the plane.
 		lp=ed[qp][qs];
-		lw=sure.test(lp,l);
+		lw=m_test(lp,l);
 
 		if(lw==1) {
 
@@ -803,7 +800,7 @@ bool voronoicell_base<n_option>::nplane(double x,double y,double z,double rsq,in
 				k++;
 				qs=cycle_up(qs,qp);
 				lp=ed[qp][qs];
-				lw=sure.test(lp,l);
+				lw=m_test(lp,l);
 			} while (lw==-1);
 
 			// Now we need to find out whether this marginal vertex
@@ -1510,24 +1507,6 @@ inline void voronoicell_base<n_option>::reset_edges() {
 	}
 }
 
-/** Initializes the suretest class and creates a buffer for marginal points. */
-suretest::suretest() : current_marginal(init_marginal) {
-	sn=new int[2*current_marginal];
-}
-
-/** Suretest destructor that deallocates memory for the marginal cases. */
-suretest::~suretest() {
-	delete [] sn;
-}
-
-/** Sets up the suretest class with a particular test plane, and removes any
- * special cases from the table.
- * \param[in] (x,y,z) the normal vector to the plane.
- * \param[in] rsq the distance along this vector of the plane. */
-inline void suretest::init(double x,double y,double z,double rsq) {
-	sc=0;px=x;py=y;pz=z;prsq=rsq;
-}
-
 /** Checks to see if a given vertex is inside, outside or within the test
  * plane. If the point is far away from the test plane, the routine immediately
  * returns whether it is inside or outside. If the routine is close the the
@@ -1538,8 +1517,9 @@ inline void suretest::init(double x,double y,double z,double rsq) {
  *                 location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  *         plane, or 0 if the point is within the plane. */
-inline int suretest::test(int n,double &ans) {
-	double *pp(p+n+(n<<1));
+template<class n_option>
+inline int voronoicell_base<n_option>::m_test(int n,double &ans) {
+	double *pp(pts+n+(n<<1));
 	ans=*(pp++)*px;
 	ans+=*(pp++)*py;
 	ans+=*pp*pz-prsq;
@@ -1563,22 +1543,23 @@ inline int suretest::test(int n,double &ans) {
  *                the location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  *         plane, or 0 if the point is within the plane. */
-int suretest::check_marginal(int n,double &ans) {
+template<class n_option>
+int voronoicell_base<n_option>::check_marginal(int n,double &ans) {
 	int i;
-	for(i=0;i<sc;i+=2) if(sn[i]==n) return sn[i+1];
-	if(sc==2*current_marginal) {
-		i=2*current_marginal;
+	for(i=0;i<n_marg;i+=2) if(marg[i]==n) return marg[i+1];
+	if(n_marg==current_marginal<<1) {
+		i=current_marginal<<1;
 		if(i>max_marginal) voropp_fatal_error("Marginal case buffer allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 		fprintf(stderr,"Marginal cases buffer scaled up to %d\n",i);
 #endif
-		int *psn=new int[2*i];
-		for(int j=0;j<2*current_marginal;j++) psn[j]=sn[j];
-		delete [] sn;sn=psn;
+		int *pmarg=new int[2*i];
+		for(int j=0;j<(current_marginal<<1);j++) pmarg[j]=marg[j];
+		delete [] marg;marg=pmarg;
 	}
-	sn[sc++]=n;
-	sn[sc++]=ans>tolerance?1:(ans<-tolerance?-1:0);
-	return sn[sc-1];
+	marg[n_marg++]=n;
+	marg[n_marg++]=ans>tolerance?1:(ans<-tolerance?-1:0);
+	return marg[n_marg-1];
 }
 
 /** Prints the vertices, their edges, the relation table, and also notifies if

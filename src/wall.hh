@@ -23,8 +23,8 @@ struct wall_sphere : public wall {
 		 * \param[in] (ixc,iyc,izc) a position vector for the sphere's
 		 * center.
 		 * \param[in] irc the radius of the sphere. */
-		wall_sphere(double ixc,double iyc,double izc,double irc,int iw_id=-99)
-			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), rc(irc) {};
+		wall_sphere(double xc_,double yc_,double zc_,double rc_,int w_id_=-99)
+			: w_id(w_id_), xc(xc_), yc(yc_), zc(zc_), rc(rc_) {}
 		bool point_inside(double x,double y,double z);
 		template<class n_option>
 		bool cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z);
@@ -45,8 +45,8 @@ struct wall_plane : public wall {
 		 * \param[in] iac a displacement along the normal vector.
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. */
-		wall_plane(double ixc,double iyc,double izc,double iac,int iw_id=-99)
-			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), ac(iac) {};
+		wall_plane(double xc_,double yc_,double zc_,double ac_,int w_id_=-99)
+			: w_id(w_id_), xc(xc_), yc(yc_), zc(zc_), ac(ac_) {}
 		bool point_inside(double x,double y,double z);
 		template<class n_option>
 		bool cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z);
@@ -70,9 +70,9 @@ struct wall_cylinder : public wall {
 		 * \param[in] irc the radius of the cylinder
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. */
-		wall_cylinder(double ixc,double iyc,double izc,double ixa,double iya,double iza,double irc,int iw_id=-99)
-			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
-			asi(1/(ixa*ixa+iya*iya+iza*iza)), rc(irc) {};
+		wall_cylinder(double xc_,double yc_,double zc_,double xa_,double ya_,double za_,double rc_,int w_id_=-99)
+			: w_id(w_id_), xc(xc_), yc(yc_), zc(zc_), xa(xa_), ya(ya_), za(za_),
+			asi(1/(xa_*xa_+ya_*ya_+za_*za_)), rc(rc_) {}
 		bool point_inside(double x,double y,double z);
 		template<class n_option>
 		bool cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z);
@@ -97,10 +97,10 @@ struct wall_cone : public wall {
 		 * from the axis.
 		 * \param[in] iw_id an ID number to associate with the wall for
 		 * neighbor tracking. */
-		wall_cone(double ixc,double iyc,double izc,double ixa,double iya,double iza,double ang,int iw_id=-99)
-			: w_id(iw_id), xc(ixc), yc(iyc), zc(izc), xa(ixa), ya(iya), za(iza),
-			asi(1/(ixa*ixa+iya*iya+iza*iza)),
-			gra(tan(ang)), sang(sin(ang)), cang(cos(ang)) {};
+		wall_cone(double xc_,double yc_,double zc_,double xa_,double ya_,double za_,double ang,int w_id_=-99)
+			: w_id(w_id_), xc(xc_), yc(yc_), zc(zc_), xa(xa_), ya(ya_), za(za_),
+			asi(1/(xa_*xa_+ya_*ya_+za_*za_)),
+			gra(tan(ang)), sang(sin(ang)), cang(cos(ang)) {}
 		bool point_inside(double x,double y,double z);
 		template<class n_option>
 		bool cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z);

@@ -10,7 +10,7 @@ const double pi=3.1415926535897932384626433832795;
 
 int main() {
 	int i=0;
-	fpoint x,y,z,evol,vvol;
+	double x,y,z,evol,vvol;
 
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
@@ -42,7 +42,7 @@ int main() {
 	// exact frustum volume
 	evol=pi*1*(0.5*0.5+0.5*1+1*1)/3;
 	vvol=con.sum_cell_volumes();
-	cout << "Exact frustum volume : " << evol << "\n";
-	cout << "Voronoi cell volume  : " << vvol << "\n";
-	cout << "Difference           : " << vvol-evol << endl;
+	printf("Exact frustum volume : %g\n"
+	       "Voronoi cell volume  : %g\n"
+	       "Difference           : %g\n",evol,vvol,vvol-evol);
 }
