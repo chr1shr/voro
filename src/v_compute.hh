@@ -81,7 +81,7 @@ class voropp_compute {
 		 * the Voronoi cell computation. */
 		int *sl;
 		template<class n_option>
-		inline bool corner_test(voronoicell_base<n_option> &c,double xl,double yl,double zl,double xh,double yh,double zh);
+		bool corner_test(voronoicell_base<n_option> &c,double xl,double yl,double zl,double xh,double yh,double zh);
 		template<class n_option>
 		inline bool edge_x_test(voronoicell_base<n_option> &c,double x0,double yl,double zl,double x1,double yh,double zh);
 		template<class n_option>
@@ -94,7 +94,7 @@ class voropp_compute {
 		inline bool face_y_test(voronoicell_base<n_option> &c,double x0,double yl,double z0,double x1,double z1);
 		template<class n_option>
 		inline bool face_z_test(voronoicell_base<n_option> &c,double x0,double y0,double zl,double x1,double y1);
-		inline bool compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gx,double gy,double gz,double& crs,double mrs);
+		bool compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gx,double gy,double gz,double& crs,double mrs);
 		void add_list_memory();
 		inline void reset_mask() {
 			for(unsigned int *mp(mask);mp<mask+hxyz;mp++) *mp=0;

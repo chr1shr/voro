@@ -20,7 +20,7 @@ single_cell: single_cell.cc $(SOURCE)
 	$(CC) $(CFLAGS) -o single_cell single_cell.cc
 
 random_points: random_points.cc $(SOURCE)
-	$(CC) $(CFLAGS) -o random_points random_points.cc
+	g++-mp-4.5 $(CFLAGS) -Winline -o random_points random_points.cc -fprofile-generate
 
 uc_test: uc_test.cc $(SOURCE)
 	$(CC) $(CFLAGS) -o uc_test uc_test.cc

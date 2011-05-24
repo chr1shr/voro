@@ -392,7 +392,7 @@ bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
 template<class n_option>
-inline bool voropp_compute<c_class>::corner_test(voronoicell_base<n_option> &c,double xl,double yl,double zl,double xh,double yh,double zh) {
+bool voropp_compute<c_class>::corner_test(voronoicell_base<n_option> &c,double xl,double yl,double zl,double xh,double yh,double zh) {
 	if(c.plane_intersects_guess(xh,yl,zl,con.r_cutoff(xl*xh+yl*yl+zl*zl))) return false;
 	if(c.plane_intersects(xh,yh,zl,con.r_cutoff(xl*xh+yl*yh+zl*zl))) return false;
 	if(c.plane_intersects(xl,yh,zl,con.r_cutoff(xl*xl+yl*yh+zl*zl))) return false;
@@ -549,7 +549,7 @@ inline bool voropp_compute<c_class>::face_z_test(voronoicell_base<n_option> &c,d
  * \return False if the region is further away than mrs, true if the region in
  *         within mrs.*/
 template<class c_class>
-inline bool voropp_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gxs,double gys,double gzs,double &crs,double mrs) {
+bool voropp_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gxs,double gys,double gzs,double &crs,double mrs) {
 	double xlo,ylo,zlo;
 	if(di>0) {
 		xlo=di*boxx-fx;
