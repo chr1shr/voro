@@ -15,8 +15,8 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
 	hx(hx_), hy(hy_), hz(hz_), hxy(hx_*hy_), hxyz(hxy*hz_), ps(con_.ps),
 	hgrid(con.hgrid), fgrid(con.fgrid), hgridsq(con.hgridsq), seq_length(con.seq_length),
 	id(con_.id), p(con_.p), co(con_.co),
-	mv(0), s_size(3*(3+hxy+hz*(hx+hy))), wl(con_.wl), mrad(con_.mrad), mask(new unsigned int[hxyz]),
-	sl(new int[s_size]) {
+	mv(0), qu_size(3*(3+hxy+hz*(hx+hy))), wl(con_.wl), mrad(con_.mrad), mask(new unsigned int[hxyz]),
+	qu(new int[qu_size]),qu_l(qu+qu_size) {
 	reset_mask();
 }
 
@@ -51,9 +51,9 @@ bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
 	double x1,y1,z1,qx=0,qy=0,qz=0;
 	double xlo,ylo,zlo,xhi,yhi,zhi,rs;
-	int di,dj,dk,ei,ej,ek,eijk,f,g,l;
+	int di,dj,dk,ei,ej,ek,f,g,l;
 	double fx,fy,fz,gxs,gys,gzs,*radp;
-	unsigned int q,*e;
+	unsigned int q,*e,*mijk;
 
 	con.r_init(ijk,s);
 
@@ -198,8 +198,8 @@ bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk
 	mv++;
 	if(mv==0) {reset_mask();mv=1;}
 
-	// Reset the block by block counters
-	s_start=s_end=0;
+	// Set the queue pointers 
+	int *qu_s(qu),*qu_e(qu);
 
 	while(g<seq_length-1) {
 
@@ -229,8 +229,8 @@ bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk
 		ei=di+i;if(ei<0||ei>=hx) continue;
 		ej=dj+j;if(ej<0||ej>=hy) continue;
 		ek=dk+k;if(ek<0||ek>=hz) continue;
-		eijk=ei+hx*(ej+hy*ek);
-		mask[eijk]=mv;
+		mijk=mask+ei+hx*(ej+hy*ek);
+		*mijk=mv;
 
 		// Call the compute_min_max_radius() function. This returns
 		// true if the minimum distance to the block is bigger than the
@@ -267,21 +267,21 @@ bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk
 
 		// If there might not be enough memory on the list for these
 		// additions, then add more
-		if(s_end+18>s_size) add_list_memory();
+		if(qu_e>qu_l-18) add_list_memory(qu_s,qu_e);
 
 		// Test the parts of the worklist element which tell us what
 		// neighbors of this block are not on the worklist. Store them
 		// on the block list, and mark the mask.
 		if((q&b2)==b2) {
-			if(ei>0) if(mask[eijk-1]!=mv) {mask[eijk-1]=mv;sl[s_end++]=ei-1;sl[s_end++]=ej;sl[s_end++]=ek;}
-			if((q&b1)==0) if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}
-		} else if((q&b1)==b1) {if(ei<hx-1) if(mask[eijk+1]!=mv) {mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}}
-		if((q&b4)==b4) {if(ej>0) if(mask[eijk-hx]!=mv) {mask[eijk-hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej-1;sl[s_end++]=ek;}
-			if((q&b3)==0) if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}
-		} else if((q&b3)==b3) {if(ej<hy-1) if(mask[eijk+hx]!=mv) {mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}}
-		if((q&b6)==b6) {if(ek>0) if(mask[eijk-hxy]!=mv) {mask[eijk-hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek-1;}
-			if((q&b5)==0) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
-		} else if((q&b5)==b5) if(ek<hz-1) if(mask[eijk+hxy]!=mv) {mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
+			if(ei>0) if(*(mijk-1)!=mv) {*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
+			if((q&b1)==0) if(ei<hx-1) if(*(mijk+1)!=mv) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
+		} else if((q&b1)==b1) {if(ei<hx-1) if(*(mijk+1)!=mv) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}}
+		if((q&b4)==b4) {if(ej>0) if(*(mijk-hx)!=mv) {*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
+			if((q&b3)==0) if(ej<hy-1) if(*(mijk+hx)!=mv) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
+		} else if((q&b3)==b3) {if(ej<hy-1) if(*(mijk+hx)!=mv) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}}
+		if((q&b6)==b6) {if(ek>0) if(*(mijk-hxy)!=mv) {*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
+			if((q&b5)==0) if(ek<hz-1) if(*(mijk+hxy)!=mv) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+		} else if((q&b5)==b5) if(ek<hz-1) if(*(mijk+hxy)!=mv) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
 	}
 
 	// Do a check to see if we've reach the radius cutoff
@@ -290,15 +290,15 @@ bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk
 	// We were unable to completely compute the cell based on the blocks in
 	// the worklist, so now we have to go block by block, reading in items
 	// off the list
-	while(s_start!=s_end) {
+	while(qu_s!=qu_e) {
 
 		// If we reached the end of the list memory loop back to the
 		// start
-		if(s_start==s_size) s_start=0;
+		if(qu_s==qu_l) qu_s=qu;
 
 		// Read in a block off the list, and compute the upper and lower
 		// coordinates in each of the three dimensions
-		ei=sl[s_start++];ej=sl[s_start++];ek=sl[s_start++];
+		ei=*(qu_s++);ej=*(qu_s++);ek=*(qu_s++);
 		xlo=(ei-i)*boxx-fx;xhi=xlo+boxx;
 		ylo=(ej-j)*boxy-fy;yhi=ylo+boxy;
 		zlo=(ek-k)*boxz-fz;zhi=zlo+boxz;
@@ -365,17 +365,17 @@ bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk
 		}
 
 		// If there's not much memory on the block list then add more
-		if((s_start<=s_end?s_size-s_end+s_start:s_end-s_start)<18) add_list_memory();
+		if((qu_s<=qu_e?(qu_l-qu_e)+(qu_s-qu):qu_e-qu_s)<18) add_list_memory(qu_s,qu_e);
 
 		// Test the neighbors of the current block, and add them to the
 		// block list if they haven't already been tested
-		eijk=ei+hx*(ej+hy*ek);
-		if(ei>0) if(mask[eijk-1]!=mv) {if(s_end==s_size) s_end=0;mask[eijk-1]=mv;sl[s_end++]=ei-1;sl[s_end++]=ej;sl[s_end++]=ek;}
-		if(ej>0) if(mask[eijk-hx]!=mv) {if(s_end==s_size) s_end=0;mask[eijk-hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej-1;sl[s_end++]=ek;}
-		if(ek>0) if(mask[eijk-hxy]!=mv) {if(s_end==s_size) s_end=0;mask[eijk-hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek-1;}
-		if(ei<hx-1) if(mask[eijk+1]!=mv) {if(s_end==s_size) s_end=0;mask[eijk+1]=mv;sl[s_end++]=ei+1;sl[s_end++]=ej;sl[s_end++]=ek;}
-		if(ej<hy-1) if(mask[eijk+hx]!=mv) {if(s_end==s_size) s_end=0;mask[eijk+hx]=mv;sl[s_end++]=ei;sl[s_end++]=ej+1;sl[s_end++]=ek;}
-		if(ek<hz-1) if(mask[eijk+hxy]!=mv) {if(s_end==s_size) s_end=0;mask[eijk+hxy]=mv;sl[s_end++]=ei;sl[s_end++]=ej;sl[s_end++]=ek+1;}
+		mijk=mask+ei+hx*(ej+hy*ek);
+		if(ek>0) if(*(mijk-hxy)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
+		if(ej>0) if(*(mijk-hx)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
+		if(ei>0) if(*(mijk-1)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
+		if(ei<hx-1) if(*(mijk+1)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
+		if(ej<hy-1) if(*(mijk+hx)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
+		if(ek<hz-1) if(*(mijk+hxy)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
 	}
 
 	return true;
@@ -700,19 +700,20 @@ bool voropp_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double
 
 /** Add list memory. */
 template<class c_class>
-inline void voropp_compute<c_class>::add_list_memory() {
-	int i,j=0,*ps;
-	ps=new int[s_size<<1];
+inline void voropp_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
+	qu_size<<=1;
+	int *qu_n(new int[qu_size]),*qu_c(qu_n);
 #if VOROPP_VERBOSE >=2
-	fprintf(stderr,"List memory scaled up to %d\n",s_size<<1);
+	fprintf(stderr,"List memory scaled up to %d\n",qu_size);
 #endif
-	if(s_start<=s_end) {
-		for(i=s_start;i<s_end;i++) ps[j++]=sl[i];
+	if(qu_s<=qu_e) {
+		while(qu_s<qu_e) *(qu_c++)=*(qu_s++);
 	} else {
-		for(i=s_start;i<s_size;i++) ps[j++]=sl[i];
-		for(i=0;i<s_end;i++) ps[j++]=sl[i];
+		while(qu_s<qu_l) *(qu_c++)=*(qu_s++);qu_s=qu;
+		while(qu_s<qu_e) *(qu_c++)=*(qu_s++);
 	}
-	s_size<<=1;
-	s_start=0;s_end=j;
-	delete [] sl;sl=ps;
+	delete [] qu;
+	qu_s=qu=qu_n;
+	qu_l=qu+qu_size;
+	qu_e=qu_c;
 }

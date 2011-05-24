@@ -11,6 +11,7 @@
 #include <cstring>
 using namespace std;
 
+#include "config.hh"
 #include "common.hh"
 #include "cell.hh"
 #include "neighbor.hh"
@@ -24,7 +25,7 @@ voronoicell_base<n_option>::voronoicell_base() :
 	pts(new double[3*current_vertices]), neighbor(this), mem(new int[current_vertex_order]),
 	mec(new int[current_vertex_order]), mep(new int*[current_vertex_order]),
 	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]),
-	marg(new int[current_marginal<<1]) {
+	current_marginal(init_marginal), marg(new int[current_marginal]) {
 	int i;
 	for(i=0;i<3;i++) {
 		mem[i]=init_n_vertices;mec[i]=0;
@@ -1547,15 +1548,17 @@ template<class n_option>
 int voronoicell_base<n_option>::check_marginal(int n,double &ans) {
 	int i;
 	for(i=0;i<n_marg;i+=2) if(marg[i]==n) return marg[i+1];
-	if(n_marg==current_marginal<<1) {
-		i=current_marginal<<1;
-		if(i>max_marginal) voropp_fatal_error("Marginal case buffer allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	if(n_marg==current_marginal) {
+		current_marginal<<=1;
+		if(current_marginal>max_marginal)
+			voropp_fatal_error("Marginal case buffer allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 		fprintf(stderr,"Marginal cases buffer scaled up to %d\n",i);
 #endif
-		int *pmarg=new int[2*i];
-		for(int j=0;j<(current_marginal<<1);j++) pmarg[j]=marg[j];
-		delete [] marg;marg=pmarg;
+		int *pmarg=new int[current_marginal];
+		for(int j=0;j<n_marg;j++) pmarg[j]=marg[j];
+		delete [] marg;
+		marg=pmarg;
 	}
 	marg[n_marg++]=n;
 	marg[n_marg++]=ans>tolerance?1:(ans<-tolerance?-1:0);

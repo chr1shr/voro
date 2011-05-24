@@ -55,7 +55,7 @@ class voropp_compute {
 		int *co;		
 		voropp_compute(c_class &con_,int hx_,int hy_,int hz_);
 		~voropp_compute() {
-			delete [] sl;
+			delete [] qu;
 			delete [] mask;
 		}
 		template<class n_option>
@@ -64,14 +64,8 @@ class voropp_compute {
 		/** This sets the current value being used to mark tested blocks
 		 * in the mask. */
 		unsigned int mv;		
-		/** The position of the first element on the search list to be
-		 * considered. */
-		int s_start;
-		/** The position of the last element on the search list to be
-		 * considered. */
-		int s_end;
 		/** The current size of the search list. */
-		int s_size;
+		int qu_size;
 		const unsigned int *wl;
 		double *mrad;
 		/** This array is used during the cell computation to determine
@@ -79,7 +73,7 @@ class voropp_compute {
 		unsigned int *mask;		
 		/** This array is used to store the list of blocks to test during
 		 * the Voronoi cell computation. */
-		int *sl;
+		int *qu,*qu_l;
 		template<class n_option>
 		bool corner_test(voronoicell_base<n_option> &c,double xl,double yl,double zl,double xh,double yh,double zh);
 		template<class n_option>
@@ -95,7 +89,7 @@ class voropp_compute {
 		template<class n_option>
 		inline bool face_z_test(voronoicell_base<n_option> &c,double x0,double y0,double zl,double x1,double y1);
 		bool compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gx,double gy,double gz,double& crs,double mrs);
-		void add_list_memory();
+		void add_list_memory(int*& qu_s,int*& qu_e);
 		inline void reset_mask() {
 			for(unsigned int *mp(mask);mp<mask+hxyz;mp++) *mp=0;
 		}		

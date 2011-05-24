@@ -41,6 +41,7 @@ int main() {
 		x=x_min+rnd()*(x_max-x_min);
 		y=y_min+rnd()*(y_max-y_min);
 		z=z_min+rnd()*(z_max-z_min);
+		printf("%d\n",i);
 		con.put(i,x,y,z);
 	}
 
@@ -55,5 +56,5 @@ int main() {
 
 	// Output the Voronoi cells in gnuplot format
 //	con.draw_cells_gnuplot("random_points_v.gnu");
-	con.print_custom("%i %x %y %z %v","rp_custom");
+//	con.print_custom("%i %x %y %z %v","rp_custom");
 }

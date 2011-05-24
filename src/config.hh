@@ -22,7 +22,7 @@ const int init_3_vertices=256;
  */
 const int init_n_vertices=8;
 /** The initial buffer size for marginal cases used by the suretest class. */
-const int init_marginal=256;
+const int init_marginal=64;
 /** The initial size for the delete stack. */
 const int init_delete_size=256;
 /** The initial size for the auxiliary delete stack. */
