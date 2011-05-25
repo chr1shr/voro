@@ -279,8 +279,13 @@
 #ifndef VOROPP_HH
 #define VOROPP_HH
 
+#include "config.hh"
+#include "common.hh"
 #include "cell.hh"
+#include "v_base.hh"
 #include "container.hh"
+#include "v_compute.hh"
+#include "v_loops.hh"
 #include "wall.hh"
 
 #endif

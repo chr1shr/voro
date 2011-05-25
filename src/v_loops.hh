@@ -37,14 +37,21 @@ class voropp_order {
 
 class v_loop_base {
 	public:
-		const int nx,ny,nz,nxy,nxyz;
+		const int nx,ny,nz,nxy,nxyz,ps;
 		double **p;
 		int **id;
 		int *co;
 		int i,j,k,ijk,q;
 		template<class c_class>
-		v_loop_base(c_class &con) : nx(con.nx), ny(con.ny), nz(con.nz), nxy(con.nxy), nxyz(con.nxyz),
+		v_loop_base(c_class &con) : nx(con.nx), ny(con.ny), nz(con.nz), nxy(con.nxy), nxyz(con.nxyz), ps(con.ps),
 					    p(con.p), id(con.id), co(con.co) {}
+		inline void pos(double &x,double &y,double &z) {
+			double *pp(p[ijk]+ps*q);
+			x=*(pp++);y=*(pp++);z=*pp;
+		}
+		inline double x() {return p[ijk][ps*q];}
+		inline double y() {return p[ijk][ps*q+1];}
+		inline double z() {return p[ijk][ps*q+2];}
 };
 
 class v_loop_all : public v_loop_base {

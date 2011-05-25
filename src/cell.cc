@@ -1394,7 +1394,7 @@ double voronoicell_base::total_edge_distance() {
 void voronoicell_base::draw_pov(double x,double y,double z,FILE* fp) {
 	int i,j,k;double *ptsp(pts),*pt2;
 	char posbuf1[128],posbuf2[128];
-	for(i=0;i<p-1;i++,ptsp+=3) {
+	for(i=0;i<p;i++,ptsp+=3) {
 		sprintf(posbuf1,"%g,%g,%g",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
 		fprintf(fp,"sphere{<%s>,r}\n",posbuf1);
 		for(j=0;j<nu[i];j++) {
@@ -1446,11 +1446,11 @@ inline bool voronoicell_base::search_edge(int l,int &m,int &k) {
  * applied.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  * \param[in] fp a file handle to write to. */
-inline void voronoicell_base::draw_pov_mesh(double x,double y,double z,FILE *fp) {
+void voronoicell_base::draw_pov_mesh(double x,double y,double z,FILE *fp) {
 	int i,j,k,l,m,n;
 	double *ptsp(pts);
 	fprintf(fp,"mesh2 {\nvertex_vectors {\n%d\n",p);
-	for(i=0;i<p;i++,ptsp+=3) fprintf(fp,",<%g,%g,%g>\n",x+*ptsp*0.5,y+pts[1]*0.5,z+pts[2]*0.5);
+	for(i=0;i<p;i++,ptsp+=3) fprintf(fp,",<%g,%g,%g>\n",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
 	fprintf(fp,"}\nface_indices {\n%d\n",2*(p-2));
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];

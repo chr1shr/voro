@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 // Golden ratio constants
 const double Phi=0.5*(1+sqrt(5.0));

@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 // Set up constants for the container geometry
 const double x_min=-5,x_max=5;

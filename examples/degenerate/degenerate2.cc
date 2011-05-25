@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : July 1st 2008
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 const double pi=3.1415926535897932384626433832795;
 
@@ -55,9 +55,9 @@ int main() {
 	}
 
 	// Output the Voronoi cell to a file in Gnuplot format
-	v.draw_gnuplot("degenerate2.gnu",0,0,0);
+	v.draw_gnuplot(0,0,0,"degenerate2.gnu");
 
 	// Optional POV-Ray output
-	v.draw_pov("degenerate2_v.pov",0,0,0);
-	v.draw_pov_mesh("degenerate2_m.pov",0,0,0);
+	v.draw_pov(0,0,0,"degenerate2_v.pov");
+	v.draw_pov_mesh(0,0,0,"degenerate2_m.pov");
 }

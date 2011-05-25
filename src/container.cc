@@ -28,8 +28,7 @@ container_base::container_base(double ax_,double bx_,double ay_,double by_,doubl
 	: voropp_base(nx_,ny_,nz_,(bx_-ax_)/nx_,(by_-ay_)/ny_,(bz_-az_)/nz_),
 	ax(ax_), bx(bx_), ay(ay_), by(by_), az(az_), bz(bz_),
 	xperiodic(xperiodic_), yperiodic(yperiodic_), zperiodic(zperiodic_),
-	id(new int*[nxyz]), p(new double*[nxyz]), co(new int[nxyz]), mem(new int[nxyz]), ps(ps_),
-	walls(new wall*[init_wall_size]), wall_number(0), current_wall_size(init_wall_size) {
+	id(new int*[nxyz]), p(new double*[nxyz]), co(new int[nxyz]), mem(new int[nxyz]), ps(ps_) {
 	int l;
 	for(l=0;l<nxyz;l++) co[l]=0;
 	for(l=0;l<nxyz;l++) mem[l]=init_mem;
@@ -44,7 +43,6 @@ container_base::~container_base() {
 	for(l=0;l<nxyz;l++) delete [] id[l];
 	delete [] p;
 	delete [] id;
-	delete [] walls;
 	delete [] mem;
 	delete [] co;
 }
@@ -119,7 +117,7 @@ inline bool container_base::put_locate_block(int &ijk,double &x,double &y,double
 		return true;
 	}
 #if VOROPP_REPORT_OUT_OF_BOUNDS
-	fprintf(stderr,"Out of bounds: [%d] (x,y,z)=(%g,%g,%g)\n",n,x,y,z,r);
+	fprintf(stderr,"Out of bounds: [%d] (x,y,z)=(%g,%g,%g)\n",n,x,y,z);
 #endif
 	return false;
 }
@@ -217,7 +215,7 @@ void container::draw_particles(v_loop &vl,FILE *fp) {
 	double *pp;
 	if(vl.start()) do {
 		pp=p[vl.ijk]+3*vl.q;
-		fprintf(fp,"%d %d %d %g %g %g\n",vl.ijk,vl.q,id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
+		fprintf(fp,"%d %g %g %g\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
 	} while(vl.inc());
 }
 
@@ -401,28 +399,52 @@ bool container_base::point_inside(double x,double y,double z) {
 	return point_inside_walls(x,y,z);
 }
 
-/** This function tests to see if a give vector lies within the walls that have
- * been added to the container, but does not specifically check whether the
- * vector lies within the container bounds.
- * \param[in] (x,y,z) the position vector to be tested.
- * \return True if the point is inside the container, false if the point is
- *         outside. */
-bool container_base::point_inside_walls(double x,double y,double z) {
-	for(int j=0;j<wall_number;j++) if(!walls[j]->point_inside(x,y,z)) return false;
-	return true;
+wall_list::wall_list() : walls(new wall*[init_wall_size]), wep(walls), wel(walls+init_wall_size),
+	current_wall_size(init_wall_size) {}
+
+wall_list::~wall_list() {
+	delete [] walls;
+}
+
+void wall_list::add_wall(wall_list &wl) {
+	for(wall **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
+}
+
+void wall_list::deallocate() {
+	for(wall **wp=walls;wp<wep;wp++) delete [] wp;
 }
 
 /** Adds a wall to the container.
  * \param[in] w a wall object to be added.*/
-void container_base::add_wall(wall& w) {
-	if(wall_number==current_wall_size) {
-		current_wall_size<<=1;
-		if(current_wall_size>max_wall_size)
-			voropp_fatal_error("Wall memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
-		wall **pwall;
-		pwall=new wall*[current_wall_size];
-		for(int i=0;i<wall_number;i++) pwall[i]=walls[i];
-		delete [] walls;walls=pwall;
-	}
-	walls[wall_number++]=&w;
+void wall_list::increase_wall_memory() {
+	current_wall_size<<=1;
+	if(current_wall_size>max_wall_size)
+		voropp_fatal_error("Wall memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	wall **nwalls(new wall*[current_wall_size]),**nwp(nwalls),**wp(walls);
+	while(wp<wep) *(nwp++)=*(wp++);
+	delete [] walls;
+	walls=nwalls;wel=walls+current_wall_size;wep=nwp;
 }
+
+// Explicit instantiation
+template void container::draw_particles<v_loop_all>(v_loop_all&,FILE*);
+template void container::draw_particles<v_loop_order>(v_loop_order&,FILE*);
+template void container::draw_particles_pov<v_loop_all>(v_loop_all&,FILE*);
+template void container::draw_particles_pov<v_loop_order>(v_loop_order&,FILE*);
+template void container::draw_cells_pov<v_loop_all>(v_loop_all&,FILE*);
+template void container::draw_cells_pov<v_loop_order>(v_loop_order&,FILE*);
+template void container::draw_cells_gnuplot<v_loop_all>(v_loop_all&,FILE*);
+template void container::draw_cells_gnuplot<v_loop_order>(v_loop_order&,FILE*);
+template void container::print_custom<v_loop_all>(v_loop_all&,const char*,FILE*);
+template void container::print_custom<v_loop_order>(v_loop_order&,const char*,FILE*);
+
+template void container_poly::draw_particles<v_loop_all>(v_loop_all&,FILE*);
+template void container_poly::draw_particles<v_loop_order>(v_loop_order&,FILE*);
+template void container_poly::draw_particles_pov<v_loop_all>(v_loop_all&,FILE*);
+template void container_poly::draw_particles_pov<v_loop_order>(v_loop_order&,FILE*);
+template void container_poly::draw_cells_pov<v_loop_all>(v_loop_all&,FILE*);
+template void container_poly::draw_cells_pov<v_loop_order>(v_loop_order&,FILE*);
+template void container_poly::draw_cells_gnuplot<v_loop_all>(v_loop_all&,FILE*);
+template void container_poly::draw_cells_gnuplot<v_loop_order>(v_loop_order&,FILE*);
+template void container_poly::print_custom<v_loop_all>(v_loop_all&,const char*,FILE*);
+template void container_poly::print_custom<v_loop_order>(v_loop_order&,const char*,FILE*);

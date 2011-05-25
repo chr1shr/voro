@@ -7,35 +7,26 @@
 # Load the common configuration file
 include ../../config.mk
 
-# The relative of path of the main library source files
-INCLUDE=-I../../src
-
-# List of the common source files
-SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
-       ../../src/cell.hh ../../src/cell.cc ../../src/wall.cc ../../src/wall.hh \
-       ../../src/worklist.cc ../../src/worklist.hh ../../src/voro++.cc \
-       ../../src/voro++.hh
-
 # List of executables
 EXECUTABLES=single_cell platonic random_points import 
 
 # Makefile rules
 all: single_cell platonic random_points import 
 
-single_cell: $(SOURCE) single_cell.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o single_cell single_cell.cc
+single_cell: single_cell.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o single_cell single_cell.cc -lvoro++
 
-platonic: $(SOURCE) platonic.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o platonic platonic.cc
+platonic: platonic.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o platonic platonic.cc -lvoro++
 
-random_points: $(SOURCE) random_points.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o random_points random_points.cc
+random_points: random_points.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o random_points random_points.cc -lvoro++
 
-import: $(SOURCE) import.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o import import.cc
+import: import.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o import import.cc -lvoro++
 
-nearest: $(SOURCE) nearest.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o nearest nearest.cc
+#nearest: $(SOURCE) nearest.cc
+#	$(CC) $(CFLAGS) $(INCLUDE) -o nearest nearest.cc
 
 clean:
 	rm -f $(EXECUTABLES)

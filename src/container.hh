@@ -42,7 +42,37 @@ class wall {
 		virtual bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) = 0;
 };
 
-class container_base : public voropp_base {
+class wall_list {
+	public:
+		wall **walls,**wep;
+		wall_list();
+		~wall_list();
+		inline void add_wall(wall *w) {
+			if(wep==wel) increase_wall_memory();
+			*(wep++)=w;
+		}
+		inline void add_wall(wall &w) {add_wall(&w);}
+		void add_wall(wall_list &wl);
+		inline bool point_inside_walls(double x,double y,double z) {
+			for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->point_inside(x,y,z))) return false;
+			return true;
+		}
+		template<class c_class>
+		bool apply_walls(c_class &c,double x,double y,double z) {
+			for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->cut_cell(c,x,y,z))) return false;
+			return true;
+		}
+		void deallocate();
+	protected:
+		void increase_wall_memory();
+		/** This array holds pointers to any wall objects that have
+		 * been added to the container. */
+		wall **wel;
+		/** The current amount of memory allocated for walls. */
+		int current_wall_size;
+};
+
+class container_base : public voropp_base, public wall_list {
 	public:
 		/** The minimum x coordinate of the container. */
 		const double ax;
@@ -81,6 +111,13 @@ class container_base : public voropp_base {
 		 * more is allocated using the add_particle_memory() function.
 		 */
 		int *mem;
+		/** The amount of memory in the array structure for each
+		 * particle. This is set to 3 when the basic class is
+		 * initialized, so that the array holds (x,y,z) positions. If
+		 * the container class is initialized as part of the derived
+		 * class container_poly, then this is set to 4, to also hold
+		 * the particle radii. */
+		const int ps;		
 		container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 				int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,
 				int init_mem,int ps);
@@ -111,8 +148,7 @@ class container_base : public voropp_base {
 			if(yperiodic) {y1=-(y2=0.5*(by-ay));stj=ny;} else {y1=ay-cuy;y2=by-cuy;stj=cuj;}
 			if(zperiodic) {z1=-(z2=0.5*(bz-az));stk=nz;} else {z1=az-cuz;z2=bz-cuz;stk=cuk;}
 			c.init(x1,x2,y1,y2,z1,z2);
-			for(int j=0;j<wall_number;j++) if(!(walls[j]->cut_cell(c,cux,cuy,cuz))) return false;
-
+			if(!apply_walls(c,cux,cuy,cuz)) return false;
 			cuijk=vl.ijk-sti-nx*(stj+ny*stk);
 			return true;
 		}
@@ -128,20 +164,6 @@ class container_base : public voropp_base {
 			return cuijk+ei+nx*(ej+ny*ek);
 		}		
 	protected:
-		/** The amount of memory in the array structure for each
-		 * particle. This is set to 3 when the basic class is
-		 * initialized, so that the array holds (x,y,z) positions. If
-		 * the container class is initialized as part of the derived
-		 * class container_poly, then this is set to 4, to also hold
-		 * the particle radii. */
-		const int ps;
-		/** This array holds pointers to any wall objects that have
-		 * been added to the container. */
-		wall **walls;
-		/** The current number of wall objects, initially set to zero. */
-		int wall_number;
-		/** The current amount of memory allocated for walls. */
-		int current_wall_size;
 		double cux,cuy,cuz;
 		int cui,cuj,cuk,cuijk;
 		void add_particle_memory(int i);

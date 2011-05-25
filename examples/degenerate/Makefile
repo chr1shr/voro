@@ -7,15 +7,6 @@
 # Load the common configuration file
 include ../../config.mk
 
-# The relative of path of the main library source files
-INCLUDE=-I../../src
-
-# List of the common source files
-SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
-       ../../src/cell.hh ../../src/cell.cc ../../src/wall.cc ../../src/wall.hh \
-       ../../src/worklist.cc ../../src/worklist.hh ../../src/voro++.cc \
-       ../../src/voro++.hh
-
 # List of executables
 EXECUTABLES=degenerate degenerate2
 
@@ -23,10 +14,10 @@ EXECUTABLES=degenerate degenerate2
 all: degenerate degenerate2
 
 degenerate: $(SOURCE) degenerate.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o degenerate degenerate.cc
+	$(CC) $(CFLAGS) $(EXAMPLE_PATHS) -o degenerate degenerate.cc -lvoro++
 
 degenerate2: $(SOURCE) degenerate2.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o degenerate2 degenerate2.cc
+	$(CC) $(CFLAGS) $(EXAMPLE_PATHS) -o degenerate2 degenerate2.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

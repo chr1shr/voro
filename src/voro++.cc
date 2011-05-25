@@ -8,7 +8,6 @@
  * \brief A file that loads all of the function implementation files. */
 
 #include "cell.cc"
-#include "neighbor.cc"
 #include "v_base.cc"
 #include "container.cc"
 #include "v_compute.cc"
