@@ -5,7 +5,6 @@
 // Date     : July 1st 2008
 
 #include "cell.cc"
-#include "neighbor.cc"
 
 // This function returns a random floating point number between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
