@@ -721,6 +721,7 @@ inline void voropp_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
 
 // Explicit template instantiation
 template voropp_compute<container>::voropp_compute(container&,int,int,int);
+template voropp_compute<container_poly>::voropp_compute(container_poly&,int,int,int);
 template bool voropp_compute<container>::compute_cell(voronoicell&,int,int,int,int,int,double,double,double);
 template bool voropp_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int,double,double,double);
 template bool voropp_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int,double,double,double);
