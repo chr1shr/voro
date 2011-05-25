@@ -5,7 +5,6 @@
 // Date     : July 1st 2008
 
 #include "cell.cc"
-#include "neighbor.cc"
 #include "unitcell.cc"
 
 int main() {

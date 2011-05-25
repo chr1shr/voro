@@ -1004,13 +1004,15 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 	// Delete them from the array structure
 	while(stack>0) {
-		while(ed[--p][nu[p]]==-1) {
+		--p;
+		while(ed[p][nu[p]]==-1) {
 			j=nu[p];
 			mec[j]--;
 			for(i=0;i<=2*j;i++) ed[p][i]=(mep[j]+(2*j+1)*mec[j])[i];
 			vc.n_set_aux2_copy(p,j);
 			vc.n_copy_pointer(ed[p][2*j],p);
 			ed[ed[p][2*j]]=ed[p];
+			--p;
 		}
 		up=ds[--stack];
 		if(up<p) {
@@ -2087,3 +2089,6 @@ void voronoicell_neighbor::print_edges_neighbors(int i) {
 		printf("%d)",ne[i][j]);
 	} else printf("     ()");
 }
+
+template bool voronoicell_base::nplane(voronoicell&,double,double,double,double,int);
+template bool voronoicell_base::nplane(voronoicell_neighbor&,double,double,double,double,int);

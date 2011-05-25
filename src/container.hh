@@ -7,6 +7,9 @@
 /** \file container.hh
  * \brief Header file for the container_base template and related classes. */
 
+#ifndef VOROPP_CONTAINER_HH
+#define VOROPP_CONTAINER_HH
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -14,6 +17,7 @@
 using namespace std;
 
 #include "config.hh"
+#include "common.hh"
 #include "v_base.hh"
 #include "cell.hh"
 #include "v_loops.hh"
@@ -32,10 +36,10 @@ class wall {
 		virtual bool point_inside(double x,double y,double z) = 0;
 		/** A pure virtual function for cutting a cell without
 		 * neighbor-tracking with a wall. */
-		virtual bool cut_cell(voronoicell_base<neighbor_none> &c,double x,double y,double z) = 0;
+		virtual bool cut_cell(voronoicell &c,double x,double y,double z) = 0;
 		/** A pure virtual function for cutting a cell with
 		 * neighbor-tracking enabled with a wall. */
-		virtual bool cut_cell(voronoicell_base<neighbor_track> &c,double x,double y,double z) = 0;
+		virtual bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) = 0;
 };
 
 class container_base : public voropp_base {
@@ -97,8 +101,8 @@ class container_base : public voropp_base {
 		 * \param[in] (x,y,z) the position of the particle.
 		 * \return False if the plane cuts applied by walls completely
 		 * removed the cell, true otherwise. */
-		template<class n_option,class v_loop>
-		inline bool initialize_voronoicell(voronoicell_base<n_option> &c,v_loop &vl,int &sti,int &stj,int &stk) {
+		template<class v_cell,class v_loop>
+		inline bool initialize_voronoicell(v_cell &c,v_loop &vl,int &sti,int &stj,int &stk) {
 			double x1,x2,y1,y2,z1,z2;
 			double *pp(p[vl.ijk]+ps*vl.q);
 			cux=*(pp++);cuy=*(pp++);cuz=*pp;
@@ -221,8 +225,8 @@ class container : public container_base {
 			print_custom(format,fp);
 			fclose(fp);
 		}
-		template<class n_option,class v_loop>
-		inline bool compute_cell(voronoicell_base<n_option> &c,v_loop &vl) {
+		template<class v_cell,class v_loop>
+		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			int sti,stj,stk;
 			if(!initialize_voronoicell(c,vl,sti,stj,stk)) return false;
 			return vc.compute_cell(c,vl.ijk,vl.q,sti,stj,stk,cux,cuy,cuz);
@@ -312,8 +316,8 @@ class container_poly : public container_base {
 			print_custom(format,fp);
 			fclose(fp);
 		}
-		template<class n_option,class v_loop>
-		inline bool compute_cell(voronoicell_base<n_option> &c,v_loop &vl) {
+		template<class v_cell,class v_loop>
+		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			int sti,stj,stk;
 			if(!initialize_voronoicell(c,vl,sti,stj,stk)) return false;
 			return vc.compute_cell(c,vl.ijk,vl.q,sti,stj,stk,cux,cuy,cuz);
@@ -334,3 +338,5 @@ class container_poly : public container_base {
 		}
 		friend class voropp_compute<container_poly>;
 };
+
+#endif

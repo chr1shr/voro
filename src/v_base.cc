@@ -1,4 +1,5 @@
 #include "v_base.hh"
+#include "config.hh"
 
 /** This function is called during container construction. The routine scans
  * all of the worklists in the wl[] array. For a given worklist of blocks
@@ -100,3 +101,5 @@ bool voropp_base::contains_neighbor(const char *format) {
 
 	return false;
 }
+
+#include "worklist.cc"

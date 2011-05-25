@@ -5,7 +5,6 @@
 // Date     : July 1st 2008
 
 #include "cell.cc"
-#include "neighbor.cc"
 #include "v_base.cc"
 #include "container.cc"
 #include "v_compute.cc"

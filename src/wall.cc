@@ -23,8 +23,8 @@ bool wall_sphere::point_inside(double x,double y,double z) {
  * \param[in,out] c the Voronoi cell to be cut.
  * \param[in] (x,y,z) the location of the Voronoi cell.
  * \return True if the cell still exists, false if the cell is deleted. */
-template<class n_option>
-bool wall_sphere::cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z) {
+template<class v_cell>
+bool wall_sphere::cut_cell_base(v_cell &c,double x,double y,double z) {
 	double xd=x-xc,yd=y-yc,zd=z-zc,dq;
 	dq=xd*xd+yd*yd+zd*zd;
 	if (dq>1e-5) {
@@ -45,8 +45,8 @@ bool wall_plane::point_inside(double x,double y,double z) {
  * \param[in,out] c the Voronoi cell to be cut.
  * \param[in] (x,y,z) the location of the Voronoi cell.
  * \return True if the cell still exists, false if the cell is deleted. */
-template<class n_option>
-bool wall_plane::cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z) {
+template<class v_cell>
+bool wall_plane::cut_cell_base(v_cell &c,double x,double y,double z) {
 	double dq=2*(ac-x*xc-y*yc-z*zc);
 	return c.nplane(xc,yc,zc,dq,w_id);
 }
@@ -69,8 +69,8 @@ bool wall_cylinder::point_inside(double x,double y,double z) {
  * \param[in,out] c the Voronoi cell to be cut.
  * \param[in] (x,y,z) the location of the Voronoi cell.
  * \return True if the cell still exists, false if the cell is deleted. */
-template<class n_option>
-bool wall_cylinder::cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z) {
+template<class v_cell>
+bool wall_cylinder::cut_cell_base(v_cell &c,double x,double y,double z) {
 	double xd=x-xc,yd=y-yc,zd=z-zc;
 	double pa=(xd*xa+yd*ya+zd*za)*asi;
 	xd-=xa*pa;yd-=ya*pa;zd-=za*pa;
@@ -103,8 +103,8 @@ bool wall_cone::point_inside(double x,double y,double z) {
  * \param[in,out] c the Voronoi cell to be cut.
  * \param[in] (x,y,z) the location of the Voronoi cell.
  * \return True if the cell still exists, false if the cell is deleted. */
-template<class n_option>
-bool wall_cone::cut_cell_base(voronoicell_base<n_option> &c,double x,double y,double z) {
+template<class v_cell>
+bool wall_cone::cut_cell_base(v_cell &c,double x,double y,double z) {
 	double xd=x-xc,yd=y-yc,zd=z-zc;
 	double xf,yf,zf,imoda;
 	double pa=(xd*xa+yd*ya+zd*za)*asi;

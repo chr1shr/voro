@@ -17,6 +17,7 @@
 using namespace std;
 
 #include "config.hh"
+#include "common.hh"
 
 /** \brief A class encapsulating all the routines for storing and calculating
  * a single Voronoi cell.
@@ -218,12 +219,6 @@ class voronoicell_base {
 		int check_marginal(int n,double &ans);
 		friend class neighbor_track;
 };
-
-/*class voronoicell;
-class voronoicell_neighbor;
-
-template bool voronoicell_base::nplane(voronoicell&,double,double,double,double,int);
-template bool voronoicell_base::nplane(voronoicell_neighbor&,double,double,double,double,int);*/
 
 class voronoicell : public voronoicell_base {
 	public:

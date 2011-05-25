@@ -58,8 +58,8 @@ class voropp_compute {
 			delete [] qu;
 			delete [] mask;
 		}
-		template<class n_option>
-		bool compute_cell(voronoicell_base<n_option> &c,int ijk,int s,int i,int j,int k,double x,double y,double z);
+		template<class v_cell>
+		bool compute_cell(v_cell &c,int ijk,int s,int i,int j,int k,double x,double y,double z);
 	private:
 		/** This sets the current value being used to mark tested blocks
 		 * in the mask. */
@@ -74,20 +74,20 @@ class voropp_compute {
 		/** This array is used to store the list of blocks to test during
 		 * the Voronoi cell computation. */
 		int *qu,*qu_l;
-		template<class n_option>
-		bool corner_test(voronoicell_base<n_option> &c,double xl,double yl,double zl,double xh,double yh,double zh);
-		template<class n_option>
-		inline bool edge_x_test(voronoicell_base<n_option> &c,double x0,double yl,double zl,double x1,double yh,double zh);
-		template<class n_option>
-		inline bool edge_y_test(voronoicell_base<n_option> &c,double xl,double y0,double zl,double xh,double y1,double zh);
-		template<class n_option>
-		inline bool edge_z_test(voronoicell_base<n_option> &c,double xl,double yl,double z0,double xh,double yh,double z1);
-		template<class n_option>
-		inline bool face_x_test(voronoicell_base<n_option> &c,double xl,double y0,double z0,double y1,double z1);
-		template<class n_option>
-		inline bool face_y_test(voronoicell_base<n_option> &c,double x0,double yl,double z0,double x1,double z1);
-		template<class n_option>
-		inline bool face_z_test(voronoicell_base<n_option> &c,double x0,double y0,double zl,double x1,double y1);
+		template<class v_cell>
+		bool corner_test(v_cell &c,double xl,double yl,double zl,double xh,double yh,double zh);
+		template<class v_cell>
+		inline bool edge_x_test(v_cell &c,double x0,double yl,double zl,double x1,double yh,double zh);
+		template<class v_cell>
+		inline bool edge_y_test(v_cell &c,double xl,double y0,double zl,double xh,double y1,double zh);
+		template<class v_cell>
+		inline bool edge_z_test(v_cell &c,double xl,double yl,double z0,double xh,double yh,double z1);
+		template<class v_cell>
+		inline bool face_x_test(v_cell &c,double xl,double y0,double z0,double y1,double z1);
+		template<class v_cell>
+		inline bool face_y_test(v_cell &c,double x0,double yl,double z0,double x1,double z1);
+		template<class v_cell>
+		inline bool face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1);
 		bool compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gx,double gy,double gz,double& crs,double mrs);
 		void add_list_memory(int*& qu_s,int*& qu_e);
 		inline void reset_mask() {

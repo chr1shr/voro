@@ -7,6 +7,7 @@
 /** \file v_compute.cc */
 
 #include "v_compute.hh"
+#include "container.hh"
 
 template<class c_class>
 voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
@@ -46,8 +47,8 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
  * \return False if the Voronoi cell was completely removed during the
  *         computation and has zero volume, true otherwise. */
 template<class c_class>
-template<class n_option>
-bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk,int s,int i,int j,int k,double x,double y,double z) {
+template<class v_cell>
+bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,int k,double x,double y,double z) {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
 	double x1,y1,z1,qx=0,qy=0,qz=0;
 	double xlo,ylo,zlo,xhi,yhi,zhi,rs;
@@ -391,8 +392,8 @@ bool voropp_compute<c_class>::compute_cell(voronoicell_base<n_option> &c,int ijk
  *                       furthest away from the cell center.
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
-template<class n_option>
-bool voropp_compute<c_class>::corner_test(voronoicell_base<n_option> &c,double xl,double yl,double zl,double xh,double yh,double zh) {
+template<class v_cell>
+bool voropp_compute<c_class>::corner_test(v_cell &c,double xl,double yl,double zl,double xh,double yh,double zh) {
 	if(c.plane_intersects_guess(xh,yl,zl,con.r_cutoff(xl*xh+yl*yl+zl*zl))) return false;
 	if(c.plane_intersects(xh,yh,zl,con.r_cutoff(xl*xh+yl*yh+zl*zl))) return false;
 	if(c.plane_intersects(xl,yh,zl,con.r_cutoff(xl*xl+yl*yh+zl*zl))) return false;
@@ -415,8 +416,8 @@ bool voropp_compute<c_class>::corner_test(voronoicell_base<n_option> &c,double x
  *                    block furthest away from the cell center.
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
-template<class n_option>
-inline bool voropp_compute<c_class>::edge_x_test(voronoicell_base<n_option> &c,double x0,double yl,double zl,double x1,double yh,double zh) {
+template<class v_cell>
+inline bool voropp_compute<c_class>::edge_x_test(v_cell &c,double x0,double yl,double zl,double x1,double yh,double zh) {
 	if(c.plane_intersects_guess(x0,yl,zh,con.r_cutoff(yl*yl+zl*zh))) return false;
 	if(c.plane_intersects(x1,yl,zh,con.r_cutoff(yl*yl+zl*zh))) return false;
 	if(c.plane_intersects(x1,yl,zl,con.r_cutoff(yl*yl+zl*zl))) return false;
@@ -439,8 +440,8 @@ inline bool voropp_compute<c_class>::edge_x_test(voronoicell_base<n_option> &c,d
  *                    block furthest away from the cell center.
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
-template<class n_option>
-inline bool voropp_compute<c_class>::edge_y_test(voronoicell_base<n_option> &c,double xl,double y0,double zl,double xh,double y1,double zh) {
+template<class v_cell>
+inline bool voropp_compute<c_class>::edge_y_test(v_cell &c,double xl,double y0,double zl,double xh,double y1,double zh) {
 	if(c.plane_intersects_guess(xl,y0,zh,con.r_cutoff(xl*xl+zl*zh))) return false;
 	if(c.plane_intersects(xl,y1,zh,con.r_cutoff(xl*xl+zl*zh))) return false;
 	if(c.plane_intersects(xl,y1,zl,con.r_cutoff(xl*xl+zl*zl))) return false;
@@ -462,8 +463,8 @@ inline bool voropp_compute<c_class>::edge_y_test(voronoicell_base<n_option> &c,d
  *                    block furthest away from the cell center.
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
-template<class n_option>
-inline bool voropp_compute<c_class>::edge_z_test(voronoicell_base<n_option> &c,double xl,double yl,double z0,double xh,double yh,double z1) {
+template<class v_cell>
+inline bool voropp_compute<c_class>::edge_z_test(v_cell &c,double xl,double yl,double z0,double xh,double yh,double z1) {
 	if(c.plane_intersects_guess(xl,yh,z0,con.r_cutoff(xl*xl+yl*yh))) return false;
 	if(c.plane_intersects(xl,yh,z1,con.r_cutoff(xl*xl+yl*yh))) return false;
 	if(c.plane_intersects(xl,yl,z1,con.r_cutoff(xl*xl+yl*yl))) return false;
@@ -484,8 +485,8 @@ inline bool voropp_compute<c_class>::edge_z_test(voronoicell_base<n_option> &c,d
  *                    block.
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
-template<class n_option>
-inline bool voropp_compute<c_class>::face_x_test(voronoicell_base<n_option> &c,double xl,double y0,double z0,double y1,double z1) {
+template<class v_cell>
+inline bool voropp_compute<c_class>::face_x_test(v_cell &c,double xl,double y0,double z0,double y1,double z1) {
 	if(c.plane_intersects_guess(xl,y0,z0,con.r_cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y0,z1,con.r_cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y1,z1,con.r_cutoff(xl*xl))) return false;
@@ -504,8 +505,8 @@ inline bool voropp_compute<c_class>::face_x_test(voronoicell_base<n_option> &c,d
  *                    block.
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
-template<class n_option>
-inline bool voropp_compute<c_class>::face_y_test(voronoicell_base<n_option> &c,double x0,double yl,double z0,double x1,double z1) {
+template<class v_cell>
+inline bool voropp_compute<c_class>::face_y_test(v_cell &c,double x0,double yl,double z0,double x1,double z1) {
 	if(c.plane_intersects_guess(x0,yl,z0,con.r_cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x0,yl,z1,con.r_cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x1,yl,z1,con.r_cutoff(yl*yl))) return false;
@@ -524,8 +525,8 @@ inline bool voropp_compute<c_class>::face_y_test(voronoicell_base<n_option> &c,d
  *                    block.
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
-template<class n_option>
-inline bool voropp_compute<c_class>::face_z_test(voronoicell_base<n_option> &c,double x0,double y0,double zl,double x1,double y1) {
+template<class v_cell>
+inline bool voropp_compute<c_class>::face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1) {
 	if(c.plane_intersects_guess(x0,y0,zl,con.r_cutoff(zl*zl))) return false;
 	if(c.plane_intersects(x0,y1,zl,con.r_cutoff(zl*zl))) return false;
 	if(c.plane_intersects(x1,y1,zl,con.r_cutoff(zl*zl))) return false;
@@ -717,3 +718,10 @@ inline void voropp_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
 	qu_l=qu+qu_size;
 	qu_e=qu_c;
 }
+
+// Explicit template instantiation
+template voropp_compute<container>::voropp_compute(container&,int,int,int);
+template bool voropp_compute<container>::compute_cell(voronoicell&,int,int,int,int,int,double,double,double);
+template bool voropp_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int,double,double,double);
+template bool voropp_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int,double,double,double);
+template bool voropp_compute<container_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int,double,double,double);

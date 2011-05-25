@@ -8,9 +8,7 @@
  * \brief Function implementations for the container_base template and related
  * classes. */
 
-#include "cell.hh"
 #include "container.hh"
-
 
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
@@ -428,5 +426,3 @@ void container_base::add_wall(wall& w) {
 	}
 	walls[wall_number++]=&w;
 }
-
-#include "worklist.cc"

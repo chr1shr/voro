@@ -8,31 +8,36 @@
 include ../config.mk
 
 # List of the common source files
-SOURCE=container.cc container.hh config.hh cell.hh cell.cc wall.cc wall.hh worklist.cc worklist.hh
+objs=cell.o container.o unitcell.o v_compute.o v_loops.o v_base.o wall.o
+src=$(patsubst %.o,%.cc,$(objs))
 
 # Lists of the command line utilities
-EXECUTABLES=../bin/voro++
+execs=single_cell
 
 # Makefile rules
-all: single_cell random_points uc_test
+all: libvoro++.a
 
-single_cell: single_cell.cc $(SOURCE)
-	$(CC) $(CFLAGS) -o single_cell single_cell.cc
+depend:
+	$(CXX) -MM $(src) >Makefile.dep
 
-random_points: random_points.cc $(SOURCE)
-	g++-mp-4.5 -O3 -funit-at-a-time -o random_points random_points.cc
+execs: $(execs)
 
-uc_test: uc_test.cc $(SOURCE)
-	$(CC) $(CFLAGS) -o uc_test uc_test.cc
+include Makefile.dep
 
-../bin/voro++: $(SOURCE) cmd_line.cc
-	$(CC) $(CFLAGS) -o ../bin/voro++ cmd_line.cc
+libvoro++.a: $(objs)
+	ar rs libvoro++.a $^
+
+%.o: %.cc
+	$(CXX) $(CFLAGS) -c $<
+
+single_cell: single_cell.cc libvoro++.a
+	g++-mp-4.5 $(CFLAGS) -funit-at-a-time -L. -o single_cell single_cell.cc -lvoro++
 
 help: Doxyfile $(SOURCE)
 	doxygen Doxyfile
 	cd ../latex && make
 
 clean:
-	rm -f $(EXECUTABLES)
+	rm -f $(objs)
 
-.PHONY: all help clean
+.PHONY: all help execs depend
