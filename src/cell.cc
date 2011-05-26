@@ -22,7 +22,8 @@ voronoicell_base::voronoicell_base() :
 	ed(new int*[current_vertices]), nu(new int[current_vertices]),
 	pts(new double[3*current_vertices]), mem(new int[current_vertex_order]),
 	mec(new int[current_vertex_order]), mep(new int*[current_vertex_order]),
-	ds(new int[current_delete_size]), ds2(new int[current_delete2_size]),
+	ds(new int[current_delete_size]), stacke(ds+current_delete_size),
+	ds2(new int[current_delete2_size]), stacke2(ds2+current_delete_size),
 	current_marginal(init_marginal), marg(new int[current_marginal]) {
 	int i;
 	for(i=0;i<3;i++) {
@@ -170,31 +171,31 @@ void voronoicell_base::add_memory_vorder(vc_class &vc) {
 /** Doubles the size allocation of the main delete stack. If the allocation
  * exceeds the absolute maximum set in max_delete_size, then routine causes a
  * fatal error. */
-void voronoicell_base::add_memory_ds() {
-	int i=2*current_delete_size,j,*pds;
-	if(i>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+void voronoicell_base::add_memory_ds(int *&stackp) {
+	current_delete_size<<=1;
+	if(current_delete_size>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
-	fprintf(stderr,"Delete stack 1 memory scaled up to %d\n",i);
+	fprintf(stderr,"Delete stack 1 memory scaled up to %d\n",current_delete_size);
 #endif
-	pds=new int[i];
-	for(j=0;j<current_delete_size;j++) pds[j]=ds[j];
-	delete [] ds;ds=pds;
-	current_delete_size=i;
+	int *dsn(new int[current_delete_size]),*dsnp(dsn),*dsp(ds);
+	while(dsp<stackp) *(dsnp++)=*(dsp++);
+	delete [] ds;ds=dsn;stackp=dsnp;
+	stacke=ds+current_delete_size;
 }
 
 /** Doubles the size allocation of the auxiliary delete stack. If the
  * allocation exceeds the absolute maximum set in max_delete2_size, then the
  * routine causes a fatal error. */
-void voronoicell_base::add_memory_ds2() {
-	int i=2*current_delete2_size,j,*pds2;
-	if(i>max_delete2_size) voropp_fatal_error("Delete stack 2 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+void voronoicell_base::add_memory_ds2(int *&stackp2) {
+	current_delete2_size<<=1;
+	if(current_delete2_size>max_delete2_size) voropp_fatal_error("Delete stack 2 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
-	fprintf(stderr,"Delete stack 2 memory scaled up to %d\n",i);
+	fprintf(stderr,"Delete stack 2 memory scaled up to %d\n",current_delete2_size);
 #endif
-	pds2=new int[i];
-	for(j=0;j<current_delete2_size;j++) pds2[j]=ds2[j];
-	delete [] ds2;ds2=pds2;
-	current_delete2_size=i;
+	int *dsn(new int[current_delete2_size]),*dsnp(dsn),*dsp(ds2);
+	while(dsp<stackp2) *(dsnp++)=*(dsp++);
+	delete [] ds2;ds2=dsn;stackp2=dsnp;
+	stacke2=ds2+current_delete2_size;
 }
 
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions.
@@ -315,7 +316,7 @@ void voronoicell_base::construct_relations() {
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class vc_class>
 bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq,int p_id) {
-	int count=0,i,j,k,lp=up,cp,qp,rp,stack=0;stack2=0;
+	int count=0,i,j,k,lp=up,cp,qp,rp,*stackp(ds),*stackp2(ds2),*dsp;
 	int us=0,ls=0,qs,iqs,cs,uw,qw,lw;
 	int *edp,*edd;
 	double u,l,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
@@ -662,8 +663,8 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		} else vc.n_copy(p,0,up,qs);
 
 		// Add this point to the auxiliary delete stack
-		if(stack2==current_delete2_size) add_memory_ds2();
-		ds2[stack2++]=up;
+		if(stackp2==stacke2) add_memory_ds2(stackp2);
+		*(stackp2++)=up;
 
 		// Look at the edges on either side of the group that was
 		// detected. We're going to commence facet computation by
@@ -682,8 +683,8 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		// points lp and up. Create a new vertex between them which
 		// lies on the cutting plane. Since u and l differ by at least
 		// the tolerance, this division should never screw up.
-		if(stack==current_delete_size) add_memory_ds();
-		ds[stack++]=up;
+		if(stackp==stacke) add_memory_ds(stackp);
+		*(stackp++)=up;
 		r=1/(u-l);
 		pts[3*p]=(pts[3*lp]*u-pts[3*up]*l)*r;
 		pts[3*p+1]=(pts[3*lp+1]*u-pts[3*up+1]*l)*r;
@@ -726,11 +727,11 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 			// The point is still in the cutting space. Just add it
 			// to the delete stack and keep moving.
-			if(stack==current_delete_size) add_memory_ds();
 			qs=cycle_up(ed[qp][nu[qp]+qs],lp);
 			qp=lp;
 			q=l;
-			ds[stack++]=qp;
+			if(stackp==stacke) add_memory_ds(stackp);
+			*(stackp++)=qp;
 
 		} else if(lw==-1) {
 
@@ -910,8 +911,8 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 				vc.n_set_pointer(p,k);
 				ed[p]=mep[k]+(2*k+1)*mec[k]++;
 				ed[p][2*k]=p;
-				if(stack2==current_delete2_size) add_memory_ds2();
-				ds2[stack2++]=qp;
+				if(stackp2==stacke2) add_memory_ds2(stackp2);
+				*(stackp2++)=qp;
 				pts[3*p]=pts[3*qp];
 				pts[3*p+1]=pts[3*qp+1];
 				pts[3*p+2]=pts[3*qp+2];
@@ -965,36 +966,36 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	ed[rp][nu[rp]+0]=cs;
 
 	// Delete points: first, remove any duplicates
-	i=0;
-	while(i<stack) {
-		j=ds[i];
+	dsp=ds;
+	while(dsp<stackp) {
+		j=*dsp;
 		if(ed[j][nu[j]]!=-1) {
 			ed[j][nu[j]]=-1;
-			i++;
-		} else ds[i]=ds[--stack];
+			dsp++;
+		} else *dsp=*(--stackp);
 	}
 
 	// Add the points in the auxiliary delete stack,
 	// and reset their back pointers
-	for(i=0;i<stack2;i++) {
-		j=ds2[i];
+	for(dsp=ds2;dsp<stackp2;dsp++) {
+		j=*dsp;
 		ed[j][2*nu[j]]=j;
 		if(ed[j][nu[j]]!=-1) {
 			ed[j][nu[j]]=-1;
-			if(stack==current_delete_size) add_memory_ds();
-			ds[stack++]=j;
+			if(stackp==stacke) add_memory_ds(stackp);
+			*(stackp++)=j;
 		}
 	}
 
 	// Scan connections and add in extras
-	for(i=0;i<stack;i++) {
-		cp=ds[i];
+	for(dsp=ds;dsp<stackp;dsp++) {
+		cp=*dsp;
 		for(j=0;j<nu[cp];j++) {
 			qp=ed[cp][j];
 			if(qp!=-1) {
 				if(ed[qp][nu[qp]]!=-1) {
-					if(stack==current_delete_size) add_memory_ds();
-					ds[stack++]=qp;
+					if(stackp==stacke) add_memory_ds(stackp);
+					*(stackp++)=qp;
 					ed[qp][nu[qp]]=-1;
 				}
 			}
@@ -1003,7 +1004,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	up=0;
 
 	// Delete them from the array structure
-	while(stack>0) {
+	while(stackp>ds) {
 		--p;
 		while(ed[p][nu[p]]==-1) {
 			j=nu[p];
@@ -1014,7 +1015,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			ed[ed[p][2*j]]=ed[p];
 			--p;
 		}
-		up=ds[--stack];
+		up=*(--stackp);
 		if(up<p) {
 
 			// Vertex management

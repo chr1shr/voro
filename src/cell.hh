@@ -174,10 +174,10 @@ class voronoicell_base {
 		/** This is the delete stack, used to store the vertices which
 		 * are going to be deleted during the plane cutting procedure.
 		 */
-		int *ds;
+		int *ds,*stacke;
 		/** This is the auxiliary delete stack, which has size set by
 		 * current_delete2_size. */
-		int *ds2;
+		int *ds2,*stacke2;
 		/** This holds the number of points currently on the auxiliary
 		 * delete stack. */
 		int stack2;
@@ -204,8 +204,8 @@ class voronoicell_base {
 		void add_memory_vertices(vc_class &vc);
 		template<class vc_class>
 		void add_memory_vorder(vc_class &vc);
-		void add_memory_ds();
-		void add_memory_ds2();
+		void add_memory_ds(int *&stackp);
+		void add_memory_ds2(int *&stackp2);
 		template<class vc_class>
 		inline bool collapse_order1(vc_class &vc);
 		template<class vc_class>
