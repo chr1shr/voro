@@ -366,17 +366,17 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,i
 		}
 
 		// If there's not much memory on the block list then add more
-		if((qu_s<=qu_e?(qu_l-qu_e)+(qu_s-qu):qu_e-qu_s)<18) add_list_memory(qu_s,qu_e);
+		if((qu_s<=qu_e?(qu_l-qu_e)+(qu_s-qu):qu_s-qu_e)<18) add_list_memory(qu_s,qu_e);
 
 		// Test the neighbors of the current block, and add them to the
 		// block list if they haven't already been tested
 		mijk=mask+ei+hx*(ej+hy*ek);
-		if(ek>0) if(*(mijk-hxy)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
-		if(ej>0) if(*(mijk-hx)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
-		if(ei>0) if(*(mijk-1)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
-		if(ei<hx-1) if(*(mijk+1)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
-		if(ej<hy-1) if(*(mijk+hx)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
-		if(ek<hz-1) if(*(mijk+hxy)!=mv) {if(qu_e==qu_l) qu_e=qu_l;*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+		if(ek>0) if(*(mijk-hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
+		if(ej>0) if(*(mijk-hx)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
+		if(ei>0) if(*(mijk-1)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
+		if(ei<hx-1) if(*(mijk+1)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
+		if(ej<hy-1) if(*(mijk+hx)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
+		if(ek<hz-1) if(*(mijk+hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
 	}
 
 	return true;

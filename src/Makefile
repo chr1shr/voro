@@ -8,14 +8,14 @@
 include ../config.mk
 
 # List of the common source files
-objs=cell.o container.o unitcell.o v_compute.o v_loops.o v_base.o wall.o
+objs=cell.o container.o unitcell.o v_compute.o v_loops.o v_base.o wall.o pre_container.o
 src=$(patsubst %.o,%.cc,$(objs))
 
 # Lists of the command line utilities
 execs=single_cell
 
 # Makefile rules
-all: libvoro++.a
+all: libvoro++.a ../bin/voro++
 
 depend:
 	$(CXX) -MM $(src) >Makefile.dep
@@ -27,11 +27,12 @@ include Makefile.dep
 libvoro++.a: $(objs)
 	ar rs libvoro++.a $^
 
+../bin/voro++: libvoro++.a cmd_line.cc
+	$(CXX) $(CFLAGS) -L. -o ../bin/voro++ cmd_line.cc -lvoro++
+
+
 %.o: %.cc
 	$(CXX) $(CFLAGS) -c $<
-
-single_cell: single_cell.cc libvoro++.a
-	g++-mp-4.5 $(CFLAGS) -funit-at-a-time -L. -o single_cell single_cell.cc -lvoro++
 
 help: Doxyfile $(SOURCE)
 	doxygen Doxyfile

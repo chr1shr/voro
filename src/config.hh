@@ -32,7 +32,7 @@ const int init_wall_size=32;
 /** The default initial size for the ordering class. */
 const int init_ordering_size=4096;
 /** The initial size of the pre_container chunk index. */
-const int init_chunk_size=128;
+const int init_chunk_size=256;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
@@ -68,7 +68,7 @@ const int pre_container_chunk_size=1024;
  * plane routine bails out due to floating point problems. At level 2, general
  * messages about memory expansion are printed. At level 3, technical details
  * about memory management are printed. */
-#define VOROPP_VERBOSE 0
+#define VOROPP_VERBOSE 2
 #endif
 
 /** If a point is within this distance of a cutting plane, then the code
@@ -93,6 +93,10 @@ const double default_radius=0.5;
 
 /** The maximum number of shells of periodic images to test over. */
 const int max_unit_voro_shells=10;
+
+/** A guess for the optimal number of particles per block, used to set up the
+ * container grid. */
+const double optimal_particles=5.6;
 
 //#define VOROPP_REPORT_OUT_OF_BOUNDS
 

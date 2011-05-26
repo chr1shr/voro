@@ -10,6 +10,7 @@
 #include "cell.cc"
 #include "v_base.cc"
 #include "container.cc"
+#include "pre_container.cc"
 #include "v_compute.cc"
 #include "v_loops.cc"
 #include "wall.cc"

@@ -14,31 +14,46 @@ class pre_container_base {
 		const bool xperiodic;
 		const bool yperiodic;
 		const bool zperiodic;
-		pre_container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-				bool xperiodic_,bool yperiodic_,bool zperiodic_,int ps_) :
-			ax(ax_), bx(bx_), ay(ay_), by(by_), az(az_), bz(bz_),
-			xperiodic(xperiodic_), yperiodic(yperiodic_), zperiodic(zperiodic_), ps(ps_)	{}
+		void guess_optimal(int &nx,int &ny,int &nz);
+		pre_container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int ps_);
+		~pre_container_base();
 	protected:
 		const int ps;
-		/** This array holds pointers to any wall objects that have
-		 * been added to the container. */
-		wall **walls;
-		/** The current number of wall objects, initially set to zero. */
-		int wall_number;
-		/** The current amount of memory allocated for walls. */
-		int current_wall_size;
-}
+		void new_chunk();
+		void extend_chunk_index();
+		int index_sz;
+		int **pre_id,**end_id,**l_id,*ch_id,*e_id;
+		double **pre_p,**end_p,*ch_p;
+};
 
-class pre_container {
+class pre_container : public pre_container_base {
 	public:
 		pre_container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 				bool xperiodic_,bool yperiodic_,bool zperiodic_)
-			: pre_container_base(ax_,bx_,ay_,by_,az_,bz_,xperiodic_,yperiodic,zperiodic_) {};
-	private:
-}
+			: pre_container_base(ax_,bx_,ay_,by_,az_,bz_,xperiodic_,yperiodic_,zperiodic_,3) {};
+		void put(int n,double x,double y,double z);
+		void import(FILE *fp=stdin);
+		inline void import(const char* filename) {
+			FILE *fp(voropp_safe_fopen(filename,"r"));
+			import(fp);
+			fclose(fp);
+		}
+		void setup(container &con);
+};
 
-class pre_container_poly {
-
-}
+class pre_container_poly : public pre_container_base {
+	public:
+		pre_container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
+				bool xperiodic_,bool yperiodic_,bool zperiodic_)
+			: pre_container_base(ax_,bx_,ay_,by_,az_,bz_,xperiodic_,yperiodic_,zperiodic_,4) {};
+		void put(int n,double x,double y,double z,double r);
+		void import(FILE *fp=stdin);
+		inline void import(const char* filename) {
+			FILE *fp(voropp_safe_fopen(filename,"r"));
+			import(fp);
+			fclose(fp);
+		}
+		void setup(container_poly &con);
+};
 
 #endif

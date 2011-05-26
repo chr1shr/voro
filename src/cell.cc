@@ -1964,7 +1964,7 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
 
 /** This initializes the neighbor information for a rectangular box and is
  * called during the initialization routine for the voronoicell class. */
-inline void voronoicell_neighbor::init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
+void voronoicell_neighbor::init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
 	init_base(xmin,xmax,ymin,ymax,zmin,zmax);
 	int *q(mne[3]);
 	*q=-5;q[1]=-3;q[2]=-1;
@@ -1981,7 +1981,7 @@ inline void voronoicell_neighbor::init(double xmin,double xmax,double ymin,doubl
 
 /** This initializes the neighbor information for an octahedron. The eight
  * initial faces are assigned ID numbers from -1 to -8. */
-inline void voronoicell_neighbor::init_octahedron(double l) {
+void voronoicell_neighbor::init_octahedron(double l) {
 	init_octahedron_base(l);
 	int *q(mne[4]);
 	*q=-5;q[1]=-6;q[2]=-7;q[3]=-8;
@@ -1995,8 +1995,8 @@ inline void voronoicell_neighbor::init_octahedron(double l) {
 
 /** This initializes the neighbor information for an tetrahedron. The four
  * initial faces are assigned ID numbers from -1 to -4.*/
-inline void voronoicell_neighbor::init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
-	init_tetrahedron(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3);
+void voronoicell_neighbor::init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
+	init_tetrahedron_base(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3);
 	int *q(mne[3]);
 	*q=-4;q[1]=-3;q[2]=-2;
 	q[3]=-3;q[4]=-4;q[5]=-1;

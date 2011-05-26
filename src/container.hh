@@ -122,7 +122,6 @@ class container_base : public voropp_base, public wall_list {
 				int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,
 				int init_mem,int ps);
 		~container_base();
-		void add_wall(wall &w);
 		bool point_inside(double x,double y,double z);
 		bool point_inside_walls(double x,double y,double z);
 		void region_count();
@@ -193,7 +192,7 @@ class container : public container_base {
 		void compute_all_cells();
 		double sum_cell_volumes();
 		template<class v_loop>
-		void draw_particles(v_loop &vl,FILE *fp=stdout);
+		void draw_particles(v_loop &vl,FILE *fp);
 		inline void draw_particles(FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			draw_particles(vl,fp);
@@ -204,7 +203,7 @@ class container : public container_base {
 			fclose(fp);
 		}
 		template<class v_loop>
-		void draw_particles_pov(v_loop &vl,FILE *fp=stdout);
+		void draw_particles_pov(v_loop &vl,FILE *fp);
 		inline void draw_particles_pov(FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			draw_particles_pov(vl,fp);
@@ -215,7 +214,7 @@ class container : public container_base {
 			fclose(fp);
 		}
 		template<class v_loop>
-		void draw_cells_gnuplot(v_loop &vl,FILE *fp=stdout);
+		void draw_cells_gnuplot(v_loop &vl,FILE *fp);
 		inline void draw_cells_gnuplot(FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			draw_cells_gnuplot(vl,fp);
@@ -226,7 +225,7 @@ class container : public container_base {
 			fclose(fp);
 		}
 		template<class v_loop>
-		void draw_cells_pov(v_loop &vl,FILE *fp=stdout);
+		void draw_cells_pov(v_loop &vl,FILE *fp);
 		inline void draw_cells_pov(FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			draw_cells_pov(vl,fp);
@@ -237,7 +236,7 @@ class container : public container_base {
 			fclose(fp);
 		}
 		template<class v_loop>
-		void print_custom(v_loop &vl,const char *format,FILE *fp=stdout);
+		void print_custom(v_loop &vl,const char *format,FILE *fp);
 		inline void print_custom(const char *format,FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			print_custom(vl,format,fp);
@@ -284,7 +283,7 @@ class container_poly : public container_base {
 		void compute_all_cells();
 		double sum_cell_volumes();
 		template<class v_loop>
-		void draw_particles(v_loop &vl,FILE *fp=stdout);
+		void draw_particles(v_loop &vl,FILE *fp);
 		inline void draw_particles(FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			draw_particles(vl,fp);
@@ -295,7 +294,7 @@ class container_poly : public container_base {
 			fclose(fp);
 		}
 		template<class v_loop>
-		void draw_particles_pov(v_loop &vl,FILE *fp=stdout);
+		void draw_particles_pov(v_loop &vl,FILE *fp);
 		inline void draw_particles_pov(FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			draw_particles_pov(vl,fp);
@@ -306,7 +305,7 @@ class container_poly : public container_base {
 			fclose(fp);
 		}
 		template<class v_loop>
-		void draw_cells_gnuplot(v_loop &vl,FILE *fp=stdout);
+		void draw_cells_gnuplot(v_loop &vl,FILE *fp);
 		inline void draw_cells_gnuplot(FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			draw_cells_gnuplot(vl,fp);
@@ -317,7 +316,7 @@ class container_poly : public container_base {
 			fclose(fp);
 		}
 		template<class v_loop>
-		void draw_cells_pov(v_loop &vl,FILE *fp=stdout);
+		void draw_cells_pov(v_loop &vl,FILE *fp);
 		inline void draw_cells_pov(FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			draw_cells_pov(vl,fp);
@@ -328,7 +327,7 @@ class container_poly : public container_base {
 			fclose(fp);
 		}
 		template<class v_loop>
-		void print_custom(v_loop &vl,const char *format,FILE *fp=stdout);
+		void print_custom(v_loop &vl,const char *format,FILE *fp);
 		inline void print_custom(const char *format,FILE *fp=stdout) {
 			v_loop_all vl(*this);
 			print_custom(vl,format,fp);
