@@ -1009,7 +1009,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		while(ed[p][nu[p]]==-1) {
 			j=nu[p];
 			edp=ed[p];edd=(mep[j]+((j<<1)+1)*--mec[j]);
-			while(edp<ed[up]+(j<<1)+1) *(edp++)=*(edd++);
+			while(edp<ed[p]+(j<<1)+1) *(edp++)=*(edd++);
 			vc.n_set_aux2_copy(p,j);
 			vc.n_copy_pointer(ed[p][(j<<1)],p);
 			ed[ed[p][(j<<1)]]=ed[p];
