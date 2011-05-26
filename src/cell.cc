@@ -205,7 +205,7 @@ void voronoicell_base::add_memory_ds2(int *&stackp2) {
 void voronoicell_base::init_base(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
-	pts[0]=xmin;pts[1]=ymin;pts[2]=zmin;
+	*pts=xmin;pts[1]=ymin;pts[2]=zmin;
 	pts[3]=xmax;pts[4]=ymin;pts[5]=zmin;
 	pts[6]=xmin;pts[7]=ymax;pts[8]=zmin;
 	pts[9]=xmax;pts[10]=ymax;pts[11]=zmin;
@@ -214,7 +214,7 @@ void voronoicell_base::init_base(double xmin,double xmax,double ymin,double ymax
 	pts[18]=xmin;pts[19]=ymax;pts[20]=zmax;
 	pts[21]=xmax;pts[22]=ymax;pts[23]=zmax;
 	int *q=mep[3];
-	q[0]=1;q[1]=4;q[2]=2;q[3]=2;q[4]=1;q[5]=0;q[6]=0;
+	*q=1;q[1]=4;q[2]=2;q[3]=2;q[4]=1;q[5]=0;q[6]=0;
 	q[7]=3;q[8]=5;q[9]=0;q[10]=2;q[11]=1;q[12]=0;q[13]=1;
 	q[14]=0;q[15]=6;q[16]=3;q[17]=2;q[18]=1;q[19]=0;q[20]=2;
 	q[21]=2;q[22]=7;q[23]=1;q[24]=2;q[25]=1;q[26]=0;q[27]=3;
@@ -222,9 +222,9 @@ void voronoicell_base::init_base(double xmin,double xmax,double ymin,double ymax
 	q[35]=4;q[36]=1;q[37]=7;q[38]=2;q[39]=1;q[40]=0;q[41]=5;
 	q[42]=7;q[43]=2;q[44]=4;q[45]=2;q[46]=1;q[47]=0;q[48]=6;
 	q[49]=5;q[50]=3;q[51]=6;q[52]=2;q[53]=1;q[54]=0;q[55]=7;
-	ed[0]=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
+	*ed=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
 	ed[4]=q+28;ed[5]=q+35;ed[6]=q+42;ed[7]=q+49;
-	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
+	*nu=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
 }
 
 /** Initializes a Voronoi cell as a regular octahedron.
@@ -234,21 +234,21 @@ void voronoicell_base::init_base(double xmin,double xmax,double ymin,double ymax
 inline void voronoicell_base::init_octahedron_base(double l) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[4]=p=6;l*=2;
-	pts[0]=-l;pts[1]=0;pts[2]=0;
+	*pts=-l;pts[1]=0;pts[2]=0;
 	pts[3]=l;pts[4]=0;pts[5]=0;
 	pts[6]=0;pts[7]=-l;pts[8]=0;
 	pts[9]=0;pts[10]=l;pts[11]=0;
 	pts[12]=0;pts[13]=0;pts[14]=-l;
 	pts[15]=0;pts[16]=0;pts[17]=l;
 	int *q=mep[4];
-	q[0]=2;q[1]=5;q[2]=3;q[3]=4;q[4]=0;q[5]=0;q[6]=0;q[7]=0;q[8]=0;
+	*q=2;q[1]=5;q[2]=3;q[3]=4;q[4]=0;q[5]=0;q[6]=0;q[7]=0;q[8]=0;
 	q[9]=2;q[10]=4;q[11]=3;q[12]=5;q[13]=2;q[14]=2;q[15]=2;q[16]=2;q[17]=1;
 	q[18]=0;q[19]=4;q[20]=1;q[21]=5;q[22]=0;q[23]=3;q[24]=0;q[25]=1;q[26]=2;
 	q[27]=0;q[28]=5;q[29]=1;q[30]=4;q[31]=2;q[32]=3;q[33]=2;q[34]=1;q[35]=3;
 	q[36]=0;q[37]=3;q[38]=1;q[39]=2;q[40]=3;q[41]=3;q[42]=1;q[43]=1;q[44]=4;
 	q[45]=0;q[46]=2;q[47]=1;q[48]=3;q[49]=1;q[50]=3;q[51]=3;q[52]=1;q[53]=5;
-	ed[0]=q;ed[1]=q+9;ed[2]=q+18;ed[3]=q+27;ed[4]=q+36;ed[5]=q+45;
-	nu[0]=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
+	*ed=q;ed[1]=q+9;ed[2]=q+18;ed[3]=q+27;ed[4]=q+36;ed[5]=q+45;
+	*nu=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
 }
 
 /** Initializes a Voronoi cell as a tetrahedron. It assumes that the normal to
@@ -260,17 +260,17 @@ inline void voronoicell_base::init_octahedron_base(double l) {
 inline void voronoicell_base::init_tetrahedron_base(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=4;
-	pts[0]=x0*2;pts[1]=y0*2;pts[2]=z0*2;
+	*pts=x0*2;pts[1]=y0*2;pts[2]=z0*2;
 	pts[3]=x1*2;pts[4]=y1*2;pts[5]=z1*2;
 	pts[6]=x2*2;pts[7]=y2*2;pts[8]=z2*2;
 	pts[9]=x3*2;pts[10]=y3*2;pts[11]=z3*2;
 	int *q=mep[3];
-	q[0]=1;q[1]=3;q[2]=2;q[3]=0;q[4]=0;q[5]=0;q[6]=0;
+	*q=1;q[1]=3;q[2]=2;q[3]=0;q[4]=0;q[5]=0;q[6]=0;
 	q[7]=0;q[8]=2;q[9]=3;q[10]=0;q[11]=2;q[12]=1;q[13]=1;
 	q[14]=0;q[15]=3;q[16]=1;q[17]=2;q[18]=2;q[19]=1;q[20]=2;
 	q[21]=0;q[22]=1;q[23]=2;q[24]=1;q[25]=2;q[26]=1;q[27]=3;
-	ed[0]=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
-	nu[0]=nu[1]=nu[2]=nu[3]=3;
+	*ed=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
+	*nu=nu[1]=nu[2]=nu[3]=3;
 }
 
 /** Checks that the relational table of the Voronoi cell is accurate, and
@@ -508,7 +508,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		// are outside of the cutting space. Begin by testing the
 		// zeroth edge.
 		i=0;
-		lp=ed[up][0];
+		lp=*ed[up];
 		lw=m_test(lp,l);
 		if(lw!=-1) {
 
@@ -753,13 +753,13 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			vc.n_copy(p,1,qp,qs);
 			vc.n_copy(p,2,lp,ls);
 			ed[p]=mep[3]+7*mec[3]++;
+			*ed[p]=cp;
+			ed[p][1]=lp;
+			ed[p][3]=cs;
+			ed[p][4]=ls;
 			ed[p][6]=p;
 			ed[lp][ls]=p;
 			ed[lp][nu[lp]+ls]=1;
-			ed[p][1]=lp;
-			ed[p][0]=cp;
-			ed[p][nu[p]+1]=ls;
-			ed[p][nu[p]]=cs;
 			ed[cp][cs]=p;
 			ed[cp][nu[cp]+cs]=0;
 			ed[qp][qs]=-1;
@@ -796,7 +796,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			// new vertex, rather than creating a fresh one. We also
 			// need to figure out whether we're in a case where we
 			// might be creating a duplicate edge.
-			j=-ed[qp][2*nu[qp]];
+			j=-ed[qp][nu[qp]<<1];
 	 		if(qp==up&&qs==us) {
 
 				// If we're heading into the final part of the
@@ -821,7 +821,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 						// Now see whether this marginal point
 						// has been visited before.
-						i=-ed[lp][2*nu[lp]];
+						i=-ed[lp][nu[lp]<<1];
 						if(i>0) {
 
 							// Now see if the last edge of that other
@@ -856,7 +856,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 						// small branch, and that we're
 						// heading right back to where
 						// we came from
-						i=-ed[lp][2*nu[lp]];
+						i=-ed[lp][nu[lp]<<1];
 						if(i==cp) {
 							new_double_edge=true;
 							k-=1;
@@ -882,7 +882,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 					// Allocate memory and copy the edges
 					// of the previous instance into it
 					vc.n_set_aux1(k);
-					edp=mep[k]+(2*k+1)*mec[k]++;
+					edp=mep[k]+((k<<1)+1)*mec[k]++;
 					i=0;
 					while(i<nu[j]) {
 						vc.n_copy_aux1(j,i);
@@ -890,17 +890,17 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 						edp[k+i]=ed[j][nu[j]+i];
 						i++;
 					}
-					edp[2*k]=j;
+					edp[k<<1]=j;
 
 					// Remove the previous instance with
 					// fewer vertices from the memory
 					// structure
-					edd=mep[nu[j]]+(2*nu[j]+1)*--mec[nu[j]];
+					edd=mep[nu[j]]+((nu[j]<<1)+1)*--mec[nu[j]];
 					if(edd!=ed[j]) {
-						for(lw=0;lw<=2*nu[j];lw++) ed[j][lw]=edd[lw];
+						for(lw=0;lw<=(nu[j]<<1);lw++) ed[j][lw]=edd[lw];
 						vc.n_set_aux2_copy(j,nu[j]);
-						vc.n_copy_pointer(edd[2*nu[j]],j);
-						ed[edd[2*nu[j]]]=ed[j];
+						vc.n_copy_pointer(edd[nu[j]<<1],j);
+						ed[edd[nu[j]<<1]]=ed[j];
 					}
 					vc.n_set_to_aux1(j);
 					ed[j]=edp;
@@ -909,14 +909,14 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 				// Allocate a new vertex of order k
 				vc.n_set_pointer(p,k);
-				ed[p]=mep[k]+(2*k+1)*mec[k]++;
-				ed[p][2*k]=p;
+				ed[p]=mep[k]+((k<<1)+1)*mec[k]++;
+				ed[p][k<<1]=p;
 				if(stackp2==stacke2) add_memory_ds2(stackp2);
 				*(stackp2++)=qp;
 				pts[3*p]=pts[3*qp];
 				pts[3*p+1]=pts[3*qp+1];
 				pts[3*p+2]=pts[3*qp+2];
-				ed[qp][2*nu[qp]]=-p;
+				ed[qp][nu[qp]<<1]=-p;
 				j=p++;
 				i=0;
 			}
@@ -961,7 +961,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 	// Connect the final created vertex to the initial one
 	ed[cp][cs]=rp;
-	ed[rp][0]=cp;
+	*ed[rp]=cp;
 	ed[cp][nu[cp]+cs]=0;
 	ed[rp][nu[rp]+0]=cs;
 
@@ -979,7 +979,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	// and reset their back pointers
 	for(dsp=ds2;dsp<stackp2;dsp++) {
 		j=*dsp;
-		ed[j][2*nu[j]]=j;
+		ed[j][nu[j]<<1]=j;
 		if(ed[j][nu[j]]!=-1) {
 			ed[j][nu[j]]=-1;
 			if(stackp==stacke) add_memory_ds(stackp);
@@ -1008,11 +1008,11 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		--p;
 		while(ed[p][nu[p]]==-1) {
 			j=nu[p];
-			mec[j]--;
-			for(i=0;i<=2*j;i++) ed[p][i]=(mep[j]+(2*j+1)*mec[j])[i];
+			edp=ed[p];edd=(mep[j]+((j<<1)+1)*--mec[j]);
+			while(edp<ed[up]+(j<<1)+1) *(edp++)=*(edd++);
 			vc.n_set_aux2_copy(p,j);
-			vc.n_copy_pointer(ed[p][2*j],p);
-			ed[ed[p][2*j]]=ed[p];
+			vc.n_copy_pointer(ed[p][(j<<1)],p);
+			ed[ed[p][(j<<1)]]=ed[p];
 			--p;
 		}
 		up=*(--stackp);
@@ -1025,27 +1025,23 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 			// Memory management
 			j=nu[up];
-			mec[j]--;
-			for(i=0;i<=2*j;i++) ed[up][i]=(mep[j]+(2*j+1)*mec[j])[i];
+			edp=ed[up];edd=(mep[j]+((j<<1)+1)*--mec[j]);
+			while(edp<ed[up]+(j<<1)+1) *(edp++)=*(edd++);
 			vc.n_set_aux2_copy(up,j);
-			vc.n_copy_pointer(ed[up][2*j],up);
+			vc.n_copy_pointer(ed[up][j<<1],up);
 			vc.n_copy_pointer(up,p);
-			ed[ed[up][2*j]]=ed[up];
+			ed[ed[up][j<<1]]=ed[up];
 
 			// Edge management
 			ed[up]=ed[p];
 			nu[up]=nu[p];
-			for(i=0;i<nu[up];i++) {
-			//	if(ed[up][i]==-1)
-			//		voropp_fatal_error("Dangling edge found",VOROPP_INTERNAL_ERROR);
-				ed[ed[up][i]][ed[up][nu[up]+i]]=up;
-			}
-			ed[up][2*nu[up]]=up;
+			for(i=0;i<nu[up];i++) ed[ed[up][i]][ed[up][nu[up]+i]]=up;
+			ed[up][nu[up]<<1]=up;
 		} else up=p++;
 	}
 
 	// Check for any vertices of zero order
-	if(mec[0]>0) voropp_fatal_error("Zero order vertex formed",VOROPP_INTERNAL_ERROR);
+	if(*mec>0) voropp_fatal_error("Zero order vertex formed",VOROPP_INTERNAL_ERROR);
 
 	// Collapse any order 2 vertices and exit
 	return collapse_order2(vc);
@@ -1210,7 +1206,7 @@ double voronoicell_base::volume() {
 	int i,j,k,l,m,n;
 	double ux,uy,uz,vx,vy,vz,wx,wy,wz;
 	for(i=1;i<p;i++) {
-		ux=pts[0]-pts[3*i];
+		ux=*pts-pts[3*i];
 		uy=pts[1]-pts[3*i+1];
 		uz=pts[2]-pts[3*i+2];
 		for(j=0;j<nu[i];j++) {
@@ -1218,13 +1214,13 @@ double voronoicell_base::volume() {
 			if(k>=0) {
 				ed[i][j]=-1-k;
 				l=cycle_up(ed[i][nu[i]+j],k);
-				vx=pts[3*k]-pts[0];
+				vx=pts[3*k]-*pts;
 				vy=pts[3*k+1]-pts[1];
 				vz=pts[3*k+2]-pts[2];
 				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
 					n=cycle_up(ed[k][nu[k]+l],m);
-					wx=pts[3*m]-pts[0];
+					wx=pts[3*m]-*pts;
 					wy=pts[3*m+1]-pts[1];
 					wz=pts[3*m+2]-pts[2];
 					vol+=ux*vy*wz+uy*vz*wx+uz*vx*wy-uz*vy*wx-uy*vx*wz-ux*vz*wy;
@@ -1318,7 +1314,7 @@ void voronoicell_base::centroid(double &cx,double &cy,double &cz) {
 	int i,j,k,l,m,n;
 	double ux,uy,uz,vx,vy,vz,wx,wy,wz;
 	for(i=1;i<p;i++) {
-		ux=pts[0]-pts[3*i];
+		ux=*pts-pts[3*i];
 		uy=pts[1]-pts[3*i+1];
 		uz=pts[2]-pts[3*i+2];
 		for(j=0;j<nu[i];j++) {
@@ -1326,13 +1322,13 @@ void voronoicell_base::centroid(double &cx,double &cy,double &cz) {
 			if(k>=0) {
 				ed[i][j]=-1-k;
 				l=cycle_up(ed[i][nu[i]+j],k);
-				vx=pts[3*k]-pts[0];
+				vx=pts[3*k]-*pts;
 				vy=pts[3*k+1]-pts[1];
 				vz=pts[3*k+2]-pts[2];
 				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
 					n=cycle_up(ed[k][nu[k]+l],m);
-					wx=pts[3*m]-pts[0];
+					wx=pts[3*m]-*pts;
 					wy=pts[3*m+1]-pts[1];
 					wz=pts[3*m+2]-pts[2];
 					tvol=ux*vy*wz+uy*vz*wx+uz*vx*wy-uz*vy*wx-uy*vx*wz-ux*vz*wy;
@@ -1349,7 +1345,7 @@ void voronoicell_base::centroid(double &cx,double &cy,double &cz) {
 	reset_edges();
 	if(vol>tolerance_sq) {
 		vol=0.125/vol;
-		cx=cx*vol+0.5*pts[0];
+		cx=cx*vol+0.5*(*pts);
 		cy=cy*vol+0.5*pts[1];
 		cz=cz*vol+0.5*pts[2];
 	} else cx=cy=cz=0;
