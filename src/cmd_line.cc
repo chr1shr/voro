@@ -127,14 +127,14 @@ int main(int argc,char **argv) {
 
 	// If there aren't enough command-line arguments, then bail out
 	// with an error.
-	if(argc<8) {
+	if(argc<7) {
 	       error_message();
 	       return VOROPP_CMD_LINE_ERROR;
 	}
 
 	// We have enough arguments. Now start searching for command-line
 	// options.
-	while(i<argc-8) {
+	while(i<argc-7) {
 		if(strcmp(argv[i],"-c")==0) {
 			if(i>=argc-9) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			if(custom_output==0) {
@@ -238,6 +238,7 @@ int main(int argc,char **argv) {
 	double ax=atof(argv[i]),bx=atof(argv[i+1]);
 	double ay=atof(argv[i+2]),by=atof(argv[i+3]);
 	double az=atof(argv[i+4]),bz=atof(argv[i+5]);
+	printf("%g %g %g %g %g %g\n",ax,bx,ay,by,az,bz);
 
 	// Check that for each coordinate, the minimum value is smaller
 	// than the maximum value

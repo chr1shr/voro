@@ -1882,8 +1882,8 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 /** Counts the number of edges of the Voronoi cell.
  * \return the number of edges. */
 int voronoicell_base::number_of_edges() {
-	int i,edges=0;
-	for(i=0;i<p;i++) edges+=nu[i];
+	int edges=0,*nup(nu);
+	while(nup<nu+p) edges+=*(nup++);
 	return edges>>1;
 }
 

@@ -11,7 +11,7 @@ const int nx=26,ny=26,nz=26;
 const double dis=1.25,mjrad=2.5,mirad=0.95;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=100000;
+const int particles=10000;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}

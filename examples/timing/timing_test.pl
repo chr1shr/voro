@@ -17,7 +17,7 @@ $opt="-O3";
 foreach $r (@range) {
 
 	# Compile the code with the current grid size
-	system "g++ -I../../src -DNNN=$r -o timing_test $opt timing_test.cc";
+	system "g++ -I../../src -DNNN=$r -o timing_test $opt -L../../src timing_test.cc -lvoro++";
 
 	# Carry out the trials for this grid size
 	$st=$stt=0;

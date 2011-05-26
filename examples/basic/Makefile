@@ -8,10 +8,10 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=single_cell platonic random_points import 
+EXECUTABLES=single_cell platonic random_points import pre_import
 
 # Makefile rules
-all: single_cell platonic random_points import 
+all: single_cell platonic random_points import pre_import
 
 single_cell: single_cell.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o single_cell single_cell.cc -lvoro++
@@ -24,6 +24,9 @@ random_points: random_points.cc
 
 import: import.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o import import.cc -lvoro++
+
+pre_import: pre_import.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o pre_import pre_import.cc -lvoro++
 
 #nearest: $(SOURCE) nearest.cc
 #	$(CC) $(CFLAGS) $(INCLUDE) -o nearest nearest.cc
