@@ -990,8 +990,8 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	// Scan connections and add in extras
 	for(dsp=ds;dsp<stackp;dsp++) {
 		cp=*dsp;
-		for(j=0;j<nu[cp];j++) {
-			qp=ed[cp][j];
+		for(edp=ed[cp];edp<ed[cp]+nu[cp];edp++) {
+			qp=*edp;
 			if(qp!=-1) {
 				if(ed[qp][nu[qp]]!=-1) {
 					if(stackp==stacke) add_memory_ds(stackp);
@@ -1036,8 +1036,8 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			ed[up]=ed[p];
 			nu[up]=nu[p];
 			for(i=0;i<nu[up];i++) {
-				if(ed[up][i]==-1)
-					voropp_fatal_error("Dangling edge found",VOROPP_INTERNAL_ERROR);
+			//	if(ed[up][i]==-1)
+			//		voropp_fatal_error("Dangling edge found",VOROPP_INTERNAL_ERROR);
 				ed[ed[up][i]][ed[up][nu[up]+i]]=up;
 			}
 			ed[up][2*nu[up]]=up;
