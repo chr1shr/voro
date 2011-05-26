@@ -123,7 +123,6 @@ class container_base : public voropp_base, public wall_list {
 				int init_mem,int ps);
 		~container_base();
 		bool point_inside(double x,double y,double z);
-		bool point_inside_walls(double x,double y,double z);
 		void region_count();
 		/** Initialize the Voronoi cell to be the entire container. For
 		 * non-periodic coordinates, this is set by the position of the
