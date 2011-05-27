@@ -5,6 +5,17 @@ using namespace std;
 #include "config.hh"
 #include "pre_container.hh"
 
+/** The class constructor sets up the geometry of container, initializing the
+ * minimum and maximum coordinates in each direction. It allocates an initial
+ * chunk into which to store
+ * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
+ * \param[in] (ay_,by_) the minimum and maximum y coordinates.
+ * \param[in] (az_,bz_) the minimum and maximum z coordinates.
+ * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
+ *                                                container is periodic in each
+ *                                                coordinate direction.
+ * \param[in] ps_ the number of floating point entries to store for each
+ *                particle. */
 pre_container_base::pre_container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	bool xperiodic_,bool yperiodic_,bool zperiodic_,int ps_) :
 	ax(ax_), bx(bx_), ay(ay_), by(by_), az(az_), bz(bz_),
@@ -16,6 +27,7 @@ pre_container_base::pre_container_base(double ax_,double bx_,double ay_,double b
 		ch_p=*end_p=new double[ps*pre_container_chunk_size];
 }
 
+/** The destructor frees the dynamically allocated memory. */ 
 pre_container_base::~pre_container_base() {
 	delete [] *end_p;
 	delete [] *end_id;
@@ -29,6 +41,9 @@ pre_container_base::~pre_container_base() {
 	delete [] pre_id;
 }
 
+/** Makes a guess at the optimal grid of blocks to use, computing in
+ * a way that
+ * \param[out] (nx,ny,nz) the number of blocks to use. */
 void pre_container_base::guess_optimal(int &nx,int &ny,int &nz) {
 	int ptotal((end_id-pre_id)*pre_container_chunk_size+(ch_id-*end_id));
 	double dx(bx-ax),dy(by-ay),dz(bz-az);
@@ -38,22 +53,40 @@ void pre_container_base::guess_optimal(int &nx,int &ny,int &nz) {
 	nz=int(dx*ilscale+1);
 }
 
+/** Stores a particle ID and position, allocating a new memory chunk if
+ * necessary. For coordinate directions in which the container is not periodic,
+ * the routine checks to make sure that the particle is within the container
+ * bounds. If the particle is out of bounds, it is not stored.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle. */
 void pre_container::put(int n,double x,double y,double z) {
 	if((xperiodic||(x>=ax&&x<=bx))&&(yperiodic||(y>=ay&&y<=by))&&(zperiodic||(z>=az&&z<=bz))) {
 		if(ch_id==e_id) new_chunk();
 		*(ch_id++)=n;
 		*(ch_p++)=x;*(ch_p++)=y;*(ch_p++)=z;
 	}
+#if VOROPP_REPORT_OUT_OF_BOUNDS
+	else fprintf(stderr,"Out of bounds: [%d] (x,y,z)=(%g,%g,%g)\n",n,x,y,z);
+#endif
 }
 
+/** Stores a particle ID and position, allocating a new memory chunk if necessary.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle.
+ * \param[in] r the radius of the particle. */
 void pre_container_poly::put(int n,double x,double y,double z,double r) {
 	if((xperiodic||(x>=ax&&x<=bx))&&(yperiodic||(y>=ay&&y<=by))&&(zperiodic||(z>=az&&z<=bz))) {
 		if(ch_id==e_id) new_chunk();
 		*(ch_id++)=n;
 		*(ch_p++)=x;*(ch_p++)=y;*(ch_p++)=z;*(ch_p++)=r;
 	}
+#if VOROPP_REPORT_OUT_OF_BOUNDS
+	else fprintf(stderr,"Out of bounds: [%d] (x,y,z)=(%g,%g,%g)\n",n,x,y,z);
+#endif	
 }
 
+/** Transfers the particles stored within the class to a container class.
+ * \param[in] con the container class to transfer to. */
 void pre_container::setup(container &con) {
 	int **c_id(pre_id),*idp,*ide,n;
 	double **c_p(pre_p),*pp,x,y,z;
@@ -73,6 +106,8 @@ void pre_container::setup(container &con) {
 	}
 }
 
+/** Transfers the particles stored within the class to a container_poly class.
+ * \param[in] con the container_poly class to transfer to. */
 void pre_container_poly::setup(container_poly &con) {
 	int **c_id(pre_id),*idp,*ide,n;
 	double **c_p(pre_p),*pp,x,y,z,r;
@@ -92,7 +127,11 @@ void pre_container_poly::setup(container_poly &con) {
 	}
 }
 
-/** Import a list of particles from standard input. */
+/** Import a list of particles from an open file stream into the container.
+ * Entries of four numbers (Particle ID, x position, y position, z position)
+ * are searched for. If the file cannot be successfully read, then the routine
+ * causes a fatal error.
+ * \param[fp] fp the file handle to read from. */
 void pre_container::import(FILE *fp) {
 	int i,j;
 	double x,y,z;
@@ -100,7 +139,12 @@ void pre_container::import(FILE *fp) {
 	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
-/** Import a list of particles from standard input. */
+/** Import a list of particles from an open file stream, also storing the order
+ * of that the particles are read. Entries of four numbers (Particle ID, x
+ * position, y position, z position) are searched for. If the file cannot be
+ * successfully read, then the routine causes a fatal error.
+ * \param[in,out] vo a reference to an ordering class to use.
+ * \param[in] fp the file handle to read from. */
 void pre_container_poly::import(FILE *fp) {
 	int i,j;
 	double x,y,z,r;
@@ -108,6 +152,7 @@ void pre_container_poly::import(FILE *fp) {
 	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
+/** Allocates a new chunk of memory for storing particles. */
 void pre_container_base::new_chunk() {
 	end_id++;end_p++;
 	if(end_id==l_id) extend_chunk_index();
@@ -116,6 +161,7 @@ void pre_container_base::new_chunk() {
 	ch_p=*end_p=new double[ps*pre_container_chunk_size];
 }
 
+/** Extends the index of chunks. */
 void pre_container_base::extend_chunk_index() {
 	index_sz<<=1;
 	if(index_sz>max_chunk_size)

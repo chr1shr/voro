@@ -24,6 +24,11 @@ inline void voropp_fatal_error(const char *p,int status) {
 	exit(status);
 }
 
+/** \brief Prints a vector of integers.
+ *
+ * Prints a vector of integers.
+ * \param[in] v the vector to print.
+ * \param[in] fp the file stream to print to. */
 inline void voropp_print_vector(vector<int> &v,FILE *fp=stdout) {
 	int k(0),s(v.size());
 	while(k+4<s) {
@@ -39,6 +44,11 @@ inline void voropp_print_vector(vector<int> &v,FILE *fp=stdout) {
 	}
 }
 
+/** \brief Prints a vector of doubles.
+ *
+ * Prints a vector of doubles.
+ * \param[in] v the vector to print.
+ * \param[in] fp the file stream to print to. */
 inline void voropp_print_vector(vector<double> &v,FILE *fp=stdout) {
 	int k(0),s(v.size());
 	while(k+4<s) {
@@ -54,6 +64,11 @@ inline void voropp_print_vector(vector<double> &v,FILE *fp=stdout) {
 	}
 }
 
+/** \brief Prints a vector of positions.
+ *
+ * Prints a vector of positions as bracketed triplets.
+ * \param[in] v the vector to print.
+ * \param[in] fp the file stream to print to. */
 inline void voropp_print_positions(vector<double> &v,FILE *fp=stdout) {
 	if(v.size()>0) {
 		fprintf(fp,"(%g,%g,%g)",v[0],v[1],v[2]);
@@ -63,6 +78,14 @@ inline void voropp_print_positions(vector<double> &v,FILE *fp=stdout) {
 	}
 }
 
+/** \brief Prints a vector a face vertex information.
+ *
+ * Prints a vector of face vertex information. A value is read, which
+ * corresponds to the number of vertices in the next face. The routine reads
+ * this number of values and prints them as a bracked list. This is repeated
+ * until the end of the vector is reached.
+ * \param[in] v the vector to interpret and print.
+ * \param[in] fp the file stream to print to. */
 inline void voropp_print_face_vertices(vector<int> &v,FILE *fp=stdout) {
 	int j,k=0,l;
 	if(v.size()>0) {
@@ -89,6 +112,13 @@ inline void voropp_print_face_vertices(vector<int> &v,FILE *fp=stdout) {
 	}
 }
 
+/** \brief Opens a file and checks the operation was successful.
+ *
+ * Opens a file, and checks the return value to ensure that the operation
+ * was successful.
+ * \param[in] filename the file to open.
+ * \param[in] mode the cstdio fopen mode to use.
+ * \return The file handle. */
 inline FILE* voropp_safe_fopen(const char *filename,const char *mode) {
 	FILE *fp(fopen(filename,mode));
 	if(fp==NULL) {

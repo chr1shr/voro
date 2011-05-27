@@ -1884,6 +1884,16 @@ int voronoicell_base::number_of_edges() {
 	return edges>>1;
 }
 
+/** Outputs a custom string of information about the Voronoi cell. The string
+ * of information follows a similar style as the C printf command, and detailed
+ * information about its format is available at
+ * http://math.lbl.gov/voro++/doc/custom.html.
+ * \param[in] format the custom string to print.
+ * \param[in] i the ID of the particle associated with this Voronoi cell.
+ * \param[in] (x,y,z) the position of the particle associated with this Voronoi
+ *                    cell.
+ * \param[in] r a radius associated with the particle.
+ * \param[fp] fp the file handle to write to. */
 void voronoicell_base::output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp) {
 	char *fmp(const_cast<char*>(format));
 	vector<int> vi;
@@ -1959,8 +1969,13 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
 	fputs("\n",fp);
 }
 
-/** This initializes the neighbor information for a rectangular box and is
- * called during the initialization routine for the voronoicell class. */
+/** This initializes the class to be a rectangular box. It calls the base class
+ * initialization routine to set up the edge and vertex information, and then
+ * sets up the neighbor information, with initial faces being assigned ID
+ * numbers from -1 to -6.
+ * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
+ * \param[in] (ymin,ymax) the minimum and maximum y coordinates.
+ * \param[in] (zmin,zmax) the minimum and maximum z coordinates. */
 void voronoicell_neighbor::init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
 	init_base(xmin,xmax,ymin,ymax,zmin,zmax);
 	int *q(mne[3]);
@@ -1976,8 +1991,13 @@ void voronoicell_neighbor::init(double xmin,double xmax,double ymin,double ymax,
 	ne[4]=q+12;ne[5]=q+15;ne[6]=q+18;ne[7]=q+21;
 }
 
-/** This initializes the neighbor information for an octahedron. The eight
- * initial faces are assigned ID numbers from -1 to -8. */
+/** This initializes the class to be an octahedron. It calls the base class
+ * initialization routine to set up the edge and vertex information, and then
+ * sets up the neighbor information, with the initial faces being assigned ID
+ * numbers from -1 to -8.
+ * \param[in] l The distance from the octahedron center to a vertex. Six
+ *              vertices are initialized at (-l,0,0), (l,0,0), (0,-l,0),
+ *              (0,l,0), (0,0,-l), and (0,0,l). */
 void voronoicell_neighbor::init_octahedron(double l) {
 	init_octahedron_base(l);
 	int *q(mne[4]);
@@ -1990,8 +2010,14 @@ void voronoicell_neighbor::init_octahedron(double l) {
 	*ne=q;ne[1]=q+4;ne[2]=q+8;ne[3]=q+12;ne[4]=q+16;ne[5]=q+20;
 }
 
-/** This initializes the neighbor information for an tetrahedron. The four
- * initial faces are assigned ID numbers from -1 to -4.*/
+/** This initializes the class to be a tetrahedron. It calls the base class
+ * initialization routine to set up the edge and vertex information, and then
+ * sets up the neighbor information, with the initial faces being assigned ID
+ * numbers from -1 to -4.
+ * \param (x0,y0,z0) a position vector for the first vertex.
+ * \param (x1,y1,z1) a position vector for the second vertex.
+ * \param (x2,y2,z2) a position vector for the third vertex.
+ * \param (x3,y3,z3) a position vector for the fourth vertex. */
 void voronoicell_neighbor::init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
 	init_tetrahedron_base(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3);
 	int *q(mne[3]);
@@ -2003,7 +2029,7 @@ void voronoicell_neighbor::init_tetrahedron(double x0,double y0,double z0,double
 }
 
 /** This routine checks to make sure the neighbor information of each face is
- * consistent.*/
+ * consistent. */
 void voronoicell_neighbor::check_facets() {
 	int i,j,k,l,m,q;
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
@@ -2024,6 +2050,7 @@ void voronoicell_neighbor::check_facets() {
 	reset_edges();
 }
 
+/** The class constructor allocates memory for storing neighbor information. */
 voronoicell_neighbor::voronoicell_neighbor() {
 	int i;
 	mne=new int*[current_vertex_order];
@@ -2033,12 +2060,15 @@ voronoicell_neighbor::voronoicell_neighbor() {
 	for(i=4;i<current_vertex_order;i++) mne[i]=new int[init_n_vertices*i];
 }
 
+/** The class destructor frees the dynamically allocated memory for storing
+ * neighbor information. */
 voronoicell_neighbor::~voronoicell_neighbor() {
 	for(int i=current_vertex_order-1;i>=0;i--) if(mem[i]>0) delete [] mne[i];
 	delete [] mne;
 	delete [] ne;
 }
 
+/** Computes a vector list of neighbors. */
 void voronoicell_neighbor::neighbors(vector<int> &v) {
 	v.clear();
 	int i,j,k,l,m;
@@ -2087,5 +2117,6 @@ void voronoicell_neighbor::print_edges_neighbors(int i) {
 	} else printf("     ()");
 }
 
+// Explicit instantiation
 template bool voronoicell_base::nplane(voronoicell&,double,double,double,double,int);
 template bool voronoicell_base::nplane(voronoicell_neighbor&,double,double,double,double,int);

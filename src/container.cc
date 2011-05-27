@@ -15,14 +15,17 @@
  * direction is periodic or not. It divides the container into a rectangular
  * grid of blocks, and allocates memory for each of these for storing particle
  * positions and IDs.
- * \param[in] (xa,xb) the minimum and maximum x coordinates.
- * \param[in] (ya,yb) the minimum and maximum y coordinates.
- * \param[in] (za,zb) the minimum and maximum z coordinates.
- * \param[in] (xn,yn,zn) the number of grid blocks in each of the three
+ * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
+ * \param[in] (ay_,by_) the minimum and maximum y coordinates.
+ * \param[in] (az_,bz_) the minimum and maximum z coordinates.
+ * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
  *                       coordinate directions.
- * \param[in] (xper,yper,zper) flags setting whether the container is periodic
- *                             in each coordinate direction.
- * \param[in] memi the initial memory allocation for each block. */
+ * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
+ *                                                container is periodic in each
+ *                                                coordinate direction.
+ * \param[in] init_mem the initial memory allocation for each block.
+ * \param[in] ps_ the number of floating point entries to store for each
+ *                particle. */
 container_base::container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 		int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem,int ps_)
 	: voropp_base(nx_,ny_,nz_,(bx_-ax_)/nx_,(by_-ay_)/ny_,(bz_-az_)/nz_),
@@ -47,11 +50,35 @@ container_base::~container_base() {
 	delete [] co;
 }
 
+/** The class constructor sets up the geometry of container.
+ * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
+ * \param[in] (ay_,by_) the minimum and maximum y coordinates.
+ * \param[in] (az_,bz_) the minimum and maximum z coordinates.
+ * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
+ *                       coordinate directions.
+ * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
+ *                                                container is periodic in each
+ *                                                coordinate direction.
+ * \param[in] init_mem the initial memory allocation for each block.
+ * \param[in] ps_ the number of floating point entries to store for each
+ *                particle. */
 container::container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
 	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,3),
 	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_,zperiodic_?2*nz_+1:nz_) {}
 
+/** The class constructor sets up the geometry of container.
+ * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
+ * \param[in] (ay_,by_) the minimum and maximum y coordinates.
+ * \param[in] (az_,bz_) the minimum and maximum z coordinates.
+ * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
+ *                       coordinate directions.
+ * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
+ *                                                container is periodic in each
+ *                                                coordinate direction.
+ * \param[in] init_mem the initial memory allocation for each block.
+ * \param[in] ps_ the number of floating point entries to store for each
+ *                particle. */
 container_poly::container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
 	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,4),
@@ -72,7 +99,7 @@ void container::put(int n,double x,double y,double z) {
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
- * \param[in] r the radius of the particle.*/
+ * \param[in] r the radius of the particle. */
 void container_poly::put(int n,double x,double y,double z,double r) {
 	int ijk;
 	if(put_locate_block(ijk,x,y,z)) {
@@ -99,7 +126,7 @@ void container::put(voropp_order &vo,int n,double x,double y,double z) {
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
- * \param[in] r the radius of the particle.*/
+ * \param[in] r the radius of the particle. */
 void container_poly::put(voropp_order &vo,int n,double x,double y,double z,double r) {
 	int ijk;
 	if(put_locate_block(ijk,x,y,z)) {
@@ -111,6 +138,15 @@ void container_poly::put(voropp_order &vo,int n,double x,double y,double z,doubl
 	}
 }
 
+/** This routine takes a particle position vector, tries to remap it into the
+ * primary domain. If successful, it computes the region into which it can be
+ * stored and checks that there is enough memory within this region to store
+ * it.
+ * \param[out] ijk the region index.
+ * \param[in,out] (x,y,z) the particle position, remapped into the primary
+ *                        domain if necessary.
+ * \return True if the particle can be successfully placed into the container,
+ * false otherwise. */
 inline bool container_base::put_locate_block(int &ijk,double &x,double &y,double &z) {
 	if(put_remap(ijk,x,y,z)) {
 		if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
@@ -122,6 +158,15 @@ inline bool container_base::put_locate_block(int &ijk,double &x,double &y,double
 	return false;
 }
 
+/** Takes a particle position vector and computes the region index into which
+ * it should be stored. If the container is periodic, then the routine also
+ * maps the particle position to ensure it is in the primary domain. If the
+ * container is not periodic, the routine bails out. 
+ * \param[out] ijk the region index.
+ * \param[in,out] (x,y,z) the particle position, remapped into the primary
+ *                        domain if necessary.
+ * \return True if the particle can be successfully placed into the container,
+ * false otherwise. */
 inline bool container_base::put_remap(int &ijk,double &x,double &y,double &z) {
 	int l;
 	
@@ -160,7 +205,11 @@ void container_base::add_particle_memory(int i) {
 	delete [] p[i];p[i]=pp;
 }
 
-/** Import a list of particles from standard input. */
+/** Import a list of particles from an open file stream into the container.
+ * Entries of four numbers (Particle ID, x position, y position, z position)
+ * are searched for. If the file cannot be successfully read, then the routine
+ * causes a fatal error.
+ * \param[fp] fp the file handle to read from. */
 void container::import(FILE *fp) {
 	int i,j;
 	double x,y,z;
@@ -168,7 +217,12 @@ void container::import(FILE *fp) {
 	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
-/** Import a list of particles from standard input. */
+/** Import a list of particles from an open file stream, also storing the order
+ * of that the particles are read. Entries of four numbers (Particle ID, x
+ * position, y position, z position) are searched for. If the file cannot be
+ * successfully read, then the routine causes a fatal error.
+ * \param[in,out] vo a reference to an ordering class to use.
+ * \param[in] fp the file handle to read from. */
 void container::import(voropp_order &vo,FILE *fp) {
 	int i,j;
 	double x,y,z;
@@ -176,7 +230,11 @@ void container::import(voropp_order &vo,FILE *fp) {
 	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
-/** Import a list of particles from standard input. */
+/** Import a list of particles from an open file stream into the container.
+ * Entries of five numbers (Particle ID, x position, y position, z position,
+ * radius) are searched for. If the file cannot be successfully read, then the
+ * routine causes a fatal error.
+ * \param[fp] fp the file handle to read from. */
 void container_poly::import(FILE *fp) {
 	int i,j;
 	double x,y,z,r;
@@ -184,7 +242,12 @@ void container_poly::import(FILE *fp) {
 	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
-
+/** Import a list of particles from an open file stream, also storing the order
+ * of that the particles are read. Entries of four numbers (Particle ID, x
+ * position, y position, z position, radius) are searched for. If the file
+ * cannot be successfully read, then the routine causes a fatal error.
+ * \param[in,out] vo a reference to an ordering class to use.
+ * \param[in] fp the file handle to read from. */
 void container_poly::import(voropp_order &vo,FILE *fp) {
 	int i,j;
 	double x,y,z,r;
@@ -192,6 +255,8 @@ void container_poly::import(voropp_order &vo,FILE *fp) {
 	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
+/** Outputs the a list of all the container regions along with the number of
+ * particles stored within each. */
 void container_base::region_count() {
 	int i,j,k,*cop(co);
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
@@ -203,6 +268,8 @@ void container::clear() {
 	for(int *cop=co;cop<co+nxyz;cop++) *cop=0;
 }
 
+/** Clears a container of particles, also clearing resetting the maximum radius
+ * to zero. */
 void container_poly::clear() {
 	for(int *cop=co;cop<co+nxyz;cop++) *cop=0;
 	max_radius=0;
@@ -399,19 +466,25 @@ bool container_base::point_inside(double x,double y,double z) {
 	return point_inside_walls(x,y,z);
 }
 
+/** The wall_list constructor sets up an array of pointers to wall classes. */
 wall_list::wall_list() : walls(new wall*[init_wall_size]), wep(walls), wel(walls+init_wall_size),
 	current_wall_size(init_wall_size) {}
 
+/** The wall_list destructor frees the array of pointers to the wall classes.
+ */
 wall_list::~wall_list() {
 	delete [] walls;
 }
 
+/** Adds a wall to the container
+ * \param[in] wl a reference to the wall class. */
 void wall_list::add_wall(wall_list &wl) {
 	for(wall **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
 }
 
+/** Deallocates all of the wall classes pointed to by the wall_list. */
 void wall_list::deallocate() {
-	for(wall **wp=walls;wp<wep;wp++) delete [] wp;
+	for(wall **wp=walls;wp<wep;wp++) delete *wp;
 }
 
 /** Adds a wall to the container.
