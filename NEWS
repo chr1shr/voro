@@ -1,5 +1,35 @@
 Version 0.4 (May 2011)
-============================
+======================
+* Voro++ can now be built as a shared library that can be installed and linked
+  to. As part of this, the .cc and .hh have been revised with some small inline
+  functions and template code being written into the header files.
+* Previously, all of the voronoicell output routines sent data to an output
+  stream. However, input and output are now carried out using the STL vector
+  class, allowing for programs to directly link to and use Voro++ output. The
+  STL vector class has been chosen since it the simplest and most standard
+  mechanism for returning a variable amount of data. Two new examples are
+  provided to demonstrate this functionality, at the cell and container levels.
+* A common issue has been that the order of particles in the output file does
+  not match the input file, since Voro++ internally sorts particles according
+  to their position. A new class called voropp_order has been provided, which
+  can link to particles as they are stored, allowing for the Voronoi computation
+  to be carried out in the same order as the input file. The core computation
+  routines can be run with a variety of different loops, and a new example
+  "loops.cc" is provided to demonstrate this. The voropp_order class can also
+  be re-sorted according to particle ID, allowing for sorted output even in the
+  case of unsorted input.
+* The order of parameters to certain functions have been changed to take
+  advantage of the C++ default parameter mechanism wherever possible
+* The container and container_poly classes are now derived from a base class,
+  rather than being different instances of a template. This simplifies the code
+  and stops common routines from being duplicated. The core Voronoi computation
+  routine is now held with a voropp_compute class, which can be instantiated
+  on any container with the correct access functions.
+* The voronoicell and voronoicell_neighbor classes are now derived from a
+  common base class, rather than being different instances of a template. This
+  simplifies the code and stops common routines from being duplicated. The core
+  nplane routine is now a function template that can be instantiated on the
+  parent class itself. 
 * All output routines have been switched from using C++ iostreams to using the C
   cstdio library. This has been done for increased performance. In general the
   cstdio routines run significantly faster than the comparable iostream
@@ -8,8 +38,8 @@ Version 0.4 (May 2011)
   Voro++ to batch process large numbers of input files, this increase in
   input/output speed seemed desirable.
 * The Gnuplot output routines now merge individual lines into contiguous paths
-  wherever possible, resulting in a ~35% reduction in their file size and
-  noticeably smoother plotting performance
+  wherever possible, resulting in a ~15% reduction in their file size and a
+  noticeable improvement in Gnuplot rendering speed
 * Previously, the POV-Ray output routines could create cylinders where the start
   and end points matched. This was a benign problem, due to the fact the vertex
   positions within Voro++ were held to higher precision than the POV-Ray output
@@ -17,6 +47,20 @@ Version 0.4 (May 2011)
   a perl script was provided to post-process and remove these. However, Voro++
   now scans each cylinder before saving to file to automatically remove these
   cases from consideration.
+* Pointer arithmetic is now used within a number of critical cell computation
+  routines, and gives a speedup of 10%-20% in many cases. On some typical
+  problems on typical machines , Voro++ currently computes around 50,000
+  cells/second.
+* A new pre-container mechanism is provided, which can read in a file of
+  unknown length, and then make a guess at the correct computational grid size
+  to use. This removes the need for specifying a length scale with the
+  command-line utility. However, a length scale or grid decomposition can still
+  be manually specified.
+* Fixed a benign bug in the block computation list that would cause it to get
+  extended prematurely
+* Numerous small improvements to memory allocation routines
+* Created a new wall_list class to handle a list of walls. This simplifies the
+  command-line utility code.  
 * Fixed a bug in the print_all_custom() routine, affecting "%P" output. Thanks
   to David Waroquiers (Université Catholique de Louvain, Belgium) for pointing
   this out.
@@ -25,6 +69,7 @@ Version 0.4 (May 2011)
   (Texas A&M University) for pointing this out.
 * Removed the add_vertex() and init_test() routines, which were mainly used for
   debugging
+* A man page about Voro++ can now be installed
 * Updated Doxyfile to 1.7.4
 
 Version 0.3.1 (September 29, 2009)
