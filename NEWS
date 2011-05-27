@@ -23,7 +23,7 @@ Version 0.4 (May 2011)
 * The container and container_poly classes are now derived from a base class,
   rather than being different instances of a template. This simplifies the code
   and stops common routines from being duplicated. The core Voronoi computation
-  routine is now held with a voropp_compute class, which can be instantiated
+  routine is now held within a voropp_compute class, which can be instantiated
   on any container with the correct access functions.
 * The voronoicell and voronoicell_neighbor classes are now derived from a
   common base class, rather than being different instances of a template. This
@@ -49,7 +49,7 @@ Version 0.4 (May 2011)
   cases from consideration.
 * Pointer arithmetic is now used within a number of critical cell computation
   routines, and gives a speedup of 10%-20% in many cases. On some typical
-  problems on typical machines , Voro++ currently computes around 50,000
+  problems on typical machines, Voro++ currently computes around 50,000
   cells/second.
 * A new pre-container mechanism is provided, which can read in a file of
   unknown length, and then make a guess at the correct computational grid size
@@ -60,7 +60,9 @@ Version 0.4 (May 2011)
   extended prematurely
 * Numerous small improvements to memory allocation routines
 * Created a new wall_list class to handle a list of walls. This simplifies the
-  command-line utility code.  
+  command-line utility code.
+* The routines that put particles into a container now do so more reliably for
+  periodic cases, remapping them into the primary domain if necessary 
 * Fixed a bug in the print_all_custom() routine, affecting "%P" output. Thanks
   to David Waroquiers (Université Catholique de Louvain, Belgium) for pointing
   this out.

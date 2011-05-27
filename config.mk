@@ -13,7 +13,7 @@
 # "-O2" or switching it off completely, to speed up the compilation. See
 # config.hh for more details.
 CC=g++
-CFLAGS=-Wall -ansi -pedantic -O3 -dead_strip
+CFLAGS=-Wall -ansi -pedantic -O3
 
 E_INC=-I../../src
 E_LIB=-L../../src
