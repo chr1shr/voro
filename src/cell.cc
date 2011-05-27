@@ -685,10 +685,10 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		// the tolerance, this division should never screw up.
 		if(stackp==stacke) add_memory_ds(stackp);
 		*(stackp++)=up;
-		r=1/(u-l);
-		pts[3*p]=(pts[3*lp]*u-pts[3*up]*l)*r;
-		pts[3*p+1]=(pts[3*lp+1]*u-pts[3*up+1]*l)*r;
-		pts[3*p+2]=(pts[3*lp+2]*u-pts[3*up+2]*l)*r;
+		r=u/(u-l);l=1-r;
+		pts[3*p]=pts[3*lp]*r+pts[3*up]*l;
+		pts[3*p+1]=pts[3*lp+1]*r+pts[3*up+1]*l;
+		pts[3*p+2]=pts[3*lp+2]*r+pts[3*up+2]*l;
 
 		// This point will always have three edges. Connect one of them
 		// to lp.
@@ -741,10 +741,10 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			// point we just tested. Also connect it to the previous
 			// new point in the facet we're constructing.
 			if(p==current_vertices) add_memory_vertices(vc);
-			r=1/(q-l);
-			pts[3*p]=(pts[3*lp]*q-pts[3*qp]*l)*r;
-			pts[3*p+1]=(pts[3*lp+1]*q-pts[3*qp+1]*l)*r;
-			pts[3*p+2]=(pts[3*lp+2]*q-pts[3*qp+2]*l)*r;
+			r=q/(q-l);l=1-r;
+			pts[3*p]=pts[3*lp]*r+pts[3*qp]*l;
+			pts[3*p+1]=pts[3*lp+1]*r+pts[3*qp+1]*l;
+			pts[3*p+2]=pts[3*lp+2]*r+pts[3*qp+2]*l;
 			nu[p]=3;
 			if(mec[3]==mem[3]) add_memory(vc,3);
 			ls=ed[qp][qs+nu[qp]];
