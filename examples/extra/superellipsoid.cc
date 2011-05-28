@@ -2,9 +2,9 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : May 18th 2011 
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 // This function returns a random floating point number between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -32,9 +32,9 @@ int main() {
 	}
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.draw_gnuplot("superellipsoid.gnu",0,0,0);
+	v.draw_gnuplot(0,0,0,"superellipsoid.gnu");
 
 	// Output the Voronoi cell to a file in POV-Ray formats
-	v.draw_pov("superellipsoid_v.pov",0,0,0);
-	v.draw_pov_mesh("superellipsoid_m.pov",0,0,0);
+	v.draw_pov(0,0,0,"superellipsoid_v.pov");
+	v.draw_pov_mesh(0,0,0,"superellipsoid_m.pov");
 }

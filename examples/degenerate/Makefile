@@ -14,10 +14,10 @@ EXECUTABLES=degenerate degenerate2
 all: degenerate degenerate2
 
 degenerate: $(SOURCE) degenerate.cc
-	$(CC) $(CFLAGS) $(EXAMPLE_PATHS) -o degenerate degenerate.cc -lvoro++
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o degenerate degenerate.cc -lvoro++
 
 degenerate2: $(SOURCE) degenerate2.cc
-	$(CC) $(CFLAGS) $(EXAMPLE_PATHS) -o degenerate2 degenerate2.cc -lvoro++
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o degenerate2 degenerate2.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

@@ -121,14 +121,41 @@ class voronoicell_base {
 		int number_of_faces();
 		int number_of_edges();
 		void vertex_orders(vector<int> &v);
+		void output_vertex_orders(FILE *fp=stdout);
 		void vertices(vector<double> &v);
-		void vertices(vector<double> &v,double x,double y,double z);
+		void output_vertices(FILE *fp=stdout);
+		void vertices(double x,double y,double z,vector<double> &v);
+		void output_vertices(double x,double y,double z,FILE *fp=stdout);
 		void face_areas(vector<double> &v);
+		inline void output_face_areas(FILE *fp=stdout) {
+			vector<double> v;face_areas(v);
+			voropp_print_vector(v,fp);
+		}
 		void face_orders(vector<int> &v);
+		inline void output_face_orders(FILE *fp=stdout) {
+			vector<int> v;face_orders(v);
+			voropp_print_vector(v,fp);
+		}
 		void face_freq_table(vector<int> &v);
+		inline void output_face_freq_table(FILE *fp=stdout) {
+			vector<int> v;face_freq_table(v);
+			voropp_print_vector(v,fp);
+		}
 		void face_vertices(vector<int> &v);
+		inline void output_face_vertices(FILE *fp=stdout) {
+			vector<int> v;face_vertices(v);
+			voropp_print_face_vertices(v,fp);
+		}
 		void face_perimeters(vector<double> &v);
+		inline void output_face_perimeters(FILE *fp=stdout) {
+			vector<double> v;face_perimeters(v);
+			voropp_print_vector(v,fp);
+		}
 		void normals(vector<double> &v);
+		inline void output_normals(FILE *fp=stdout) {
+			vector<double> v;normals(v);
+			voropp_print_positions(v,fp);
+		}
 		inline void output_custom(const char *format,FILE *fp=stdout) {output_custom(format,0,0,0,0,default_radius,fp);}
 		void output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp=stdout);
 		template<class vc_class>
@@ -140,6 +167,7 @@ class voronoicell_base {
 		void check_duplicates();
 		void print_edges();
 		virtual void neighbors(vector<int> &v) {v.clear();}
+		virtual void output_neighbors(FILE *fp=stdout) {}
 		virtual void print_edges_neighbors(int i) {};
 		/** This is a simple inline function for picking out the index
 		 * of the next edge counterclockwise at the current vertex.
@@ -170,6 +198,9 @@ class voronoicell_base {
 		 * code allocates more using the add_memory() routine. */
 		int **mep;
 		inline void reset_edges();
+		template<class vc_class>
+		void check_memory_for_copy(vc_class &vc,voronoicell_base* vb);
+		void copy(voronoicell_base* vb);		
 	private:
 		/** This is the delete stack, used to store the vertices which
 		 * are going to be deleted during the plane cutting procedure.
@@ -223,6 +254,13 @@ class voronoicell_base {
 class voronoicell : public voronoicell_base {
 	public:
 		using voronoicell_base::nplane;
+		/** Copies the information from another voronoicell class into
+		 * this class, extending memory allocation if necessary.
+		 * \param[in] c the class to copy. */
+		inline void operator=(voronoicell &c) {
+			voronoicell_base* vb((voronoicell_base*) &c);
+			check_memory_for_copy(*this,vb);copy(vb);
+		}
 		inline bool nplane(double x,double y,double z,double rsq,int p_id) {
 			return nplane(*this,x,y,z,rsq,0);
 		}
@@ -307,6 +345,7 @@ class voronoicell_neighbor : public voronoicell_base {
 		int **ne;
 		voronoicell_neighbor();
 		~voronoicell_neighbor();
+		inline void operator=(voronoicell_neighbor &c);
 		inline bool nplane(double x,double y,double z,double rsq,int p_id) {
 			return nplane(*this,x,y,z,rsq,p_id);
 		}
@@ -349,6 +388,10 @@ class voronoicell_neighbor : public voronoicell_base {
 		void check_facets();
 		virtual void neighbors(vector<int> &v);
 		virtual void print_edges_neighbors(int i);
+		virtual void output_neighbors(FILE *fp=stdout) {
+			vector<int> v;neighbors(v);
+			voropp_print_vector(v,fp);
+		}
 	private:
 		int *paux1;
 		int *paux2;

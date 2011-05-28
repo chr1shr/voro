@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 10th 2009
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 // This function returns a random floating point number between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -21,31 +21,31 @@ int main() {
 	v.plane(1,1,0,2);
 
 	// Output the Voronoi cell to a file in gnuplot format
-	v.draw_gnuplot("simple_cell.gnu",0,0,0);
+	v.draw_gnuplot(0,0,0,"simple_cell.gnu");
 
 	// Output vertex-based statistics
-	cout << "Total vertices      : " << v.p << "\n";
-	cout << "Vertex positions    : ";v.output_vertices(cout);cout << "\n";
-	cout << "Vertex orders       : ";v.output_vertex_orders(cout);cout << "\n";
-	cout << "Max rad. sq. vertex : " << 0.25*v.max_radius_squared() << "\n\n";
+	printf("Total vertices      : %d\n",v.p);
+	printf("Vertex positions    : ");v.output_vertices();puts("");
+	printf("Vertex orders       : ");v.output_vertex_orders();puts("");
+	printf("Max rad. sq. vertex : %g\n\n",0.25*v.max_radius_squared());
 
 	// Output edge-based statistics
-	cout << "Total edges         : " << v.number_of_edges() << "\n";
-	cout << "Total edge distance : " << v.total_edge_distance() << "\n";
-	cout << "Face perimeters     : ";v.output_face_perimeters(cout);cout << "\n\n";
+	printf("Total edges         : %d\n",v.number_of_edges());
+	printf("Total edge distance : %g\n",v.total_edge_distance());
+	printf("Face perimeters     : ");v.output_face_perimeters();puts("\n");
 
 	// Output face-based statistics
-	cout << "Total faces         : " << v.number_of_faces() << "\n";
-	cout << "Surface area        : " << v.surface_area() << "\n";
-	cout << "Face freq. table    : ";v.output_face_freq_table(cout);cout << "\n";
-	cout << "Face orders         : ";v.output_face_orders(cout);cout << "\n";
-	cout << "Face areas          : ";v.output_face_areas(cout);cout << "\n";
-	cout << "Face normals        : ";v.output_normals(cout);cout << "\n";
-	cout << "Face vertices       : ";v.output_face_vertices(cout);cout << "\n\n";
+	printf("Total faces         : %d\n",v.number_of_faces());
+	printf("Surface area        : %g\n",v.surface_area());
+	printf("Face freq. table    : ");v.output_face_freq_table();puts("");
+	printf("Face orders         : ");v.output_face_orders();puts("");
+	printf("Face areas          : ");v.output_face_areas();puts("");
+	printf("Face normals        : ");v.output_normals();puts("");
+	printf("Face vertices       : ");v.output_face_vertices();puts("\n");
 
 	// Output volume-based statistics
-	cout << "Volume              : " << v.volume() << "\n";
 	v.centroid(x,y,z);
-	cout << "Centroid vector     : (" << x << "," << y << "," << z << ")" << endl;
+	printf("Volume              : %g\n"
+	       "Centroid vector     : (%g,%g,%g)\n",v.volume(),x,y,z);
 
 }

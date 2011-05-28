@@ -2,14 +2,14 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 10th 2009
+// Date     : May 18th 2011 
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 // Set up constants for the container geometry
-const fpoint x_min=-3,x_max=3;
-const fpoint y_min=-3,y_max=3;
-const fpoint z_min=0,z_max=6;
+const double x_min=-3,x_max=3;
+const double y_min=-3,y_max=3;
+const double z_min=0,z_max=6;
 
 // Set up the number of blocks that the container is divided
 // into.
@@ -27,19 +27,9 @@ int main() {
 	// tessellation in gnuplot and POV-Ray formats.
 	con.import("pack_six_cube");
 
-	// Use the basic output routine, that saves the particle IDs,
-	// positions, and Voronoi cell volumes
-	con.print_all("packing.standard");
-
-	// Use the neighbor output routine, that also includes information
-	// about what particles share a face. The numbers -1 to -6 in the
-	// neighbor list correspond to faces that are in contact with the
-	// container walls.
-	con.print_all_neighbor("packing.neighbor");
-
 	// Do a custom output routine to store the number of vertices, edges,
 	// and faces of each Voronoi cell
-	con.print_all_custom(
+	con.print_custom(
 		"ID=%i, pos=(%x,%y,%z), vertices=%w, edges=%g, faces=%s",
 		"packing.custom1");
 
@@ -48,12 +38,12 @@ int main() {
 	// the total face area, the order of each face, the areas of each face,
 	// the vertices making up each face, and the neighboring particle (or
 	// wall) corresponding to each face.
-	con.print_all_custom("%i %q %s %F %a %f %t %l %n","packing.custom2");
+	con.print_custom("%i %q %s %F %a %f %t %l %n","packing.custom2");
 
 	// Do a custom output routine that outputs the particle IDs and
 	// positions, plus the volume and the centroid position relative to the
 	// particle center
-	con.print_all_custom("%i %q %v %c","packing.custom3");
+	con.print_custom("%i %q %v %c","packing.custom3");
 
 	// Also create POV-Ray output of the Voronoi cells for use in the
 	// rendering

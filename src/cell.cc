@@ -48,6 +48,44 @@ voronoicell_base::~voronoicell_base() {
 	delete [] nu;delete [] ed;
 }
 
+/** Ensures that enough memory is allocated prior to carrying out a copy.
+ * \param[in] vc a reference to the specialized version of the calling class.
+ * \param[in] vb a pointered to the class to be copied. */
+template<class vc_class>
+void voronoicell_base::check_memory_for_copy(vc_class &vc,voronoicell_base* vb) {
+	while(current_vertex_order<vb->current_vertex_order) add_memory_vorder(vc);
+	for(int i=0;i<current_vertex_order;i++) while(mem[i]<vb->mec[i]) add_memory(vc,i);
+	while(current_vertices<vb->p) add_memory_vertices(vc);
+}
+
+/** Copies the vertex and edge information from another class. The routine
+ * assumes that enough memory is available for the copy.
+ * \param[in] vb a pointer to the class to copy. */
+void voronoicell_base::copy(voronoicell_base* vb) {
+	int i,j;
+	p=vb->p;up=0;
+	for(i=0;i<current_vertex_order;i++) {
+		mec[i]=vb->mec[i];
+		for(j=0;j<mec[i]*(2*i+1);j++) mep[i][j]=vb->mep[i][j];
+		for(j=0;j<mec[i]*(2*i+1);j+=2*i+1) ed[mep[i][j+2*i]]=mep[i]+j;
+	}
+	for(i=0;i<p;i++) nu[i]=vb->nu[i];
+	for(i=0;i<3*p;i++) pts[i]=vb->pts[i];
+}
+
+/** Copies the information from another voronoicell_neighbor class into this
+ * class, extending memory allocation if necessary.
+ * \param[in] c the class to copy. */
+void voronoicell_neighbor::operator=(voronoicell_neighbor &c) {
+	voronoicell_base* vb((voronoicell_base*) &c);
+	check_memory_for_copy(*this,vb);copy(vb);
+	int i,j;
+	for(i=0;i<c.current_vertex_order;i++) {
+		for(j=0;j<c.mec[i]*i;j++) mne[i][j]=c.mne[i][j];
+		for(j=0;j<c.mec[i];j++) ne[c.mep[i][(2*i+1)*j+2*i]]=mne[i]+(j*i);
+	}
+}
+
 /** Translates the vertices of the Voronoi cell by a given vector.
  * \param[in] (x,y,z) the coordinates of the vector. */
 void voronoicell_base::translate(double x,double y,double z) {
@@ -231,7 +269,7 @@ void voronoicell_base::init_base(double xmin,double xmax,double ymin,double ymax
  * \param[in] l The distance from the octahedron center to a vertex. Six
  *              vertices are initialized at (-l,0,0), (l,0,0), (0,-l,0),
  *              (0,l,0), (0,0,-l), and (0,0,l). */
-inline void voronoicell_base::init_octahedron_base(double l) {
+void voronoicell_base::init_octahedron_base(double l) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[4]=p=6;l*=2;
 	*pts=-l;pts[1]=0;pts[2]=0;
@@ -257,7 +295,7 @@ inline void voronoicell_base::init_octahedron_base(double l) {
  * \param (x1,y1,z1) a position vector for the second vertex.
  * \param (x2,y2,z2) a position vector for the third vertex.
  * \param (x3,y3,z3) a position vector for the fourth vertex. */
-inline void voronoicell_base::init_tetrahedron_base(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
+void voronoicell_base::init_tetrahedron_base(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=4;
 	*pts=x0*2;pts[1]=y0*2;pts[2]=z0*2;
@@ -1650,6 +1688,15 @@ void voronoicell_base::vertex_orders(vector<int> &v) {
 	for(int i=0;i<p;i++) v[i]=nu[i];
 }
 
+/** Outputs the vertex orders.
+ * \param[out] fp the file handle to write to. */
+void voronoicell_base::output_vertex_orders(FILE *fp) {
+	if(p>0) {
+		fprintf(fp,"%d",*nu);
+		for(int *nup=nu+1;nup<nu+p;nup++) fprintf(fp," %d",*nup);
+	}
+}
+
 /** Returns a vector of the vertex vectors using the local coordinate system.
  * \param[out] v the vector to store the results in. */
 void voronoicell_base::vertices(vector<double> &v) {
@@ -1662,17 +1709,38 @@ void voronoicell_base::vertices(vector<double> &v) {
 	}
 }
 
-/** Returns a vector of the vertex vectors using the local coordinate system.
+/** Outputs the vertex vectors using the local coordinate system.
+ * \param[out] fp the file handle to write to. */
+void voronoicell_base::output_vertices(FILE *fp) {
+	if(p>0) {
+		fprintf(fp,"(%g,%g,%g)",*pts*0.5,pts[1]*0.5,pts[2]*0.5);
+		for(double *ptsp(pts+3);ptsp<pts+3*p;ptsp+=3) fprintf(fp," (%g,%g,%g)",*ptsp*0.5,ptsp[1]*0.5,ptsp[2]*0.5);
+	}
+}
+
+
+/** Returns a vector of the vertex vectors in the global coordinate system.
  * \param[out] v the vector to store the results in.
  * \param[in] (x,y,z) the position vector of the particle in the global
  *                    coordinate system. */
-void voronoicell_base::vertices(vector<double> &v,double x,double y,double z) {
+void voronoicell_base::vertices(double x,double y,double z,vector<double> &v) {
 	v.resize(3*p);
 	double *ptsp(pts);
 	for(int i=0;i<3*p;i+=3) {
 		v[i]=x+*(ptsp++)*0.5;
 		v[i+1]=y+*(ptsp++)*0.5;
 		v[i+2]=z+*(ptsp++)*0.5;
+	}
+}
+
+/** Outputs the vertex vectors using the global coordinate system.
+ * \param[out] fp the file handle to write to.
+ * \param[in] (x,y,z) the position vector of the particle in the global
+ *                    coordinate system. */
+void voronoicell_base::output_vertices(double x,double y,double z,FILE *fp) {
+	if(p>0) {
+		fprintf(fp,"(%g,%g,%g)",x+*pts*0.5,y+pts[1]*0.5,z+pts[2]*0.5);
+		for(double *ptsp(pts+3);ptsp<pts+3*p;ptsp+=3) fprintf(fp," (%g,%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
 	}
 }
 
@@ -1728,7 +1796,7 @@ void voronoicell_base::face_vertices(vector<int> &v) {
 				k=m;
 			} while (k!=i);
 			vn=v.size();
-			v[vp]=vn-vp;
+			v[vp]=vn-vp-1;
 			vp=vn;
 		}
 	}
@@ -1913,9 +1981,9 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
 
 				// Vertex-related output
 				case 'w': fprintf(fp,"%d",p);break;
-				case 'p': vertices(vd);voropp_print_positions(vd,fp);break;
-				case 'P': vertices(vd,x,y,z);voropp_print_positions(vd,fp);break;
-				case 'o': vertex_orders(vi);voropp_print_vector(vi,fp);break;
+				case 'p': output_vertices(fp);break;
+				case 'P': output_vertices(x,y,z,fp);break;
+				case 'o': output_vertex_orders(fp);break;
 				case 'm': fprintf(fp,"%g",0.25*max_radius_squared());break;
 
 				// Edge-related output
@@ -2120,3 +2188,5 @@ void voronoicell_neighbor::print_edges_neighbors(int i) {
 // Explicit instantiation
 template bool voronoicell_base::nplane(voronoicell&,double,double,double,double,int);
 template bool voronoicell_base::nplane(voronoicell_neighbor&,double,double,double,double,int);
+template void voronoicell_base::check_memory_for_copy(voronoicell&,voronoicell_base*);
+template void voronoicell_base::check_memory_for_copy(voronoicell_neighbor&,voronoicell_base*);

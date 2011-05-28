@@ -2,9 +2,9 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 12th 2009
+// Date     : May 18th 2011
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 // Major and minor torus radii
 const double arad=9,brad=3.5;
@@ -52,9 +52,8 @@ class wall_torus : public wall {
 		// voronoicell_neighbor object for a particle at a vector
 		// (x,y,z), and makes a plane cut to to the object to account
 		// for the toroidal wall
-		template<class n_option>
-		inline bool cut_cell_base(voronoicell_base<n_option> &c,
-				double x,double y,double z) {
+		template<class vc_class>
+		inline bool cut_cell_base(vc_class &c,double x,double y,double z) {
 			double orad=sqrt(x*x+y*y);
 			double odis=orad-mjr;
 			double ot=odis*odis+z*z;
@@ -75,9 +74,9 @@ class wall_torus : public wall {
 		// These virtual functions are called during the cell
 		// computation in the container class. They call instances of
 		// the template given above.
-		bool cut_cell(voronoicell_base<neighbor_none> &c,double x,
+		bool cut_cell(voronoicell &c,double x,
 				double y,double z) {return cut_cell_base(c,x,y,z);}
-		bool cut_cell(voronoicell_base<neighbor_track> &c,double x,
+		bool cut_cell(voronoicell_neighbor &c,double x,
 				double y,double z) {return cut_cell_base(c,x,y,z);}
 	private:
 		// The ID number associated with the wall
@@ -105,7 +104,7 @@ int main() {
 
 	// Output the particle positions in POV-Ray format
 	con.draw_particles_pov("torus_p.pov");
-
+con.draw_cells_gnuplot("torus.gnu");
 	// Output the Voronoi cells in POV-Ray format
 	con.draw_cells_pov("torus_v.pov");
 }

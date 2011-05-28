@@ -53,15 +53,15 @@ inline void unitcell::unit_voro_apply(int i,int j,int k) {
 
 bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
 	const double bxinv=1/bx,byinv=1/by,bzinv=1/bz,ivol=bxinv*byinv*bzinv;
-/*	voronoicell c;
-	c.init(unit_voro);
+	voronoicell c;
+	c=unit_voro;
 	if(!c.plane(0,0,bzinv,dx+1)) return false;
 	if(!c.plane(0,0,-bzinv,-dx+1)) return false;
 	if(!c.plane(0,byinv,-byz*byinv*bzinv,dy+1)) return false;
 	if(!c.plane(0,-byinv,byz*byinv*bzinv,-dy+1)) return false;
 	if(!c.plane(bxinv,-bxy*bxinv*byinv,(bxy*byz-by*bxz)*ivol,dz+1)) return false;
 	if(!c.plane(-bxinv,bxy*bxinv*byinv,(-bxy*byz+by*bxz)*ivol,-dz+1)) return false;
-	vol=c.volume()*ivol;*/
+	vol=c.volume()*ivol;
 	return true;
 }
 

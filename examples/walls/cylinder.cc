@@ -2,9 +2,9 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : May 18th 2011
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 // Set up constants for the container geometry
 const double x_min=-6.5,x_max=6.5;
@@ -26,11 +26,11 @@ int main() {
 	con.add_wall(cyl);
 
 	// Import the particles from a file
-	for(int i=0;i<500;i++) con.import("pack_cylinder");
+	con.import("pack_cylinder");
 
 	// Output the particle positions in POV-Ray format
-	//con.draw_particles_pov("cylinder_p.pov");
+	con.draw_particles_pov("cylinder_p.pov");
 
 	// Output the Voronoi cells in POV-Ray format
-	//con.draw_cells_pov("cylinder_v.pov");
+	con.draw_cells_pov("cylinder_v.pov");
 }

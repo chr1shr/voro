@@ -2,9 +2,9 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : May 18th 2011
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 const double pi=3.1415926535897932384626433832795;
 

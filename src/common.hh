@@ -94,8 +94,9 @@ inline void voropp_print_face_vertices(vector<int> &v,FILE *fp=stdout) {
 			if(l==1) fprintf(fp,"(%d)",v[k++]);
 			else fputs("()",fp);
 		} else {
-			fprintf(fp,"(%d",v[k]);
-			for(j=k+l;k<j;k++) fprintf(fp,",%d",v[k]);
+			j=k+l;
+			fprintf(fp,"(%d",v[k++]);
+			while(k<j) fprintf(fp,",%d",v[k++]);
 			fputs(")",fp);
 		}
 		while((unsigned int) k<v.size()) {
@@ -104,8 +105,9 @@ inline void voropp_print_face_vertices(vector<int> &v,FILE *fp=stdout) {
 				if(l==1) fprintf(fp," (%d)",v[k++]);
 				else fputs(" ()",fp);
 			} else {
-				fprintf(fp," (%d",v[k]);
-				for(j=k+l;k<j;k++) fprintf(fp,",%d",v[k]);
+				j=k+l;
+				fprintf(fp," (%d",v[k++]);
+				while(k<j) fprintf(fp,",%d",v[k++]);
 				fputs(")",fp);
 			}
 		}

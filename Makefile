@@ -9,8 +9,8 @@
 
 # Build all of the executable files
 all:
-	cd examples && make
 	cd src && make
+	cd examples && make
 
 # Build the help files (with doxygen)
 help:

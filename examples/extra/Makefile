@@ -2,34 +2,25 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : July 1st 2008
+# Date   : May 18th 2011
 
 # Load the common configuration file
 include ../../config.mk
 
-# The relative of path of the main library source files
-INCLUDE=-I../../src
-
-# List of the common source files
-SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
-       ../../src/cell.hh ../../src/cell.cc ../../src/wall.cc ../../src/wall.hh \
-       ../../src/worklist.cc ../../src/worklist.hh ../../src/voro++.cc \
-       ../../src/voro++.hh
-
 # List of executables
-EXECUTABLES=cut_region box_cut superellipsoid
+EXECUTABLES=box_cut cut_region superellipsoid
 
 # Makefile rules
-all: cut_region box_cut superellipsoid
+all: $(EXECUTABLES)
 
-superellipsoid: $(SOURCE) superellipsoid.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o superellipsoid superellipsoid.cc
+box_cut: box_cut.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o box_cut box_cut.cc -lvoro++
 
-cut_region: $(SOURCE) cut_region.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o cut_region cut_region.cc
+cut_region: cut_region.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o cut_region cut_region.cc -lvoro++
 
-box_cut: $(SOURCE) box_cut.cc
-	$(CC) $(CFLAGS) $(INCLUDE) -o box_cut box_cut.cc
+superellipsoid: superellipsoid.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o superellipsoid superellipsoid.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

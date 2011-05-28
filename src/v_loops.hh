@@ -23,7 +23,7 @@ class voropp_order {
 		int size;
 		int *o,*op;
 		voropp_order(int init_size=init_ordering_size)
-			: size(init_size),o(new int[size<<1]),op(o) {};
+			: size(init_size),o(new int[size<<1]),op(o) {}
 		~voropp_order() {
 			delete [] o;
 		}

@@ -2,9 +2,9 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : October 19th 2007
+// Date     : May 18th 2011
 
-#include "voro++.cc"
+#include "voro++.hh"
 
 // Set up constants for the container geometry
 const double x_min=-3,x_max=3;

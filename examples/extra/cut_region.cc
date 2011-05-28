@@ -2,9 +2,10 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : May 18th 2011 
 
-#include "cell.cc"
+#include "common.hh"
+#include "cell.hh"
 
 const double pi=3.1415926535897932384626433832795;
 
@@ -18,8 +19,7 @@ int main() {
 	double x,y,z,r,rmin,rmax;
 	double theta,phi,phi_step;
 	voronoicell v;
-	ofstream os;
-	os.open("cell_cut_region.gnu",ofstream::out|ofstream::trunc);
+	FILE *fp(voropp_safe_fopen("cell_cut_region.gnu","w"));
 
 	// Initialize the Voronoi cell to be an octahedron and make a single
 	// plane cut to add some variation
@@ -27,7 +27,7 @@ int main() {
 	v.plane(0.4,0.3,1,0.1);
 
 	// Output the cell in gnuplot format
-	v.draw_gnuplot("cell.gnu",0,0,0);
+	v.draw_gnuplot(0,0,0,"cell.gnu");
 
 	// Now test over direction vectors from the center of the sphere. For
 	// each vector, carry out a search to find the maximum distance along
@@ -64,9 +64,9 @@ int main() {
 			// Output this point to file
 			r=(rmax+rmin)*0.5;
 			x*=r;y*=r;z*=r;
-			os << x << " " << y << " " << z << endl;
+			fprintf(fp,"%g %g %g\n",x,y,z);
 		}
 	}
 
-	os.close();
+	fclose(fp);
 }
