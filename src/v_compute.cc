@@ -4,11 +4,15 @@
 // Email    : chr@alum.mit.edu
 // Date     : May 18th 2011
 
-/** \file v_compute.cc */
+/** \file v_compute.cc Function implementantions for the v_compute class. */
 
 #include "v_compute.hh"
 #include "container.hh"
 
+/** The class constructor initializes constants from the container class, and
+ * sets up the mask and queue used for Voronoi computations.
+ * \param[in] con a reference to the container class to use.
+ * \param[in] (hx_,hy_,hz_) the size of the mask to use. */
 template<class c_class>
 voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
 	con(con_), boxx(con_.boxx), boxy(con_.boxy), boxz(con_.boxz),
@@ -699,7 +703,9 @@ bool voropp_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double
 	return false;
 }
 
-/** Add list memory. */
+/** Adds memory to the queue.
+ * \param[in,out] qu_s a reference to the queue start pointer.
+ * \param[in,out] qu_e a reference to the queue end pointer. */
 template<class c_class>
 inline void voropp_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
 	qu_size<<=1;

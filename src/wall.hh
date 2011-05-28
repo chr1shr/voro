@@ -19,11 +19,11 @@
 struct wall_sphere : public wall {
 	public:
 		/** Constructs a spherical wall object.
-		 * \param[in] iw_id an ID number to associate with the wall for
+		 * \param[in] w_id_ an ID number to associate with the wall for
 		 * neighbor tracking.
-		 * \param[in] (ixc,iyc,izc) a position vector for the sphere's
+		 * \param[in] (xc_,yc_,zc_) a position vector for the sphere's
 		 * center.
-		 * \param[in] irc the radius of the sphere. */
+		 * \param[in] rc_ the radius of the sphere. */
 		wall_sphere(double xc_,double yc_,double zc_,double rc_,int w_id_=-99)
 			: w_id(w_id_), xc(xc_), yc(yc_), zc(zc_), rc(rc_) {}
 		bool point_inside(double x,double y,double z);
@@ -42,9 +42,9 @@ struct wall_sphere : public wall {
 struct wall_plane : public wall {
 	public:
 		/** Constructs a plane wall object
-		 * \param[in] (ixc,iyc,izc) a normal vector to the plane.
-		 * \param[in] iac a displacement along the normal vector.
-		 * \param[in] iw_id an ID number to associate with the wall for
+		 * \param[in] (xc_,yc_,zc_) a normal vector to the plane.
+		 * \param[in] ac_ a displacement along the normal vector.
+		 * \param[in] w_id_ an ID number to associate with the wall for
 		 * neighbor tracking. */
 		wall_plane(double xc_,double yc_,double zc_,double ac_,int w_id_=-99)
 			: w_id(w_id_), xc(xc_), yc(yc_), zc(zc_), ac(ac_) {}
@@ -64,12 +64,12 @@ struct wall_plane : public wall {
 struct wall_cylinder : public wall {
 	public:
 		/** Constructs a cylinder wall object.
-		 * \param[in] (ixc,iyc,izc) a point on the axis of the
+		 * \param[in] (xc_,yc_,zc_) a point on the axis of the
 		 * cylinder.
-		 * \param[in] (ixa,iya,iza) a vector pointing along the
+		 * \param[in] (xa_,ya_,za_) a vector pointing along the
 		 * direction of the cylinder.
-		 * \param[in] irc the radius of the cylinder
-		 * \param[in] iw_id an ID number to associate with the wall for
+		 * \param[in] rc_ the radius of the cylinder
+		 * \param[in] w_id_ an ID number to associate with the wall for
 		 * neighbor tracking. */
 		wall_cylinder(double xc_,double yc_,double zc_,double xa_,double ya_,double za_,double rc_,int w_id_=-99)
 			: w_id(w_id_), xc(xc_), yc(yc_), zc(zc_), xa(xa_), ya(ya_), za(za_),
@@ -91,12 +91,12 @@ struct wall_cylinder : public wall {
 struct wall_cone : public wall {
 	public:
 		/** Constructs a cone wall object.
-		 * \param[in] (ixc,iyc,izc) the apex of the cone.
-		 * \param[in] (ixa,iya,iza) a vector pointing along the axis of
+		 * \param[in] (xc_,yc_,zc_) the apex of the cone.
+		 * \param[in] (xa_,ya_,za_) a vector pointing along the axis of
 		 * the cone.
 		 * \param[in] ang the angle (in radians) of the cone, measured
 		 * from the axis.
-		 * \param[in] iw_id an ID number to associate with the wall for
+		 * \param[in] w_id_ an ID number to associate with the wall for
 		 * neighbor tracking. */
 		wall_cone(double xc_,double yc_,double zc_,double xa_,double ya_,double za_,double ang,int w_id_=-99)
 			: w_id(w_id_), xc(xc_), yc(yc_), zc(zc_), xa(xa_), ya(ya_), za(za_),

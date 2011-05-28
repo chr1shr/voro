@@ -4,6 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : May 18th 2011
 
+/** \file cell.hh
+ * \brief Header file for the small helper functions. */
+
 #ifndef VOROPP_COMMON_HH
 #define VOROPP_COMMON_HH
 

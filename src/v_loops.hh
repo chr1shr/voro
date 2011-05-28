@@ -5,7 +5,7 @@
 // Date     : May 18th 2011
 
 /** \file v_loops.hh
- * \brief Header file for the container_base template and related classes. */
+ * \brief Header file for the loop classes. */
 
 #ifndef VOROPP_V_LOOPS_HH
 #define VOROPP_V_LOOPS_HH

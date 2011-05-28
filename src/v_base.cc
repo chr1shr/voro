@@ -1,3 +1,12 @@
+// Voro++, a 3D cell-based Voronoi library
+//
+// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Email    : chr@alum.mit.edu
+// Date     : May 18th 2011
+
+/** \file v_base.cc
+ * \brief Function implementations for the base Voronoi container class. */
+
 #include "v_base.hh"
 #include "config.hh"
 

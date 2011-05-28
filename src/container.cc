@@ -5,8 +5,7 @@
 // Date     : May 18th 2011
 
 /** \file container.cc
- * \brief Function implementations for the container_base template and related
- * classes. */
+ * \brief Function implementations for the container and related classes. */
 
 #include "container.hh"
 
@@ -476,7 +475,7 @@ wall_list::~wall_list() {
 	delete [] walls;
 }
 
-/** Adds a wall to the container
+/** Adds all of the walls on another wall_list to this class. 
  * \param[in] wl a reference to the wall class. */
 void wall_list::add_wall(wall_list &wl) {
 	for(wall **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
@@ -487,8 +486,7 @@ void wall_list::deallocate() {
 	for(wall **wp=walls;wp<wep;wp++) delete *wp;
 }
 
-/** Adds a wall to the container.
- * \param[in] w a wall object to be added.*/
+/** Increases the memory allocation for the walls array. */
 void wall_list::increase_wall_memory() {
 	current_wall_size<<=1;
 	if(current_wall_size>max_wall_size)

@@ -42,21 +42,40 @@ class wall {
 		virtual bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) = 0;
 };
 
+/** \brief A class for storing a list of pointers to walls. */
 class wall_list {
 	public:
-		wall **walls,**wep;
+		/** An array holding pointers to wall objects. */
+		wall **walls;
+		/** A pointer to the next free position to add a wall pointer.
+		 */
+		wall **wep;
 		wall_list();
 		~wall_list();
+		/** Adds a wall to the list.
+		 * \param[in] w the wall to add. */
 		inline void add_wall(wall *w) {
 			if(wep==wel) increase_wall_memory();
 			*(wep++)=w;
 		}
+		/** Adds a wall to the list.
+		 * \param[in] w a reference to the wall to add. */
 		inline void add_wall(wall &w) {add_wall(&w);}
 		void add_wall(wall_list &wl);
+		/** Determines whether a given position is inside all of the
+		 * walls on the list.
+		 * \param[in] (x,y,z) the position to test.
+		 * \return True if it is inside, false if it is outside. */
 		inline bool point_inside_walls(double x,double y,double z) {
 			for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->point_inside(x,y,z))) return false;
 			return true;
 		}
+		/** Cuts a Voronoi cell by all of the walls currently on
+		 * the list.
+		 * \param[in] c a reference to the Voronoi cell class.
+		 * \param[in] (x,y,z) the position of the cell.
+		 * \return True if the cell still exists, false if the cell is
+		 * deleted. */
 		template<class c_class>
 		bool apply_walls(c_class &c,double x,double y,double z) {
 			for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->cut_cell(c,x,y,z))) return false;
@@ -65,8 +84,8 @@ class wall_list {
 		void deallocate();
 	protected:
 		void increase_wall_memory();
-		/** This array holds pointers to any wall objects that have
-		 * been added to the container. */
+		/** A pointer to the limit of the walls array, used to
+		 * determine when array is full. */
 		wall **wel;
 		/** The current amount of memory allocated for walls. */
 		int current_wall_size;
@@ -150,6 +169,11 @@ class container_base : public voropp_base, public wall_list {
 			cuijk=vl.ijk-sti-nx*(stj+ny*stk);
 			return true;
 		}
+		/** Returns the position of the particle currently being
+		 * computed relative to the computational block that it is
+		 * within. It is used to select the optimal worklist entry to
+		 * use.
+		 * \param[out] (fx,fy,fz) the relative position. */
 		inline void frac_pos(double &fx,double &fy,double &fz) {
 			fx=cux-ax-boxx*cui;
 			fy=cuy-ay-boxy*cuj;
@@ -162,7 +186,9 @@ class container_base : public voropp_base, public wall_list {
 			return cuijk+ei+nx*(ej+ny*ek);
 		}		
 	protected:
-		double cux,cuy,cuz;
+		double cux;
+		double cuy;
+		double cuz;
 		int cui,cuj,cuk,cuijk;
 		void add_particle_memory(int i);
 		inline bool put_locate_block(int &ijk,double &x,double &y,double &z);
@@ -261,6 +287,9 @@ class container : public container_base {
 
 class container_poly : public container_base {
 	public:
+		/** The current maximum radius of any particle, used to
+		 * determine when to cut off the radical Voronoi computation.
+		 * */
 		double max_radius;
 		container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 				int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem);

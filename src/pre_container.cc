@@ -1,3 +1,12 @@
+// Voro++, a 3D cell-based Voronoi library
+//
+// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Email    : chr@alum.mit.edu
+// Date     : May 18th 2011
+
+/** \file pre_container.cc
+ * \brief Function implementations for pre_container and related classes. */
+
 #include <cstdio>
 #include <cmath>
 using namespace std;

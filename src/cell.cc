@@ -5,8 +5,7 @@
 // Date     : May 18th 2011
 
 /** \file cell.cc
- * \brief Function implementations for the voronoicell_base template and
- * related classes. */
+ * \brief Function implementations for the voronoicell and related classes. */
 
 #include <cstring>
 using namespace std;

@@ -5,7 +5,7 @@
 // Date     : May 18th 2011
 
 /** \file cell.hh
- * \brief Header file for the voronoicell_base template and related classes. */
+ * \brief Header file for the voronoicell and related classes. */
 
 #ifndef VOROPP_CELL_HH
 #define VOROPP_CELL_HH
