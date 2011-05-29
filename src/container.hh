@@ -185,6 +185,18 @@ class container_base : public voropp_base, public wall_list {
 			if(zperiodic) {if(cuk+ek<nz) {ek+=nz;qz=-(bz-az);} else if(cuk+ek>=(nz<<1)) {ek-=nz;qz=bz-az;} else qz=0;}
 			return cuijk+ei+nx*(ej+ny*ek);
 		}
+		void draw_domain_gnuplot(FILE *fp=stdout);
+		inline void draw_domain_gnuplot(const char* filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_domain_gnuplot(fp);
+			fclose(fp);
+		}
+		void draw_domain_pov(FILE *fp=stdout);
+		inline void draw_domain_pov(const char* filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_domain_pov(fp);
+			fclose(fp);
+		}
 	protected:
 		double cux;
 		double cuy;

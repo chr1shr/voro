@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : May 18th 2011
 
 /** \file cmd_line.cc
  * \brief Source code for the command-line utility. */
@@ -168,15 +168,15 @@ int main(int argc,char **argv) {
 			}
 			bm=specified;
 			i++;
-			nx=atoi(argv[i++]);			
-			ny=atoi(argv[i++]);			
+			nx=atoi(argv[i++]);
+			ny=atoi(argv[i++]);
 			nz=atoi(argv[i]);
 			if(nx<=0||ny<=0||nz<=0) {
 				fputs("voro++: Computational grid specified with -n must be greater than one\n"
 				      "in each direction\n",stderr);
 				wl.deallocate();
 				return VOROPP_CMD_LINE_ERROR;
-			}		
+			}
 		} else if(strcmp(argv[i],"-p")==0) {
 			xperiodic=yperiodic=zperiodic=true;
 		} else if(strcmp(argv[i],"-px")==0) {

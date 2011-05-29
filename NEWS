@@ -56,6 +56,9 @@ Version 0.4 (May 2011)
   to use. This removes the need for specifying a length scale with the
   command-line utility. However, a length scale or grid decomposition can still
   be manually specified.
+* Removed the option to compile in single-precision. This was a highly
+  specialized feature, and it appears better to allow users who wish to do this
+  to make their own modifications.
 * Fixed a benign bug in the block computation list that would cause it to get
   extended prematurely
 * Numerous small improvements to memory allocation routines

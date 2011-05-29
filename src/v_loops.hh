@@ -58,6 +58,7 @@ class v_loop_base {
 		inline double x() {return p[ijk][ps*q];}
 		inline double y() {return p[ijk][ps*q+1];}
 		inline double z() {return p[ijk][ps*q+2];}
+		inline double pid() {return id[ijk][q];}
 };
 
 class v_loop_all : public v_loop_base {
