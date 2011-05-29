@@ -129,23 +129,7 @@ inline bool unitcell::unit_voro_test(int i,int j,int k) {
  * \param[in] filename the filename to write to. */
 void unitcell::draw_domain(FILE *fp) {
 	fprintf(fp,"0 0 0\n%g 0 0\n%g %g 0\n%g %g 0\n",bx,bx+bxy,by,bxy,by);
-	//os << "0 0 0\n";
-	//os << bx << " 0 0\n";
-	//os << bx+bxy << " " << by << " 0\n";
-	//os << bxy << " " << by << " 0\n";
 	fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",bxy+bxz,by+byz,bz,bx+bxy+bxz,by+byz,bz,bx+bxz,byz,bz,bxz,byz,bz);
-	//os << bxy+bxz << " " << by+byz << " " << bz << "\n";
-	//os << bx+bxy+bxz << " " << by+byz << " " << bz << "\n";
-	//os << bx+bxz << " " << byz << " " << bz << "\n";
-	//os << bxz << " " << byz << " " << bz << "\n";
 	fprintf(fp,"0 0 0\n%g %g 0\n\n%g %g %g\n%g %g %g\n\n",bxy,by,bxz,byz,bz,bxy+bxz,by+byz,bz);
-	//os << "0 0 0\n";
-	//os << bxy << " " << by << " 0\n\n";
-	//os << bxz << " " << byz << " " << bz << "\n";
-	//os << bxy+bxz << " " << by+byz << " " << bz << "\n\n";
 	fprintf(fp,"%g 0 0\n%g %g %g\n\n%g %g 0\n%g %g %g\n\n",bx,bx+bxz,byz,bz,bx+bxy,by,bx+bxy+bxz,by+byz,bz);
-	//os << bx << " 0 0\n";
-	//os << bx+bxz << " " << byz << " " << bz << "\n\n";
-	//os << bx+bxy << " " << by << " 0\n";
-	//os << bx+bxy+bxz << " " << by+byz << " " << bz << "\n\n";
 }

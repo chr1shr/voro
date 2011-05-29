@@ -25,6 +25,9 @@ void help_message() {
 	puts("Voro++ version 0.4, by Chris H. Rycroft (UC Berkeley/LBL)\n\n"
 	     "Syntax: voro++ [options] <x_min> <x_max> <y_min>\n"
 	     "               <y_max> <z_min> <z_max> <filename>\n\n"
+	     "By default, the utility reads in the input file of particle IDs and positions,\n"
+	     "computes the Voronoi cell for each, and then creates <filename.vol> with an\n"
+	     "additional column containing the volume of each Voronoi cell.\n\n"
 	     "Available options:\n"
 	     " -c <str>   : Specify a custom output string\n"
 	     " -g         : Turn on the gnuplot output to <filename.gnu>\n"
@@ -35,8 +38,8 @@ void help_message() {
 	     " -m <mem>   : Manually choose the memory allocation per grid block\n"
 	     "              (default 8)\n"
 	     " -n [3]     : Manually specify the internal grid size\n"
-//	     " -o         : Ensure that the output file has the same order as the input\n"
-//	     "              file\n"
+	     " -o         : Ensure that the output file has the same order as the input\n"
+	     "              file\n"
 	     " -p         : Make container periodic in all three directions\n"
 	     " -px        : Make container periodic in the x direction\n"
 	     " -py        : Make container periodic in the y direction\n"
@@ -49,7 +52,11 @@ void help_message() {
 	     " -ws [4]    : Add a sphere wall object, centered on (x1,x2,x3),\n"
 	     "              with radius x4\n"
 	     " -wp [4]    : Add a plane wall object, with normal (x1,x2,x3),\n"
-	     "              and displacement x4");
+	     "              and displacement x4\n"
+	     " -y         : Save POV-Ray particles to <filename_p.pov> and POV-Ray Voronoi\n"
+	     "              cells to <filename_v.pov>\n"
+	     " -yp        : Save only POV-Ray particles to <filename_p.pov>\n"
+	     " -yv        : Save only POV-Ray Voronoi cells to <filename_v.pov>");
 }
 
 // This message gets displayed if the user requests information about doing custom
@@ -102,14 +109,52 @@ void error_message() {
 	fputs("voro++: Unrecognized command-line options; type \"voro++ -h\" for more\ninformation.\n",stderr);
 }
 
+// Carries out the Voronoi computation
+template<class v_loop,class c_class>
+void cmd_line_output(v_loop &vl,c_class &con,const char* format,FILE* outfile,FILE* gnu_file,FILE* povp_file,FILE* povv_file) {
+	int pid,ps(con.ps);double x,y,z,r;
+	if(con.contains_neighbor(format)) {
+		voronoicell_neighbor c;
+		if(vl.start()) do if(con.compute_cell(c,vl)) {
+			vl.pos(pid,x,y,z,r);
+			if(outfile!=NULL) c.output_custom(format,pid,x,y,z,r,outfile);
+			if(gnu_file!=NULL) c.draw_gnuplot(x,y,z,gnu_file);
+			if(povp_file!=NULL) {
+				fprintf(povp_file,"// id %d\n",pid);
+				if(ps==4) fprintf(povp_file,"sphere{<%g,%g,%g>,%g}\n",x,y,z,r);
+				else fprintf(povp_file,"sphere{<%g,%g,%g>,s}\n",x,y,z);
+			}
+			if(povv_file!=NULL) {
+				fprintf(povv_file,"// cell %d\n",pid);
+				c.draw_pov(x,y,z,povv_file);
+			}
+		} while(vl.inc());
+	} else {
+		voronoicell c;
+		if(vl.start()) do if(con.compute_cell(c,vl)) {
+			vl.pos(pid,x,y,z,r);
+			if(outfile!=NULL) c.output_custom(format,pid,x,y,z,r,outfile);
+			if(gnu_file!=NULL) c.draw_gnuplot(x,y,z,gnu_file);
+			if(povp_file!=NULL) {
+				fprintf(povp_file,"// id %d\n",pid);
+				if(ps==4) fprintf(povp_file,"sphere{<%g,%g,%g>,%g}\n",x,y,z,r);
+				else fprintf(povp_file,"sphere{<%g,%g,%g>,s}\n",x,y,z);
+			}
+			if(povv_file!=NULL) {
+				fprintf(povv_file,"// cell %d\n",pid);
+				c.draw_pov(x,y,z,povv_file);
+			}
+		} while(vl.inc());
+	}
+}
+
 int main(int argc,char **argv) {
 	int i=1,j=-7,custom_output=0,nx,ny,nz,init_mem(8);
 	double ls=0;
 	blocks_mode bm(none);
-	bool gnuplot_output=false,polydisperse=false;
-	bool xperiodic=false,yperiodic=false,zperiodic=false;
+	bool gnuplot_output=false,povp_output=false,povv_output=false,polydisperse=false;
+	bool xperiodic=false,yperiodic=false,zperiodic=false,ordered=false;
 	pre_container *pcon(NULL);pre_container_poly *pconp(NULL);
-	char buffer[256];
 	wall_list wl;
 
 	// If there's one argument, check to see if it's requesting help.
@@ -177,6 +222,8 @@ int main(int argc,char **argv) {
 				wl.deallocate();
 				return VOROPP_CMD_LINE_ERROR;
 			}
+		} else if(strcmp(argv[i],"-o")==0) {
+			ordered=true;
 		} else if(strcmp(argv[i],"-p")==0) {
 			xperiodic=yperiodic=zperiodic=true;
 		} else if(strcmp(argv[i],"-px")==0) {
@@ -219,6 +266,12 @@ int main(int argc,char **argv) {
 			double w6=atof(argv[i]);
 			wl.add_wall(new wall_cone(w0,w1,w2,w3,w4,w5,w6,j));
 			j--;
+		} else if(strcmp(argv[i],"-y")==0) {
+			povp_output=povv_output=true;
+		} else if(strcmp(argv[i],"-yp")==0) {
+			povp_output=true;
+		} else if(strcmp(argv[i],"-yv")==0) {
+			povv_output=true;
 		} else {
 			error_message();
 			return VOROPP_CMD_LINE_ERROR;
@@ -238,7 +291,6 @@ int main(int argc,char **argv) {
 	double ax=atof(argv[i]),bx=atof(argv[i+1]);
 	double ay=atof(argv[i+2]),by=atof(argv[i+3]);
 	double az=atof(argv[i+4]),bz=atof(argv[i+5]);
-	printf("%g %g %g %g %g %g\n",ax,bx,ay,by,az,bz);
 
 	// Check that for each coordinate, the minimum value is smaller
 	// than the maximum value
@@ -306,42 +358,86 @@ int main(int argc,char **argv) {
 			return VOROPP_MEMORY_ERROR;
 		}
 	}
-	printf("%g %d %d %d\n",ls,nx,ny,nz);
 
-	// Prepare output filename
+	// Check that the output filename is a sensible length 
+	int flen(strlen(argv[i+6]));
+	if(flen>4096) {
+		fputs("voro++: Filename too long\n",stderr);
+		wl.deallocate();
+		return VOROPP_CMD_LINE_ERROR;
+	}
+
+	// Open files for output
+	char *buffer(new char[flen+7]);
 	sprintf(buffer,"%s.vol",argv[i+6]);
+	FILE *outfile(voropp_safe_fopen(buffer,"w")),*gnu_file,*povp_file,*povv_file;
+	if(gnuplot_output) {
+		sprintf(buffer,"%s.gnu",argv[i+6]);
+		gnu_file=voropp_safe_fopen(buffer,"w");
+	} else gnu_file=NULL;
+	if(povp_output) {
+		sprintf(buffer,"%s_p.pov",argv[i+6]);
+		povp_file=voropp_safe_fopen(buffer,"w");
+	} else povp_file=NULL;
+	if(povv_output) {
+		sprintf(buffer,"%s_v.pov",argv[i+6]);
+		povv_file=voropp_safe_fopen(buffer,"w");
+	} else povv_file=NULL;
+	delete [] buffer;
 
-	// Now switch depending on whether polydispersity was enabled
+	const char *c_str(custom_output==0?(polydisperse?"%i %q %v %r":"%i %q %v"):argv[i]);
+
+	// Now switch depending on whether polydispersity was enabled, and
+	// whether output ordering is requested
 	if(polydisperse) {
-		container_poly con(ax,bx,ay,by,az,bz,nx,ny,nz,
-			      xperiodic,yperiodic,zperiodic,init_mem);
-		con.add_wall(wl);
-		if(bm==none) {
-			pconp->setup(con);delete pconp;
-		} else con.import(argv[i+6]);
+		if(ordered) {
+			voropp_order vo;
+			container_poly con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
+			con.add_wall(wl);
+			if(bm==none) {
+				pconp->setup(vo,con);delete pconp;
+			} else con.import(vo,argv[i+6]);
+			
+			v_loop_order vlo(con,vo);
+			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file);
+		} else {
+			container_poly con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
+			con.add_wall(wl);
 
-		if(custom_output>0) con.print_custom(argv[custom_output],buffer);
-		else con.print_custom("%i %q %v",buffer);
+			if(bm==none) {
+				pconp->setup(con);delete pconp;
+			} else con.import(argv[i+6]);
 
-		if(gnuplot_output) {
-			sprintf(buffer,"%s.gnu",argv[i+6]);
-			con.draw_cells_gnuplot(buffer);
+			v_loop_all vla(con);
+			cmd_line_output(vla,con,c_str,outfile,gnu_file,povp_file,povv_file);
 		}
 	} else {
-		container con(ax,bx,ay,by,az,bz,nx,ny,nz,
-			      xperiodic,yperiodic,zperiodic,init_mem);
-		con.add_wall(wl);
-		if(bm==none) {
-			pcon->setup(con);delete pcon;
-		} else con.import(argv[i+6]);
+		if(ordered) {
+			voropp_order vo;
+			container con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
+			con.add_wall(wl);
+			if(bm==none) {
+				pcon->setup(vo,con);delete pcon;
+			} else con.import(vo,argv[i+6]);
 
-		if(custom_output>0) con.print_custom(argv[custom_output],buffer);
-		else con.print_custom("%i %q %v",buffer);
-
-		if(gnuplot_output) {
-			sprintf(buffer,"%s.gnu",argv[i+6]);
-			con.draw_cells_gnuplot(buffer);
+			v_loop_order vlo(con,vo);
+			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file);
+		} else {
+			container con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
+			con.add_wall(wl);
+			if(bm==none) {
+				pcon->setup(con);delete pcon;
+			} else con.import(argv[i+6]);
+			v_loop_all vla(con);
+			cmd_line_output(vla,con,c_str,outfile,gnu_file,povp_file,povv_file);
 		}
 	}
+
+	// Close output files
+	fclose(outfile);
+	if(gnu_file!=NULL) fclose(gnu_file);
+	if(povp_file!=NULL) fclose(povp_file);
+	if(povv_file!=NULL) fclose(povv_file);
 	return 0;
 }
+

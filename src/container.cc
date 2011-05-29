@@ -105,7 +105,9 @@ void container_poly::put(int n,double x,double y,double z,double r) {
 	}
 }
 
-/** Put a particle into the correct region of the container.
+/** Put a particle into the correct region of the container, also recording
+ * into which region it was stored.
+ * \param[in] vo the ordering class in which to record the region. 
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 void container::put(voropp_order &vo,int n,double x,double y,double z) {
@@ -118,7 +120,9 @@ void container::put(voropp_order &vo,int n,double x,double y,double z) {
 	}
 }
 
-/** Put a particle into the correct region of the container.
+/** Put a particle into the correct region of the container, also recording
+ * into which region it was stored.
+ * \param[in] vo the ordering class in which to record the region. 
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */
@@ -147,8 +151,8 @@ inline bool container_base::put_locate_block(int &ijk,double &x,double &y,double
 		if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
 		return true;
 	}
-#if VOROPP_REPORT_OUT_OF_BOUNDS
-	fprintf(stderr,"Out of bounds: [%d] (x,y,z)=(%g,%g,%g)\n",n,x,y,z);
+#if VOROPP_REPORT_OUT_OF_BOUNDS ==1
+	fprintf(stderr,"Out of bounds: (x,y,z)=(%g,%g,%g)\n",x,y,z);
 #endif
 	return false;
 }

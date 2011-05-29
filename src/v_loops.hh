@@ -86,6 +86,12 @@ class v_loop_base {
 			double *pp(p[ijk]+ps*q);
 			x=*(pp++);y=*(pp++);z=*pp;
 		}
+		inline void pos(int &pid,double &x,double &y,double &z,double &r) {
+			pid=id[ijk][q];
+			double *pp(p[ijk]+ps*q);
+			x=*(pp++);y=*(pp++);z=*pp;
+			r=ps==3?default_radius:*(++pp);
+		}		
 		inline double x() {return p[ijk][ps*q];}
 		inline double y() {return p[ijk][ps*q+1];}
 		inline double z() {return p[ijk][ps*q+2];}

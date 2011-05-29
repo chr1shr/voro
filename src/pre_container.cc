@@ -74,8 +74,8 @@ void pre_container::put(int n,double x,double y,double z) {
 		*(ch_id++)=n;
 		*(ch_p++)=x;*(ch_p++)=y;*(ch_p++)=z;
 	}
-#if VOROPP_REPORT_OUT_OF_BOUNDS
-	else fprintf(stderr,"Out of bounds: [%d] (x,y,z)=(%g,%g,%g)\n",n,x,y,z);
+#if VOROPP_REPORT_OUT_OF_BOUNDS ==1
+	else fprintf(stderr,"Out of bounds: (x,y,z)=(%g,%g,%g)\n",x,y,z);
 #endif
 }
 
@@ -89,8 +89,8 @@ void pre_container_poly::put(int n,double x,double y,double z,double r) {
 		*(ch_id++)=n;
 		*(ch_p++)=x;*(ch_p++)=y;*(ch_p++)=z;*(ch_p++)=r;
 	}
-#if VOROPP_REPORT_OUT_OF_BOUNDS
-	else fprintf(stderr,"Out of bounds: [%d] (x,y,z)=(%g,%g,%g)\n",n,x,y,z);
+#if VOROPP_REPORT_OUT_OF_BOUNDS ==1
+	else fprintf(stderr,"Out of bounds: (x,y,z)=(%g,%g,%g)\n",x,y,z);
 #endif	
 }
 
@@ -133,6 +133,52 @@ void pre_container_poly::setup(container_poly &con) {
 	while(idp<ch_id) {
 		n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);r=*(pp++);
 		con.put(n,x,y,z,r);
+	}
+}
+
+/** Transfers the particles stored within the class to a container class, also
+ * recording the order in which particles were stored. 
+ * \param[in] vo the ordering class to use.
+ * \param[in] con the container class to transfer to. */
+void pre_container::setup(voropp_order &vo,container &con) {
+	int **c_id(pre_id),*idp,*ide,n;
+	double **c_p(pre_p),*pp,x,y,z;
+	while(c_id<end_id) {
+		idp=*(c_id++);ide=idp+pre_container_chunk_size;
+		pp=*(c_p++);
+		while(idp<ide) {
+			n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);
+			con.put(vo,n,x,y,z);
+		}
+	}
+	idp=*c_id;
+	pp=*c_p;
+	while(idp<ch_id) {
+		n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);
+		con.put(vo,n,x,y,z);
+	}
+}
+
+/** Transfers the particles stored within the class to a container_poly class,
+ * also recording the order in which particles were stored.
+ * \param[in] vo the ordering class to use.
+ * \param[in] con the container_poly class to transfer to. */
+void pre_container_poly::setup(voropp_order &vo,container_poly &con) {
+	int **c_id(pre_id),*idp,*ide,n;
+	double **c_p(pre_p),*pp,x,y,z,r;
+	while(c_id<end_id) {
+		idp=*(c_id++);ide=idp+pre_container_chunk_size;
+		pp=*(c_p++);
+		while(idp<ide) {
+			n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);r=*(pp++);
+			con.put(vo,n,x,y,z,r);
+		}
+	}
+	idp=*c_id;
+	pp=*c_p;
+	while(idp<ch_id) {
+		n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);r=*(pp++);
+		con.put(vo,n,x,y,z,r);
 	}
 }
 

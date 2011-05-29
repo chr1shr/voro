@@ -1,4 +1,4 @@
-// Single Voronoi cell example code
+// Odd/even face coloring code 
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
@@ -37,8 +37,8 @@ int main() {
 	v.face_orders(f_vert);
 	v.normals(nor);
 	
-	// Output POV-Ray planes with textures based chosen on whether
-	// a face is composed of an odd or even number of edges
+	// Output POV-Ray planes with textures based on whether a face is
+	// composed of an odd or even number of edges
 	const char* parity[2]={"even","odd"};
 	FILE *fp(voropp_safe_fopen("odd_even_pl.pov","w"));
 	for(i=0;i<f_vert.size();i++) 

@@ -277,7 +277,7 @@ class container : public container_base {
 			double *pp;
 			if(vl.start()) do {
 				pp=p[vl.ijk]+3*vl.q;
-				fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,r}\n",
+				fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,s}\n",
 						id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
 			} while(vl.inc());
 		}

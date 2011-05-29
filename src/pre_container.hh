@@ -10,6 +10,7 @@
 #ifndef VOROPP_PRE_CONTAINER_HH
 #define VOROPP_PRE_CONTAINER_HH
 
+#include "v_loops.hh"
 #include "container.hh"
 
 class pre_container_base {
@@ -63,6 +64,7 @@ class pre_container : public pre_container_base {
 			fclose(fp);
 		}
 		void setup(container &con);
+		void setup(voropp_order &vo,container &con);
 };
 
 class pre_container_poly : public pre_container_base {
@@ -78,6 +80,7 @@ class pre_container_poly : public pre_container_base {
 			fclose(fp);
 		}
 		void setup(container_poly &con);
+		void setup(voropp_order &vo,container_poly &con);
 };
 
 #endif
