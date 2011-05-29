@@ -2,16 +2,15 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : May 18th 2011 
 
 #include "voro++.hh"
 
-// Set up the number of blocks that the container is divided into
-const int nx=26,ny=26,nz=26;
-const double dis=1.25,mjrad=2.5,mirad=0.95;
+// Constants determining the configuration of the tori
+const double dis=1.25,mjrad=2.5,mirad=0.95,trad=mjrad+mirad;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=10000;
+const int particles=100000;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -21,10 +20,8 @@ int main() {
 	double x,y,z,r;
 	voronoicell c;
 
-	// Create a container with the geometry given above, and make it
-	// non-periodic in each of the three coordinates. Allocate space for
-	// eight particles within each computational block
-	container con(-5,5,-5,5,-5,5,nx,ny,nz,false,false,false,8);
+	// Create a container as a non-periodic 10 by 10 by 10 box
+	container con(-5,5,-5,5,-5,5,26,26,26,false,false,false,8);
 	voropp_order vo;
 	
 	// Randomly add particles into the container
@@ -32,38 +29,48 @@ int main() {
 		x=10*rnd()-5;
 		y=10*rnd()-5;
 		z=10*rnd()-5;
+
+		// If the particle lies within the first torus, store it in the
+		// ordering class when adding to the container
 		r=sqrt((x-dis)*(x-dis)+y*y);
 		if((r-mjrad)*(r-mjrad)+z*z<mirad) con.put(vo,i,x,y,z);
 		else con.put(i,x,y,z);
 	}
 
-	con.draw_particles("draw");
-
-	FILE *f1(voropp_safe_fopen("loop1_p.pov","w"));
+	// Compute Voronoi cells for the first torus. Here, the points
+	// previously stored in the ordering class are looped over.
+	FILE *f1(voropp_safe_fopen("loop1_m.pov","w"));
 	FILE *f2(voropp_safe_fopen("loop1_v.pov","w"));
 	v_loop_order vlo(con,vo);
 	if(vlo.start()) do if(con.compute_cell(c,vlo)) {
 		vlo.pos(x,y,z);
 		
-		//fprintf(f1,"sphere{<%g,%g,%g>,r}\n",x,y,z);
+		// Save a POV-Ray mesh to one file and a cylinder/sphere
+		// representation to the other file
 		c.draw_pov_mesh(x,y,z,f1);
 		c.draw_pov(x,y,z,f2);
 	} while (vlo.inc());
 	fclose(f1);
 	fclose(f2);
 
-	f1=voropp_safe_fopen("loop2_p.pov","w");
+	// Compute Voronoi cells for the second torus. Here, the subset loop is
+	// used to search over the blocks overlapping the torus, and then each
+	// particle is individually tested.
+	f1=voropp_safe_fopen("loop2_m.pov","w");
 	f2=voropp_safe_fopen("loop2_v.pov","w");
-	v_loop_all vla(con);
-	if(vla.start()) do {
-		vla.pos(x,y,z);
+	v_loop_subset vls(con);
+	vls.setup_box(-dis-trad,-dis+trad,-mirad,mirad,-trad,trad,false);
+	if(vls.start()) do {
+		vls.pos(x,y,z);
+
+		// Test whether this point is within the torus, and if so,
+		// compute and save the Voronoi cell
 		r=sqrt((x+dis)*(x+dis)+z*z);
-		if((r-mjrad)*(r-mjrad)+y*y<mirad&&con.compute_cell(c,vla)) {
-		//	fprintf(f1,"sphere{<%g,%g,%g>,r}\n",x,y,z);
+		if((r-mjrad)*(r-mjrad)+y*y<mirad&&con.compute_cell(c,vls)) {
 			c.draw_pov_mesh(x,y,z,f1);
 			c.draw_pov(x,y,z,f2);
 		}
-	} while (vla.inc());
+	} while (vls.inc());
 	fclose(f1);
 	fclose(f2);
 }

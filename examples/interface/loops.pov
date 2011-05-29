@@ -23,7 +23,7 @@ light_source{<25,12,-12> color rgb <0.36,0.40,0.40>}
 #declare s=0.2;
 
 union{
-#include "loop1_p.pov"
+#include "loop1_m.pov"
 	pigment{rgb <0.9,0.6,0.3>} finish{reflection 0.185 specular 0.3 ambient 0.42}
 }
 
@@ -33,7 +33,7 @@ union{
 }
 
 union{
-#include "loop2_p.pov"
+#include "loop2_m.pov"
 	pigment{rgb <0.5,0.65,0.75>} finish{reflection 0.185 specular 0.3 ambient 0.42}
 }
 
