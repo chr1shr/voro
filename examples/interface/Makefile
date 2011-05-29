@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=loops polygons
+EXECUTABLES=loops polygons sub_loop_test
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -18,6 +18,9 @@ loops: loops.cc
 
 polygons: polygons.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o polygons polygons.cc -lvoro++
+
+sub_loop_test: sub_loop_test.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o sub_loop_test sub_loop_test.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)
