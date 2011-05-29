@@ -4,7 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : May 18th 2011
 
-/** \file v_compute.cc Function implementantions for the v_compute class. */
+/** \file v_compute.cc
+ * \brief Function implementantions for the v_compute class. */
 
 #include "v_compute.hh"
 #include "container.hh"

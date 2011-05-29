@@ -1,3 +1,12 @@
+// Voro++, a 3D cell-based Voronoi library
+//
+// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Email    : chr@alum.mit.edu
+// Date     : May 18th 2011
+
+/** \file pre_container.hh
+ * \brief Header file for the pre_container and related classes. */
+
 #ifndef VOROPP_PRE_CONTAINER_HH
 #define VOROPP_PRE_CONTAINER_HH
 
@@ -5,14 +14,26 @@
 
 class pre_container_base {
 	public:
+		/** The minimum x coordinate of the container. */
 		const double ax;
+		/** The maximum x coordinate of the container. */
 		const double bx;
+		/** The minimum y coordinate of the container. */
 		const double ay;
+		/** The maximum y coordinate of the container. */
 		const double by;
+		/** The minimum z coordinate of the container. */
 		const double az;
+		/** The maximum z coordinate of the container. */
 		const double bz;
+		/** A boolean value that determines if the x coordinate in
+		 * periodic or not. */
 		const bool xperiodic;
+		/** A boolean value that determines if the y coordinate in
+		 * periodic or not. */
 		const bool yperiodic;
+		/** A boolean value that determines if the z coordinate in
+		 * periodic or not. */
 		const bool zperiodic;
 		void guess_optimal(int &nx,int &ny,int &nz);
 		pre_container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int ps_);

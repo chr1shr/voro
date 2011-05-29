@@ -186,12 +186,16 @@ class container_base : public voropp_base, public wall_list {
 			return cuijk+ei+nx*(ej+ny*ek);
 		}
 		void draw_domain_gnuplot(FILE *fp=stdout);
+		/** Draws an outline of the domain in Gnuplot format.
+		 * \param[in] filename the filename to write to. */
 		inline void draw_domain_gnuplot(const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"w"));
 			draw_domain_gnuplot(fp);
 			fclose(fp);
 		}
 		void draw_domain_pov(FILE *fp=stdout);
+		/** Draws an outline of the domain in Gnuplot format.
+		 * \param[in] filename the filename to write to. */
 		inline void draw_domain_pov(const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"w"));
 			draw_domain_pov(fp);
@@ -216,11 +220,24 @@ class container : public container_base {
 		void put(voropp_order &vo,int n,double x,double y,double z);
 		void import(FILE *fp=stdin);
 		void import(voropp_order &vo,FILE *fp=stdin);
+		/** Imports a list of particles from an open file stream into
+		 * the container. Entries of four numbers (Particle ID, x
+		 * position, y position, z position) are searched for. If the
+		 * file cannot be successfully read, then the routine causes a
+		 * fatal error.
+		 * \param[in] fp the filename to open and read from. */
 		inline void import(const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(fp);
 			fclose(fp);
 		}
+		/** Imports a list of particles from an open file stream into
+		 * the container. Entries of four numbers (Particle ID, x
+		 * position, y position, z position) are searched for. In
+		 * addition, the order in which particles are read is saved
+		 * into an ordering class. If the file cannot be successfully
+		 * read, then the routine causes a fatal error.
+		 * \param[in] fp the filename to open and read from. */		
 		inline void import(voropp_order &vo,const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(vo,fp);
@@ -356,6 +373,7 @@ class container : public container_base {
 		}
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
+		//*
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			int sti,stj,stk;

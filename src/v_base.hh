@@ -12,22 +12,30 @@
 
 class voropp_base {
 	public:
+		/** The number of blocks in the x direction. */
 		const int nx;
+		/** The number of blocks in the y direction. */
 		const int ny;
+		/** The number of blocks in the z direction. */
 		const int nz;
+		/** A constant, set to the value of nx multiplied by ny, which
+		 * is used in the routines that step through blocks in
+		 * sequence. */
 		const int nxy;
+		/** A constant, set to the value of nx*ny*nz, which is used in
+		 * the routines that step through blocks in sequence. */
 		const int nxyz;
+		/** The size of a computational block in the x direction. */ 
 		const double boxx;
+		/** The size of a computational block in the y direction. */ 
 		const double boxy;
+		/** The size of a computational block in the z direction. */ 
 		const double boxz;
-		/** The inverse box length in the x direction, set to
-		 * nx/(bx-ax). */
+		/** The inverse box length in the x direction. */
 		const double xsp;
-		/** The inverse box length in the y direction, set to
-		 * ny/(by-ay). */
+		/** The inverse box length in the y direction. */
 		const double ysp;
-		/** The inverse box length in the z direction, set to
-		 * nz/(bz-az). */
+		/** The inverse box length in the z direction. */
 		const double zsp;
 		/** An array to hold the minimum distances associated with the
 		 * worklists. This array is initialized during container

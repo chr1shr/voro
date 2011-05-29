@@ -87,7 +87,10 @@ class voropp_compute {
 		unsigned int mv;
 		/** The current size of the search list. */
 		int qu_size;
+		/** An pointer to the array of worklists. */		
 		const unsigned int *wl;
+		/** An pointer to the array holding the minimum distances
+		 * associated with the worklists. */
 		double *mrad;
 		/** This array is used during the cell computation to determine
 		 * which blocks have been considered. */
@@ -114,6 +117,8 @@ class voropp_compute {
 		inline bool face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1);
 		bool compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gx,double gy,double gz,double& crs,double mrs);
 		void add_list_memory(int*& qu_s,int*& qu_e);
+		/** Resets the mask in cases where the mask counter wraps
+		 * around. */
 		inline void reset_mask() {
 			for(unsigned int *mp(mask);mp<mask+hxyz;mp++) *mp=0;
 		}

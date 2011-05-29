@@ -26,10 +26,16 @@ enum v_loop_subset_mode {
 
 class voropp_order {
 	public:
-		int size;
-		int *o,*op;
+		/** A pointer to the array holding the ordering. */
+		int *o;
+		/** A pointer to the next position in the ordering array in
+		 * which to store an entry. */
+		int *op;
+		/** The current memory allocation for the class, set to the
+		 * number of entries which can be stored. */
+		int size;		
 		voropp_order(int init_size=init_ordering_size)
-			: size(init_size),o(new int[size<<1]),op(o) {}
+			: o(new int[init_size<<1]),op(o),size(init_size) {}
 		~voropp_order() {
 			delete [] o;
 		}
@@ -43,11 +49,36 @@ class voropp_order {
 
 class v_loop_base {
 	public:
-		const int nx,ny,nz,nxy,nxyz,ps;
+		/** The number of blocks in the x direction. */
+		const int nx;
+		/** The number of blocks in the y direction. */
+		const int ny;
+		/** The number of blocks in the z direction. */
+		const int nz;
+		/** A constant, set to the value of nx multiplied by ny, which
+		 * is used in the routines that step through blocks in
+		 * sequence. */
+		const int nxy;
+		/** A constant, set to the value of nx*ny*nz, which is used in
+		 * the routines that step through blocks in sequence. */
+		const int nxyz;
+		/** The number of floating point numbers per particle in the
+		 * associated container data structure. */
+		const int ps;
+		/** A pointer to the particle position information in the
+		 * associated container data structure. */
 		double **p;
+		/** A pointer to the particle ID information in the associated
+		 * container data structure. */
 		int **id;
+		/** A pointer to the particle counts in the associated
+		 * container data structure. */
 		int *co;
-		int i,j,k,ijk,q;
+		int i;
+		int j;
+		int k;
+		int ijk;
+		int q;
 		template<class c_class>
 		v_loop_base(c_class &con) : nx(con.nx), ny(con.ny), nz(con.nz), nxy(con.nxy), nxyz(con.nxyz), ps(con.ps),
 					    p(con.p), id(con.id), co(con.co) {}
@@ -100,6 +131,9 @@ class v_loop_all : public v_loop_base {
 
 class v_loop_subset : public v_loop_base {
 	public:
+		/** The current mode of operation, determining whether tests
+		 * should be applied to particles to ensure they are within a
+		 * certain geometrical object. */
 		v_loop_subset_mode mode;
 		template<class c_class>
 		v_loop_subset(c_class &con) : v_loop_base(con), ax(con.ax), ay(con.ay), az(con.az),

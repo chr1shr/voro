@@ -58,9 +58,7 @@ container_base::~container_base() {
  * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
  *                                                container is periodic in each
  *                                                coordinate direction.
- * \param[in] init_mem the initial memory allocation for each block.
- * \param[in] ps_ the number of floating point entries to store for each
- *                particle. */
+ * \param[in] init_mem the initial memory allocation for each block. */
 container::container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
 	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,3),
@@ -75,9 +73,7 @@ container::container(double ax_,double bx_,double ay_,double by_,double az_,doub
  * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
  *                                                container is periodic in each
  *                                                coordinate direction.
- * \param[in] init_mem the initial memory allocation for each block.
- * \param[in] ps_ the number of floating point entries to store for each
- *                particle. */
+ * \param[in] init_mem the initial memory allocation for each block. */
 container_poly::container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
 	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,4),
@@ -208,7 +204,7 @@ void container_base::add_particle_memory(int i) {
  * Entries of four numbers (Particle ID, x position, y position, z position)
  * are searched for. If the file cannot be successfully read, then the routine
  * causes a fatal error.
- * \param[fp] fp the file handle to read from. */
+ * \param[in] fp the file handle to read from. */
 void container::import(FILE *fp) {
 	int i,j;
 	double x,y,z;
@@ -366,7 +362,7 @@ bool container_base::point_inside(double x,double y,double z) {
 }
 
 /** Draws an outline of the domain in gnuplot format.
- * \param[in] filename the filename to write to. */
+ * \param[in] fp the file handle to write to. */
 void container_base::draw_domain_gnuplot(FILE *fp) {
 	fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",ax,ay,az,bx,ay,az,bx,by,az,ax,by,az);
 	fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",ax,by,bz,bx,by,bz,bx,ay,bz,ax,ay,bz);
@@ -375,7 +371,7 @@ void container_base::draw_domain_gnuplot(FILE *fp) {
 }
 
 /** Draws an outline of the domain in POV-Ray format.
- * \param[in] filename the filename to write to. */
+ * \param[in] fp the file handle to write to. */
 void container_base::draw_domain_pov(FILE *fp) {
 	fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
 		   "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",ax,ay,az,bx,ay,az,ax,by,az,bx,by,az);

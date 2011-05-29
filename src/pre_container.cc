@@ -5,7 +5,8 @@
 // Date     : May 18th 2011
 
 /** \file pre_container.cc
- * \brief Function implementations for pre_container and related classes. */
+ * \brief Function implementations for the pre_container and related classes.
+ */
 
 #include <cstdio>
 #include <cmath>
