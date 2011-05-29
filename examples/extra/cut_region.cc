@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011 
+// Date     : May 18th 2011
 
 #include "common.hh"
 #include "cell.hh"

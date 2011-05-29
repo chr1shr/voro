@@ -19,7 +19,7 @@
  *                        the particle will only loop over the particles which
  *                        actually lie within the sphere.
  * \return True if there is any valid point to loop over, false otherwise. */
-bool v_loop_subset::start_sphere(double vx,double vy,double vz,double r,bool bounds_test) {
+void v_loop_subset::setup_sphere(double vx,double vy,double vz,double r,bool bounds_test) {
 	if(bounds_test) {mode=sphere;v0=vx;v1=vy;v2=vz;v3=r*r;} else mode=no_check;
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
@@ -27,7 +27,7 @@ bool v_loop_subset::start_sphere(double vx,double vy,double vz,double r,bool bou
 	bj=step_int((vy-ay+r)*ysp);
 	ak=step_int((vz-az-r)*zsp);
 	bk=step_int((vz-az+r)*zsp);
-	return start_common();
+	setup_common();
 }
 
 /** Initializes the class to loop over all particles in a rectangular subgrid
@@ -39,15 +39,15 @@ bool v_loop_subset::start_sphere(double vx,double vy,double vz,double r,bool bou
  * \param[in] (ak_,bk_) the subgrid range in the z-direction, inclusive of both
  *                      ends.
  * \return True if there is any valid point to loop over, false otherwise. */
-bool v_loop_subset::start_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_) {
+void v_loop_subset::setup_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_) {
 	ai=ai_;bi=bi_;aj=aj_;bj=bj_;ak=ak_;bk=bk_;
 	mode=no_check;
-	return start_common();
+	setup_common();
 }
 
 /** Sets up all of the common constants used for the loop.
  * \return True if there is any valid point to loop over, false otherwise. */
-bool v_loop_subset::start_common() {
+void v_loop_subset::setup_common() {
 	if(!xperiodic) {
 		if(ai<0) {ai=0;if(bi<0) bi=0;}
 		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;}
@@ -70,6 +70,9 @@ bool v_loop_subset::start_common() {
 	inc1+=nx;
 	ijk=di+nx*(dj+ny*dk);
 	q=0;
+}
+
+bool v_loop_subset::start() {
 	while(co[ijk]==0) {if(!next_block()) return false;}
 	while(mode!=no_check&&out_of_bounds()) {
 		q++;
@@ -88,7 +91,7 @@ bool v_loop_subset::start_common() {
  *                        particle will only loop over the particles which
  *                        actually lie within the box.
  * \return True if there is any valid point to loop over, false otherwise. */
-bool v_loop_subset::start_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test) {
+void v_loop_subset::setup_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test) {
 	if(bounds_test) {mode=box;v0=xmin;v1=xmax;v2=ymin;v3=ymax;v4=zmin;v5=zmax;} else mode=no_check;
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
@@ -96,7 +99,7 @@ bool v_loop_subset::start_box(double xmin,double xmax,double ymin,double ymax,do
 	bj=step_int((ymax-ay)*ysp);
 	ak=step_int((zmin-az)*zsp);
 	bk=step_int((zmax-az)*zsp);
-	return start_common();
+	setup_common();
 }
 
 /** Computes whether the current point is out of bounds, relative to the

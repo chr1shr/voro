@@ -17,6 +17,9 @@ class pre_container_base {
 		void guess_optimal(int &nx,int &ny,int &nz);
 		pre_container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int ps_);
 		~pre_container_base();
+		inline int total_particles() {
+			return (end_id-pre_id)*pre_container_chunk_size+(ch_id-*end_id);
+		}
 	protected:
 		const int ps;
 		void new_chunk();

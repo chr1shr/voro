@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 10th 2009
+// Date     : May 18th 2011
 
 #include "voro++.hh"
 

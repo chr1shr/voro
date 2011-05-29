@@ -105,9 +105,10 @@ class v_loop_subset : public v_loop_base {
 		v_loop_subset(c_class &con) : v_loop_base(con), ax(con.ax), ay(con.ay), az(con.az),
 			sx(con.bx-ax), sy(con.by-ay), sz(con.bz-az), xsp(con.xsp), ysp(con.ysp), zsp(con.zsp),
 			xperiodic(con.xperiodic), yperiodic(con.yperiodic), zperiodic(con.zperiodic) {}
-		bool start_sphere(double vx,double vy,double vz,double r,bool bounds_test=true);
-		bool start_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test=true);
-		bool start_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_);
+		void setup_sphere(double vx,double vy,double vz,double r,bool bounds_test=true);
+		void setup_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test=true);
+		void setup_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_);
+		bool start();
 		/** Finds the next point to test.
 		 * \return True if there is another point, false if no more points are
 		 * available. */
@@ -128,7 +129,7 @@ class v_loop_subset : public v_loop_base {
 		inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
 		inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
 		inline int step_int(double a) {return a<0?int(a)-1:int(a);}
-		bool start_common();
+		void setup_common();
 		bool next_block();
 		bool out_of_bounds();
 };
