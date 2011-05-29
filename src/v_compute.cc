@@ -16,12 +16,12 @@
 template<class c_class>
 voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
 	con(con_), boxx(con_.boxx), boxy(con_.boxy), boxz(con_.boxz),
-	bxsq(boxx*boxx+boxy*boxy+boxz*boxz), xsp(con_.xsp), ysp(con_.ysp), zsp(con_.zsp),
+	xsp(con_.xsp), ysp(con_.ysp), zsp(con_.zsp),
 	hx(hx_), hy(hy_), hz(hz_), hxy(hx_*hy_), hxyz(hxy*hz_), ps(con_.ps),
 	hgrid(con.hgrid), fgrid(con.fgrid), hgridsq(con.hgridsq), seq_length(con.seq_length),
-	id(con_.id), p(con_.p), co(con_.co),
-	mv(0), qu_size(3*(3+hxy+hz*(hx+hy))), wl(con_.wl), mrad(con_.mrad), mask(new unsigned int[hxyz]),
-	qu(new int[qu_size]),qu_l(qu+qu_size) {
+	id(con_.id), p(con_.p), co(con_.co), bxsq(boxx*boxx+boxy*boxy+boxz*boxz),
+	mv(0), qu_size(3*(3+hxy+hz*(hx+hy))), wl(con_.wl), mrad(con_.mrad),
+	mask(new unsigned int[hxyz]), qu(new int[qu_size]), qu_l(qu+qu_size) {
 	reset_mask();
 }
 
@@ -203,7 +203,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,i
 	mv++;
 	if(mv==0) {reset_mask();mv=1;}
 
-	// Set the queue pointers 
+	// Set the queue pointers
 	int *qu_s(qu),*qu_e(qu);
 
 	while(g<seq_length-1) {

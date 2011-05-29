@@ -42,7 +42,7 @@ class voropp_base {
 		inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
 		inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
 	private:
-		void compute_minimum(double &minr,double &xlo,double &xhi,double &ylo,double &yhi,double &zlo,double &zhi,int ti,int tj,int tk);		
+		void compute_minimum(double &minr,double &xlo,double &xhi,double &ylo,double &yhi,double &zlo,double &zhi,int ti,int tj,int tk);
 };
 
 #endif

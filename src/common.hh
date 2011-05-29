@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : May 18th 2011
 
-/** \file cell.hh
+/** \file common.hh
  * \brief Header file for the small helper functions. */
 
 #ifndef VOROPP_COMMON_HH
@@ -27,46 +27,6 @@ inline void voropp_fatal_error(const char *p,int status) {
 	exit(status);
 }
 
-/** \brief Prints a vector of integers.
- *
- * Prints a vector of integers.
- * \param[in] v the vector to print.
- * \param[in] fp the file stream to print to. */
-inline void voropp_print_vector(vector<int> &v,FILE *fp=stdout) {
-	int k(0),s(v.size());
-	while(k+4<s) {
-		fprintf(fp,"%d %d %d %d ",v[k],v[k+1],v[k+2],v[k+3]);
-		k+=4;
-	}
-	if(k+3<=s) {
-		if(k+4==s) fprintf(fp,"%d %d %d %d",v[k],v[k+1],v[k+2],v[k+3]);
-		else fprintf(fp,"%d %d %d",v[k],v[k+1],v[k+2]);
-	} else {
-		if(k+2==s) fprintf(fp,"%d %d",v[k],v[k+1]);
-		else fprintf(fp,"%d",v[k]);
-	}
-}
-
-/** \brief Prints a vector of doubles.
- *
- * Prints a vector of doubles.
- * \param[in] v the vector to print.
- * \param[in] fp the file stream to print to. */
-inline void voropp_print_vector(vector<double> &v,FILE *fp=stdout) {
-	int k(0),s(v.size());
-	while(k+4<s) {
-		fprintf(fp,"%g %g %g %g ",v[k],v[k+1],v[k+2],v[k+3]);
-		k+=4;
-	}
-	if(k+3<=s) {
-		if(k+4==s) fprintf(fp,"%g %g %g %g",v[k],v[k+1],v[k+2],v[k+3]);
-		else fprintf(fp,"%g %g %g",v[k],v[k+1],v[k+2]);
-	} else {
-		if(k+2==s) fprintf(fp,"%g %g",v[k],v[k+1]);
-		else fprintf(fp,"%g",v[k]);
-	}
-}
-
 /** \brief Prints a vector of positions.
  *
  * Prints a vector of positions as bracketed triplets.
@@ -77,42 +37,6 @@ inline void voropp_print_positions(vector<double> &v,FILE *fp=stdout) {
 		fprintf(fp,"(%g,%g,%g)",v[0],v[1],v[2]);
 		for(int k=3;(unsigned int) k<v.size();k+=3) {
 			fprintf(fp," (%g,%g,%g)",v[k],v[k+1],v[k+2]);
-		}
-	}
-}
-
-/** \brief Prints a vector a face vertex information.
- *
- * Prints a vector of face vertex information. A value is read, which
- * corresponds to the number of vertices in the next face. The routine reads
- * this number of values and prints them as a bracked list. This is repeated
- * until the end of the vector is reached.
- * \param[in] v the vector to interpret and print.
- * \param[in] fp the file stream to print to. */
-inline void voropp_print_face_vertices(vector<int> &v,FILE *fp=stdout) {
-	int j,k=0,l;
-	if(v.size()>0) {
-		l=v[k++];
-		if(l<=1) {
-			if(l==1) fprintf(fp,"(%d)",v[k++]);
-			else fputs("()",fp);
-		} else {
-			j=k+l;
-			fprintf(fp,"(%d",v[k++]);
-			while(k<j) fprintf(fp,",%d",v[k++]);
-			fputs(")",fp);
-		}
-		while((unsigned int) k<v.size()) {
-			l=v[k++];
-			if(l<=1) {
-				if(l==1) fprintf(fp," (%d)",v[k++]);
-				else fputs(" ()",fp);
-			} else {
-				j=k+l;
-				fprintf(fp," (%d",v[k++]);
-				while(k<j) fprintf(fp,",%d",v[k++]);
-				fputs(")",fp);
-			}
 		}
 	}
 }
@@ -132,5 +56,9 @@ inline FILE* voropp_safe_fopen(const char *filename,const char *mode) {
 	}
 	return fp;
 }
+
+void voropp_print_vector(vector<int> &v,FILE *fp=stdout);
+void voropp_print_vector(vector<double> &v,FILE *fp=stdout);
+void voropp_print_face_vertices(vector<int> &v,FILE *fp=stdout);
 
 #endif

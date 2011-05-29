@@ -200,7 +200,7 @@ class voronoicell_base {
 		inline void reset_edges();
 		template<class vc_class>
 		void check_memory_for_copy(vc_class &vc,voronoicell_base* vb);
-		void copy(voronoicell_base* vb);		
+		void copy(voronoicell_base* vb);
 	private:
 		/** This is the delete stack, used to store the vertices which
 		 * are going to be deleted during the plane cutting procedure.
@@ -381,7 +381,7 @@ class voronoicell_neighbor : public voronoicell_base {
 		inline bool plane(double x,double y,double z) {
 			double rsq=x*x+y*y+z*z;
 			return nplane(*this,x,y,z,rsq,0);
-		}		
+		}
 		void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
 		void init_octahedron(double l);
 		void init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3);

@@ -160,7 +160,7 @@ inline bool container_base::put_locate_block(int &ijk,double &x,double &y,double
 /** Takes a particle position vector and computes the region index into which
  * it should be stored. If the container is periodic, then the routine also
  * maps the particle position to ensure it is in the primary domain. If the
- * container is not periodic, the routine bails out. 
+ * container is not periodic, the routine bails out.
  * \param[out] ijk the region index.
  * \param[in,out] (x,y,z) the particle position, remapped into the primary
  *                        domain if necessary.
@@ -168,7 +168,7 @@ inline bool container_base::put_locate_block(int &ijk,double &x,double &y,double
  * false otherwise. */
 inline bool container_base::put_remap(int &ijk,double &x,double &y,double &z) {
 	int l;
-	
+
 	ijk=step_int((x-ax)*xsp);
 	if(xperiodic) {l=step_mod(ijk,nx);x+=boxx*(l-ijk);ijk=l;}
 	else if(ijk<0||ijk>=nx) return false;
@@ -274,140 +274,40 @@ void container_poly::clear() {
 	max_radius=0;
 }
 
-/** Dumps all the particle positions and identifies to a file.
+/** Computes all the Voronoi cells and saves customized information about them.
+ * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
-template<class v_loop>
-void container::draw_particles(v_loop &vl,FILE *fp) {
-	double *pp;
-	if(vl.start()) do {
-		pp=p[vl.ijk]+3*vl.q;
-		fprintf(fp,"%d %g %g %g\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
-	} while(vl.inc());
+void container::print_custom(const char *format,FILE *fp) {
+	v_loop_all vl(*this);
+	print_custom(vl,format,fp);
 }
 
-/** Dumps all the particle positions and identifies to a file.
+/** Computes all the Voronoi cells and saves customized
+ * information about them.
+ * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
-template<class v_loop>
-void container_poly::draw_particles(v_loop &vl,FILE *fp) {
-	double *pp;
-	if(vl.start()) do {
-		pp=p[vl.ijk]+4*vl.q;
-		fprintf(fp,"%d %g %g %g %g\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2],pp[3]);
-	} while(vl.inc());
+void container_poly::print_custom(const char *format,FILE *fp) {
+	v_loop_all vl(*this);
+	print_custom(vl,format,fp);
 }
 
-/** Dumps all the particle positions in POV-Ray format.
- * \param[in] fp a file handle to write to. */ 
-template<class v_loop>
-void container::draw_particles_pov(v_loop &vl,FILE *fp) {
-	double *pp;
-	if(vl.start()) do {
-		pp=p[vl.ijk]+3*vl.q;
-		fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,r}\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
-	} while(vl.inc());
+/** Computes all the Voronoi cells and saves customized information about them.
+ * \param[in] format the custom output string to use.
+ * \param[in] filename the name of the file to write to. */
+void container::print_custom(const char *format,const char *filename) {
+	FILE *fp(voropp_safe_fopen(filename,"w"));
+	print_custom(format,fp);
+	fclose(fp);
 }
 
-/** Dumps all the particle positions in POV-Ray format.
- * \param[in] fp a file handle to write to. */ 
-template<class v_loop>
-void container_poly::draw_particles_pov(v_loop &vl,FILE *fp) {
-	double *pp;
-	if(vl.start()) do {
-		pp=p[vl.ijk]+4*vl.q;
-		fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,%g}\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2],pp[3]);
-	} while(vl.inc());
-}
-
-/** Computes the Voronoi cells for all particles within a rectangular box,
- * and saves the output in gnuplot format.
- * \param[in] fp a file handle to write to. */ 
-template<class v_loop>
-void container::draw_cells_gnuplot(v_loop &vl,FILE *fp) {
-	voronoicell c;double *pp;
-	if(vl.start()) do if(compute_cell(c,vl)) {
-		pp=p[vl.ijk]+3*vl.q;
-		c.draw_gnuplot(*pp,pp[1],pp[2],fp);
-	} while(vl.inc());
-}
-
-/** Computes the Voronoi cells for all particles within a rectangular box,
- * and saves the output in gnuplot format.
- * \param[in] fp a file handle to write to. */ 
-template<class v_loop>
-void container_poly::draw_cells_gnuplot(v_loop &vl,FILE *fp) {
-	voronoicell c;double *pp;
-	if(vl.start()) do if(compute_cell(c,vl)) {
-		pp=p[vl.ijk]+4*vl.q;
-		c.draw_gnuplot(*pp,pp[1],pp[2],fp);
-	} while(vl.inc());
-}
-
-/** Computes the Voronoi cells for all particles within a rectangular box,
- * and saves the output in POV-Ray format.
- * \param[in] fp a file handle to write to. */ 
-template<class v_loop>
-void container::draw_cells_pov(v_loop &vl,FILE *fp) {
-	voronoicell c;double *pp;
-	if(vl.start()) do if(compute_cell(c,vl)) {
-		fprintf(fp,"// cell %d\n",id[vl.ijk][vl.q]);
-		pp=p[vl.ijk]+3*vl.q;
-		c.draw_pov(*pp,pp[1],pp[2],fp);
-	} while(vl.inc());
-}
-
-/** Computes the Voronoi cells for all particles within a rectangular box,
- * and saves the output in POV-Ray format.
- * \param[in] fp a file handle to write to. */ 
-template<class v_loop>
-void container_poly::draw_cells_pov(v_loop &vl,FILE *fp) {
-	voronoicell c;double *pp;
-	if(vl.start()) do if(compute_cell(c,vl)) {
-		fprintf(fp,"// cell %d\n",id[vl.ijk][vl.q]);
-		pp=p[vl.ijk]+4*vl.q;
-		c.draw_pov(*pp,pp[1],pp[2],fp);
-	} while(vl.inc());
-}
-
-/** Computes the Voronoi cells for all particles within a rectangular box,
- * and saves the output in POV-Ray format.
- * \param[in] fp a file handle to write to. */ 
-template<class v_loop>
-void container::print_custom(v_loop &vl,const char *format,FILE *fp) {
-	int ijk,q;double *pp;
-	if(contains_neighbor(format)) {
-		voronoicell_neighbor c;
-		if(vl.start()) do if(compute_cell(c,vl)) {
-			ijk=vl.ijk;q=vl.q;pp=p[ijk]+3*q;
-			c.output_custom(format,id[ijk][q],*pp,pp[1],pp[2],default_radius,fp);
-		} while(vl.inc());
-	} else {
-		voronoicell c;
-		if(vl.start()) do if(compute_cell(c,vl)) {
-			ijk=vl.ijk;q=vl.q;pp=p[ijk]+3*q;
-			c.output_custom(format,id[ijk][q],*pp,pp[1],pp[2],default_radius,fp);
-		} while(vl.inc());
-	}
-}
-
-/** Computes the Voronoi cells for all particles within a rectangular box,
- * and saves the output in POV-Ray format.
- * \param[in] fp a file handle to write to. */ 
-template<class v_loop>
-void container_poly::print_custom(v_loop &vl,const char *format,FILE *fp) {
-	int ijk,q;double *pp;
-	if(contains_neighbor(format)) {
-		voronoicell_neighbor c;
-		if(vl.start()) do if(compute_cell(c,vl)) {
-			ijk=vl.ijk;q=vl.q;pp=p[ijk]+4*q;
-			c.output_custom(format,id[ijk][q],*pp,pp[1],pp[2],pp[3],fp);
-		} while(vl.inc());
-	} else {
-		voronoicell c;
-		if(vl.start()) do if(compute_cell(c,vl)) {
-			ijk=vl.ijk;q=vl.q;pp=p[ijk]+4*q;
-			c.output_custom(format,id[ijk][q],*pp,pp[1],pp[2],pp[3],fp);
-		} while(vl.inc());
-	}
+/** Computes all the Voronoi cells and saves customized
+ * information about them
+ * \param[in] format the custom output string to use.
+ * \param[in] filename the name of the file to write to. */
+void container_poly::print_custom(const char *format,const char *filename) {
+	FILE *fp(voropp_safe_fopen(filename,"w"));
+	print_custom(format,fp);
+	fclose(fp);
 }
 
 /** Computes all of the Voronoi cells in the container, but does nothing
@@ -440,7 +340,7 @@ double container::sum_cell_volumes() {
 	double vol=0;
 	v_loop_all vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
-	return vol;	
+	return vol;
 }
 
 /** Calculates all of the Voronoi cells and sums their volumes. In most cases
@@ -452,7 +352,7 @@ double container_poly::sum_cell_volumes() {
 	double vol=0;
 	v_loop_all vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
-	return vol;	
+	return vol;
 }
 
 /** This function tests to see if a given vector lies within the container
@@ -475,7 +375,7 @@ wall_list::~wall_list() {
 	delete [] walls;
 }
 
-/** Adds all of the walls on another wall_list to this class. 
+/** Adds all of the walls on another wall_list to this class.
  * \param[in] wl a reference to the wall class. */
 void wall_list::add_wall(wall_list &wl) {
 	for(wall **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
@@ -496,26 +396,3 @@ void wall_list::increase_wall_memory() {
 	delete [] walls;
 	walls=nwalls;wel=walls+current_wall_size;wep=nwp;
 }
-
-// Explicit instantiation
-template void container::draw_particles<v_loop_all>(v_loop_all&,FILE*);
-template void container::draw_particles<v_loop_order>(v_loop_order&,FILE*);
-template void container::draw_particles_pov<v_loop_all>(v_loop_all&,FILE*);
-template void container::draw_particles_pov<v_loop_order>(v_loop_order&,FILE*);
-template void container::draw_cells_pov<v_loop_all>(v_loop_all&,FILE*);
-template void container::draw_cells_pov<v_loop_order>(v_loop_order&,FILE*);
-template void container::draw_cells_gnuplot<v_loop_all>(v_loop_all&,FILE*);
-template void container::draw_cells_gnuplot<v_loop_order>(v_loop_order&,FILE*);
-template void container::print_custom<v_loop_all>(v_loop_all&,const char*,FILE*);
-template void container::print_custom<v_loop_order>(v_loop_order&,const char*,FILE*);
-
-template void container_poly::draw_particles<v_loop_all>(v_loop_all&,FILE*);
-template void container_poly::draw_particles<v_loop_order>(v_loop_order&,FILE*);
-template void container_poly::draw_particles_pov<v_loop_all>(v_loop_all&,FILE*);
-template void container_poly::draw_particles_pov<v_loop_order>(v_loop_order&,FILE*);
-template void container_poly::draw_cells_pov<v_loop_all>(v_loop_all&,FILE*);
-template void container_poly::draw_cells_pov<v_loop_order>(v_loop_order&,FILE*);
-template void container_poly::draw_cells_gnuplot<v_loop_all>(v_loop_all&,FILE*);
-template void container_poly::draw_cells_gnuplot<v_loop_order>(v_loop_order&,FILE*);
-template void container_poly::print_custom<v_loop_all>(v_loop_all&,const char*,FILE*);
-template void container_poly::print_custom<v_loop_order>(v_loop_order&,const char*,FILE*);

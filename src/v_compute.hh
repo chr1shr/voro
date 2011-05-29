@@ -68,7 +68,7 @@ class voropp_compute {
 		double **p;
 		/** An array holding the number of particles within each
 		 * computational box of the container. */
-		int *co;		
+		int *co;
 		voropp_compute(c_class &con_,int hx_,int hy_,int hz_);
 		/** The class destructor frees the dynamically allocated memory
 		 * for the mask and queue. */
@@ -84,14 +84,14 @@ class voropp_compute {
 		const double bxsq;
 		/** This sets the current value being used to mark tested blocks
 		 * in the mask. */
-		unsigned int mv;		
+		unsigned int mv;
 		/** The current size of the search list. */
 		int qu_size;
 		const unsigned int *wl;
 		double *mrad;
 		/** This array is used during the cell computation to determine
 		 * which blocks have been considered. */
-		unsigned int *mask;		
+		unsigned int *mask;
 		/** An array is used to store the queue of blocks to test
 		 * during the Voronoi cell computation. */
 		int *qu;
@@ -116,7 +116,7 @@ class voropp_compute {
 		void add_list_memory(int*& qu_s,int*& qu_e);
 		inline void reset_mask() {
 			for(unsigned int *mp(mask);mp<mask+hxyz;mp++) *mp=0;
-		}		
+		}
 };
 
 #endif
