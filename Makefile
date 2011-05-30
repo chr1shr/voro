@@ -9,14 +9,14 @@
 
 # Build all of the executable files
 all:
-	cd src && make
-	cd examples && make
+	cd src && $(MAKE)
+	cd examples && $(MAKE)
 
 # Build the help files (with doxygen)
 help:
-	cd src && make help
+	cd src && $(MAKE) help
 
 # Clean up the executable files
 clean:
-	cd examples && make clean
-	cd src && make clean
+	cd examples && $(MAKE) clean
+	cd src && $(MAKE) clean

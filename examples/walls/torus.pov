@@ -5,7 +5,7 @@
 #include "textures.inc"
 
 global_settings {
-	max_trace_level 64
+max_trace_level 64
 }
 
 camera {

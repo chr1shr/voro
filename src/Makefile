@@ -36,7 +36,7 @@ libvoro++.a: $(objs)
 
 help: Doxyfile $(SOURCE)
 	doxygen Doxyfile
-	cd ../latex && make
+	cd ../latex && $(MAKE)
 
 clean:
 	rm -f $(objs)
