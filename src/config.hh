@@ -31,24 +31,16 @@ const int max_particle_memory=16777216;
 #define VOROPP_VERBOSE 0
 #endif
 
-/** The declaration of fpoint allows that code to be compiled both using single
- * precision numbers and double precision numbers. Under normal usage fpoint is
- * set be a double precision floating point number, but defining the
- * preprocessor macro VOROPP_SINGLE_PRECISION will switch it to single
- * precision and make the code tolerances larger. */
-#ifdef VOROPP_SINGLE_PRECISION
-typedef float fpoint;
-#else
-typedef double fpoint;
-#endif
+/** A radius to use as a placeholder when no other information is available. */
+const double default_radius=0.5;
 
 /** If a point is within this distance of a cutting plane, then the code
  * assumes that point exactly lies on the plane. */
-#ifdef VOROPP_SINGLE_PRECISION
-const fpoint tolerance=1e-5;
-#else
-const fpoint tolerance=1e-10;
-#endif
+const double tolerance=1e-10;
+
+/** If this is set to 1, then the code reports any instances of particles being
+ * put outside of the container geometry. */
+#define VOROPP_REPORT_OUT_OF_BOUNDS 0
 
 /** Voro++ returns this status code if there is a file-related error, such as
  * not being able to open file. */

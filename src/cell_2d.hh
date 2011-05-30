@@ -4,23 +4,13 @@
 #ifndef VOROPP_CELL_2D_HH
 #define VOROPP_CELL_2D_HH
 
-#include "config.hh"
 #include <cstdio>
 #include <cstdlib>
-#include <iostream>
-#include <fstream>
 #include <cmath>
 using namespace std;
 
-/** \brief Function for printing fatal error messages and exiting.
- *
- * Function for printing fatal error messages and exiting.
- * \param[in] p a pointer to the message to print.
- * \param[in] status the status code to return with. */
-void voropp_fatal_error(const char *p,int status) {
-	cerr << "voro++: " << p << endl;
-	exit(status);
-}
+#include "common.hh"
+#include "config.hh"
 
 /** \brief A class encapsulating all the routines for storing and calculating a
  * single Voronoi cell. */
@@ -35,34 +25,54 @@ class voronoicell_2d {
 		int current_delete_size;
 		/** The total nuber of vertices in the current cell. */
 		int p;
-		/** This a two dimensional array that holds information about
-		 * edge connections between vertices.*/
-		int **ed;
-		/** This in an array with size 2*current_vertices for holding
+		/** An array with size 2*current_vertices holding information
+		 * about edge connections between vertices.*/
+		int *ed;
+		/** An array with size 2*current_vertices for holding
 		 * the positions of the vertices. */
 		double *pts;
 		voronoicell_2d();
 		~voronoicell_2d();
 		void init(double xmin,double xmax,double ymin,double ymax);
-		void draw_gnuplot(ostream &os,double x,double y);
-		inline void draw_gnuplot(const char *filename,double x,double y);
-		inline void draw_gnuplot(double x,double y);
-		void draw_pov(ostream &os,double x,double y,double z=0);
-		inline void draw_pov(const char *filename,double x,double y,double z=0);
-		inline void draw_pov(double x,double y,double z=0);
-		inline bool plane(double x,double y,double rs);
+		void draw_gnuplot(double x,double y,FILE *fp=stdout);
+		inline void draw_gnuplot(double x,double y,const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_gnuplot(x,y,fp);
+			fclose(fp);
+		}
+		void draw_pov(double x,double y,double z=0,FILE *fp=stdout);
+		inline void draw_pov(double x,double y,double z,const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_pov(x,y,z,fp);
+			fclose(fp);
+		}
+		void output_custom(const char *format,int i,double x,double y,double r,FILE *fp=stdout);
+		inline void output_custom(const char *format,int i,double x,double y,double r,const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			output_custom(format,i,x,y,r,fp);
+			fclose(fp);
+		}		
+		bool plane(double x,double y,double rs);
 		double max_radius_squared();
 		double perimeter();
 		double area();
 		void centroid(double &cx,double &cy);
 	private:
 		void add_memory_vertices();
-		void add_memory_ds();
-		inline double pos(double x,double y,double rsq,int qp);
-		/** This is the delete stack, used to store the vertices which
-		 * are going to be deleted during the plane cutting procedure.
-		 */	
+		void add_memory_ds(int *&stackp);
+		/** Computes the distance of a Voronoi cell vertex to a plane.
+		 * \param[in] (x,y) the normal vector to the plane.
+		 * \param[in] rsq the distance along this vector of the plane.
+		 * \param[in] qp the index of the vertex to consider. */
+		inline double pos(double x,double y,double rsq,int qp) {
+			return x*pts[2*qp]+y*pts[2*qp+1]-rsq;
+		}
+		/** The delete stack, used to store the vertices that are
+		 * deleted during the plane cutting procedure. */	
 		int *ds;
+		/** A pointer to the end of the delete stack, used to detect
+		 * when it is full. */
+		int *stacke;
 };
 
 #endif

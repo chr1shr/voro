@@ -8,14 +8,30 @@
 include ../config.mk
 
 # List of the common source files
-SRC_CELL=config.hh cell_2d.cc cell_2d.hh
-SRC_CTR=container_2d.cc container_2d.hh
+objs=common.o cell_2d.o container_2d.o
+src=$(patsubst %.o,%.cc,$(objs))
 
 # Makefile rules
-all: help
+all: libvoro++_2d.a
 
-help: Doxyfile $(SRC_CELL) $(SRC_CTR)
+depend:
+	$(CXX) -MM $(src) >Makefile.dep
+
+execs: $(execs)
+
+include Makefile.dep
+
+libvoro++_2d.a: $(objs)
+	ar rs libvoro++.a $^
+
+%.o: %.cc
+	$(CXX) $(CFLAGS) -c $<
+
+help: Doxyfile $(SOURCE)
 	doxygen Doxyfile
-	cd ../latex && make
+	cd ../latex && $(MAKE)
 
-.PHONY: all help
+clean:
+	rm -f $(objs)
+
+.PHONY: all help execs depend

@@ -3,18 +3,17 @@
 
 #include "cell_2d.hh"
 
-/** Constructs a 2D Voronoic cell and sets up the initial memory. */
+/** Constructs a 2D Voronoi cell and sets up the initial memory. */
 voronoicell_2d::voronoicell_2d() :
 	current_vertices(init_vertices), current_delete_size(init_delete_size),
-	ed(new int*[current_vertices]), pts(new double[2*current_vertices]),
-	ds(new int[current_delete_size]) {
-	ed[0]=new int[2*current_vertices];
-	for(int i=1;i<current_vertices;i++) ed[i]=ed[i-1]+2;
+	ed(new int[2*current_vertices]), pts(new double[2*current_vertices]),
+	ds(new int[current_delete_size]), stacke(ds+current_delete_size) {
 }
 
 /** The voronoicell_2d destructor deallocates all of the dynamic memory. */
 voronoicell_2d::~voronoicell_2d() {
-	delete [] ed[0];
+	delete [] ds;
+	delete [] pts;
 	delete [] ed;
 }
 
@@ -22,37 +21,40 @@ voronoicell_2d::~voronoicell_2d() {
  * arrays. If the allocation exceeds the absolute maximum set in max_vertices,
  * then the routine exits with a fatal error. */
 void voronoicell_2d::add_memory_vertices() {
-	int i=(current_vertices<<1);
-	if(i>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	double *ppe(pts+2*current_vertices);
+	int *ede(ed+2*current_vertices);
+
+	// Double the memory allocation and check it is within range
+	current_vertices<<=1;
+	if(current_vertices>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
-	cerr << "Vertex memory scaled up to " << i << endl;
+	fprintf(stderr,"Vertex memory scaled up to %d\n",i);
 #endif
-	double *ppts(new double[2*i]);
-	int j,*ped(new int[2*i]);
-	for(j=0;j<2*current_vertices;j++) ped[j]=ed[0][j];
-	delete [] ed[0];
-	delete [] ed;
-	ed=new int*[i];
-	for(j=0;j<i;j++) ed[j]=ped+(2*j);
-	for(j=0;j<2*current_vertices;j++) ppts[j]=pts[j];
-	delete [] pts;
-	pts=ppts;
-	current_vertices=i;
+
+	// Copy the vertex positions
+	double *npts(new double[2*current_vertices]),*npp(npts),*pp(pts);
+	while(pp<ppe) *(npp++)=*(pp++);
+	delete [] pts;pts=npts;
+
+	// Copy the edge table
+	int *ned(new int[2*current_vertices]),*nep(ned),*edp(ed);
+	while(edp<ede) *(nep++)=*(edp++);
+	delete [] ed;ed=ned;
 }
 
 /** Doubles the size allocation of the delete stack. If the allocation exceeds
  * the absolute maximum set in max_delete_size, then routine causes a fatal
  * error. */
-void voronoicell_2d::add_memory_ds() {
-	int i(current_delete_size<<1);
-	if(i>max_delete_size) voropp_fatal_error("Delete stack memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+void voronoicell_2d::add_memory_ds(int *&stackp) {
+	current_delete_size<<=1;
+	if(current_delete_size>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
-	cerr << "Delete stack memory scaled up to " << i << endl;
+	fprintf(stderr,"Delete stack 1 memory scaled up to %d\n",current_delete_size);
 #endif
-	int j,*pds(new int[i]);
-	for(j=0;j<current_delete_size;j++) pds[j]=ds[j];
-	delete [] ds;ds=pds;
-	current_delete_size=i;
+	int *dsn(new int[current_delete_size]),*dsnp(dsn),*dsp(ds);
+	while(dsp<stackp) *(dsnp++)=*(dsp++);
+	delete [] ds;ds=dsn;stackp=dsnp;
+	stacke=ds+current_delete_size;
 }
 
 /** Initializes a Voronoi cell as a rectangle with the given dimensions.
@@ -60,15 +62,12 @@ void voronoicell_2d::add_memory_ds() {
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates. */
 void voronoicell_2d::init(double xmin,double xmax,double ymin,double ymax) {
 	p=4;xmin*=2;xmax*=2;ymin*=2;ymax*=2;
-	pts[0]=xmin;pts[1]=ymin;
+	*pts=xmin;pts[1]=ymin;
 	pts[2]=xmax;pts[3]=ymin;
 	pts[4]=xmax;pts[5]=ymax;
 	pts[6]=xmin;pts[7]=ymax;
-	int *q=ed[0];
-	q[0]=1;q[1]=3;
-	q[2]=2;q[3]=0;
-	q[4]=3;q[5]=1;
-	q[6]=0;q[7]=2;
+	int *q=ed;
+	*q=1;q[1]=3;q[2]=2;q[3]=0;q[4]=3;q[5]=1;q[6]=0;q[7]=2;
 }
 
 /** Outputs the edges of the Voronoi cell in gnuplot format to an output
@@ -76,34 +75,14 @@ void voronoicell_2d::init(double xmin,double xmax,double ymin,double ymax) {
  * \param[in] os a reference to an output stream to write to.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
  */
-void voronoicell_2d::draw_gnuplot(ostream &os,double x,double y) {
+void voronoicell_2d::draw_gnuplot(double x,double y,FILE *fp) {
 	if(p==0) return;
 	int k=0;
 	do {
-		os << x+0.5*pts[2*k] << " " << y+0.5*pts[2*k+1] << "\n";
-		k=ed[k][0];
+		fprintf(fp,"%g %g\n",x+0.5*pts[2*k],y+0.5*pts[2*k+1]);
+		k=ed[2*k];
 	} while (k!=0);
-	os << x+0.5*pts[0] << " " << y+0.5*pts[1] << "\n";
-}
-
-/** An overloaded version of the draw_gnuplot routine that writes directly to a
- * file.
- * \param[in] filename The name of the file to write to.
- * \param[in] (x,y) a displacement vector to be added to the cell's position.
- */
-inline void voronoicell_2d::draw_gnuplot(const char *filename,double x,double y) {
-	ofstream os;
-	os.open(filename,ofstream::out|ofstream::trunc);
-	draw_gnuplot(os,x,y);
-	os.close();
-}
-
-/** An overloaded version of the draw_gnuplot routine, that prints to the
- * standard output.
- * \param[in] (x,y) a displacement vector to be added to the cell's position.
- */
-inline void voronoicell_2d::draw_gnuplot(double x,double y) {
-	draw_gnuplot(cout,x,y);
+	fprintf(fp,"%g %g\n\n",x+0.5*pts[0],y+0.5*pts[1]);
 }
 
 /** Outputs the edges of the Voronoi cell in POV-Ray format to an open file
@@ -111,35 +90,16 @@ inline void voronoicell_2d::draw_gnuplot(double x,double y) {
  * \param[in] os a output stream to write to.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
-void voronoicell_2d::draw_pov(ostream &os,double x,double y,double z) {
+void voronoicell_2d::draw_pov(double x,double y,double z,FILE *fp) {
 	if(p==0) return;
 	int k=0;
 	do {
-		os << "sphere{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,r}\n";
-		os << "cylinder{<" << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,<";
-		k=ed[k][0];
-		os << x+0.5*pts[2*k] << "," << y+0.5*pts[2*k+1] << "," << z << ">,r}\n";
+		fprintf(fp,"sphere{<%g,%g,%g>,r}\ncylinder{<%g,%g,%g>,<"
+			,x+0.5*pts[2*k],y+0.5*pts[2*k+1],z
+			,x+0.5*pts[2*k],y+0.5*pts[2*k+1],z);
+		k=ed[2*k];
+		fprintf(fp,"%g,%g,%g>,r}\n",x+0.5*pts[2*k],y+0.5*pts[2*k+1],z);
 	} while (k!=0);
-}
-
-/** An overloaded version of the draw_pov routine that writes directly to
- * a file.
- * \param[in] filename The name of the file to write to.
- * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
- */
-inline void voronoicell_2d::draw_pov(const char *filename,double x,double y,double z) {
-	ofstream os;
-	os.open(filename,ofstream::out|ofstream::trunc);
-	draw_pov(os,x,y,z);
-	os.close();
-}
-
-/** An overloaded version of the draw_pov routine, that prints to the standard
- * output.
- * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
- */
-inline void voronoicell_2d::draw_pov(double x,double y,double z) {
-	draw_pov(cout,x,y,z);
 }
 
 /** Computes the maximum radius squared of a vertex from the center of the
@@ -147,21 +107,14 @@ inline void voronoicell_2d::draw_pov(double x,double y,double z) {
  * all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
 double voronoicell_2d::max_radius_squared() {
-	int i;double r,s;
-	r=pts[0]*pts[0]+pts[1]*pts[1];
-	for(i=2;i<2*p;i+=2) {
-		s=pts[i]*pts[i]+pts[i+1]*pts[i+1];
+	double r,s,*ptsp(pts+2),*ptse(pts+2*p);
+	r=*pts*(*pts)+pts[1]*pts[1];
+	while(ptsp<ptse) {
+		s=*ptsp*(*ptsp);ptsp++;
+		s+=*ptsp*(*ptsp);ptsp++;
 		if(s>r) r=s;
 	}
-	return r;
-}
-
-/** Computes this distance of a Voronoi cell vertex to a plane.
- * \param[in] (x,y) the normal vector to the plane.
- * \param[in] rsq the distance along this vector of the plane.
- * \param[in] qp the index of the vertex to consider. */
-inline double voronoicell_2d::pos(double x,double y,double rsq,int qp) {
-	return x*pts[2*qp]+y*pts[2*qp+1]-rsq;
+	return r;	
 }
 
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
@@ -171,25 +124,26 @@ inline double voronoicell_2d::pos(double x,double y,double rsq,int qp) {
  * \param[in] rsq the distance along this vector of the plane.
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
 bool voronoicell_2d::plane(double x,double y,double rsq) {
-	int cp,lp,up=0,up2,up3,stack=0;double fac,l,u,u2,u3;
+	int cp,lp,up=0,up2,up3,*stackp(ds);
+	double fac,l,u,u2,u3;
 	
 	// First try and find a vertex that is within the cutting plane, if
 	// there is one. If one can't be found, then the cell is not cut by
 	// this plane and the routine immediately returns true.
 	u=pos(x,y,rsq,up);
 	if(u<tolerance) {
-		up2=ed[up][0];u2=pos(x,y,rsq,up2);
-		up3=ed[up][1];u3=pos(x,y,rsq,up3);
+		up2=ed[2*up];u2=pos(x,y,rsq,up2);
+		up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
 		if(u2>u3) {
 			while(u2<tolerance) {
-				up2=ed[up2][0];
+				up2=ed[2*up2];
 				u2=pos(x,y,rsq,up2);
 				if(up2==up3) return true;
 			}
 			up=up2;u=u2;
 		} else {
 			while(u3<tolerance) {
-				up3=ed[up3][1];
+				up3=ed[2*up3+1];
 				u3=pos(x,y,rsq,up3);
 				if(up2==up3) return true;
 			}
@@ -199,13 +153,13 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 
 	// Add this point to the delete stack, and search clockwise
 	// to find additional points that need to be deleted.
-	ds[stack++]=up;
-	l=u;up2=ed[up][0];
+	*(stackp++)=up;
+	l=u;up2=ed[2*up];
 	u2=pos(x,y,rsq,up2);
 	while(u2>tolerance) {
-		if(stack==current_delete_size) add_memory_ds();
-		ds[stack++]=up2;
-		up2=ed[up2][0];
+		if(stackp==stacke) add_memory_ds(stackp);
+		*(stackp++)=up2;
+		up2=ed[2*up2];
 		l=u2;
 		u2=pos(x,y,rsq,up2);
 		if(up2==up) return false;
@@ -218,22 +172,22 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 		cp=up2;
 	} else {
 		if(p==current_vertices) add_memory_vertices();
-		lp=ed[up2][1];
+		lp=ed[2*up2+1];
 		fac=1/(u2-l);
 		pts[2*p]=(pts[2*lp]*u2-pts[2*up2]*l)*fac;
 		pts[2*p+1]=(pts[2*lp+1]*u2-pts[2*up2+1]*l)*fac;
-		ed[p][0]=up2;
-		ed[up2][1]=p;
+		ed[2*p]=up2;
+		ed[2*up2+1]=p;
 		cp=p++;
 	}
 
 	// Search counter-clockwise for additional points that need to be
 	// deleted
-	l=u;up3=ed[up][1];u3=pos(x,y,rsq,up3);
+	l=u;up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
 	while(u3>tolerance) {
-		if(stack==current_delete_size) add_memory_ds();
-		ds[stack++]=up3;
-		up3=ed[up3][1];
+		if(stackp==stacke) add_memory_ds(stackp);
+		*(stackp++)=up3;
+		up3=ed[2*up3+1];
 		l=u3;
 		u3=pos(x,y,rsq,up3);
 		if(up3==up2) break;
@@ -243,34 +197,34 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 	// with the vertex found on the previous search in the clockwise
 	// direction
 	if(u3>tolerance) {
-		ed[cp][1]=up3;
-		ed[up3][0]=cp;
+		ed[2*cp+1]=up3;
+		ed[2*up3]=cp;
 	} else {
 		if(p==current_vertices) add_memory_vertices();
-		lp=ed[up3][0];
+		lp=ed[2*up3];
 		fac=1/(u3-l);
 		pts[2*p]=(pts[2*lp]*u3-pts[2*up3]*l)*fac;
 		pts[2*p+1]=(pts[2*lp+1]*u3-pts[2*up3+1]*l)*fac;
-		ed[p][0]=cp;
-		ed[cp][1]=p;
-		ed[p][1]=up3;
-		ed[up3][0]=p++;
+		ed[2*p]=cp;
+		ed[2*cp+1]=p;
+		ed[2*p+1]=up3;
+		ed[2*up3]=p++;
 	}
 
 	// Mark points on the delete stack
-	for(int i=0;i<stack;i++) ed[ds[i]][0]=-1;
+	for(int *sp=ds;sp<stackp;sp++) ed[*sp*2]=-1;
 	
 	// Remove them from the memory structure
-	while(stack>0) {
-		while(ed[--p][0]==-1);
-		up=ds[--stack];
+	while(stackp>ds) {
+		while(ed[2*--p]==-1);
+		up=*(--stackp);
 		if(up<p) {
-			ed[ed[p][0]][1]=up;
-			ed[ed[p][1]][0]=up;
+			ed[2*ed[2*p]+1]=up;
+			ed[2*ed[2*p+1]]=up;
 			pts[2*up]=pts[2*p];
 			pts[2*up+1]=pts[2*p+1];
-			ed[up][0]=ed[p][0];
-			ed[up][1]=ed[p][1];
+			ed[2*up]=ed[2*p];
+			ed[2*up+1]=ed[2*p+1];
 		} else p++;
 	}
 	return true;
@@ -282,7 +236,7 @@ double voronoicell_2d::perimeter() {
 	if(p==0) return 0;
 	int k=0,l;double perim=0,dx,dy;
 	do {
-		l=ed[k][0];
+		l=ed[2*k];
 		dx=pts[2*k]-pts[2*l];
 		dy=pts[2*k+1]-pts[2*l+1];
 		perim+=sqrt(dx*dx+dy*dy);
@@ -295,14 +249,14 @@ double voronoicell_2d::perimeter() {
  * \return A floating point number holding the calculated distance. */
 double voronoicell_2d::area() {
 	if(p==0) return 0;
-	int k=ed[0][0];double area=0,x=pts[0],y=pts[1],dx1,dy1,dx2,dy2;
+	int k=ed[0];double area=0,x=*pts,y=pts[1],dx1,dy1,dx2,dy2;
 	dx1=pts[2*k]-x;dy1=pts[2*k+1]-y;
-	k=ed[k][0];
+	k=ed[2*k];
 	while(k!=0) {
 		dx2=pts[2*k]-x;dy2=pts[2*k+1]-y;
 		area+=dx1*dy2-dx2*dy1;
 		dx1=dx2;dy1=dy2;
-		k=ed[k][0];
+		k=ed[2*k];
 	}
 	return 0.125*area;
 }
@@ -313,10 +267,10 @@ void voronoicell_2d::centroid(double &cx,double &cy) {
 	cx=cy=0;
 	static const double third=1/3.0;
 	if(p==0) return;
-	int k=ed[0][0];
-	double area,tarea=0,x=pts[0],y=pts[1],dx1,dy1,dx2,dy2;
+	int k(*ed);
+	double area,tarea=0,x=*pts,y=pts[1],dx1,dy1,dx2,dy2;
 	dx1=pts[2*k]-x;dy1=pts[2*k+1]-y;
-	k=ed[k][0];
+	k=ed[2*k];
 	while(k!=0) {
 		dx2=pts[2*k]-x;dy2=pts[2*k+1]-y;
 		area=dx1*dy2-dx2*dy1;
@@ -324,9 +278,67 @@ void voronoicell_2d::centroid(double &cx,double &cy) {
 		cx+=area*(dx1+dx2);
 		cy+=area*(dy1+dy2);
 		dx1=dx2;dy1=dy2;
-		k=ed[k][0];
+		k=ed[2*k];
 	}
 	tarea=third/tarea;
 	cx=0.5*(x+cx*tarea);
 	cy=0.5*(y+cy*tarea);
+}
+
+/** Computes the Voronoi cells for all particles in the container, and for each
+ * cell, outputs a line containing custom information about the cell structure.
+ * The output format is specified using an input string with control sequences
+ * similar to the standard C printf() routine.
+ * \param[in] format the format of the output lines, using control sequences to
+ *                   denote the different cell statistics.
+ * \param[in] i the ID of the particle associated with this Voronoi cell.
+ * \param[in] (x,y,z) the position of the particle associated with this Voronoi
+ *                    cell.
+ * \param[in] r a radius associated with the particle.
+ * \param[fp] fp the file handle to write to. */
+void voronoicell_2d::output_custom(const char *format,int i,double x,double y,double r,FILE *fp) {
+	char *fmp(const_cast<char*>(format));
+	while(*fmp!=0) {
+		if(*fmp=='%') {
+			fmp++;
+			switch(*fmp) {
+
+				// Particle-related output
+				case 'i': fprintf(fp,"%d",i);break;
+				case 'x': fprintf(fp,"%g",x);break;
+				case 'y': fprintf(fp,"%g",y);break;
+				case 'q': fprintf(fp,"%g %g",x,y);break;
+				case 'r': fprintf(fp,"%g",r);break;
+
+				// Vertex-related output
+				case 'w': fprintf(fp,"%d",p);break;
+				case 'm': fprintf(fp,"%g",0.25*max_radius_squared());break;
+
+				// Edge-related output
+				case 'p': fprintf(fp,"%g",perimeter());break;
+
+				// Area-related output
+				case 'a': fprintf(fp,"%g",area());break;
+				case 'c': {
+						  double cx,cy;
+						  centroid(cx,cy);
+						  fprintf(fp,"%g %g",cx,cy);
+					  } break;
+				case 'C': {
+						  double cx,cy;
+						  centroid(cx,cy);
+						  fprintf(fp,"%g %g",x+cx,x+cy);
+					  } break;
+
+				// End-of-string reached
+				case 0: fmp--;break;
+
+				// The percent sign is not part of a
+				// control sequence
+				default: putc('%',fp);putc(*fmp,fp);
+			}
+		} else putc(*fmp,fp); 
+		fmp++;
+	}
+	fputs("\n",fp);
 }

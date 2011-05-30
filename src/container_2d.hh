@@ -4,13 +4,13 @@
 #ifndef VOROPP_CONTAINER_2D_HH
 #define VOROPP_CONTAINER_2D_HH
 
-#include "config.hh"
 #include <cstdio>
 #include <cstdlib>
-#include <iostream>
-#include <fstream>
 #include <cmath>
 using namespace std;
+
+#include "config.hh"
+#include "cell_2d.hh"
 
 class voropp_loop_2d;
 
@@ -24,45 +24,22 @@ class voropp_loop_2d;
  * calculations. */
 class container_2d {
 	public:
-		container_2d(fpoint xa,fpoint xb,fpoint ya,fpoint yb,int xn,int yn,bool xper,bool yper,int memi);
-		~container_2d();
-		void import(istream &is);
-		inline void import();
-		inline void import(const char *filename);
-		void draw_particles(const char *filename);
-		void draw_particles();
-		void draw_particles(ostream &os);
-		void draw_particles_pov(const char *filename);
-		void draw_particles_pov();
-		void draw_particles_pov(ostream &os);		
-		void draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax);
-		inline void draw_cells_gnuplot(const char *filename);
-		void draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax);
-		inline void draw_cells_pov(const char *filename);
-		inline void print_all_custom(const char *format,const char *filename);
-		inline void print_all_custom(const char *format);
-		void print_all_custom(const char *format,ostream &os);
-		inline bool compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s);
-		bool compute_cell_sphere(voronoicell_2d	&c,int i,int j,int ij,int s,fpoint x,fpoint y);
-		bool initialize_voronoicell(voronoicell_2d &c,fpoint x,fpoint y);
-		void put(int n,fpoint x,fpoint y);
-		void clear();
-	private:
-		void add_particle_memory(int i);
 		/** The minimum x coordinate of the container. */
-		const fpoint ax;
+		const double ax;
 		/** The maximum x coordinate of the container. */
-		const fpoint bx;
+		const double bx;
 		/** The minimum y coordinate of the container. */
-		const fpoint ay;
+		const double ay;
 		/** The maximum y coordinate of the container. */
-		const fpoint by;
-		/** The inverse box length in the x direction, set to
-		 * nx/(bx-ax). */
-		const fpoint xsp;
-		/** The inverse box length in the y direction, set to
-		 * ny/(by-ay). */
-		const fpoint ysp;
+		const double by;
+		/** The box length in the x direction, set to (bx-ax)/nx. */
+		const double boxx;
+		/** The box length in the y direction, set to (by-ay)/ny. */
+		const double boxy;
+		/** The inverse box length in the x direction. */
+		const double xsp;
+		/** The inverse box length in the y direction. */
+		const double ysp;
 		/** The number of boxes in the x direction. */
 		const int nx;
 		/** The number of boxes in the y direction. */
@@ -92,8 +69,67 @@ class container_2d {
 		/** A two dimensional array holding particle positions. For the
 		 * derived container_poly class, this also holds particle
 		 * radii. */
-		fpoint **p;
-		friend class voropp_loop_2d;	
+		double **p;		
+		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,int memi);
+		~container_2d();
+		void import(istream &is);
+		inline void import(FILE *fp=stdin);
+		inline void import(const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"r"));
+			import(fp);
+			fclose(fp);
+		}
+		void draw_particles(FILE *fp=stdout);
+		inline void draw_particles(const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_particles(fp);
+			fclose(fp);
+		}
+		void draw_particles_pov(FILE *fp=stdout);
+		inline void draw_particles_pov(const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_particles_pov(fp);
+			fclose(fp);
+		}
+		void draw_cells_gnuplot(FILE *fp=stdout);
+		inline void draw_cells_gnuplot(const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_cells_gnuplot(fp);
+			fclose(fp);
+		}
+		void draw_cells_pov(FILE *fp=stdout);
+		inline void draw_cells_pov(const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_cells_pov(fp);
+			fclose(fp);
+		}
+		void print_custom(const char *format,FILE *fp=stdout);
+		inline void print_custom(const char *format,const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			print_custom(format,fp);
+			fclose(fp);
+		}
+		inline bool compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s);
+		bool compute_cell_sphere(voronoicell_2d	&c,int i,int j,int ij,int s,double x,double y);
+		bool initialize_voronoicell(voronoicell_2d &c,double x,double y);
+		void put(int n,double x,double y);
+		void clear();
+	private:
+		inline bool put_locate_block(int &ij,double &x,double &y);
+		inline bool put_remap(int &ij,double &x,double &y);
+		void add_particle_memory(int i);
+		/** Custom int function, that gives consistent stepping for
+		 * negative numbers. With normal int, we have
+		 * (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1). With this routine, we
+		 * have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1). */
+		inline int step_int(double a) {return a<0?int(a)-1:int(a);}
+		/** Custom modulo function, that gives consistent stepping for
+		 * negative numbers. */
+		inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
+		/** Custom integer division function, that gives consistent
+		 * stepping for negative numbers. */
+		inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
+		friend class voropp_loop_2d;
 };
 
 
@@ -110,10 +146,10 @@ class container_2d {
  */
 class voropp_loop_2d {
 	public:
-		voropp_loop_2d(container_2d *q);
-		inline int init(fpoint vx,fpoint vy,fpoint r,fpoint &px,fpoint &py);
-		inline int init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint &px,fpoint &py);
-		inline int inc(fpoint &px,fpoint &py);
+		voropp_loop_2d(container_2d &con);
+		int init(double vx,double vy,double r,double &px,double &py);
+		int init(double xmin,double xmax,double ymin,double ymax,double &px,double &py);
+		int inc(double &px,double &py);
 		/** The current block index in the x direction, referencing a
 		 * real cell in the range 0 to nx-1. */
 		int ip;
@@ -121,15 +157,23 @@ class voropp_loop_2d {
 		 * real cell in the range 0 to ny-1. */
 		int jp;
 	private:
-		int i,j,ai,bi,aj,bj,s;
-		int aip,ajp,inc1;
-		inline int step_mod(int a,int b);
-		inline int step_div(int a,int b);
-		inline int step_int(fpoint a);
-		fpoint apx,apy;
-		const fpoint sx,sy,xsp,ysp,ax,ay;
+		const double boxx,boxy,xsp,ysp,ax,ay;
 		const int nx,ny,nxy;
 		const bool xperiodic,yperiodic;
+		double apx,apy;
+		int i,j,ai,bi,aj,bj,s;
+		int aip,ajp,inc1;
+		/** Custom modulo function, that gives consistent stepping for
+		 * negative numbers. */
+		inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
+		/** Custom integer division function, that gives consistent
+		 * stepping for negative numbers. */
+		inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
+		/** Custom int function, that gives consistent stepping for
+		 * negative numbers. With normal int, we have
+		 * (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1). With this routine, we
+		 * have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1). */
+		inline int step_int(double a) {return a<0?int(a)-1:int(a);}
 };
 
 #endif
