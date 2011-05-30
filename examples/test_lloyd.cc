@@ -12,20 +12,19 @@ int main() {
 	// Import the spiral data set, and only save those particles that are
 	// within the container bounds 
 	con.import("particles_spiral");
-	sprintf(buffer,"particles_spiral.%d",0);
+	sprintf(buffer,"lloyd/lloyd_p.%d",0);
 	con.draw_particles(buffer);
 
-	// Draw the initial Voronoi cells
-	//con.draw_cells_gnuplot("init_lloyd.gnu");
-
 	// Carry out sixty four iterations of Lloyd's algorithm
-	for(i=0;i<64;i++) {
+	for(i=0;i<256;i++) {
 		con.clear();
 		con.import(buffer);
-		sprintf(buffer,"particles_spiral.%d",i+1);
+		sprintf(buffer,"lloyd/lloyd_v.%d",i);
+		con.draw_cells_gnuplot(buffer);
+		sprintf(buffer,"lloyd/lloyd_p.%d",i+1);
 		con.print_custom("%i %C",buffer);
 	}
 
 	// Draw the final Voronoi cells
-	//con.draw_cells_gnuplot("final_lloyd.gnu");
+	con.draw_cells_gnuplot("lloyd/lloyd_v.256");
 }
