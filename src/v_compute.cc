@@ -151,7 +151,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 		di=q&127;di-=64;
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
-//printf("%d %d %d %d %d %d\n",i,j,k,di,dj,dk);
+
 		// Check that the worklist position is in range
 		ei=di+i;if(ei<0||ei>=hx) continue;
 		ej=dj+j;if(ej<0||ej>=hy) continue;

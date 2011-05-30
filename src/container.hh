@@ -166,14 +166,15 @@ class container_base : public voropp_base, public wall_list {
 			c.init(x1,x2,y1,y2,z1,z2);
 			if(!apply_walls(c,x,y,z)) return false;
 			disp=ijk-i-nx*(j+ny*k);
-			//printf("%d %d %d %d %d %d %d %d %d %d %d\n",nx,ny,nz,i,j,k,ci,cj,ck,ijk,disp);
 			return true;
 		}
-		/** Returns the position of the particle currently being
-		 * computed relative to the computational block that it is
-		 * within. It is used to select the optimal worklist entry to
-		 * use.
-		 * \param[out] (fx,fy,fz) the relative position. */
+		/** Returns the position of a particle currently being computed
+		 * relative to the computational block that it is within. It is
+		 * used to select the optimal worklist entry to use.
+		 * \param[in] (x,y,z) the position of the particle.
+		 * \param[in] (ci,cj,ck) the block that the particle is within.
+		 * \param[out] (fx,fy,fz) the position relateive to the block.
+		 */
 		inline void frac_pos(double x,double y,double z,double ci,double cj,double ck,double &fx,double &fy,double &fz) {
 			fx=x-ax-boxx*ci;
 			fy=y-ay-boxy*cj;
@@ -183,7 +184,6 @@ class container_base : public voropp_base, public wall_list {
 			if(xperiodic) {if(ci+ei<nx) {ei+=nx;qx=-(bx-ax);} else if(ci+ei>=(nx<<1)) {ei-=nx;qx=bx-ax;} else qx=0;}
 			if(yperiodic) {if(cj+ej<ny) {ej+=ny;qy=-(by-ay);} else if(cj+ej>=(ny<<1)) {ej-=ny;qy=by-ay;} else qy=0;}
 			if(zperiodic) {if(ck+ek<nz) {ek+=nz;qz=-(bz-az);} else if(ck+ek>=(nz<<1)) {ek-=nz;qz=bz-az;} else qz=0;}
-			//printf("%d %d %d %d %d %d %d %d\n",ei,ej,ek,ci,cj,ck,disp,disp+ei+nx*(ej+ny*ek));
 			return disp+ei+nx*(ej+ny*ek);
 		}
 		void draw_domain_gnuplot(FILE *fp=stdout);
@@ -374,6 +374,11 @@ class container : public container_base {
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
 		}
+		template<class v_cell>
+		inline bool compute_cell(v_cell &c,int ijk,int q) {
+			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
+			return vc.compute_cell(c,ijk,q,i,j,k);
+		}		
 	private:
 		voropp_compute<container> vc;
 		inline void r_init(int ijk,int s) {};
@@ -535,11 +540,15 @@ class container_poly : public container_base {
 				} while(vl.inc());
 			}
 		}
-
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
 		}
+		template<class v_cell>
+		inline bool compute_cell(v_cell &c,int ijk,int q) {
+			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
+			return vc.compute_cell(c,ijk,q,i,j,k);
+		}		
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
 	private:
