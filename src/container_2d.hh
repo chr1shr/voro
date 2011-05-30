@@ -72,8 +72,7 @@ class container_2d {
 		double **p;		
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,int memi);
 		~container_2d();
-		void import(istream &is);
-		inline void import(FILE *fp=stdin);
+		void import(FILE *fp=stdin);
 		inline void import(const char *filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(fp);
@@ -109,7 +108,24 @@ class container_2d {
 			print_custom(format,fp);
 			fclose(fp);
 		}
-		inline bool compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s);
+		double sum_cell_areas();
+		void compute_all_cells();
+		/** An overloaded version of the compute_cell_sphere routine,
+		 * that sets up the x and y variables.
+		 *\param[in,out] c a reference to a voronoicell object.
+		 * \param[in] (i,j) the coordinates of the block that the test
+		 *                  particle is in.
+		 * \param[in] ij the index of the block that the test particle
+		 *               is in, set to i+nx*j.
+		 * \param[in] s the index of the particle within the test
+		 *              block.
+		 * \return False if the Voronoi cell was completely removed
+		 * during the computation and has zero volume, true otherwise.
+		 */
+		inline bool compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s) {
+			double x=p[s][2*ij],y=p[s][2*ij+1];
+			return compute_cell_sphere(c,i,j,ij,s,x,y);
+		}
 		bool compute_cell_sphere(voronoicell_2d	&c,int i,int j,int ij,int s,double x,double y);
 		bool initialize_voronoicell(voronoicell_2d &c,double x,double y);
 		void put(int n,double x,double y);

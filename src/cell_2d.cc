@@ -327,7 +327,7 @@ void voronoicell_2d::output_custom(const char *format,int i,double x,double y,do
 				case 'C': {
 						  double cx,cy;
 						  centroid(cx,cy);
-						  fprintf(fp,"%g %g",x+cx,x+cy);
+						  fprintf(fp,"%g %g",x+cx,y+cy);
 					  } break;
 
 				// End-of-string reached

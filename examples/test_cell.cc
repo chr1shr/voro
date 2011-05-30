@@ -1,5 +1,4 @@
-#include "cell_2d.cc"
-#include "container_2d.cc"
+#include "voro++_2d.hh"
 
 // This function returns a random floating point number between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -25,11 +24,11 @@ int main() {
 	}
 
 	// Print out several statistics about the computed cell
-	cout << "Perimeter is " << v.perimeter() << endl;
-	cout << "Area is " << v.area() << endl;
 	v.centroid(x,y);
-	cout << "Centroid is (" << x << "," << y << ")" << endl;
+	printf("Perimeter is %g\n"
+	       "Area is %g\n"
+       	       "Centroid is (%g,%g)\n",v.perimeter(),v.area(),x,y);
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.draw_gnuplot("single_cell.gnu",0,0);
+	v.draw_gnuplot(0,0,"single_cell.gnu");
 }

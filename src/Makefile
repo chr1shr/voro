@@ -22,7 +22,7 @@ execs: $(execs)
 include Makefile.dep
 
 libvoro++_2d.a: $(objs)
-	ar rs libvoro++.a $^
+	ar rs libvoro++_2d.a $^
 
 %.o: %.cc
 	$(CXX) $(CFLAGS) -c $<

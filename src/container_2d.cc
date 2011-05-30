@@ -115,7 +115,7 @@ void container_2d::add_particle_memory(int i) {
 
 /** Imports a list of particles from an input stream.
  * \param[in] is an input stream to read from. */
-inline void container_2d::import(FILE *fp) {
+void container_2d::import(FILE *fp) {
 	int i,j;
 	double x,y;
 	while((j=fscanf(fp,"%d %lg %lg",&i,&x,&y))==3) put(i,x,y);
@@ -124,7 +124,7 @@ inline void container_2d::import(FILE *fp) {
 
 /** Clears a container of particles. */
 void container_2d::clear() {
-	for(int* cop=0;cop<co+nxy;cop++) *cop=0;
+	for(int* cop=co;cop<co+nxy;cop++) *cop=0;
 }
 
 /** Dumps all the particle positions and identifies to a file.
@@ -185,15 +185,14 @@ void container_2d::print_custom(const char *format,FILE *fp) {
 	voronoicell_2d c;
 	for(j=0;j<ny;j++) for(i=0;i<nx;i++,ij++) for(q=0;q<co[ij];q++) {
 		x=p[ij][2*q];y=p[ij][2*q+1];
-		if(compute_cell_sphere(c,i,j,ij,q,x,y))
-			c.output_custom(format,id[ij][q],x,y,default_radius,fp);
+		if(compute_cell_sphere(c,i,j,ij,q,x,y)) c.output_custom(format,id[ij][q],x,y,default_radius,fp);
 	}
 }
 
 /** Initializes a voronoicell_2d class to fill the entire container.
  * \param[in] c a reference to a voronoicell_2d class.
  * \param[in] (x,y) the position of the particle that . */
-inline bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,double y) {
+bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,double y) {
 	double x1,x2,y1,y2;
 	if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
@@ -201,19 +200,28 @@ inline bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,doub
 	return true;
 }
 
-/** An overloaded version of the compute_cell_sphere routine, that sets up the x
- * and y variables.
- \param[in,out] c a reference to a voronoicell object.
- * \param[in] (i,j) the coordinates of the block that the test particle is
- *                  in.
- * \param[in] ij the index of the block that the test particle is in, set to
- *               i+nx*j.
- * \param[in] s the index of the particle within the test block.
- * \return False if the Voronoi cell was completely removed during the
- *         computation and has zero volume, true otherwise. */
-inline bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s) {
-	double x=p[s][2*ij],y=p[s][2*ij+1];
-	return compute_cell_sphere(c,i,j,ij,s,x,y);
+/** Computes all Voronoi cells and sums their areas.
+ * \return The computed area. */
+double container_2d::sum_cell_areas() {
+	int i,j,ij=0,q;
+	double x,y,sum=0;
+	voronoicell_2d c;
+	for(j=0;j<ny;j++) for(i=0;i<nx;i++,ij++) for(q=0;q<co[ij];q++) {
+		x=p[ij][2*q];y=p[ij][2*q+1];
+		if(compute_cell_sphere(c,i,j,ij,q,x,y)) sum+=c.area();
+	}
+	return sum;
+}
+
+/** Computes all of the Voronoi cells in the container, but does nothing
+ * with the output. It is useful for measuring the pure computation time
+ * of the Voronoi algorithm, without any additional calculations such as
+ * volume evaluation or cell output. */
+void container_2d::compute_all_cells() {
+	int i,j,ij=0,q;
+	voronoicell_2d c;
+	for(j=0;j<ny;j++) for(i=0;i<nx;i++,ij++) for(q=0;q<co[ij];q++)
+		compute_cell_sphere(c,i,j,ij,q);
 }
 
 /** This routine computes the Voronoi cell for a give particle, by successively
@@ -228,7 +236,7 @@ inline bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int 
  * \param[in] s the index of the particle within the test block.
  * \param[in] (x,y) the coordinates of the particle.
  * \return False if the Voronoi cell was completely removed during the
- *         computation and has zero volume, true otherwise. */
+ * computation and has zero volume, true otherwise. */
 bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s,double x,double y) {
 
 	// This length scale determines how large the spherical shells should
@@ -260,7 +268,6 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	}
 	return true;
 }
-
 
 /** Creates a voropp_loop_2d object, by setting the necessary constants about the
  * container geometry from a pointer to the current container class.

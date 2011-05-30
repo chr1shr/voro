@@ -1,5 +1,4 @@
-#include "cell_2d.cc"
-#include "container_2d.cc"
+#include "voro++_2d.hh"
 
 int main() {
 
@@ -13,5 +12,5 @@ int main() {
 
 	// Do a custom computation on the Voronoi cells, printing the IDs,
 	// positions, and Voronoi cell areas to a file
-	con.print_all_custom("%i %x %y %a","particles_spiral.out");
+	con.print_custom("%i %x %y %a","particles_spiral.out");
 }

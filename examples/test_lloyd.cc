@@ -1,5 +1,4 @@
-#include "cell_2d.cc"
-#include "container_2d.cc"
+#include "voro++_2d.hh"
 
 int main() {
 	int i;
@@ -16,11 +15,17 @@ int main() {
 	sprintf(buffer,"particles_spiral.%d",0);
 	con.draw_particles(buffer);
 
+	// Draw the initial Voronoi cells
+	//con.draw_cells_gnuplot("init_lloyd.gnu");
+
 	// Carry out sixty four iterations of Lloyd's algorithm
 	for(i=0;i<64;i++) {
 		con.clear();
 		con.import(buffer);
 		sprintf(buffer,"particles_spiral.%d",i+1);
-		con.print_all_custom("%i %C",buffer);
+		con.print_custom("%i %C",buffer);
 	}
+
+	// Draw the final Voronoi cells
+	//con.draw_cells_gnuplot("final_lloyd.gnu");
 }
