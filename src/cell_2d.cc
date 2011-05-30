@@ -28,7 +28,7 @@ void voronoicell_2d::add_memory_vertices() {
 	current_vertices<<=1;
 	if(current_vertices>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
-	fprintf(stderr,"Vertex memory scaled up to %d\n",i);
+	fprintf(stderr,"Vertex memory scaled up to %d\n",current_vertices);
 #endif
 
 	// Copy the vertex positions
