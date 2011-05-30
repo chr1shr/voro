@@ -6,7 +6,7 @@
 /** Constructs a 2D Voronoic cell and sets up the initial memory. */
 voronoicell_2d::voronoicell_2d() :
 	current_vertices(init_vertices), current_delete_size(init_delete_size),
-	ed(new int*[current_vertices]), pts(new fpoint[2*current_vertices]),
+	ed(new int*[current_vertices]), pts(new double[2*current_vertices]),
 	ds(new int[current_delete_size]) {
 	ed[0]=new int[2*current_vertices];
 	for(int i=1;i<current_vertices;i++) ed[i]=ed[i-1]+2;
@@ -27,7 +27,7 @@ void voronoicell_2d::add_memory_vertices() {
 #if VOROPP_VERBOSE >=2
 	cerr << "Vertex memory scaled up to " << i << endl;
 #endif
-	fpoint *ppts(new fpoint[2*i]);
+	double *ppts(new double[2*i]);
 	int j,*ped(new int[2*i]);
 	for(j=0;j<2*current_vertices;j++) ped[j]=ed[0][j];
 	delete [] ed[0];
@@ -58,7 +58,7 @@ void voronoicell_2d::add_memory_ds() {
 /** Initializes a Voronoi cell as a rectangle with the given dimensions.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates. */
-void voronoicell_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
+void voronoicell_2d::init(double xmin,double xmax,double ymin,double ymax) {
 	p=4;xmin*=2;xmax*=2;ymin*=2;ymax*=2;
 	pts[0]=xmin;pts[1]=ymin;
 	pts[2]=xmax;pts[3]=ymin;
@@ -76,7 +76,7 @@ void voronoicell_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
  * \param[in] os a reference to an output stream to write to.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
  */
-void voronoicell_2d::draw_gnuplot(ostream &os,fpoint x,fpoint y) {
+void voronoicell_2d::draw_gnuplot(ostream &os,double x,double y) {
 	if(p==0) return;
 	int k=0;
 	do {
@@ -91,7 +91,7 @@ void voronoicell_2d::draw_gnuplot(ostream &os,fpoint x,fpoint y) {
  * \param[in] filename The name of the file to write to.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
  */
-inline void voronoicell_2d::draw_gnuplot(const char *filename,fpoint x,fpoint y) {
+inline void voronoicell_2d::draw_gnuplot(const char *filename,double x,double y) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_gnuplot(os,x,y);
@@ -102,7 +102,7 @@ inline void voronoicell_2d::draw_gnuplot(const char *filename,fpoint x,fpoint y)
  * standard output.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
  */
-inline void voronoicell_2d::draw_gnuplot(fpoint x,fpoint y) {
+inline void voronoicell_2d::draw_gnuplot(double x,double y) {
 	draw_gnuplot(cout,x,y);
 }
 
@@ -111,7 +111,7 @@ inline void voronoicell_2d::draw_gnuplot(fpoint x,fpoint y) {
  * \param[in] os a output stream to write to.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
-void voronoicell_2d::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
+void voronoicell_2d::draw_pov(ostream &os,double x,double y,double z) {
 	if(p==0) return;
 	int k=0;
 	do {
@@ -127,7 +127,7 @@ void voronoicell_2d::draw_pov(ostream &os,fpoint x,fpoint y,fpoint z) {
  * \param[in] filename The name of the file to write to.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
-inline void voronoicell_2d::draw_pov(const char *filename,fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_2d::draw_pov(const char *filename,double x,double y,double z) {
 	ofstream os;
 	os.open(filename,ofstream::out|ofstream::trunc);
 	draw_pov(os,x,y,z);
@@ -138,7 +138,7 @@ inline void voronoicell_2d::draw_pov(const char *filename,fpoint x,fpoint y,fpoi
  * output.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  */
-inline void voronoicell_2d::draw_pov(fpoint x,fpoint y,fpoint z) {
+inline void voronoicell_2d::draw_pov(double x,double y,double z) {
 	draw_pov(cout,x,y,z);
 }
 
@@ -146,8 +146,8 @@ inline void voronoicell_2d::draw_pov(fpoint x,fpoint y,fpoint z) {
  * cell. It can be used to determine when enough particles have been testing an
  * all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
-fpoint voronoicell_2d::max_radius_squared() {
-	int i;fpoint r,s;
+double voronoicell_2d::max_radius_squared() {
+	int i;double r,s;
 	r=pts[0]*pts[0]+pts[1]*pts[1];
 	for(i=2;i<2*p;i+=2) {
 		s=pts[i]*pts[i]+pts[i+1]*pts[i+1];
@@ -160,7 +160,7 @@ fpoint voronoicell_2d::max_radius_squared() {
  * \param[in] (x,y) the normal vector to the plane.
  * \param[in] rsq the distance along this vector of the plane.
  * \param[in] qp the index of the vertex to consider. */
-inline fpoint voronoicell_2d::pos(fpoint x,fpoint y,fpoint rsq,int qp) {
+inline double voronoicell_2d::pos(double x,double y,double rsq,int qp) {
 	return x*pts[2*qp]+y*pts[2*qp+1]-rsq;
 }
 
@@ -170,8 +170,8 @@ inline fpoint voronoicell_2d::pos(fpoint x,fpoint y,fpoint rsq,int qp) {
  * \param[in] (x,y) the normal vector to the plane.
  * \param[in] rsq the distance along this vector of the plane.
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
-bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
-	int cp,lp,up=0,up2,up3,stack=0;fpoint fac,l,u,u2,u3;
+bool voronoicell_2d::plane(double x,double y,double rsq) {
+	int cp,lp,up=0,up2,up3,stack=0;double fac,l,u,u2,u3;
 	
 	// First try and find a vertex that is within the cutting plane, if
 	// there is one. If one can't be found, then the cell is not cut by
@@ -278,9 +278,9 @@ bool voronoicell_2d::plane(fpoint x,fpoint y,fpoint rsq) {
 
 /** Calculates the perimeter of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
-fpoint voronoicell_2d::perimeter() {
+double voronoicell_2d::perimeter() {
 	if(p==0) return 0;
-	int k=0,l;fpoint perim=0,dx,dy;
+	int k=0,l;double perim=0,dx,dy;
 	do {
 		l=ed[k][0];
 		dx=pts[2*k]-pts[2*l];
@@ -293,9 +293,9 @@ fpoint voronoicell_2d::perimeter() {
 
 /** Calculates the area of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
-fpoint voronoicell_2d::area() {
+double voronoicell_2d::area() {
 	if(p==0) return 0;
-	int k=ed[0][0];fpoint area=0,x=pts[0],y=pts[1],dx1,dy1,dx2,dy2;
+	int k=ed[0][0];double area=0,x=pts[0],y=pts[1],dx1,dy1,dx2,dy2;
 	dx1=pts[2*k]-x;dy1=pts[2*k+1]-y;
 	k=ed[k][0];
 	while(k!=0) {
@@ -309,12 +309,12 @@ fpoint voronoicell_2d::area() {
 
 /** Calculates the centroid of the Voronoi cell.
  * \param[out] (cx,cy) The coordinates of the centroid. */
-void voronoicell_2d::centroid(fpoint &cx,fpoint &cy) {
+void voronoicell_2d::centroid(double &cx,double &cy) {
 	cx=cy=0;
-	static const fpoint third=1/3.0;
+	static const double third=1/3.0;
 	if(p==0) return;
 	int k=ed[0][0];
-	fpoint area,tarea=0,x=pts[0],y=pts[1],dx1,dy1,dx2,dy2;
+	double area,tarea=0,x=pts[0],y=pts[1],dx1,dy1,dx2,dy2;
 	dx1=pts[2*k]-x;dy1=pts[2*k+1]-y;
 	k=ed[k][0];
 	while(k!=0) {

@@ -40,25 +40,25 @@ class voronoicell_2d {
 		int **ed;
 		/** This in an array with size 2*current_vertices for holding
 		 * the positions of the vertices. */
-		fpoint *pts;
+		double *pts;
 		voronoicell_2d();
 		~voronoicell_2d();
-		void init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax);
-		void draw_gnuplot(ostream &os,fpoint x,fpoint y);
-		inline void draw_gnuplot(const char *filename,fpoint x,fpoint y);
-		inline void draw_gnuplot(fpoint x,fpoint y);
-		void draw_pov(ostream &os,fpoint x,fpoint y,fpoint z=0);
-		inline void draw_pov(const char *filename,fpoint x,fpoint y,fpoint z=0);
-		inline void draw_pov(fpoint x,fpoint y,fpoint z=0);
-		inline bool plane(fpoint x,fpoint y,fpoint rs);
-		fpoint max_radius_squared();
-		fpoint perimeter();
-		fpoint area();
-		void centroid(fpoint &cx,fpoint &cy);
+		void init(double xmin,double xmax,double ymin,double ymax);
+		void draw_gnuplot(ostream &os,double x,double y);
+		inline void draw_gnuplot(const char *filename,double x,double y);
+		inline void draw_gnuplot(double x,double y);
+		void draw_pov(ostream &os,double x,double y,double z=0);
+		inline void draw_pov(const char *filename,double x,double y,double z=0);
+		inline void draw_pov(double x,double y,double z=0);
+		inline bool plane(double x,double y,double rs);
+		double max_radius_squared();
+		double perimeter();
+		double area();
+		void centroid(double &cx,double &cy);
 	private:
 		void add_memory_vertices();
 		void add_memory_ds();
-		inline fpoint pos(fpoint x,fpoint y,fpoint rsq,int qp);
+		inline double pos(double x,double y,double rsq,int qp);
 		/** This is the delete stack, used to store the vertices which
 		 * are going to be deleted during the plane cutting procedure.
 		 */	

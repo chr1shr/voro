@@ -15,16 +15,16 @@
  * \param[in] (xper,yper) flags setting whether the container is periodic
  *                        in each coordinate direction.
  * \param[in] memi the initial memory allocation for each block. */
-container_2d::container_2d(fpoint xa,fpoint xb,fpoint ya,
-		fpoint yb,int xn,int yn,bool xper,bool yper,int memi)
+container_2d::container_2d(double xa,double xb,double ya,
+		double yb,int xn,int yn,bool xper,bool yper,int memi)
 	: ax(xa),bx(xb),ay(ya),by(yb),xsp(xn/(xb-xa)),ysp(yn/(yb-ya)),
 	nx(xn),ny(yn),nxy(xn*yn),xperiodic(xper),yperiodic(yper),
-	co(new int[nxy]),mem(new int[nxy]),id(new int*[nxy]),p(new fpoint*[nxy]) {
+	co(new int[nxy]),mem(new int[nxy]),id(new int*[nxy]),p(new double*[nxy]) {
 	int l;
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=memi;
 	for(l=0;l<nxy;l++) id[l]=new int[memi];
-	for(l=0;l<nxy;l++) p[l]=new fpoint[2*memi];
+	for(l=0;l<nxy;l++) p[l]=new double[2*memi];
 }
 
 /** The container destructor frees the dynamically allocated memory. */
@@ -68,7 +68,7 @@ void container_2d::draw_particles(const char *filename) {
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y) the position vector of the inserted particle. */
-void container_2d::put(int n,fpoint x,fpoint y) {
+void container_2d::put(int n,double x,double y) {
 	if(x>ax&&y>ay) {
 		int i,j;
 		i=int((x-ax)*xsp);j=int((y-ay)*ysp);
@@ -85,7 +85,7 @@ void container_2d::put(int n,fpoint x,fpoint y) {
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 void container_2d::add_particle_memory(int i) {
-	int *idp;fpoint *pp;
+	int *idp;double *pp;
 	int l,nmem(2*mem[i]);
 #if VOROPP_VERBOSE >=3
 	cerr << "Particle memory in region " << i << " scaled up to " << nmem << endl;
@@ -94,7 +94,7 @@ void container_2d::add_particle_memory(int i) {
 		voropp_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 	idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
-	pp=new fpoint[2*nmem];
+	pp=new double[2*nmem];
 	for(l=0;l<2*co[i];l++) pp[l]=p[i][l];
 	mem[i]=nmem;
 	delete [] id[i];id[i]=idp;
@@ -121,7 +121,7 @@ inline void container_2d::import(const char *filename) {
 /** Imports a list of particles from an input stream.
  * \param[in] is an input stream to read from. */
 inline void container_2d::import(istream &is) {
-	int n;fpoint x,y;
+	int n;double x,y;
 	is >> n >> x >> y;
 	while(!is.eof()) {
 		put(n,x,y);
@@ -140,8 +140,8 @@ void container_2d::clear() {
  * \param[in] filename the name of the file to write to.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box. */
-void container_2d::draw_cells_gnuplot(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
-	fpoint x,y,px,py;
+void container_2d::draw_cells_gnuplot(const char *filename,double xmin,double xmax,double ymin,double ymax) {
+	double x,y,px,py;
 	voropp_loop_2d l1(this);
 	int q,s;
 	voronoicell_2d c;
@@ -174,8 +174,8 @@ void container_2d::draw_cells_gnuplot(const char *filename) {
  * \param[in] filename the name of the file to write to.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box. */
-void container_2d::draw_cells_pov(const char *filename,fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax) {
-	fpoint x,y,px,py;
+void container_2d::draw_cells_pov(const char *filename,double xmin,double xmax,double ymin,double ymax) {
+	double x,y,px,py;
 	voropp_loop_2d l1(this);
 	int q,s;
 	voronoicell_2d c;
@@ -239,7 +239,7 @@ void container_2d::draw_particles_pov(const char *filename) {
  * \param[in] os an open output stream to write to. */
 void container_2d::print_all_custom(const char *format,ostream &os) {
 	int i,j,ij=0,fp,q;
-	fpoint x,y;
+	double x,y;
 	voronoicell_2d c;
 	for(j=0;j<ny;j++) for(i=0;i<nx;i++,ij++) for(q=0;q<co[ij];q++) {
 		x=p[ij][2*q];y=p[ij][2*q+1];
@@ -266,12 +266,12 @@ void container_2d::print_all_custom(const char *format,ostream &os) {
 					// Area-related output
 					case 'a': os << c.area();break;
 					case 'c': {
-							  fpoint cx,cy;
+							  double cx,cy;
 							  c.centroid(cx,cy);
 							  os << cx << " " << cy;
 						  } break;
 					case 'C': {
-							  fpoint cx,cy;
+							  double cx,cy;
 							  c.centroid(cx,cy);
 							  os << x+cx << " " << y+cy;
 						  } break;
@@ -313,8 +313,8 @@ inline void container_2d::print_all_custom(const char *format,const char *filena
 /** Initializes a voronoicell_2d class to fill the entire container.
  * \param[in] c a reference to a voronoicell_2d class.
  * \param[in] (x,y) the position of the particle that . */
-inline bool container_2d::initialize_voronoicell(voronoicell_2d &c,fpoint x,fpoint y) {
-	fpoint x1,x2,y1,y2;
+inline bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,double y) {
+	double x1,x2,y1,y2;
 	if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 	c.init(x1,x2,y1,y2);
@@ -332,7 +332,7 @@ inline bool container_2d::initialize_voronoicell(voronoicell_2d &c,fpoint x,fpoi
  * \return False if the Voronoi cell was completely removed during the
  *         computation and has zero volume, true otherwise. */
 inline bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s) {
-	fpoint x=p[s][2*ij],y=p[s][2*ij+1];
+	double x=p[s][2*ij],y=p[s][2*ij+1];
 	return compute_cell_sphere(c,i,j,ij,s,x,y);
 }
 
@@ -349,13 +349,13 @@ inline bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int 
  * \param[in] (x,y) the coordinates of the particle.
  * \return False if the Voronoi cell was completely removed during the
  *         computation and has zero volume, true otherwise. */
-bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s,fpoint x,fpoint y) {
+bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s,double x,double y) {
 
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
-	const fpoint length_scale=0.5*sqrt((bx-ax)*(by-ay)/nx/ny);
+	const double length_scale=0.5*sqrt((bx-ax)*(by-ay)/nx/ny);
 	
-	fpoint x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs;
+	double x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	voropp_loop_2d l(this);
 
@@ -398,7 +398,7 @@ voropp_loop_2d::voropp_loop_2d(container_2d *q) : sx(q->bx-q->ax), sy(q->by-q->a
  * \param[out] (px,py) the periodic displacement vector for the first block to
  *                     be tested.
  * \return The index of the first block to be tested. */
-inline int voropp_loop_2d::init(fpoint vx,fpoint vy,fpoint r,fpoint &px,fpoint &py) {
+inline int voropp_loop_2d::init(double vx,double vy,double r,double &px,double &py) {
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
 	if(!xperiodic) {
@@ -427,7 +427,7 @@ inline int voropp_loop_2d::init(fpoint vx,fpoint vy,fpoint r,fpoint &px,fpoint &
  * \param[out] (px,py) the periodic displacement vector for the first block
  *                     to be tested.
  * \return The index of the first block to be tested. */
-inline int voropp_loop_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,fpoint &px,fpoint &py) {
+inline int voropp_loop_2d::init(double xmin,double xmax,double ymin,double ymax,double &px,double &py) {
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
 	if(!xperiodic) {
@@ -452,7 +452,7 @@ inline int voropp_loop_2d::init(fpoint xmin,fpoint xmax,fpoint ymin,fpoint ymax,
  * vector if necessary.
  * \param[in,out] (px,py) the current block on entering the function, which is
  *                        updated to the next block on exiting the function. */
-inline int voropp_loop_2d::inc(fpoint &px,fpoint &py) {
+inline int voropp_loop_2d::inc(double &px,double &py) {
 	if(i<bi) {
 		i++;
 		if(ip<nx-1) {ip++;s++;} else {ip=0;s+=1-nx;px+=sx;}
@@ -467,7 +467,7 @@ inline int voropp_loop_2d::inc(fpoint &px,fpoint &py) {
 /** Custom int function, that gives consistent stepping for negative numbers.
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
  * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1). */
-inline int voropp_loop_2d::step_int(fpoint a) {
+inline int voropp_loop_2d::step_int(double a) {
 	return a<0?int(a)-1:int(a);
 }
 
