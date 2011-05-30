@@ -249,7 +249,7 @@ double voronoicell_2d::perimeter() {
  * \return A floating point number holding the calculated distance. */
 double voronoicell_2d::area() {
 	if(p==0) return 0;
-	int k=ed[0];double area=0,x=*pts,y=pts[1],dx1,dy1,dx2,dy2;
+	int k(*ed);double area=0,x=*pts,y=pts[1],dx1,dy1,dx2,dy2;
 	dx1=pts[2*k]-x;dy1=pts[2*k+1]-y;
 	k=ed[2*k];
 	while(k!=0) {
