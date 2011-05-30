@@ -9,6 +9,7 @@
 
 # Build all of the executable files
 all:
+	cd src && $(MAKE)
 	cd examples && $(MAKE)
 
 # Build the help files (with doxygen)
