@@ -155,18 +155,18 @@ class container_base : public voropp_base, public wall_list {
 		 * \param[in] (x,y,z) the position of the particle.
 		 * \return False if the plane cuts applied by walls completely
 		 * removed the cell, true otherwise. */
-		template<class v_cell,class v_loop>
-		inline bool initialize_voronoicell(v_cell &c,v_loop &vl,int &sti,int &stj,int &stk) {
+		template<class v_cell>
+		inline bool initialize_voronoicell(v_cell &c,int ijk,int q,int ci,int cj,int ck,int &i,int &j,int &k,double &x,double &y,double &z,int &disp) {
 			double x1,x2,y1,y2,z1,z2;
-			double *pp(p[vl.ijk]+ps*vl.q);
-			cux=*(pp++);cuy=*(pp++);cuz=*pp;
-			cui=vl.i;cuj=vl.j;cuk=vl.k;
-			if(xperiodic) {x1=-(x2=0.5*(bx-ax));sti=nx;} else {x1=ax-cux;x2=bx-cux;sti=cui;}
-			if(yperiodic) {y1=-(y2=0.5*(by-ay));stj=ny;} else {y1=ay-cuy;y2=by-cuy;stj=cuj;}
-			if(zperiodic) {z1=-(z2=0.5*(bz-az));stk=nz;} else {z1=az-cuz;z2=bz-cuz;stk=cuk;}
+			double *pp(p[ijk]+ps*q);
+			x=*(pp++);y=*(pp++);z=*pp;
+			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
+			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
+			if(zperiodic) {z1=-(z2=0.5*(bz-az));k=nz;} else {z1=az-z;z2=bz-z;k=ck;}
 			c.init(x1,x2,y1,y2,z1,z2);
-			if(!apply_walls(c,cux,cuy,cuz)) return false;
-			cuijk=vl.ijk-sti-nx*(stj+ny*stk);
+			if(!apply_walls(c,x,y,z)) return false;
+			disp=ijk-i-nx*(j+ny*k);
+			//printf("%d %d %d %d %d %d %d %d %d %d %d\n",nx,ny,nz,i,j,k,ci,cj,ck,ijk,disp);
 			return true;
 		}
 		/** Returns the position of the particle currently being
@@ -174,16 +174,17 @@ class container_base : public voropp_base, public wall_list {
 		 * within. It is used to select the optimal worklist entry to
 		 * use.
 		 * \param[out] (fx,fy,fz) the relative position. */
-		inline void frac_pos(double &fx,double &fy,double &fz) {
-			fx=cux-ax-boxx*cui;
-			fy=cuy-ay-boxy*cuj;
-			fz=cuz-az-boxz*cuk;
+		inline void frac_pos(double x,double y,double z,double ci,double cj,double ck,double &fx,double &fy,double &fz) {
+			fx=x-ax-boxx*ci;
+			fy=y-ay-boxy*cj;
+			fz=z-az-boxz*ck;
 		}
-		inline int region_index(int ei,int ej,int ek,double &qx,double &qy,double &qz) {
-			if(xperiodic) {if(cui+ei<nx) {ei+=nx;qx=-(bx-ax);} else if(cui+ei>=(nx<<1)) {ei-=nx;qx=bx-ax;} else qx=0;}
-			if(yperiodic) {if(cuj+ej<ny) {ej+=ny;qy=-(by-ay);} else if(cuj+ej>=(ny<<1)) {ej-=ny;qy=by-ay;} else qy=0;}
-			if(zperiodic) {if(cuk+ek<nz) {ek+=nz;qz=-(bz-az);} else if(cuk+ek>=(nz<<1)) {ek-=nz;qz=bz-az;} else qz=0;}
-			return cuijk+ei+nx*(ej+ny*ek);
+		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int disp) {
+			if(xperiodic) {if(ci+ei<nx) {ei+=nx;qx=-(bx-ax);} else if(ci+ei>=(nx<<1)) {ei-=nx;qx=bx-ax;} else qx=0;}
+			if(yperiodic) {if(cj+ej<ny) {ej+=ny;qy=-(by-ay);} else if(cj+ej>=(ny<<1)) {ej-=ny;qy=by-ay;} else qy=0;}
+			if(zperiodic) {if(ck+ek<nz) {ek+=nz;qz=-(bz-az);} else if(ck+ek>=(nz<<1)) {ek-=nz;qz=bz-az;} else qz=0;}
+			//printf("%d %d %d %d %d %d %d %d\n",ei,ej,ek,ci,cj,ck,disp,disp+ei+nx*(ej+ny*ek));
+			return disp+ei+nx*(ej+ny*ek);
 		}
 		void draw_domain_gnuplot(FILE *fp=stdout);
 		/** Draws an outline of the domain in Gnuplot format.
@@ -202,10 +203,6 @@ class container_base : public voropp_base, public wall_list {
 			fclose(fp);
 		}
 	protected:
-		double cux;
-		double cuy;
-		double cuz;
-		int cui,cuj,cuk,cuijk;
 		void add_particle_memory(int i);
 		inline bool put_locate_block(int &ijk,double &x,double &y,double &z);
 		inline bool put_remap(int &ijk,double &x,double &y,double &z);
@@ -373,12 +370,9 @@ class container : public container_base {
 		}
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
-		//*
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
-			int sti,stj,stk;
-			if(!initialize_voronoicell(c,vl,sti,stj,stk)) return false;
-			return vc.compute_cell(c,vl.ijk,vl.q,sti,stj,stk,cux,cuy,cuz);
+			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
 		}
 	private:
 		voropp_compute<container> vc;
@@ -544,9 +538,7 @@ class container_poly : public container_base {
 
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
-			int sti,stj,stk;
-			if(!initialize_voronoicell(c,vl,sti,stj,stk)) return false;
-			return vc.compute_cell(c,vl.ijk,vl.q,sti,stj,stk,cux,cuy,cuz);
+			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
 		}
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);

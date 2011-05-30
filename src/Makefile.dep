@@ -9,5 +9,5 @@ v_loops.o: v_loops.cc v_loops.hh config.hh
 v_base.o: v_base.cc v_base.hh worklist.hh config.hh worklist.cc
 wall.o: wall.cc wall.hh cell.hh config.hh common.hh container.hh \
   v_base.hh worklist.hh v_loops.hh v_compute.hh
-pre_container.o: pre_container.cc config.hh pre_container.hh container.hh \
-  common.hh v_base.hh worklist.hh cell.hh v_loops.hh v_compute.hh
+pre_container.o: pre_container.cc config.hh pre_container.hh v_loops.hh \
+  container.hh common.hh v_base.hh worklist.hh cell.hh v_compute.hh

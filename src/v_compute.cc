@@ -46,21 +46,22 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
  * \param[in] ijk the index of the block that the test particle is in, set to
  *                i+nx*(j+ny*k).
  * \param[in] s the index of the particle within the test block.
- * \param[in] (i,j,k) the coordinates of the block that the test particle is
- *                    in.
+ * \param[in] (ci,cj,ck) the coordinates of the block that the test particle is
+ *                       in relative to the container data structure.
  * \param[in] (x,y,z) the coordinates of the particle.
  * \return False if the Voronoi cell was completely removed during the
  *         computation and has zero volume, true otherwise. */
 template<class c_class>
 template<class v_cell>
-bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,int k,double x,double y,double z) {
+bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck) {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
-	double x1,y1,z1,qx=0,qy=0,qz=0;
+	double x,y,z,x1,y1,z1,qx=0,qy=0,qz=0;
 	double xlo,ylo,zlo,xhi,yhi,zhi,rs;
-	int di,dj,dk,ei,ej,ek,f,g,l;
+	int i,j,k,di,dj,dk,ei,ej,ek,f,g,l,disp;
 	double fx,fy,fz,gxs,gys,gzs,*radp;
 	unsigned int q,*e,*mijk;
 
+	if(!con.initialize_voronoicell(c,ijk,s,ci,cj,ck,i,j,k,x,y,z,disp)) return false;
 	con.r_init(ijk,s);
 
 	// Initialize the Voronoi cell to fill the entire container
@@ -96,8 +97,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,i
 	// region and store it in (fx,fy,fz). We use this to compute an index
 	// (di,dj,dk) of which subregion the particle is within.
 	unsigned int m1,m2;
-	con.frac_pos(fx,fy,fz);
-
+	con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
 	di=int(fx*xsp*fgrid);dj=int(fy*ysp*fgrid);dk=int(fz*zsp*fgrid);
 
 	// The indices (di,dj,dk) tell us which worklist to use, to test the
@@ -151,7 +151,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,i
 		di=q&127;di-=64;
 		dj=(q>>7)&127;dj-=64;
 		dk=(q>>14)&127;dk-=64;
-
+//printf("%d %d %d %d %d %d\n",i,j,k,di,dj,dk);
 		// Check that the worklist position is in range
 		ei=di+i;if(ei<0||ei>=hx) continue;
 		ej=dj+j;if(ej<0||ej>=hy) continue;
@@ -166,7 +166,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,i
 
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
-		ijk=con.region_index(ei,ej,ek,qx,qy,qz);
+		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
 
 		// If mrs is bigger than the maximum distance to the block,
 		// then we have to test all particles in the block for
@@ -247,7 +247,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,i
 
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
-		ijk=con.region_index(ei,ej,ek,qx,qy,qz);
+		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
 
 		// If mrs is bigger than the maximum distance to the block,
 		// then we have to test all particles in the block for
@@ -357,7 +357,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int i,int j,i
 
 		// Now compute the region that we are going to test over, and
 		// set a displacement vector for the periodic cases
-		ijk=con.region_index(ei,ej,ek,qx,qy,qz);
+		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
 
 		// Loop over all the elements in the block to test for cuts. It
 		// would be possible to exclude some of these cases by testing
@@ -729,7 +729,7 @@ inline void voropp_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
 // Explicit template instantiation
 template voropp_compute<container>::voropp_compute(container&,int,int,int);
 template voropp_compute<container_poly>::voropp_compute(container_poly&,int,int,int);
-template bool voropp_compute<container>::compute_cell(voronoicell&,int,int,int,int,int,double,double,double);
-template bool voropp_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int,double,double,double);
-template bool voropp_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int,double,double,double);
-template bool voropp_compute<container_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int,double,double,double);
+template bool voropp_compute<container>::compute_cell(voronoicell&,int,int,int,int,int);
+template bool voropp_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template bool voropp_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int);
+template bool voropp_compute<container_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);

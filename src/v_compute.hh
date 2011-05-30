@@ -77,7 +77,7 @@ class voropp_compute {
 			delete [] mask;
 		}
 		template<class v_cell>
-		bool compute_cell(v_cell &c,int ijk,int s,int i,int j,int k,double x,double y,double z);
+		bool compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck);
 	private:
 		/** A constant set to boxx*boxx+boxy*boxy+boxz*boxz, which is
 		 * frequently used in the computation. */
