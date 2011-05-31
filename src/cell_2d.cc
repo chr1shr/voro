@@ -17,46 +17,6 @@ voronoicell_2d::~voronoicell_2d() {
 	delete [] ed;
 }
 
-/** Doubles the storage for the vertices, by reallocating the pts and ed
- * arrays. If the allocation exceeds the absolute maximum set in max_vertices,
- * then the routine exits with a fatal error. */
-void voronoicell_2d::add_memory_vertices() {
-	double *ppe(pts+2*current_vertices);
-	int *ede(ed+2*current_vertices);
-
-	// Double the memory allocation and check it is within range
-	current_vertices<<=1;
-	if(current_vertices>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
-#if VOROPP_VERBOSE >=2
-	fprintf(stderr,"Vertex memory scaled up to %d\n",current_vertices);
-#endif
-
-	// Copy the vertex positions
-	double *npts(new double[2*current_vertices]),*npp(npts),*pp(pts);
-	while(pp<ppe) *(npp++)=*(pp++);
-	delete [] pts;pts=npts;
-
-	// Copy the edge table
-	int *ned(new int[2*current_vertices]),*nep(ned),*edp(ed);
-	while(edp<ede) *(nep++)=*(edp++);
-	delete [] ed;ed=ned;
-}
-
-/** Doubles the size allocation of the delete stack. If the allocation exceeds
- * the absolute maximum set in max_delete_size, then routine causes a fatal
- * error. */
-void voronoicell_2d::add_memory_ds(int *&stackp) {
-	current_delete_size<<=1;
-	if(current_delete_size>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
-#if VOROPP_VERBOSE >=2
-	fprintf(stderr,"Delete stack 1 memory scaled up to %d\n",current_delete_size);
-#endif
-	int *dsn(new int[current_delete_size]),*dsnp(dsn),*dsp(ds);
-	while(dsp<stackp) *(dsnp++)=*(dsp++);
-	delete [] ds;ds=dsn;stackp=dsnp;
-	stacke=ds+current_delete_size;
-}
-
 /** Initializes a Voronoi cell as a rectangle with the given dimensions.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates. */
@@ -72,9 +32,8 @@ void voronoicell_2d::init(double xmin,double xmax,double ymin,double ymax) {
 
 /** Outputs the edges of the Voronoi cell in gnuplot format to an output
  * stream.
- * \param[in] os a reference to an output stream to write to.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
- */
+ * \param[in] fp the file handle to write to. */
 void voronoicell_2d::draw_gnuplot(double x,double y,FILE *fp) {
 	if(p==0) return;
 	int k=0;
@@ -87,9 +46,8 @@ void voronoicell_2d::draw_gnuplot(double x,double y,FILE *fp) {
 
 /** Outputs the edges of the Voronoi cell in POV-Ray format to an open file
  * stream, displacing the cell by given vector.
- * \param[in] os a output stream to write to.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
- */
+ * \param[in] fp the file handle to write to. */
 void voronoicell_2d::draw_pov(double x,double y,double z,FILE *fp) {
 	if(p==0) return;
 	int k=0;
@@ -114,7 +72,7 @@ double voronoicell_2d::max_radius_squared() {
 		s+=*ptsp*(*ptsp);ptsp++;
 		if(s>r) r=s;
 	}
-	return r;	
+	return r;
 }
 
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
@@ -126,7 +84,7 @@ double voronoicell_2d::max_radius_squared() {
 bool voronoicell_2d::plane(double x,double y,double rsq) {
 	int cp,lp,up=0,up2,up3,*stackp(ds);
 	double fac,l,u,u2,u3;
-	
+
 	// First try and find a vertex that is within the cutting plane, if
 	// there is one. If one can't be found, then the cell is not cut by
 	// this plane and the routine immediately returns true.
@@ -164,7 +122,7 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 		u2=pos(x,y,rsq,up2);
 		if(up2==up) return false;
 	}
-	
+
 	// Consider the first point that was found in the clockwise direction
 	// that was not inside the cutting plane. If it lies on the cutting
 	// plane then do nothing. Otherwise, introduce a new vertex.
@@ -213,7 +171,7 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 
 	// Mark points on the delete stack
 	for(int *sp=ds;sp<stackp;sp++) ed[*sp*2]=-1;
-	
+
 	// Remove them from the memory structure
 	while(stackp>ds) {
 		while(ed[2*--p]==-1);
@@ -292,10 +250,10 @@ void voronoicell_2d::centroid(double &cx,double &cy) {
  * \param[in] format the format of the output lines, using control sequences to
  *                   denote the different cell statistics.
  * \param[in] i the ID of the particle associated with this Voronoi cell.
- * \param[in] (x,y,z) the position of the particle associated with this Voronoi
+ * \param[in] (x,y) the position of the particle associated with this Voronoi
  *                    cell.
  * \param[in] r a radius associated with the particle.
- * \param[fp] fp the file handle to write to. */
+ * \param[in] fp the file handle to write to. */
 void voronoicell_2d::output_custom(const char *format,int i,double x,double y,double r,FILE *fp) {
 	char *fmp(const_cast<char*>(format));
 	while(*fmp!=0) {
@@ -337,8 +295,49 @@ void voronoicell_2d::output_custom(const char *format,int i,double x,double y,do
 				// control sequence
 				default: putc('%',fp);putc(*fmp,fp);
 			}
-		} else putc(*fmp,fp); 
+		} else putc(*fmp,fp);
 		fmp++;
 	}
 	fputs("\n",fp);
+}
+
+/** Doubles the storage for the vertices, by reallocating the pts and ed
+ * arrays. If the allocation exceeds the absolute maximum set in max_vertices,
+ * then the routine exits with a fatal error. */
+void voronoicell_2d::add_memory_vertices() {
+	double *ppe(pts+2*current_vertices);
+	int *ede(ed+2*current_vertices);
+
+	// Double the memory allocation and check it is within range
+	current_vertices<<=1;
+	if(current_vertices>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+#if VOROPP_VERBOSE >=2
+	fprintf(stderr,"Vertex memory scaled up to %d\n",current_vertices);
+#endif
+
+	// Copy the vertex positions
+	double *npts(new double[2*current_vertices]),*npp(npts),*pp(pts);
+	while(pp<ppe) *(npp++)=*(pp++);
+	delete [] pts;pts=npts;
+
+	// Copy the edge table
+	int *ned(new int[2*current_vertices]),*nep(ned),*edp(ed);
+	while(edp<ede) *(nep++)=*(edp++);
+	delete [] ed;ed=ned;
+}
+
+/** Doubles the size allocation of the delete stack. If the allocation exceeds
+ * the absolute maximum set in max_delete_size, then routine causes a fatal
+ * error.
+ * \param[in] stackp a reference to the current stack pointer. */
+void voronoicell_2d::add_memory_ds(int *&stackp) {
+	current_delete_size<<=1;
+	if(current_delete_size>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+#if VOROPP_VERBOSE >=2
+	fprintf(stderr,"Delete stack 1 memory scaled up to %d\n",current_delete_size);
+#endif
+	int *dsn(new int[current_delete_size]),*dsnp(dsn),*dsp(ds);
+	while(dsp<stackp) *(dsnp++)=*(dsp++);
+	delete [] ds;ds=dsn;stackp=dsnp;
+	stacke=ds+current_delete_size;
 }

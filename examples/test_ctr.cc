@@ -10,7 +10,7 @@ int main() {
 	// non-periodic boundary conditions. Divide it into a 6 by 6 grid, with
 	// an initial memory allocation of 16 particles per grid square.
 	container_2d con(0,1,0,1,6,6,true,true,16);
-	
+
 	// Add 1000 random points to the container
 	for(i=0;i<1000;i++) {
 		x=rnd();

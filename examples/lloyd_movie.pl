@@ -2,7 +2,7 @@
 
 # Loop over the frames
 foreach $f (0..256) {
-	
+
 	# Create the filename
 	$fn=sprintf "lloyd/fr_%04d.png",$f;
 

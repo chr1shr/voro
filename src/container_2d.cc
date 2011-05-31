@@ -10,7 +10,7 @@
  * positions and IDs.
  * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
  * \param[in] (ay_,by_) the minimum and maximum y coordinates.
- * \param[in] (az_,bz_) the number of grid blocks in each of the three
+ * \param[in] (nx_,ny_) the number of grid blocks in each of the three
  *                       coordinate directions.
  * \param[in] (xperiodic_,yperiodic_) flags setting whether the container is periodic
  *                        in each coordinate direction.
@@ -114,7 +114,7 @@ void container_2d::add_particle_memory(int i) {
 }
 
 /** Imports a list of particles from an input stream.
- * \param[in] is an input stream to read from. */
+ * \param[in] fp a file handle to read from. */
 void container_2d::import(FILE *fp) {
 	int i,j;
 	double x,y;
@@ -127,8 +127,8 @@ void container_2d::clear() {
 	for(int* cop=co;cop<co+nxy;cop++) *cop=0;
 }
 
-/** Dumps all the particle positions and identifies to a file.
- * \param[in] os an output stream to write to. */
+/** Dumps all the particle positions and IDs to a file.
+ * \param[in] fp the file handle to write to. */
 void container_2d::draw_particles(FILE *fp) {
 	int ij,q;
 	for(ij=0;ij<nxy;ij++) for(q=0;q<co[ij];q++)
@@ -136,7 +136,7 @@ void container_2d::draw_particles(FILE *fp) {
 }
 
 /** Dumps all the particle positions in POV-Ray format.
- * \param[in] os an output stream to write to. */
+ * \param[in] fp the file handle to write to. */
 void container_2d::draw_particles_pov(FILE *fp) {
 	int ij,q;
 	for(ij=0;ij<nxy;ij++) for(q=0;q<co[ij];q++)
@@ -242,7 +242,7 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
 	const double length_scale=0.5*sqrt((bx-ax)*(by-ay)/(nx*ny));
-	
+
 	double x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	voropp_loop_2d l(*this);
@@ -271,7 +271,7 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 
 /** Creates a voropp_loop_2d object, by setting the necessary constants about the
  * container geometry from a pointer to the current container class.
- * \param[in] q a pointer to the current container class. */
+ * \param[in] con a reference to the associated container class. */
 voropp_loop_2d::voropp_loop_2d(container_2d &con) : boxx(con.bx-con.ax), boxy(con.by-con.ay),
 	xsp(con.xsp),ysp(con.ysp),
 	ax(con.ax),ay(con.ay),nx(con.nx),ny(con.ny),nxy(con.nxy),

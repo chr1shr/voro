@@ -18,4 +18,5 @@ help:
 
 # Clean up the executable files
 clean:
+	cd src && $(MAKE) clean
 	cd examples && $(MAKE) clean

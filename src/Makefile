@@ -32,6 +32,6 @@ help: Doxyfile $(SOURCE)
 	cd ../latex && $(MAKE)
 
 clean:
-	rm -f $(objs)
+	rm -f $(objs) libvoro++_2d.a
 
 .PHONY: all help execs depend

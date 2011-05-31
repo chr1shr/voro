@@ -69,40 +69,61 @@ class container_2d {
 		/** A two dimensional array holding particle positions. For the
 		 * derived container_poly class, this also holds particle
 		 * radii. */
-		double **p;		
+		double **p;
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,int memi);
 		~container_2d();
 		void import(FILE *fp=stdin);
+		/** Imports a list of particles from a file.
+		 * \param[in] filename the file to read from. */
 		inline void import(const char *filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(fp);
 			fclose(fp);
 		}
 		void draw_particles(FILE *fp=stdout);
+		/** Dumps all the particle positions and IDs to a file.
+		 * \param[in] filename the file to write to. */
 		inline void draw_particles(const char *filename) {
 			FILE *fp(voropp_safe_fopen(filename,"w"));
 			draw_particles(fp);
 			fclose(fp);
 		}
 		void draw_particles_pov(FILE *fp=stdout);
+		/** Dumps all the particles positions in POV-Ray format.
+		 * \param[in] filename the file to write to. */
 		inline void draw_particles_pov(const char *filename) {
 			FILE *fp(voropp_safe_fopen(filename,"w"));
 			draw_particles_pov(fp);
 			fclose(fp);
 		}
 		void draw_cells_gnuplot(FILE *fp=stdout);
+		/** Computes the Voronoi cells for all particles and saves the
+		 * output in gnuplot format.
+		 * \param[in] filename the file to write to. */
 		inline void draw_cells_gnuplot(const char *filename) {
 			FILE *fp(voropp_safe_fopen(filename,"w"));
 			draw_cells_gnuplot(fp);
 			fclose(fp);
 		}
 		void draw_cells_pov(FILE *fp=stdout);
+		/** Computes the Voronoi cells for all particles and saves the
+		 * output in POV-Ray format.
+		 * \param[in] filename the file to write to. */
 		inline void draw_cells_pov(const char *filename) {
 			FILE *fp(voropp_safe_fopen(filename,"w"));
 			draw_cells_pov(fp);
 			fclose(fp);
 		}
 		void print_custom(const char *format,FILE *fp=stdout);
+		/** Computes the Voronoi cells for all particles in the
+		 * container, and for each cell, outputs a line containing
+		 * custom information about the cell structure. The output
+		 * format is specified using an input string with control
+		 * sequences similar to the standard C printf() routine.
+		 * \param[in] format the format of the output lines, using
+		 *                   control sequences to denote the different
+		 *                   cell statistics.
+		 * \param[in] filename the file to write to. */
 		inline void print_custom(const char *format,const char *filename) {
 			FILE *fp(voropp_safe_fopen(filename,"w"));
 			print_custom(format,fp);
