@@ -107,7 +107,7 @@ void container_poly::put(int n,double x,double y,double z,double r) {
 
 /** Put a particle into the correct region of the container, also recording
  * into which region it was stored.
- * \param[in] vo the ordering class in which to record the region. 
+ * \param[in] vo the ordering class in which to record the region.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 void container::put(voropp_order &vo,int n,double x,double y,double z) {
@@ -122,7 +122,7 @@ void container::put(voropp_order &vo,int n,double x,double y,double z) {
 
 /** Put a particle into the correct region of the container, also recording
  * into which region it was stored.
- * \param[in] vo the ordering class in which to record the region. 
+ * \param[in] vo the ordering class in which to record the region.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */

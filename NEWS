@@ -34,9 +34,11 @@ Version 0.4 (May 2011)
   cstdio library. This has been done for increased performance. In general the
   cstdio routines run significantly faster than the comparable iostream
   routines: for one file import test, using fscanf from cstdio was five times
-  as fast as the comparable << operator from iostream. Since many people use
-  Voro++ to batch process large numbers of input files, this increase in
-  input/output speed seemed desirable.
+  as fast as the comparable << operator from iostream. As another example,
+  the program "cylinder.cc", which uses both file import and export, runs
+  approximately twice as fast before. Since many people use Voro++ to batch
+  process large numbers of input files, this increase in input/output speed
+  seemed desirable.
 * The Gnuplot output routines now merge individual lines into contiguous paths
   wherever possible, resulting in a ~15% reduction in their file size and a
   noticeable improvement in Gnuplot rendering speed

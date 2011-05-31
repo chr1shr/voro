@@ -7,13 +7,12 @@
 # This a common configuration file that includes definitions used by all
 # the Makefiles.
 
-# Compiler location and compiler switches. Add "-DFACETS_SINGLE_PRECISION" to
-# switch the code from using double floating point arithmetic to just single.
-# On a slower computer, it may be worth lowering the level of optimization to
-# "-O2" or switching it off completely, to speed up the compilation. See
-# config.hh for more details.
+# C++ compiler
 CC=g++
+
+# Flags for the C++ compiler
 CFLAGS=-Wall -ansi -pedantic -O3
 
+# Relative include and library paths for compilation of the examples
 E_INC=-I../../src
 E_LIB=-L../../src
