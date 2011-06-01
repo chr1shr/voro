@@ -408,7 +408,7 @@ void voronoi_network::add_edges_to_network(voronoicell_base<n_option> &c,fpoint 
 template<class n_option>
 void voronoi_network::add_to_network_rectangular(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn,fpoint rad) {
 	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;
-	fpoint vx,vy,vz;
+	fpoint vx,vy,vz,crad;
 	
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
@@ -416,9 +416,14 @@ void voronoi_network::add_to_network_rectangular(voronoicell_base<n_option> &c,f
 	
 	for(l=0;l<c.p;l++) {
 		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
+		crad=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2])-rad;
 		if(safe_search_previous_rect(vx,vy,vz,ijk,q,cper)) {
 			vmap[l]=idmem[ijk][q];
 			vper[l]=cper;
+
+			// Store this radius if it smaller than the current
+			// value
+			if(pts[ijk][4*q+3]>crad) pts[ijk][4*q+3]=crad;			
 		} else {
 			k=step_int(vz*zsp);
 			if(k<0||k>=nz) {
@@ -443,7 +448,7 @@ void voronoi_network::add_to_network_rectangular(voronoicell_base<n_option> &c,f
 			pts[ijk][4*ptsc[ijk]]=vx;
 			pts[ijk][4*ptsc[ijk]+1]=vy;
 			pts[ijk][4*ptsc[ijk]+2]=vz;
-			pts[ijk][4*ptsc[ijk]+3]=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2]);
+			pts[ijk][4*ptsc[ijk]+3]=crad;
 			idmem[ijk][ptsc[ijk]++]=edc;
 			vmap[l]=edc++;
 		}
