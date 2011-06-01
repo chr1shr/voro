@@ -2,7 +2,7 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : May  
+# Date   : May 18th 2011 
 
 # Load the common configuration file
 include ../config.mk
