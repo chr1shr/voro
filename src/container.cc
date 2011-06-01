@@ -927,6 +927,32 @@ bool container_periodic_base<r_option>::point_inside_walls(fpoint x,fpoint y,fpo
 	return true;
 }
 
+
+template<class r_option>
+int container_periodic_base<r_option>::find_nearest(fpoint x,fpoint y,fpoint z,int &sid,double &sx,double &sy,double &sz) {
+	const fpoint boxx(bx/nx),boxy(by/ny),boxz(bz/nz);
+	const fpoint mboxt(boxx>boxy?boxy:boxx),mbox(mboxt<boxz?mboxt:boxz);
+	fpoint cr(0),mrs(1e30),crs;
+	int mt,mq;fpoint mqx;
+
+	do {
+		cr+=mbox;crs=cr*cr;
+		t=l.init(x,y,z,cr,qx);
+		do {
+			for(q=0;q<co[t];q++) {
+				x1=p[t][sz*q]+qx-x;y1=p[t][sz*q+1]-y;z1=p[t][sz*q+2]-z;
+				rs=x1*x1+y1*y1+z1*z1;
+				if(rs<mrs) {
+					mrs=rs;mt=t;mq=q;mqx=qx;
+				}
+			}
+		} while((t=l.inc(qx))!=-1);
+	} while(mrs>crs);
+
+	sid=id[mt][mq];sx=p[mt][sz*mq]+mqx;sy=p[mt][sz*mq+1];sz=p[mt][sz*mq+2];
+}
+
+
 /** This routine is a simpler alternative to compute_cell(), that constructs
  * the cell by testing over successively larger spherical shells of particles.
  * For a container that is homogeneously filled with particles, this routine
