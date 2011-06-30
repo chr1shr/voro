@@ -1,8 +1,9 @@
-/** \file cell_2d.cc
+/**d \file cell_2d.cc
  * \brief Function implementations for the voronoicell_2d class. */
 
 #include "cell_2d.hh"
-
+#include <iostream>
+bool debugging=false;
 /** Constructs a 2D Voronoi cell and sets up the initial memory. */
 voronoicell_2d::voronoicell_2d() :
 	current_vertices(init_vertices), current_delete_size(init_delete_size),
@@ -28,6 +29,71 @@ void voronoicell_2d::init(double xmin,double xmax,double ymin,double ymax) {
 	pts[6]=xmin;pts[7]=ymax;
 	int *q=ed;
 	*q=1;q[1]=3;q[2]=2;q[3]=0;q[4]=3;q[5]=1;q[6]=0;q[7]=2;
+}
+/** Initialize a Voronoi cell as exactly fitting the non-convex domain specified in bnds
+	* \param[in] bnds, a pointer to the beginning of the array specifing the intial vertices.
+	The first point int bnds MUST be the origin, the second point in bnds MUST be the first edge of 
+	the nonconvexity in the the counterclockwise direction. All subsequent points MUST define the cel
+	l in a counterclockwise fashion.
+	* \param[in] #bnds an int specifying the size of bnds. */
+	
+void voronoicell_2d::init_nonconvex(double bnds_loc[], int noofbnds){
+	
+	double x1, y1, x2, y2;
+	p=noofbnds;  
+	for(int i=0; i<(2*noofbnds); i+=2){
+		pts[i]=2*bnds_loc[i];
+		pts[i+1]=2*bnds_loc[i+1];
+		if(i==0){
+			ed[0]=noofbnds-1;
+		}else{
+			ed[i]=(i/2)-1;
+		}if((i+2)==(noofbnds*2)){
+			ed[i+1]=0;	
+		}else{
+			ed[i+1]=(i/2)+1;
+		}
+	}
+	
+	if (debugging){
+		for(int j=0; j<(2*noofbnds); j+=2){
+			cout << pts[j] << "  " << pts[j+1] << "  " << ed[2*j] << "   " << ed[(2*j)+1] << 
+			"   ";
+		}
+	}
+
+
+	x1=bnds_loc[2]; y1=bnds_loc[3]; x2=bnds_loc[(2*noofbnds)-2]; y2=bnds_loc[(2*noofbnds)-1];
+	reg1[0]=x1; reg1[1]=y1; reg2[0]=x2; reg2[1]=y2;
+	if(y1>0){
+		reg1[2]=5;
+		reg1[3]=-((5*x1)/y1);
+	}if(y1<0){
+		reg1[2]=-5;
+		reg1[3]=((5*x1)/y1);
+	}if(y1==0){
+		if(x1<0){
+			reg1[2]=0;
+			reg1[3]=5;
+		}else{
+			reg1[2]=0;
+			reg1[3]=-5;
+		}
+	}if(y2>0){
+		reg2[2]=-5;
+		reg2[3]=((5*x2)/y2);
+	}if(y2<0){
+		reg2[2]=5;
+		reg2[3]=-((5*x2)/y2);
+	}if(y2==0){
+		if(x2<0){
+			reg2[2]=0;
+			reg2[3]=-5;
+		}else{
+			reg2[2]=0;
+			reg2[3]=5;
+		}
+	}
 }
 
 /** Outputs the edges of the Voronoi cell in gnuplot format to an output
@@ -187,6 +253,166 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 	}
 	return true;
 }
+
+/** The same as Plane excepts it handles nonconvex cells, for which the handling of the vertices is more complex. */
+
+bool voronoicell_2d::plane_nonconvex(double x,double y,double rsq) {
+
+//first determine which region we are in.
+	if(((x*reg1[0]+y*reg1[1])>0)&&((x*reg1[2]+y*reg1[3])>0)){
+		return halfplane(x, y, rsq, reg1[2], reg1[3]);
+	}if(((x*reg2[0]+y*reg2[1])>0)&&((x*reg2[2]+y*reg2[3])>0)){
+		return halfplane(x, y, rsq, reg2[2], reg2[3]);
+	
+	}else{
+		return plane(x,y,rsq);
+	}  
+}
+/** cuts the given cell by a half plane given
+ * \param[in] (x1 ,y1) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \param[in] (x2, y2) the normal vector to the plane from which we want the plane cut to start.
+ * \return False if the plane cut deleted the cell entirely, true otherwise. */
+
+bool voronoicell_2d::halfplane(double x1, double y1, double rsq, double x2, double y2) {
+	int si=0, ci=0, ni, patch1, patch2, *stackp(ds);
+	double cid=pos(x1,y1,rsq,ci), nid, fac;
+	bool rightchunk=false;
+	if(debugging) cout << "beginning";
+//first find a vertex that is not being cut by the plane
+	while(cid>tolerance){
+		ci=ed[2*ci+1];
+		cid=pos(x1, y1, rsq, ci);
+		if(ci==si){
+			return false;
+		}
+	}
+	si=ci;
+
+
+
+if(debugging)	cout << "part1     ";
+
+
+
+//now circle around the vertices until we find the right chunk to cut.
+//When we exit this loop, ci will not be cut, and ni will be the first index to be cut by the plane.
+//if nothing is cut, return true.
+	while(!rightchunk){
+		ni=ed[ci*2];
+		if(ni==si){
+			cout << "error1";
+			return true;
+		}
+		nid=pos(x1,y1,rsq,ni);
+		if(nid<tolerance || (((pts[2*ni]*x2)+(pts[2*ni+1]*y2))<tolerance)) {
+			ci=ni;
+			cid=nid;
+			continue;
+			
+		}
+		else{
+			rightchunk=true;
+		if(debugging){
+			cout << pts[ni*2];
+			cout << "     ";
+			cout << pts[ni*2+1];
+			cout << "     ";
+		}
+		}
+	}
+
+
+
+if(debugging) cout << "part2";
+
+
+
+if(stackp==stacke) add_memory_ds(stackp);
+*(stackp++)=ni;
+
+	
+//see if ci lies on the cutting plane,  if it doesnt introduce a new vertex
+	if(cid>-tolerance){
+		patch1=ci;
+	}else{
+		if(p==current_vertices) add_memory_vertices();
+		fac=1/(cid-nid);
+		pts[2*p]=(pts[2*ni]*cid-pts[2*ci]*nid)*fac;
+		pts[2*p+1]=(pts[2*ni+1]*cid-pts[2*ci+1]*nid)*fac;
+		patch1=p++;
+		ed[2*ci]=patch1;
+		ed[2*patch1+1]=ci;
+	}
+
+
+
+
+if(debugging) cout << "part3";
+
+
+
+//continue around the cell clockwise deleting points until ci is being cut and ni isn't.
+ci=ni;
+cid=nid;
+ni=ed[2*ci];
+nid=pos(x1,y1,rsq,ni);
+	while(nid>tolerance){
+		if(stackp==stacke) add_memory_ds(stackp);
+		*(stackp++)=ni;
+		ci=ni;
+		cid=nid;
+		ni=ed[2*ci];
+		nid=pos(x1,y1,rsq,ni);
+	}	
+
+
+
+if(debugging) cout << "part4";
+
+
+
+//now ci is being cut and ni is not. If ni lies on the cutting plane, then do nothing, if it does not, introduce
+//a new vertex.
+	if(nid>-tolerance){
+		patch2=ni;
+		ed[2*patch1]=patch2;
+		ed[2*patch2+1]=patch1;
+	}else{
+		if(p==current_vertices) add_memory_vertices();
+		fac=1/(nid-cid);
+		pts[2*p]=(pts[2*ci]*nid-pts[2*ni]*cid)*fac;
+		pts[2*p+1]=(pts[2*ci+1]*nid-pts[2*ni+1]*cid)*fac;
+		ed[2*p]=ni;
+		ed[2*ni+1]=p;
+		patch2=p++;
+		ed[patch2*2+1]=patch1;
+		ed[2*patch1]=patch2;
+	}
+	// Mark points on the delete stack
+	for(int *sp=ds;sp<stackp;sp++) ed[*sp*2]=-1;
+
+	// Remove them from the memory structure
+	while(stackp>ds) {
+		while(ed[2*--p]==-1);
+		int up=*(--stackp);
+		if(up<p) {
+			ed[2*ed[2*p]+1]=up;
+			ed[2*ed[2*p+1]]=up;
+			pts[2*up]=pts[2*p];
+			pts[2*up+1]=pts[2*p+1];
+			ed[2*up]=ed[2*p];
+			ed[2*up+1]=ed[2*p+1];
+		} else p++;
+	}
+
+if(debugging) cout << "part5";
+
+	return true;
+
+}
+
+
 
 /** Calculates the perimeter of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */

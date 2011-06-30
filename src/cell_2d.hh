@@ -31,9 +31,18 @@ class voronoicell_2d {
 		/** An array with size 2*current_vertices for holding
 		 * the positions of the vertices. */
 		double *pts;
+		/** Is true if this point lies at the vertex of a nonconvexity, false otherwise. */
+		bool nonconvexity;
+		/** If nonconvexity=true, these arrays hold the relevant information for determining which region
+   		a cutting particle is in. They hold garbage otherwise.regx[0]and regx[1] contain the vector representing
+		the nonconvex edge of the cell. regx[2] and regx[3] contain the vector perpendicular to the previous one
+                representing the direction in which that region extends.*/
+		double reg1[4], reg2[4];
+
 		voronoicell_2d();
 		~voronoicell_2d();
 		void init(double xmin,double xmax,double ymin,double ymax);
+		void init_nonconvex(double bnds_loc[], int noofbnds);
 		void draw_gnuplot(double x,double y,FILE *fp=stdout);
 		/** Outputs the edges of the Voronoi cell in gnuplot format to
 		 * an output stream.
@@ -77,6 +86,8 @@ class voronoicell_2d {
 			fclose(fp);
 		}
 		bool plane(double x,double y,double rs);
+		bool plane_nonconvex(double x, double y, double rs);
+		bool halfplane(double x1, double y1, double rs, double x2, double y2); 
 		double max_radius_squared();
 		double perimeter();
 		double area();
@@ -89,7 +100,7 @@ class voronoicell_2d {
 		 * \param[in] rsq the distance along this vector of the plane.
 		 * \param[in] qp the index of the vertex to consider. */
 		inline double pos(double x,double y,double rsq,int qp) {
-			return x*pts[2*qp]+y*pts[2*qp+1]-rsq;
+			return x*pts[2*qp]+y*pts[2*qp+1]-rsq;//vector projection??? (x,y) would have to be normalized
 		}
 		/** The delete stack, used to store the vertices that are
 		 * deleted during the plane cutting procedure. */

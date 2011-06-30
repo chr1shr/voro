@@ -15,11 +15,12 @@
  * \param[in] (xperiodic_,yperiodic_) flags setting whether the container is periodic
  *                        in each coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block. */
+//MODIFIED
 container_2d::container_2d(double ax_,double bx_,double ay_,
-		double by_,int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
+		double by_,int nx_,int ny_,bool xperiodic_,bool yperiodic_,bool convex_,int init_mem)
 	: ax(ax_), bx(bx_), ay(ay_), by(by_), boxx((bx_-ax_)/nx_), boxy((by_-ay_)/ny_),
 	xsp(1/boxx), ysp(1/boxy), nx(nx_), ny(ny_), nxy(nx*ny),
-	xperiodic(xperiodic_), yperiodic(yperiodic_),
+	xperiodic(xperiodic_), yperiodic(yperiodic_), convex(convex_),
 	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]), p(new double*[nxy]) {
 	int l;
 	for(l=0;l<nxy;l++) co[l]=0;
@@ -115,6 +116,7 @@ void container_2d::add_particle_memory(int i) {
 
 /** Imports a list of particles from an input stream.
  * \param[in] fp a file handle to read from. */
+// NEED TO MODIFY TO HANDLE CONVEX INPUT-STREAM
 void container_2d::import(FILE *fp) {
 	int i,j;
 	double x,y;
@@ -192,12 +194,24 @@ void container_2d::print_custom(const char *format,FILE *fp) {
 /** Initializes a voronoicell_2d class to fill the entire container.
  * \param[in] c a reference to a voronoicell_2d class.
  * \param[in] (x,y) the position of the particle that . */
+//MODIFIED
 bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,double y) {
+	if(convex){
 	double x1,x2,y1,y2;
 	if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 	if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 	c.init(x1,x2,y1,y2);
 	return true;
+	}else{
+	double *relative_bnds;
+        relative_bnds=new double[noofbnds*2];
+	for(int i=0; i<(2*noofbnds); i+=2){
+		relative_bnds[i]=*(bnds+i)-x;//POINTERS??
+		relative_bnds[i+1]=*(bnds+i+1)-y;
+	}
+	c.init_nonconvex(relative_bnds,noofbnds);
+	return true; //MODIFY SO ONLY RETURNS TRUE APPROPRIATELY
+	}
 }
 
 /** Computes all Voronoi cells and sums their areas.
@@ -257,13 +271,13 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 		t=l.init(x,y,ur,qx,qy);
 		do {
 			for(q=0;q<co[t];q++) {
-				x1=p[t][2*q]+qx-x;y1=p[t][2*q+1]+qy-y;
+				x1=p[t][2*q]+qx-x;y1=p[t][2*q+1]+qy-y;//qx,qy??
 				rs=x1*x1+y1*y1;
 				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {
-					if(!c.plane(x1,y1,rs)) return false;
+					if(!c.plane(x1,y1,rs)) return false;//practical???
 				}
 			}
-		} while((t=l.inc(qx,qy))!=-1);
+		} while((t=l.inc(qx,qy))!=-1);//loops through boxes in the shell
 		lr=ur;lrs=urs;
 	}
 	return true;
@@ -283,7 +297,7 @@ voropp_loop_2d::voropp_loop_2d(container_2d &con) : boxx(con.bx-con.ax), boxy(co
  * \param[in] (vx,vy) the position vector of the center of the sphere.
  * \param[in] r the radius of the sphere.
  * \param[out] (px,py) the periodic displacement vector for the first block to
- *                     be tested.
+ *                     be tested.??????
  * \return The index of the first block to be tested. */
 int voropp_loop_2d::init(double vx,double vy,double r,double &px,double &py) {
 	ai=step_int((vx-ax-r)*xsp);

@@ -54,9 +54,23 @@ class container_2d {
 		/** A boolean value that determines if the y coordinate in
 		 * periodic or not. */
 		const bool yperiodic;
+		/** A boolean value that specifies whether the domain will be convex or non-convex.
+		* affected methods include cell_2d:plane, container_2d:import, container_2d:initialize_vo
+		ronoicell
+		* and container_2d:compute_cellsphere. */
+		const bool convex;
 		/** This array holds the number of particles within each
 		 * computational box of the container. */
 		int *co;
+		/** This array holds the vertices of the non-convex domain. If the domain is convex this 
+		* variable is not initialized. The format is (bnds[0],bnds[1])=(x1,y1) for some (x1,y1) 
+		boundary point
+		* and (bnds[2],bnds[3])=(x2,y2) is the next vertex in the boundary from (x1,y1) if we are
+		going clockwise
+		*/
+		double *bnds;
+		/** specifies the length of *bnds/2 */
+		int noofbnds;
 		/** This array holds the maximum amount of particle memory for
 		 * each computational box of the container. If the number of
 		 * particles in a particular box ever approaches this limit,
@@ -70,7 +84,7 @@ class container_2d {
 		 * derived container_poly class, this also holds particle
 		 * radii. */
 		double **p;
-		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,int memi);
+		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,bool convex_,int memi);
 		~container_2d();
 		void import(FILE *fp=stdin);
 		/** Imports a list of particles from a file.
