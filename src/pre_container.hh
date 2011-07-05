@@ -94,6 +94,15 @@ class pre_container_base {
  * optimal grid size, and the particles can be transferred. */
 class pre_container : public pre_container_base {
 	public:
+		/** The class constructor sets up the geometry of container,
+		 * initializing the minimum and maximum coordinates in each
+		 * direction.
+		 * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
+		 * \param[in] (ay_,by_) the minimum and maximum y coordinates.
+		 * \param[in] (az_,bz_) the minimum and maximum z coordinates.
+		 * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
+		 *                                                container is periodic in
+		 *                                                each coordinate direction. */
 		pre_container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 				bool xperiodic_,bool yperiodic_,bool zperiodic_)
 			: pre_container_base(ax_,bx_,ay_,by_,az_,bz_,xperiodic_,yperiodic_,zperiodic_,3) {};
@@ -119,6 +128,15 @@ class pre_container : public pre_container_base {
  * optimal grid size, and the particles can be transferred. */
 class pre_container_poly : public pre_container_base {
 	public:
+		/** The class constructor sets up the geometry of container,
+		 * initializing the minimum and maximum coordinates in each
+		 * direction.
+		 * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
+		 * \param[in] (ay_,by_) the minimum and maximum y coordinates.
+		 * \param[in] (az_,bz_) the minimum and maximum z coordinates.
+		 * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
+		 *                                                container is periodic in
+		 *                                                each coordinate direction. */
 		pre_container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 				bool xperiodic_,bool yperiodic_,bool zperiodic_)
 			: pre_container_base(ax_,bx_,ay_,by_,az_,bz_,xperiodic_,yperiodic_,zperiodic_,4) {};

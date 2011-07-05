@@ -34,12 +34,23 @@ class voropp_order {
 		int *op;
 		/** The current memory allocation for the class, set to the
 		 * number of entries which can be stored. */
-		int size;		
+		int size;
+		/** The voropp_order constructor allocates memory to store the
+		 * ordering information.
+		 * \param[in] init_size the initial amount of memory to
+		 *                      allocate. */
 		voropp_order(int init_size=init_ordering_size)
 			: o(new int[init_size<<1]),op(o),size(init_size) {}
+		/** The voropp_order destructor frees the dynamically allocated
+		 * memory used to store the ordering information. */
 		~voropp_order() {
 			delete [] o;
 		}
+		/** Adds a record to the order, corresponding to the memory
+		 * address of where a particle was placed into the container.
+		 * \param[in] ijk the block into which the particle was placed.
+		 * \param[in] q the position within the block where the
+		 * 		particle was placed. */
 		inline void add(int ijk,int q) {
 			if(op==o+size) add_ordering_memory();
 			*(op++)=ijk;*(op++)=q;
@@ -118,6 +129,9 @@ class v_loop_all : public v_loop_base {
 			}
 			return true;
 		}
+		/** Finds the next particle to test.
+		 * \return True if there is another particle, false if no more
+		 * particles are available. */		
 		inline bool inc() {
 			q++;
 			while(q>=co[ijk]) {
@@ -150,9 +164,9 @@ class v_loop_subset : public v_loop_base {
 		void setup_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test=true);
 		void setup_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_);
 		bool start();
-		/** Finds the next point to test.
-		 * \return True if there is another point, false if no more points are
-		 * available. */
+		/** Finds the next particle to test.
+		 * \return True if there is another particle, false if no more
+		 * particles are available. */
 		inline bool inc() {
 			do {
 				q++;
@@ -190,6 +204,9 @@ class v_loop_order : public v_loop_base {
 				return true;
 			} else return false;
 		}
+		/** Finds the next particle to test.
+		 * \return True if there is another particle, false if no more
+		 * particles are available. */
 		inline bool inc() {
 			if(cp==op) return false;
 			ijk=*(cp++);decode();

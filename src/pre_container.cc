@@ -17,7 +17,7 @@ using namespace std;
 
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction. It allocates an initial
- * chunk into which to store
+ * chunk into which to store particle information.
  * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
  * \param[in] (ay_,by_) the minimum and maximum y coordinates.
  * \param[in] (az_,bz_) the minimum and maximum z coordinates.
@@ -186,7 +186,7 @@ void pre_container_poly::setup(voropp_order &vo,container_poly &con) {
  * Entries of four numbers (Particle ID, x position, y position, z position)
  * are searched for. If the file cannot be successfully read, then the routine
  * causes a fatal error.
- * \param[fp] fp the file handle to read from. */
+ * \param[in] fp the file handle to read from. */
 void pre_container::import(FILE *fp) {
 	int i,j;
 	double x,y,z;

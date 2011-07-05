@@ -403,11 +403,27 @@ class container_poly : public container_base {
 		void put(voropp_order &vo,int n,double x,double y,double z,double r);
 		void import(FILE *fp=stdin);
 		void import(voropp_order &vo,FILE *fp=stdin);
+		/** Imports a list of particles from an open file stream into
+		 * the container_poly class. Entries of five numbers (Particle
+		 * ID, x position, y position, z position, radius) are searched
+		 * for. If the file cannot be successfully read, then the
+		 * routine causes a fatal error.
+		 * \param[in] filename the name of the file to open and read
+		 *                     from. */
 		inline void import(const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(fp);
 			fclose(fp);
 		}
+		/** Imports a list of particles from an open file stream into
+		 * the container_poly class. Entries of five numbers (Particle
+		 * ID, x position, y position, z position, radius) are searched
+		 * for. In addition, the order in which particles are read is
+		 * saved into an ordering class. If the file cannot be
+		 * successfully read, then the routine causes a fatal error.
+		 * \param[in,out] vo the ordering class to use.
+		 * \param[in] filename the name of the file to open and read
+		 *                     from. */
 		inline void import(voropp_order &vo,const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(vo,fp);

@@ -233,7 +233,7 @@ void container::import(voropp_order &vo,FILE *fp) {
  * Entries of five numbers (Particle ID, x position, y position, z position,
  * radius) are searched for. If the file cannot be successfully read, then the
  * routine causes a fatal error.
- * \param[fp] fp the file handle to read from. */
+ * \param[in] fp the file handle to read from. */
 void container_poly::import(FILE *fp) {
 	int i,j;
 	double x,y,z,r;
