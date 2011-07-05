@@ -12,15 +12,16 @@
 
 /** The class constructor initializes constants from the container class, and
  * sets up the mask and queue used for Voronoi computations.
- * \param[in] con a reference to the container class to use.
+ * \param[in] con_ a reference to the container class to use.
  * \param[in] (hx_,hy_,hz_) the size of the mask to use. */
 template<class c_class>
 voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
 	con(con_), boxx(con_.boxx), boxy(con_.boxy), boxz(con_.boxz),
 	xsp(con_.xsp), ysp(con_.ysp), zsp(con_.zsp),
 	hx(hx_), hy(hy_), hz(hz_), hxy(hx_*hy_), hxyz(hxy*hz_), ps(con_.ps),
-	hgrid(con.hgrid), fgrid(con.fgrid), hgridsq(con.hgridsq), seq_length(con.seq_length),
-	id(con_.id), p(con_.p), co(con_.co), bxsq(boxx*boxx+boxy*boxy+boxz*boxz),
+	id(con_.id), p(con_.p), co(con_.co), hgrid(con.hgrid),
+	fgrid(con.fgrid), hgridcu(con.hgridcu), seq_length(con.seq_length),
+	bxsq(boxx*boxx+boxy*boxy+boxz*boxz),
 	mv(0), qu_size(3*(3+hxy+hz*(hx+hy))), wl(con_.wl), mrad(con_.mrad),
 	mask(new unsigned int[hxyz]), qu(new int[qu_size]), qu_l(qu+qu_size) {
 	reset_mask();
@@ -48,7 +49,6 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
  * \param[in] s the index of the particle within the test block.
  * \param[in] (ci,cj,ck) the coordinates of the block that the test particle is
  *                       in relative to the container data structure.
- * \param[in] (x,y,z) the coordinates of the particle.
  * \return False if the Voronoi cell was completely removed during the
  *         computation and has zero volume, true otherwise. */
 template<class c_class>

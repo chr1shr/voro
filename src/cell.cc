@@ -53,7 +53,7 @@ voronoicell_base::~voronoicell_base() {
 template<class vc_class>
 void voronoicell_base::check_memory_for_copy(vc_class &vc,voronoicell_base* vb) {
 	while(current_vertex_order<vb->current_vertex_order) add_memory_vorder(vc);
-	for(int i=0;i<current_vertex_order;i++) while(mem[i]<vb->mec[i]) add_memory(vc,i);
+	for(int i=0;i<current_vertex_order;i++) while(mem[i]<vb->mec[i]) add_memory(vc,i,ds2);
 	while(current_vertices<vb->p) add_memory_vertices(vc);
 }
 
@@ -107,7 +107,7 @@ void voronoicell_base::translate(double x,double y,double z) {
  * array.
  * \param[in] i the order of the vertex memory to be increased. */
 template<class vc_class>
-void voronoicell_base::add_memory(vc_class &vc,int i) {
+void voronoicell_base::add_memory(vc_class &vc,int i,int *stackp2) {
 	int s=(i<<1)+1;
 	if(mem[i]==0) {
 		vc.n_allocate(i,init_n_vertices);
@@ -132,15 +132,15 @@ void voronoicell_base::add_memory(vc_class &vc,int i) {
 				ed[k]=l+j;
 				vc.n_set_to_aux1_offset(k,m);
 			} else {
-				int o;
-				for(o=0;o<stack2;o++) {
-					if(ed[ds2[o]]==mep[i]+j) {
-						ed[ds2[o]]=l+j;
-						vc.n_set_to_aux1_offset(ds2[o],m);
+				int *dsp;
+				for(dsp=ds2;dsp<stackp2;dsp++) {
+					if(ed[*dsp]==mep[i]+j) {
+						ed[*dsp]=l+j;
+						vc.n_set_to_aux1_offset(*dsp,m);
 						break;
 					}
 				}
-				if(o==stack2) voropp_fatal_error("Couldn't relocate dangling pointer",VOROPP_INTERNAL_ERROR);
+				if(dsp==stackp2) voropp_fatal_error("Couldn't relocate dangling pointer",VOROPP_INTERNAL_ERROR);
 #if VOROPP_VERBOSE >=3
 				fputs("Relocated dangling pointer",stderr);
 #endif
@@ -592,7 +592,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			// Add memory for the new vertex if needed, and
 			// initialize
 			while (nu[p]>=current_vertex_order) add_memory_vorder(vc);
-			if(mec[nu[p]]==mem[nu[p]]) add_memory(vc,nu[p]);
+			if(mec[nu[p]]==mem[nu[p]]) add_memory(vc,nu[p],stackp2);
 			vc.n_set_pointer(p,nu[p]);
 			ed[p]=mep[nu[p]]+((nu[p]<<1)+1)*mec[nu[p]]++;
 			ed[p][nu[p]<<1]=p;
@@ -660,7 +660,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			// already
 			k=1;
 			while(nu[p]>=current_vertex_order) add_memory_vorder(vc);
-			if(mec[nu[p]]==mem[nu[p]]) add_memory(vc,nu[p]);
+			if(mec[nu[p]]==mem[nu[p]]) add_memory(vc,nu[p],stackp2);
 
 			// Copy the edges of the original vertex into the new
 			// one. Delete the edges of the original vertex, and
@@ -730,7 +730,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		// This point will always have three edges. Connect one of them
 		// to lp.
 		nu[p]=3;
-		if(mec[3]==mem[3]) add_memory(vc,3);
+		if(mec[3]==mem[3]) add_memory(vc,3,stackp2);
 		vc.n_set_pointer(p,3);
 		vc.n_set(p,0,p_id);
 		vc.n_copy(p,1,up,us);
@@ -783,7 +783,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			pts[3*p+1]=pts[3*lp+1]*r+pts[3*qp+1]*l;
 			pts[3*p+2]=pts[3*lp+2]*r+pts[3*qp+2]*l;
 			nu[p]=3;
-			if(mec[3]==mem[3]) add_memory(vc,3);
+			if(mec[3]==mem[3]) add_memory(vc,3,stackp2);
 			ls=ed[qp][qs+nu[qp]];
 			vc.n_set_pointer(p,3);
 			vc.n_set(p,0,p_id);
@@ -906,7 +906,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			// we are forming. Add memory for it if it doesn't exist
 			// already.
 			while(k>=current_vertex_order) add_memory_vorder(vc);
-			if(mec[k]==mem[k]) add_memory(vc,k);
+			if(mec[k]==mem[k]) add_memory(vc,k,stackp2);
 
 			// Now create a new vertex with order k, or augment
 			// the existing one
@@ -1200,7 +1200,7 @@ inline bool voronoicell_base::delete_connection(vc_class &vc,int j,int k,bool ha
 		return false;
 	}
 #endif
-	if(mec[i]==mem[i]) add_memory(vc,i);
+	if(mec[i]==mem[i]) add_memory(vc,i,ds2);
 	vc.n_set_aux1(i);
 	for(l=0;l<q;l++) vc.n_copy_aux1(j,l);
 	while(l<i) {
@@ -1960,7 +1960,7 @@ int voronoicell_base::number_of_edges() {
  * \param[in] (x,y,z) the position of the particle associated with this Voronoi
  *                    cell.
  * \param[in] r a radius associated with the particle.
- * \param[fp] fp the file handle to write to. */
+ * \param[in] fp the file handle to write to. */
 void voronoicell_base::output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp) {
 	char *fmp(const_cast<char*>(format));
 	vector<int> vi;

@@ -58,7 +58,6 @@ class voropp_compute {
 		/** The number of floating point entries to store for each
 		 * particle. */
 		const int ps;
-		const int hgrid,fgrid,hgridsq,seq_length;
 		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
@@ -79,6 +78,7 @@ class voropp_compute {
 		template<class v_cell>
 		bool compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck);
 	private:
+		const int hgrid,fgrid,hgridcu,seq_length;
 		/** A constant set to boxx*boxx+boxy*boxy+boxz*boxz, which is
 		 * frequently used in the computation. */
 		const double bxsq;

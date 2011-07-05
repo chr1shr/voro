@@ -222,7 +222,8 @@ class container : public container_base {
 		 * position, y position, z position) are searched for. If the
 		 * file cannot be successfully read, then the routine causes a
 		 * fatal error.
-		 * \param[in] fp the filename to open and read from. */
+		 * \param[in] filename the name of the file to open and read
+		 *                     from. */
 		inline void import(const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(fp);
@@ -234,7 +235,9 @@ class container : public container_base {
 		 * addition, the order in which particles are read is saved
 		 * into an ordering class. If the file cannot be successfully
 		 * read, then the routine causes a fatal error.
-		 * \param[in] fp the filename to open and read from. */		
+		 * \param[in,out] vo the ordering class to use.
+		 * \param[in] filename the name of the file to open and read
+		 *                     from. */
 		inline void import(voropp_order &vo,const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(vo,fp);

@@ -13,6 +13,13 @@
 #include "v_loops.hh"
 #include "container.hh"
 
+/** \brief A class for storing an arbitrary number of particles, prior to setting
+ * up a container geometry.
+ *
+ * The pre_container_base class can dynamically import and store an arbitrary
+ * number of particles. Once the particles have been read in, an appropriate
+ * container class can be set up with the optimal grid size, and the particles
+ * can be transferred. */
 class pre_container_base {
 	public:
 		/** The minimum x coordinate of the container. */
@@ -39,18 +46,52 @@ class pre_container_base {
 		void guess_optimal(int &nx,int &ny,int &nz);
 		pre_container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int ps_);
 		~pre_container_base();
+		/** Calculates and returns the total number of particles stored
+		 * within the class.
+		 * \return The number of particles. */
 		inline int total_particles() {
 			return (end_id-pre_id)*pre_container_chunk_size+(ch_id-*end_id);
 		}
 	protected:
+		/** The number of doubles associated with a single particle
+		 * (three for the standard container, four when radius
+		 * information is stored). */
 		const int ps;
 		void new_chunk();
 		void extend_chunk_index();
+		/** The size of the chunk index. */
 		int index_sz;
-		int **pre_id,**end_id,**l_id,*ch_id,*e_id;
-		double **pre_p,**end_p,*ch_p;
+		/** A pointer to the chunk index to store the integer particle
+		 * IDs. */
+		int **pre_id;
+		/** A pointer to the last allocated integer ID chunk. */
+		int **end_id;
+		/** A pointer to the end of the integer ID chunk index, used to
+		 * determine when the chunk index is full. */
+		int **l_id;
+		/** A pointer to the next available slot on the current
+		 * particle ID chunk. */
+		int *ch_id;
+		/** A pointer to the end of the current integer chunk. */
+		int *e_id;
+		/** A pointer to the chunk index to store the floating point
+		 * information associated with particles. */
+		double **pre_p;
+		/** A pointer to the last allocated chunk of floating point
+		 * information. */
+		double **end_p;
+		/** A pointer to the next available slot on the current
+		 * floating point chunk. */
+		double *ch_p;
 };
 
+/** \brief A class for storing an arbitrary number of particles without radius
+ * information, prior to setting up a container geometry.
+ *
+ * The pre_container_base class can dynamically import and store an arbitrary
+ * number of particles for the case when no radius information is used. Once
+ * the particles have been read in, a container class can be set up with the
+ * optimal grid size, and the particles can be transferred. */
 class pre_container : public pre_container_base {
 	public:
 		pre_container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
@@ -58,6 +99,8 @@ class pre_container : public pre_container_base {
 			: pre_container_base(ax_,bx_,ay_,by_,az_,bz_,xperiodic_,yperiodic_,zperiodic_,3) {};
 		void put(int n,double x,double y,double z);
 		void import(FILE *fp=stdin);
+		/** Imports particles from a file.
+		 * \param[in] filename the name of the file to read from. */
 		inline void import(const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(fp);
@@ -67,6 +110,13 @@ class pre_container : public pre_container_base {
 		void setup(voropp_order &vo,container &con);
 };
 
+/** \brief A class for storing an arbitrary number of particles with radius
+ * information, prior to setting up a container geometry.
+ *
+ * The pre_container_base class can dynamically import and store an arbitrary
+ * number of particles for the case when radius information is used. Once the
+ * particles have been read in, a container_poly class can be set up with the
+ * optimal grid size, and the particles can be transferred. */
 class pre_container_poly : public pre_container_base {
 	public:
 		pre_container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
@@ -74,6 +124,8 @@ class pre_container_poly : public pre_container_base {
 			: pre_container_base(ax_,bx_,ay_,by_,az_,bz_,xperiodic_,yperiodic_,zperiodic_,4) {};
 		void put(int n,double x,double y,double z,double r);
 		void import(FILE *fp=stdin);
+		/** Imports particles from a file.
+		 * \param[in] filename the name of the file to read from. */
 		inline void import(const char* filename) {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(fp);

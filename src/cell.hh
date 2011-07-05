@@ -93,6 +93,11 @@ class voronoicell_base {
 		void init_tetrahedron_base(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3);
 		void translate(double x,double y,double z);
 		void draw_pov(double x,double y,double z,FILE *fp=stdout);
+		/** Outputs the cell in POV-Ray format, using cylinders for edges
+		 * and spheres for vertices, to a given file.
+		 * \param[in] (x,y,z) a displacement to add to the cell's
+		 *                    position.
+		 * \param[in] filename the name of the file to write to. */
 		inline void draw_pov(double x,double y,double z,const char *filename) {
 			FILE *fp(fopen(filename,"w"));
 			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
@@ -100,6 +105,11 @@ class voronoicell_base {
 			fclose(fp);
 		};
 		void draw_pov_mesh(double x,double y,double z,FILE *fp=stdout);
+		/** Outputs the cell in POV-Ray format as a mesh2 object to a
+		 * given file.
+		 * \param[in] (x,y,z) a displacement to add to the cell's
+		 *                    position.
+		 * \param[in] filename the name of the file to write to. */
 		inline void draw_pov_mesh(double x,double y,double z,const char *filename) {
 			FILE *fp(fopen(filename,"w"));
 			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
@@ -107,6 +117,10 @@ class voronoicell_base {
 			fclose(fp);
 		}
 		void draw_gnuplot(double x,double y,double z,FILE *fp=stdout);
+		/** Outputs the cell in Gnuplot format a given file.
+		 * \param[in] (x,y,z) a displacement to add to the cell's
+		 *                    position.
+		 * \param[in] filename the name of the file to write to. */
 		inline void draw_gnuplot(double x,double y,double z,const char *filename) {
 			FILE *fp(fopen(filename,"w"));
 			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
@@ -127,35 +141,50 @@ class voronoicell_base {
 		void vertices(double x,double y,double z,vector<double> &v);
 		void output_vertices(double x,double y,double z,FILE *fp=stdout);
 		void face_areas(vector<double> &v);
+		/** Outputs the areas of the faces.
+		 * \param[in] fp the file handle to write to. */
 		inline void output_face_areas(FILE *fp=stdout) {
 			vector<double> v;face_areas(v);
 			voropp_print_vector(v,fp);
 		}
 		void face_orders(vector<int> &v);
+		/** Outputs a list of the number of sides of each face.
+		 * \param[in] fp the file handle to write to. */
 		inline void output_face_orders(FILE *fp=stdout) {
 			vector<int> v;face_orders(v);
 			voropp_print_vector(v,fp);
 		}
 		void face_freq_table(vector<int> &v);
+		/** Outputs a */
 		inline void output_face_freq_table(FILE *fp=stdout) {
 			vector<int> v;face_freq_table(v);
 			voropp_print_vector(v,fp);
 		}
 		void face_vertices(vector<int> &v);
+		/** Outputs the */
 		inline void output_face_vertices(FILE *fp=stdout) {
 			vector<int> v;face_vertices(v);
 			voropp_print_face_vertices(v,fp);
 		}
 		void face_perimeters(vector<double> &v);
+		/** Outputs a list of the perimeters of each face.
+		 * \param[in] fp the file handle to write to. */
 		inline void output_face_perimeters(FILE *fp=stdout) {
 			vector<double> v;face_perimeters(v);
 			voropp_print_vector(v,fp);
 		}
 		void normals(vector<double> &v);
+		/** Outputs a list of the perimeters of each face.
+		 * \param[in] fp the file handle to write to. */		
 		inline void output_normals(FILE *fp=stdout) {
 			vector<double> v;normals(v);
 			voropp_print_positions(v,fp);
 		}
+		/** Outputs a custom string of information about the Voronoi
+		 * cell to a file. It assumes the cell is at (0,0,0) and has a
+		 * the default_radius associated with it.
+		 * \param[in] format the custom format string to use.
+		 * \param[in] fp the file handle to write to. */
 		inline void output_custom(const char *format,FILE *fp=stdout) {output_custom(format,0,0,0,0,default_radius,fp);}
 		void output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp=stdout);
 		template<class vc_class>
@@ -209,9 +238,6 @@ class voronoicell_base {
 		/** This is the auxiliary delete stack, which has size set by
 		 * current_delete2_size. */
 		int *ds2,*stacke2;
-		/** This holds the number of points currently on the auxiliary
-		 * delete stack. */
-		int stack2;
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
 		int current_marginal;
@@ -230,7 +256,7 @@ class voronoicell_base {
 		/** The magnitude of the normal vector to the test plane. */
 		double prsq;
 		template<class vc_class>
-		void add_memory(vc_class &vc,int i);
+		void add_memory(vc_class &vc,int i,int *stackp2);
 		template<class vc_class>
 		void add_memory_vertices(vc_class &vc);
 		template<class vc_class>
@@ -261,36 +287,40 @@ class voronoicell : public voronoicell_base {
 			voronoicell_base* vb((voronoicell_base*) &c);
 			check_memory_for_copy(*this,vb);copy(vb);
 		}
+		/** Cuts a Voronoi cell using by the plane corresponding to the
+		 * perpendicular bisector of a particle.
+		 * \param[in] (x,y,z) the position of the particle.
+		 * \param[in] rsq the modulus squared of the vector.
+		 * \param[in] p_id the plane ID, ignored for this case where no
+		 *                 neighbor tracking is enabled. 
+		 * \return False if the plane cut deleted the cell entirely,
+		 *         true otherwise. */
 		inline bool nplane(double x,double y,double z,double rsq,int p_id) {
 			return nplane(*this,x,y,z,rsq,0);
 		}
-		/** This routine calculates the modulus squared of the vector
-		 * before passing it to the main nplane() routine with full
-		 * arguments.
-		 * \param[in] (x,y,z) the vector to cut the cell by.
-		 * \param[in] p_id the plane ID (for neighbor tracking only).
+		/** Cuts a Voronoi cell using by the plane corresponding to the
+		 * perpendicular bisector of a particle.
+		 * \param[in] (x,y,z) the position of the particle.
+		 * \param[in] p_id the plane ID, ignored for this case where no
+		 *                 neighbor tracking is enabled. 
 		 * \return False if the plane cut deleted the cell entirely,
-		 *         true otherwise. */
+		 *         true otherwise. */ 
 		inline bool nplane(double x,double y,double z,int p_id) {
 			double rsq=x*x+y*y+z*z;
 			return nplane(*this,x,y,z,rsq,0);
 		}
-		/** This version of the plane routine just makes up the plane
-		 * ID to be zero. It will only be referenced if neighbor
-		 * tracking is enabled.
-		 * \param[in] (x,y,z) the vector to cut the cell by.
+		/** Cuts a Voronoi cell using by the plane corresponding to the
+		 * perpendicular bisector of a particle.
+		 * \param[in] (x,y,z) the position of the particle.
 		 * \param[in] rsq the modulus squared of the vector.
 		 * \return False if the plane cut deleted the cell entirely,
-		 *         true otherwise. */
+		 *         true otherwise. */ 
 		inline bool plane(double x,double y,double z,double rsq) {
 			return nplane(*this,x,y,z,rsq,0);
 		}
-		/** Cuts a Voronoi cell using the influence of a particle at
-		 * (x,y,z), first calculating the modulus squared of this
-		 * vector before passing it to the main nplane() routine. Zero
-		 * is supplied as the plane ID, which will be ignored unless
-		 * neighbor tracking is enabled.
-		 * \param[in] (x,y,z) the vector to cut the cell by.
+		/** Cuts a Voronoi cell using by the plane corresponding to the
+		 * perpendicular bisector of a particle.
+		 * \param[in] (x,y,z) the position of the particle.		
 		 * \return False if the plane cut deleted the cell entirely,
 		 *         true otherwise. */
 		inline bool plane(double x,double y,double z) {
@@ -300,9 +330,19 @@ class voronoicell : public voronoicell_base {
 		inline void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
 			init_base(xmin,xmax,ymin,ymax,zmin,zmax);
 		}
+		/** Initializes the cell to be an octahedron with vertices at
+		 * (l,0,0), (-l,0,0), (0,l,0), (0,-l,0), (0,0,l), and (0,0,-l).
+		 * \param[in] l a parameter setting the size of the octahedron.
+		 */
 		inline void init_octahedron(double l) {
 			init_octahedron_base(l);
 		}
+		/** Initializes the cell to be a tetrahedron.
+		 * \param[in] (x0,y0,z0) the coordinates of the first vertex.
+		 * \param[in] (x1,y1,z1) the coordinates of the second vertex.
+		 * \param[in] (x2,y2,z2) the coordinates of the third vertex.
+		 * \param[in] (x3,y3,ze) the coordinates of the fourth vertex.
+		 */
 		inline void init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
 			init_tetrahedron_base(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3);
 		}

@@ -46,8 +46,25 @@ class voropp_base {
 		~voropp_base() {delete [] mrad;}
 #include "worklist.hh"
 	protected:
+		/** A custom int function that returns consistent stepping
+		 * for negative numbers, so that (-1.5, -0.5, 0.5, 1.5) maps
+		 * to (-2,-1,0,1).
+		 * \param[in] a the number to consider.
+		 * \return The value of the custom int operation. */
 		inline int step_int(double a) {return a<0?int(a)-1:int(a);}
+		/** A custom modulo function that returns consistent stepping
+		 * for negative numbers. For example, (-2,-1,0,1,2) step_mod 2
+		 * is (0,1,0,1,0).
+		 * \param[in] (a,b) the input integers.
+		 * \return The value of a modulo b, consistent for negative
+		 * numbers. */
 		inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
+		/** A custom integer division function that returns consistent
+		 * stepping for negative numbers. For example, (-2,-1,0,1,2)
+		 * step_div 2 is (-1,-1,0,0,1).
+		 * \param[in] (a,b) the input integers.
+		 * \return The value of a div b, consistent for negative
+		 * numbers. */
 		inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
 	private:
 		void compute_minimum(double &minr,double &xlo,double &xhi,double &ylo,double &yhi,double &zlo,double &zhi,int ti,int tj,int tk);

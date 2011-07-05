@@ -18,6 +18,7 @@ using namespace std;
 
 #include "config.hh"
 
+/** A type associated with a v_loop_subset class. */
 enum v_loop_subset_mode {
 	sphere,
 	box,

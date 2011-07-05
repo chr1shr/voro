@@ -20,7 +20,7 @@
  * reverse order by considering the distance to \f$w_{i+1}\f$. */
 voropp_base::voropp_base(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_) :
 	nx(nx_), ny(ny_), nz(nz_), nxy(nx_*ny_), nxyz(nxy*nz_), boxx(boxx_), boxy(boxy_), boxz(boxz_),
-	xsp(1/boxx_), ysp(1/boxy_), zsp(1/boxz_), mrad(new double[hgridsq*seq_length]) {
+	xsp(1/boxx_), ysp(1/boxy_), zsp(1/boxz_), mrad(new double[hgridcu*seq_length]) {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
 	const double xstep=boxx/fgrid,ystep=boxy/fgrid,zstep=boxz/fgrid;
 	int i,j,k,lx,ly,lz,q;
