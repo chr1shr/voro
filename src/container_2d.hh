@@ -24,6 +24,8 @@ class voropp_loop_2d;
  * calculations. */
 class container_2d {
 	public:
+		/** degbugging aid. */
+		bool debug;
 		/** The minimum x coordinate of the container. */
 		const double ax;
 		/** The maximum x coordinate of the container. */
@@ -80,12 +82,26 @@ class container_2d {
 		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
+		/** For each computational box, this holds the boundary walls that pass through that box.
+		*/
+		int **wid;  
 		/** A two dimensional array holding particle positions. For the
 		 * derived container_poly class, this also holds particle
 		 * radii. */
 		double **p;
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,bool convex_,int memi);
 		~container_2d();
+		int crossproductz(double x1, double y1, double x2, double y2);
+		void semi-circle-labelling(double x1, double y1, double x2, double y2, int wid);
+		inline double max(double a, double b){
+			return (b<a)?a:b; 
+		}
+		inline double min(double a, double b){
+			return (b<a)?b:a;
+		}
+		inline double dist(x1, y1, x2, y2){
+			return ((y2-y1)^2+(x2-x1)^2)^(1/2);
+		{
 		void import(FILE *fp=stdin);
 		/** Imports a list of particles from a file.
 		 * \param[in] filename the file to read from. */
@@ -93,6 +109,19 @@ class container_2d {
 			FILE *fp(voropp_safe_fopen(filename,"r"));
 			import(fp);
 			fclose(fp);
+		}
+		void tag_walls(double x1, double y1, double x2, double y2, int wid);
+		inline void tag(int wallid, int box){
+			int length=wid[box][0], *a;
+			if(length%6==0){
+				a=new int[length+6];
+				for(int j=0; j<length; j++){
+					a[j]=wid[box][j];
+				}
+				delete [] wid[box]; wid[box]=a;
+			}
+			wid[box][length]=wallid;
+			wid[box][0]++;
 		}
 		void draw_particles(FILE *fp=stdout);
 		/** Dumps all the particle positions and IDs to a file.

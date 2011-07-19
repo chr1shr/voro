@@ -2,7 +2,7 @@
  * \brief Function implementations for the container_2d class. */
 
 #include "container_2d.hh"
-
+#include <iostream>
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
  * direction is periodic or not. It divides the container into a rectangular
@@ -21,12 +21,17 @@ container_2d::container_2d(double ax_,double bx_,double ay_,
 	: ax(ax_), bx(bx_), ay(ay_), by(by_), boxx((bx_-ax_)/nx_), boxy((by_-ay_)/ny_),
 	xsp(1/boxx), ysp(1/boxy), nx(nx_), ny(ny_), nxy(nx*ny),
 	xperiodic(xperiodic_), yperiodic(yperiodic_), convex(convex_),
-	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]), p(new double*[nxy]) {
+	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]), wid(new int*[nxy]), p(new double*[nxy]){
 	int l;
+	debug=true;
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
 	for(l=0;l<nxy;l++) id[l]=new int[init_mem];
 	for(l=0;l<nxy;l++) p[l]=new double[2*init_mem];
+	for(l=0;l<nxy;l++){
+		wid[l]=new int[6];
+		wid[l][0]=1;
+	}
 }
 
 /** The container destructor frees the dynamically allocated memory. */
@@ -95,6 +100,193 @@ inline bool container_2d::put_remap(int &ij,double &x,double &y) {
 	ij+=nx*j;
 	return true;
 }
+
+/**given two points, tags all the computational boxes that the line segment specified by the two points
+goes through.
+param[in] (x1,y1) this is the point with the lesser x value
+param[in] (x2,y2) this is the other point.
+param[in] wid, this is the wall id bnds[2*wid] is the x index of the first vertice in the c-c direction
+*/
+void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid){
+int cgrid=0, cgridx=0, cgridy=0, fgrid=0;
+double slope, slopec, cx=ax+boxx, cy=ay+boxy, gridx, gridy;
+
+while(cy<y1){
+	cgrid+=nx;
+	cy+=boxy;
+	cgridy++;
+}while(cx<x1){
+	cgrid++;
+	cx+=boxx;
+	cgridx++;
+}
+cy=ay+boxy; cx=ax+boxx;
+while(cy<y2){
+	fgrid+=nx;
+	cy+=boxy;
+}while(cx<x2){
+	fgrid++;
+	cx+=boxx;
+}
+if (debug) cout << cgrid << "   ";
+if((x2-x1)==0){
+	while(cgrid!=fgrid){
+		tag(wid,cgrid);
+		cgrid+=nx;
+		if (debug) cout<< cgrid << "   ";
+	}
+tag(wid,cgrid);
+return;
+	}
+
+
+slope=((y2-y1)/(x2-x1));
+
+
+if(slope>=0){
+	gridx=ax+((1+cgridx)*boxx);
+	gridy=ay+((1+cgridy)*boxy);
+
+	while(cgrid!=fgrid){
+		tag(wid,cgrid);
+		slopec=((gridy-y1)/(gridx-x1));
+		if(slope>slopec){
+			cgrid+=nx;
+			x1+=((1/slope)*(gridy-y1));
+			y1=gridy;
+			cgridy++;
+			gridy+=boxy;
+		}if(slope<slopec){
+			cgrid++;
+			y1+=(slope*(gridx-x1));
+			x1=gridx;
+			cgridx++;
+			gridx+=boxx;
+		}if(slope==slopec){
+			cgrid+=(nx+1);
+			x1=gridx;
+			y1=gridy;
+			cgridx++;
+			cgridy++;
+			tag(wid,cgrid-1);
+			tag(wid,cgrid-nx);
+			if(debug) cout << cgrid-1 << "   " << cgrid-nx << "   ";
+			gridx+=boxx;
+			gridy+=boxy;
+		}
+	if (debug) cout << cgrid << "   ";
+	}
+
+tag(wid,cgrid);
+return;
+
+}
+
+if(slope<0){
+	gridx=ax+((1+cgridx)*boxx);
+	gridy=ay+(cgridy*boxy);
+	
+	while(cgrid!=fgrid){
+		tag(wid, cgrid);
+		slopec=((gridy-y1)/(gridx-x1));
+		if(slope>slopec){
+			cgrid++;
+			cgridx++;
+			y1+=(slope*(gridx-x1));
+			x1=gridx;
+			gridx+=boxx;
+		}if(slope<slopec){
+			cgrid-=nx;
+			cgridy--;
+			x1+=((1/slope)*(gridy-y1));
+			y1=gridy;
+			gridy-=boxy;
+		}if(slope==slopec){
+			cgrid-=(nx-1);
+			x1=gridx;
+			y1=gridy;
+			gridx+=boxx;
+			gridy-=boxy;
+			cgridx++;
+			cgridy++;
+			tag(wid,cgrid-1);
+			tag(wid,cgrid+nx);
+			if(debug) cout << cgrid-1 << "    " << cgrid+nx << "   ";
+		}
+
+	if (debug) cout << cgrid << "   ";
+	}
+tag(wid,cgrid);
+return;
+
+}
+
+}
+/* A helper function for semi-circle-labelling. If crossproductz(x1,y1,particlex,particley)>0 then the particle is on the appropriate side of the wall to be tagged. */
+int container_2d::crossproductz(double x1, double y1, double x2, double y2){
+	if(((x1*y2)-(x2*y1))>0) return 1;
+	else return -1;
+}
+
+/* tags particles that are within a semicircle(on the appropriate side) of a boundary
+ * \param[in] (x1,y1)(x2,y2) the end points of the boundary wall. with (x1,y1) being the first point reached in the counter-clockwise direction. */
+
+void containter_2d::semi-circle-labelling(double x1, double y1, double x2, double y2, int wid){
+	voropp_loop_2d l(*this);
+	double xmin, xmax, ymin, ymax, radius=(dis(x1,y1,x2,y2)/2), dummy1, dummy2, midx=(x1+x2)/2, 
+	midy=(y1+y2)/2;
+	double cpx, cpy; //these stand for "current particle x" and "current particle y"
+	int box; //this holds the current computational box that we're in.
+
+	//first we will initialize the voropp_loop_2d object to a rectangle containing all
+	//the points we are interested in plus some extraneous points. The larger the slope
+	//between (x1,y1) and (x2,y2) is, the more extraneous points we get- might change this later on.
+
+	if(x1!=x2){
+		if(x1>x2){
+			xmin=x2;
+			xmax=x1;
+			ymin=min(y1,y2)
+			ymax=((y1+y2)/2)+radius;
+		}else{
+			xmin=x1;
+			xmax=x2;
+			ymax=max(y1,y2)
+			ymin=((y1+y2)/2)-radius;
+		}
+	}else{
+		if(y1>y2){
+			ymax=y1;
+			ymin=y2;
+			xmax=x1;
+			xmin=x1-radius;
+		}else{
+			ymax=y2;
+			ymin=y1;
+			xmin=x1;
+			xmax=x1+radius;
+		}
+	}
+	box=l.init(xmin,xmax,ymin,ymax, dummy1, dummy2);
+	//now loop through all the particles in the boxes we found. Tagging the ones that are within radi	us of (midx,midy) and are on the appropriate side of the wall.
+
+	while(box!=-1){
+		for(int j=0;j<co[box];j++){
+			cpx=p[box][2*j];
+			cpy=p[box][2*j+1];
+			if((dis(midx,midy,cpx,cpy)<=radius)&&
+			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)){
+			//TAG THE APPROPRIATE DATA STRUCTURE WITH THE WALL-ID
+			}
+		}box=l.inc(dummy1,dummy2);
+	}
+}
+		
+
+			
+			
+
+
 
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
