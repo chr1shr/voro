@@ -3,6 +3,7 @@
 
 #include "container_2d.hh"
 #include <iostream>
+#include <math.h>
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
  * direction is periodic or not. It divides the container into a rectangular
@@ -21,7 +22,7 @@ container_2d::container_2d(double ax_,double bx_,double ay_,
 	: ax(ax_), bx(bx_), ay(ay_), by(by_), boxx((bx_-ax_)/nx_), boxy((by_-ay_)/ny_),
 	xsp(1/boxx), ysp(1/boxy), nx(nx_), ny(ny_), nxy(nx*ny),
 	xperiodic(xperiodic_), yperiodic(yperiodic_), convex(convex_),
-	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]), wid(new int*[nxy]), p(new double*[nxy]){
+	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]), wid(new int*[nxy]), p(new double*[nxy]), tmp(new int[15]), tmpcap(15){
 	int l;
 	debug=true;
 	for(l=0;l<nxy;l++) co[l]=0;
@@ -231,12 +232,12 @@ int container_2d::crossproductz(double x1, double y1, double x2, double y2){
 /* tags particles that are within a semicircle(on the appropriate side) of a boundary
  * \param[in] (x1,y1)(x2,y2) the end points of the boundary wall. with (x1,y1) being the first point reached in the counter-clockwise direction. */
 
-void containter_2d::semi-circle-labelling(double x1, double y1, double x2, double y2, int wid){
+void container_2d::semi_circle_labelling(double x1, double y1, double x2, double y2, int wid){
 	voropp_loop_2d l(*this);
-	double xmin, xmax, ymin, ymax, radius=(dis(x1,y1,x2,y2)/2), dummy1, dummy2, midx=(x1+x2)/2, 
+	double xmin, xmax, ymin, ymax, rs=(dist_squared(x1,y1,x2,y2)/2),radius=pow(rs,1/2), dummy1, dummy2, midx=(x1+x2)/2, 
 	midy=(y1+y2)/2;
 	double cpx, cpy; //these stand for "current particle x" and "current particle y"
-	int box; //this holds the current computational box that we're in.
+	int box, count=0; //this holds the current computational box that we're in.
 
 	//first we will initialize the voropp_loop_2d object to a rectangle containing all
 	//the points we are interested in plus some extraneous points. The larger the slope
@@ -246,12 +247,12 @@ void containter_2d::semi-circle-labelling(double x1, double y1, double x2, doubl
 		if(x1>x2){
 			xmin=x2;
 			xmax=x1;
-			ymin=min(y1,y2)
+			ymin=min(y1,y2);
 			ymax=((y1+y2)/2)+radius;
 		}else{
 			xmin=x1;
 			xmax=x2;
-			ymax=max(y1,y2)
+			ymax=max(y1,y2);
 			ymin=((y1+y2)/2)-radius;
 		}
 	}else{
@@ -274,12 +275,24 @@ void containter_2d::semi-circle-labelling(double x1, double y1, double x2, doubl
 		for(int j=0;j<co[box];j++){
 			cpx=p[box][2*j];
 			cpy=p[box][2*j+1];
-			if((dis(midx,midy,cpx,cpy)<=radius)&&
+			if((dist_squared(midx,midy,cpx,cpy)<=rs)&&
 			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)){
-			//TAG THE APPROPRIATE DATA STRUCTURE WITH THE WALL-ID
+				if(count==tmpcap){
+					int* a=new int[tmpcap*2];
+						for(int j=0; j<tmpcap; j++){
+							a[j]=tmp[j];
+						}
+					delete [] tmp; tmp=a;
+					tmpcap*=2;
+				}	
+
+				tmp[count]=box;
+				tmp[count+1]=j;
+				tmp[count+2]=wid;
+				count+=3;
 			}
 		}box=l.inc(dummy1,dummy2);
-	}
+	}tmpcap=count;
 }
 		
 

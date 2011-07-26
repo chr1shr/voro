@@ -89,19 +89,29 @@ class container_2d {
 		 * derived container_poly class, this also holds particle
 		 * radii. */
 		double **p;
+		/** An array created and modified in the procedure semi-circle-labelling. It is used to create the array *soi. 
+		Format (box, particle #, wallid) **/
+		int *tmp;
+		/** holding the current capacity of *tmp before and during semi_circle_labelling, and total number of entries in tmp aft		er semi-circle-labelling **/
+		int tmpcap;
+		/** An array created from *tmp and is referenced my *soip. soi stands for "spheres of influence" **/
+		int *soi;
+		/** An array referencing different parts of *soi. For a particle # q, soip[p] is a pointer to a spot of *soi that lists 		all walls for which q falls in an exterior semi-circle. **/
+		int *soip;
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,bool convex_,int memi);
 		~container_2d();
 		int crossproductz(double x1, double y1, double x2, double y2);
-		void semi-circle-labelling(double x1, double y1, double x2, double y2, int wid);
+		void semi_circle_labelling(double x1, double y1, double x2, double y2, int wid);
 		inline double max(double a, double b){
 			return (b<a)?a:b; 
 		}
 		inline double min(double a, double b){
 			return (b<a)?b:a;
 		}
-		inline double dist(x1, y1, x2, y2){
-			return ((y2-y1)^2+(x2-x1)^2)^(1/2);
-		{
+		inline double dist_squared(double x1,double y1,double x2,double y2){
+		
+			return (((y2-y1)*(y2-y1))+((x2-x1)*(x2-x1)));
+		}
 		void import(FILE *fp=stdin);
 		/** Imports a list of particles from a file.
 		 * \param[in] filename the file to read from. */
