@@ -22,7 +22,7 @@ container_2d::container_2d(double ax_,double bx_,double ay_,
 	: ax(ax_), bx(bx_), ay(ay_), by(by_), boxx((bx_-ax_)/nx_), boxy((by_-ay_)/ny_),
 	xsp(1/boxx), ysp(1/boxy), nx(nx_), ny(ny_), nxy(nx*ny),
 	xperiodic(xperiodic_), yperiodic(yperiodic_), convex(convex_),
-	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]), wid(new int*[nxy]), p(new double*[nxy]), tmp(new int[15]), tmpcap(15){
+	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]), wid(new int*[nxy]), p(new double*[nxy]), tmp(new int[15]), tmpcap(15),tmplength(0){
 	int l;
 	debug=true;
 	for(l=0;l<nxy;l++) co[l]=0;
@@ -101,17 +101,51 @@ inline bool container_2d::put_remap(int &ij,double &x,double &y) {
 	ij+=nx*j;
 	return true;
 }
-
+/** This does the additional set-up for non-convex containers. We assume that **p, **id, *co, *mem, *bnds, and noofbnds
+have already been setup. We then proceed to setup **wid, *soi, *soip, and THE PROBLEM POINTS BOOLEAN ARRAY. This algorithm
+keeps the importing seperate from the set-up */
+void container_2d::setup(){
+	double lx, ly, cx, cy, nx, ny, fx, fy, tmpx, tmpy;//last (x,y), current (x,y), next (x,y), temporary (x,y)
+	int wid=1;
+	lx=bnds[0]; ly=bnds[1]; cx=bnds[2]; cy=bnds[3]; nx=bnds[4]; ny=bnds[5];
+	fx=lx; fy=ly;
+	while(wid<(noofbnds-1)){
+		tag_walls(cx,cy,nx,ny,wid);
+		semi_circle_labelling(cx,cy,nx,ny,wid);
+		//CHECK IF PROBLEM POINT, IF SO TAG APPROPRIATE DATA STRUCTURE
+		tmpx=cx; tmpy=cy; cx=nx; cy=ny; lx=tmpx; ly=tmpy;
+		wid++;
+		if(!(wid==(noofbnds-1))){
+		nx=bnds[(wid*2)+2]; ny=bnds[(wid*2)+3];
+		}
+	}
+	nx=fx; ny=fy;
+	tag_walls(cx,cy,nx,ny,wid);
+	semi_circle_labelling(cx,cy,nx,ny,wid);
+	//CHECK IF (cx,cy) IS PROBLEM POINT, IF SO TAG APPROPRIATE DATA STRUCTURE
+	lx=cx; ly=cy; wid=0; cx=fx; cy=fy; nx=bnds[2]; ny=bnds[3];
+	tag_walls(cx,cy,nx,ny,wid);
+	semi_circle_labelling(cx,cy,nx,ny,wid);
+	//CHECK IF (cx,cy) IS PROBLEM POINT, IF SO TAG APPROPRIATE DATA STRUCTURE
+	//at this point *tmp is completed RUN CHRIS' ALGORITH TO CREATE *SOI and *SOIP
+	
+	
+	
+}
+	
 /**given two points, tags all the computational boxes that the line segment specified by the two points
 goes through.
-param[in] (x1,y1) this is the point with the lesser x value
+param[in] (x1,y1) this is one point 
 param[in] (x2,y2) this is the other point.
 param[in] wid, this is the wall id bnds[2*wid] is the x index of the first vertice in the c-c direction
 */
 void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid){
 int cgrid=0, cgridx=0, cgridy=0, fgrid=0;
 double slope, slopec, cx=ax+boxx, cy=ay+boxy, gridx, gridy;
-
+if(x2<x1){
+	double tmpx=x1, tmpy=y1;
+	x1=x2; y1=y2; x2=tmpx; y2=tmpy;
+}
 while(cy<y1){
 	cgrid+=nx;
 	cy+=boxy;
@@ -237,7 +271,7 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 	double xmin, xmax, ymin, ymax, rs=(dist_squared(x1,y1,x2,y2)/2),radius=pow(rs,1/2), dummy1, dummy2, midx=(x1+x2)/2, 
 	midy=(y1+y2)/2;
 	double cpx, cpy; //these stand for "current particle x" and "current particle y"
-	int box, count=0; //this holds the current computational box that we're in.
+	int box; //this holds the current computational box that we're in.
 
 	//first we will initialize the voropp_loop_2d object to a rectangle containing all
 	//the points we are interested in plus some extraneous points. The larger the slope
@@ -277,7 +311,7 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 			cpy=p[box][2*j+1];
 			if((dist_squared(midx,midy,cpx,cpy)<=rs)&&
 			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)){
-				if(count==tmpcap){
+				if(tmplength==tmpcap){
 					int* a=new int[tmpcap*2];
 						for(int j=0; j<tmpcap; j++){
 							a[j]=tmp[j];
@@ -286,13 +320,13 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 					tmpcap*=2;
 				}	
 
-				tmp[count]=box;
-				tmp[count+1]=j;
-				tmp[count+2]=wid;
-				count+=3;
+				tmp[tmplength]=box;
+				tmp[tmplength]=j;
+				tmp[tmplength]=wid;
+				tmplength+=3;
 			}
 		}box=l.inc(dummy1,dummy2);
-	}tmpcap=count;
+	}
 }
 		
 

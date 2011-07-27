@@ -92,14 +92,17 @@ class container_2d {
 		/** An array created and modified in the procedure semi-circle-labelling. It is used to create the array *soi. 
 		Format (box, particle #, wallid) **/
 		int *tmp;
-		/** holding the current capacity of *tmp before and during semi_circle_labelling, and total number of entries in tmp aft		er semi-circle-labelling **/
+		/** holding the current capacity of *tmp **/
 		int tmpcap;
+		/** holds the used values of *tmp **/
+		int tmplength;
 		/** An array created from *tmp and is referenced my *soip. soi stands for "spheres of influence" **/
 		int *soi;
 		/** An array referencing different parts of *soi. For a particle # q, soip[p] is a pointer to a spot of *soi that lists 		all walls for which q falls in an exterior semi-circle. **/
 		int *soip;
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,bool convex_,int memi);
 		~container_2d();
+		void setup();
 		int crossproductz(double x1, double y1, double x2, double y2);
 		void semi_circle_labelling(double x1, double y1, double x2, double y2, int wid);
 		inline double max(double a, double b){
