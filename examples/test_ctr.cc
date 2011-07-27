@@ -9,7 +9,7 @@ int main() {
 	// Initialize the container class to be the unit square, with
 	// non-periodic boundary conditions. Divide it into a 6 by 6 grid, with
 	// an initial memory allocation of 16 particles per grid square.
-	container_2d con(0,1,0,1,6,6,true,true,16);
+	container_2d con(0,1,0,1,6,6,true,true,false,16);
 
 	// Add 1000 random points to the container
 	for(i=0;i<1000;i++) {

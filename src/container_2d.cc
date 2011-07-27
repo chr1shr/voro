@@ -2,8 +2,12 @@
  * \brief Function implementations for the container_2d class. */
 
 #include "container_2d.hh"
+
 #include <iostream>
+#include <cstring>
 #include <math.h>
+using namespace std;
+
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
  * direction is periodic or not. It divides the container into a rectangular
@@ -16,31 +20,53 @@
  * \param[in] (xperiodic_,yperiodic_) flags setting whether the container is periodic
  *                        in each coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block. */
-//MODIFIED
 container_2d::container_2d(double ax_,double bx_,double ay_,
 		double by_,int nx_,int ny_,bool xperiodic_,bool yperiodic_,bool convex_,int init_mem)
 	: ax(ax_), bx(bx_), ay(ay_), by(by_), boxx((bx_-ax_)/nx_), boxy((by_-ay_)/ny_),
 	xsp(1/boxx), ysp(1/boxy), nx(nx_), ny(ny_), nxy(nx*ny),
 	xperiodic(xperiodic_), yperiodic(yperiodic_), convex(convex_),
-	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]), wid(new int*[nxy]), p(new double*[nxy]), tmp(new int[15]), tmpcap(15),tmplength(0){
+	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]),
+	wid(new int*[nxy]), p(new double*[nxy]), nlab(new unsigned int*[nxy]),
+	plab(new int**[nxy]), soi(NULL), noofbnds(0), bnds_size(init_bnds_size),
+	bnds(new double[2*bnds_size]), edb(new int[bnds_size]) {
 	int l;
 	debug=true;
+
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
 	for(l=0;l<nxy;l++) id[l]=new int[init_mem];
 	for(l=0;l<nxy;l++) p[l]=new double[2*init_mem];
-	for(l=0;l<nxy;l++){
+	for(l=0;l<nxy;l++) {
 		wid[l]=new int[6];
 		wid[l][0]=1;
 	}
+	for(l=0;l<nxy;l++) nlab[l]=new unsigned int[init_mem];
+	for(l=0;l<nxy;l++) plab[l]=new int*[init_mem];
 }
 
 /** The container destructor frees the dynamically allocated memory. */
 container_2d::~container_2d() {
 	int l;
+
+	// Clear "sphere of influence" array if it has been allocated
+	if(soi!=NULL) delete [] soi;
+
+	// Delete the boundary arrays
+	delete [] edb;
+	delete [] bnds;
+
+	// Deallocate the block-level arrays
+	for(l=nxy-1;l>=0;l--) delete [] plab[l];
+	for(l=nxy-1;l>=0;l--) delete [] nlab[l];
+	for(l=nxy-1;l>=0;l--) delete [] wid[l];
 	for(l=nxy-1;l>=0;l--) delete [] p[l];
 	for(l=nxy-1;l>=0;l--) delete [] id[l];
+
+	// Delete the two-dimensional 
+	delete [] plab;
+	delete [] nlab;
 	delete [] p;
+	delete [] wid;
 	delete [] id;
 	delete [] mem;
 	delete [] co;
@@ -101,9 +127,11 @@ inline bool container_2d::put_remap(int &ij,double &x,double &y) {
 	ij+=nx*j;
 	return true;
 }
-/** This does the additional set-up for non-convex containers. We assume that **p, **id, *co, *mem, *bnds, and noofbnds
-have already been setup. We then proceed to setup **wid, *soi, *soip, and THE PROBLEM POINTS BOOLEAN ARRAY. This algorithm
-keeps the importing seperate from the set-up */
+
+/** This does the additional set-up for non-convex containers. We assume that
+ * **p, **id, *co, *mem, *bnds, and noofbnds have already been setup. We then
+ * proceed to setup **wid, *soi, and THE PROBLEM POINTS BOOLEAN ARRAY.
+ * This algorithm keeps the importing seperate from the set-up */
 void container_2d::setup(){
 	double lx, ly, cx, cy, nx, ny, fx, fy, tmpx, tmpy;//last (x,y), current (x,y), next (x,y), temporary (x,y)
 	int wid=1;
@@ -133,75 +161,75 @@ void container_2d::setup(){
 	
 }
 	
-/**given two points, tags all the computational boxes that the line segment specified by the two points
-goes through.
-param[in] (x1,y1) this is one point 
-param[in] (x2,y2) this is the other point.
-param[in] wid, this is the wall id bnds[2*wid] is the x index of the first vertice in the c-c direction
-*/
+/** Given two points, tags all the computational boxes that the line segment
+ * specified by the two points
+ * goes through. param[in] (x1,y1) this is one point 
+ * \param[in] (x2,y2) this is the other point.
+ * \param[in] wid this is the wall id bnds[2*wid] is the x index of the first
+ *                vertex in the c-c direction. */
 void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid){
-int cgrid=0, cgridx=0, cgridy=0, fgrid=0;
-double slope, slopec, cx=ax+boxx, cy=ay+boxy, gridx, gridy;
-if(x2<x1){
-	double tmpx=x1, tmpy=y1;
-	x1=x2; y1=y2; x2=tmpx; y2=tmpy;
-}
-while(cy<y1){
-	cgrid+=nx;
-	cy+=boxy;
-	cgridy++;
-}while(cx<x1){
-	cgrid++;
-	cx+=boxx;
-	cgridx++;
-}
-cy=ay+boxy; cx=ax+boxx;
-while(cy<y2){
-	fgrid+=nx;
-	cy+=boxy;
-}while(cx<x2){
-	fgrid++;
-	cx+=boxx;
-}
-if (debug) cout << cgrid << "   ";
-if((x2-x1)==0){
-	while(cgrid!=fgrid){
-		tag(wid,cgrid);
+	int cgrid=0, cgridx=0, cgridy=0, fgrid=0;
+	double slope, slopec, cx=ax+boxx, cy=ay+boxy, gridx, gridy;
+
+	if(x2<x1){
+		double tmpx=x1, tmpy=y1;
+		x1=x2; y1=y2; x2=tmpx; y2=tmpy;
+	}
+	while(cy<y1){
 		cgrid+=nx;
-		if (debug) cout<< cgrid << "   ";
+		cy+=boxy;
+		cgridy++;
+	}while(cx<x1){
+		cgrid++;
+		cx+=boxx;
+		cgridx++;
 	}
-tag(wid,cgrid);
-return;
+	cy=ay+boxy; cx=ax+boxx;
+	while(cy<y2){
+		fgrid+=nx;
+		cy+=boxy;
+	}while(cx<x2){
+		fgrid++;
+		cx+=boxx;
 	}
-
-
-slope=((y2-y1)/(x2-x1));
-
-
-if(slope>=0){
-	gridx=ax+((1+cgridx)*boxx);
-	gridy=ay+((1+cgridy)*boxy);
-
-	while(cgrid!=fgrid){
-		tag(wid,cgrid);
-		slopec=((gridy-y1)/(gridx-x1));
-		if(slope>slopec){
+	if (debug) cout << cgrid << "   ";
+	if((x2-x1)==0){
+		while(cgrid!=fgrid){
+			tag(wid,cgrid);
 			cgrid+=nx;
-			x1+=((1/slope)*(gridy-y1));
-			y1=gridy;
-			cgridy++;
-			gridy+=boxy;
-		}if(slope<slopec){
-			cgrid++;
-			y1+=(slope*(gridx-x1));
-			x1=gridx;
-			cgridx++;
-			gridx+=boxx;
-		}if(slope==slopec){
-			cgrid+=(nx+1);
-			x1=gridx;
-			y1=gridy;
-			cgridx++;
+			if (debug) cout<< cgrid << "   ";
+		}
+	tag(wid,cgrid);
+	return;
+		}
+
+	slope=((y2-y1)/(x2-x1));
+
+
+	if(slope>=0){
+		gridx=ax+((1+cgridx)*boxx);
+		gridy=ay+((1+cgridy)*boxy);
+
+		while(cgrid!=fgrid){
+			tag(wid,cgrid);
+			slopec=((gridy-y1)/(gridx-x1));
+			if(slope>slopec){
+				cgrid+=nx;
+				x1+=((1/slope)*(gridy-y1));
+				y1=gridy;
+				cgridy++;
+				gridy+=boxy;
+			} else if(slope<slopec){
+				cgrid++;
+				y1+=(slope*(gridx-x1));
+				x1=gridx;
+				cgridx++;
+				gridx+=boxx;
+			} else if(slope==slopec){
+				cgrid+=(nx+1);
+				x1=gridx;
+				y1=gridy;
+				cgridx++;
 			cgridy++;
 			tag(wid,cgrid-1);
 			tag(wid,cgrid-nx);
@@ -209,158 +237,292 @@ if(slope>=0){
 			gridx+=boxx;
 			gridy+=boxy;
 		}
-	if (debug) cout << cgrid << "   ";
-	}
-
-tag(wid,cgrid);
-return;
-
-}
-
-if(slope<0){
-	gridx=ax+((1+cgridx)*boxx);
-	gridy=ay+(cgridy*boxy);
-	
-	while(cgrid!=fgrid){
-		tag(wid, cgrid);
-		slopec=((gridy-y1)/(gridx-x1));
-		if(slope>slopec){
-			cgrid++;
-			cgridx++;
-			y1+=(slope*(gridx-x1));
-			x1=gridx;
-			gridx+=boxx;
-		}if(slope<slopec){
-			cgrid-=nx;
-			cgridy--;
-			x1+=((1/slope)*(gridy-y1));
-			y1=gridy;
-			gridy-=boxy;
-		}if(slope==slopec){
-			cgrid-=(nx-1);
-			x1=gridx;
-			y1=gridy;
-			gridx+=boxx;
-			gridy-=boxy;
-			cgridx++;
-			cgridy++;
-			tag(wid,cgrid-1);
-			tag(wid,cgrid+nx);
-			if(debug) cout << cgrid-1 << "    " << cgrid+nx << "   ";
+		if (debug) cout << cgrid << "   ";
 		}
-
-	if (debug) cout << cgrid << "   ";
+	
+		tag(wid,cgrid);
+		return;
 	}
-tag(wid,cgrid);
-return;
 
+	if(slope<0){
+		gridx=ax+((1+cgridx)*boxx);
+		gridy=ay+(cgridy*boxy);
+		
+		while(cgrid!=fgrid){
+			tag(wid, cgrid);
+			slopec=((gridy-y1)/(gridx-x1));
+			if(slope>slopec){
+				cgrid++;
+				cgridx++;
+				y1+=(slope*(gridx-x1));
+				x1=gridx;
+				gridx+=boxx;
+			} else if(slope<slopec){
+				cgrid-=nx;
+				cgridy--;
+				x1+=((1/slope)*(gridy-y1));
+				y1=gridy;
+				gridy-=boxy;
+			} else if(slope==slopec){
+				cgrid-=(nx-1);
+				x1=gridx;
+				y1=gridy;
+				gridx+=boxx;
+				gridy-=boxy;
+				cgridx++;
+				cgridy++;
+				tag(wid,cgrid-1);
+				tag(wid,cgrid+nx);
+				if(debug) cout << cgrid-1 << "    " << cgrid+nx << "   ";
+			}
+
+		if (debug) cout << cgrid << "   ";
+		}
+		tag(wid,cgrid);
+	}
 }
 
-}
 /* A helper function for semi-circle-labelling. If crossproductz(x1,y1,particlex,particley)>0 then the particle is on the appropriate side of the wall to be tagged. */
 int container_2d::crossproductz(double x1, double y1, double x2, double y2){
 	if(((x1*y2)-(x2*y1))>0) return 1;
 	else return -1;
 }
 
-/* tags particles that are within a semicircle(on the appropriate side) of a boundary
- * \param[in] (x1,y1)(x2,y2) the end points of the boundary wall. with (x1,y1) being the first point reached in the counter-clockwise direction. */
-
+/* Tags particles that are within a semicircle (on the appropriate side) of a boundary.
+ * \param[in] (x1,y1) the start point of the wall segment, arranged so that it
+ *                    is the first point reached in the counter-clockwise
+ *                    direction. 
+ * \param[in] (x2,y2) the end points of the wall segment. */
 void container_2d::semi_circle_labelling(double x1, double y1, double x2, double y2, int wid){
 	voropp_loop_2d l(*this);
-	double xmin, xmax, ymin, ymax, rs=(dist_squared(x1,y1,x2,y2)/2),radius=pow(rs,1/2), dummy1, dummy2, midx=(x1+x2)/2, 
+	double xmin,xmax,ymin,ymax,rs=(dist_squared(x1,y1,x2,y2)/2),radius=pow(rs,1/2),dummy1,dummy2,midx=(x1+x2)/2,
 	midy=(y1+y2)/2;
-	double cpx, cpy; //these stand for "current particle x" and "current particle y"
+	double cpx,cpy; //these stand for "current particle x" and "current particle y"
 	int box; //this holds the current computational box that we're in.
 
-	//first we will initialize the voropp_loop_2d object to a rectangle containing all
-	//the points we are interested in plus some extraneous points. The larger the slope
-	//between (x1,y1) and (x2,y2) is, the more extraneous points we get- might change this later on.
+	/** An array created and modified in the procedure
+	 * semi-circle-labelling. It is used to create the array *soi. Format
+	 * (box, particle #, wallid) **/
+	int *tmp(new int[3*init_temp_label_size]),*tmpp(tmp),
+	    *tmpe(tmp+3*init_temp_label_size);
 
-	if(x1!=x2){
-		if(x1>x2){
+	// First we will initialize the voropp_loop_2d object to a rectangle
+	// containing all the points we are interested in plus some extraneous
+	// points. The larger the slope between (x1,y1) and (x2,y2) is, the
+	// more extraneous points we get- might change this later on.
+	if(x1!=x2) {
+		if(x1>x2) {
 			xmin=x2;
 			xmax=x1;
 			ymin=min(y1,y2);
 			ymax=((y1+y2)/2)+radius;
-		}else{
+		} else {
 			xmin=x1;
 			xmax=x2;
 			ymax=max(y1,y2);
 			ymin=((y1+y2)/2)-radius;
 		}
-	}else{
-		if(y1>y2){
+	} else {
+		if(y1>y2) {
 			ymax=y1;
 			ymin=y2;
 			xmax=x1;
 			xmin=x1-radius;
-		}else{
+		} else {
 			ymax=y2;
 			ymin=y1;
 			xmin=x1;
 			xmax=x1+radius;
 		}
 	}
-	box=l.init(xmin,xmax,ymin,ymax, dummy1, dummy2);
-	//now loop through all the particles in the boxes we found. Tagging the ones that are within radi	us of (midx,midy) and are on the appropriate side of the wall.
-
-	while(box!=-1){
+	
+	// Now loop through all the particles in the boxes we found. Tagging
+	// the ones that are within radius of (midx,midy) and are on the
+	// appropriate side of the wall.
+	box=l.init(xmin,xmax,ymin,ymax,dummy1,dummy2);
+	do {
 		for(int j=0;j<co[box];j++){
 			cpx=p[box][2*j];
 			cpy=p[box][2*j+1];
 			if((dist_squared(midx,midy,cpx,cpy)<=rs)&&
 			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)){
-				if(tmplength==tmpcap){
-					int* a=new int[tmpcap*2];
-						for(int j=0; j<tmpcap; j++){
-							a[j]=tmp[j];
-						}
-					delete [] tmp; tmp=a;
-					tmpcap*=2;
-				}	
-
-				tmp[tmplength]=box;
-				tmp[tmplength]=j;
-				tmp[tmplength]=wid;
-				tmplength+=3;
+				if(tmpp==tmpe) add_temporary_label_memory(tmp,tmpp,tmpe);
+				*(tmpp++)=box;
+				*(tmpp++)=j;
+				*(tmpp++)=wid;
 			}
-		}box=l.inc(dummy1,dummy2);
-	}
+		}
+	} while((box=l.inc(dummy1,dummy2))!=-1);
+
+	// Pass the temporary label array to the routine to initialize the
+	// label table, then delete the temporary array	
+	create_label_table(tmp,tmpp);
+	delete [] tmp;
 }
 		
+void container_2d::create_label_table(int *tmp,int *tmpp) {
+	int ij,q,*pp,tlab(0);
 
-			
-			
+	// Clear label counters
+	for(ij=0;ij<nxy;ij++) for(q=0;q<co[ij];q++) nlab[ij][q]=0;
 
+	// Increment label counters
+	for(pp=tmp;pp<tmpp;pp+=3) {nlab[*pp][pp[1]]++;tlab++;}
 
+	// Check for case of no labels at all (which may be common)
+	if(tlab==0) {
+#if VOROPP_VERBOSE >=2
+		fputs("No labels needed",stderr);
+#endif
+		return;
+	}
+
+	// If there was already a table from a previous call, remove it
+	if(soi!=NULL) delete [] soi;
+
+	// Allocate the label array, and set up pointers from each particle
+	// to the corresponding location
+	pp=soi=new int[tlab];
+	for(ij=0;ij<nxy;ij++) for(q=0;q<co[ij];pp+=nlab[ij][q++]) plab[ij][q]=pp;
+
+	// Fill in the label entries
+	for(pp=tmp;pp<tmpp;pp+=3) *(plab[*pp][pp[1]]++)=pp[2];
+
+	// Reset the label pointers 
+	pp=soi;
+	for(ij=0;ij<nxy;ij++) for(q=0;q<co[ij];pp+=nlab[ij][q++]) plab[ij][q]=pp;
+}
+
+/** Draws the boundaries. (Note: this currently assumes that each boundary loop
+ * is a continuous block in the bnds array, which will be true for the import
+ * function. However, it may not be true in other cases, in which case this
+ * routine would have to be extended.) */
+void container_2d::draw_boundary(FILE *fp) {
+	int i;
+	
+	for(i=0;i<noofbnds;i++) {
+		fprintf(fp,"%g %g\n",i,bnds[2*i],bnds[2*i+1]);
+
+		// If a loop is detected, than complete the loop in the output file
+		// and insert a newline
+		if(edb[i]<i) fprintf(fp,"%g %g\n\n",bnds[2*edb[i]],bnds[2*edb[i]+1]);
+	}
+}	
+
+/** Increases the size of the temporary label memory.
+ * \param[in,out] tmp a reference to the start of the array.
+ * \param[in,out] tmpp a reference to the next free slot of the array.
+ * \param[in,out] tmpe a reference to the end of the array. */
+void container_2d::add_temporary_label_memory(int *&tmp,int *&tmpp,int *&tmpe) {
+	int size(tmpe-tmp);
+	size<<=1;
+	if(size>3*max_temp_label_size)
+		voropp_fatal_error("Absolute temporary label memory allocation exceeded",VOROPP_MEMORY_ERROR);
+#if VOROPP_VERBOSE >=3
+	fprintf(stderr,"Temporary label memory in region scaled up to %d\n",size);
+#endif			
+	int *ntmp(new int[size]),*tp(tmp);tmpp=ntmp;
+	while(tp<tmpe) *(tmpp++)=*(tp++);
+	delete [] tmp;
+	tmp=ntmp;tmpe=tmp+size;
+}
+
+/** Increases the memory allocation for the boundary points. */
+void container_2d::add_boundary_memory() {
+	int i,size(bnds_size<<1);
+	if(size>max_bnds_size)
+		voropp_fatal_error("Absolute bounds memory allocation exceeded",VOROPP_MEMORY_ERROR);
+#if VOROPP_VERBOSE >=3
+	fprintf(stderr,"Bounds memory scaled up to %d\n",size);
+#endif
+	
+	// Reallocate the boundary vertex information
+	double *nbnds(new double[2*size]);
+	for(i=0;i<2*noofbnds;i++) nbnds[i]=bnds[i];
+	delete [] nbnds;bnds=nbnds;
+
+	// Reallocate the edge information
+	int *nedb(new int[2*size]);
+	for(i=0;i<noofbnds;i++) nedb[i]=edb[i];
+	delete [] edb;edb=nedb;
+}
 
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 void container_2d::add_particle_memory(int i) {
-	int l,*idp;double *pp;
+	int l;
 	mem[i]<<=1;
 	if(mem[i]>max_particle_memory)
 		voropp_fatal_error("Absolute maximum particle memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
 	fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,mem[i]);
 #endif
-	idp=new int[mem[i]];
+
+	// Create new arrays and copy across the data
+	int *idp(new int[mem[i]]);
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
-	pp=new double[2*mem[i]];
+	double *pp(new double[2*mem[i]]);
 	for(l=0;l<2*co[i];l++) pp[l]=p[i][l];
+	unsigned int *nlabp(new unsigned int[mem[i]]);
+	for(l=0;l<co[i];l++) nlabp[l]=nlab[i][l];
+	int **plabp(new int*[mem[i]]);
+	for(l=0;l<co[i];l++) plabp[l]=plab[i][l];
+
+	// Delete the original arrays and update the pointers
 	delete [] id[i];id[i]=idp;
 	delete [] p[i];p[i]=pp;
+	delete [] nlab[i];nlab[i]=nlabp;
+	delete [] plab[i];plab[i]=plabp;
 }
 
 /** Imports a list of particles from an input stream.
  * \param[in] fp a file handle to read from. */
-// NEED TO MODIFY TO HANDLE CONVEX INPUT-STREAM
 void container_2d::import(FILE *fp) {
-	int i,j;
+	int i,sm;
+	bool boundary(false);
 	double x,y;
-	while((j=fscanf(fp,"%d %lg %lg",&i,&x,&y))==3) put(i,x,y);
-	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	char *buf(new char[512]);
+
+	while(fgets(buf,512,fp)!=NULL) {
+		if(strcmp(buf,"#Start\n")==0||strcmp(buf,"# Start\n")==0) {
+
+			// Check that two consecutive start tokens haven't been
+			// encountered
+			if(boundary) voropp_fatal_error("File import error - two start tokens found",VOROPP_FILE_ERROR);
+			
+			// Remember this position in the boundary array to
+			// connect the end of the loop
+			sm=noofbnds;
+			boundary=true;
+
+		} else if(strcmp(buf,"#End\n")==0||strcmp(buf,"# End\n")==0) {
+			
+			// Check that two consecutive end tokens haven't been
+			// encountered
+			if(!boundary) voropp_fatal_error("File import error - two end tokens found",VOROPP_FILE_ERROR);
+			
+			// Assuming that at least one point was read, set the edge
+			// to connect back to the start point
+			if(noofbnds!=sm) edb[noofbnds-1]=sm;
+			boundary=false;
+		} else {
+
+			// Try and read three entries from the line
+			if(sscanf(buf,"%d %lg %lg",&i,&x,&y)!=3) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+			put(i,x,y);
+			if(boundary) {
+				
+				// Unless this is the start of a boundary loop,
+				// connect the previous vertex to this one
+				if(noofbnds!=sm) edb[noofbnds-1]=noofbnds;
+				bnds[2*noofbnds]=x;
+				bnds[2*(noofbnds++)+1]=y;
+			}
+		}
+	}
+
+	if(!feof(fp)) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	delete [] buf;	
 }
 
 /** Clears a container of particles. */
@@ -435,21 +597,20 @@ void container_2d::print_custom(const char *format,FILE *fp) {
  * \param[in] (x,y) the position of the particle that . */
 //MODIFIED
 bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,double y) {
-	if(convex){
-	double x1,x2,y1,y2;
-	if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
-	if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
-	c.init(x1,x2,y1,y2);
-	return true;
-	}else{
-	double *relative_bnds;
-        relative_bnds=new double[noofbnds*2];
-	for(int i=0; i<(2*noofbnds); i+=2){
-		relative_bnds[i]=*(bnds+i)-x;//POINTERS??
-		relative_bnds[i+1]=*(bnds+i+1)-y;
-	}
-	c.init_nonconvex(relative_bnds,noofbnds);
-	return true; //MODIFY SO ONLY RETURNS TRUE APPROPRIATELY
+	if(convex) {
+		double x1,x2,y1,y2;
+		if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
+		if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
+		c.init(x1,x2,y1,y2);
+		return true;
+	} else {
+		double *relative_bnds(new double[noofbnds*2]);
+		for(int i=0;i<2*noofbnds;i+=2) {
+			relative_bnds[i]=*(bnds+i)-x;//POINTERS??
+			relative_bnds[i+1]=*(bnds+i+1)-y;
+		}
+		c.init_nonconvex(relative_bnds,noofbnds);
+		return true; //MODIFY SO ONLY RETURNS TRUE APPROPRIATELY
 	}
 }
 
@@ -483,9 +644,9 @@ void container_2d::compute_all_cells() {
  * arrangements of particles.
  * \param[in,out] c a reference to a voronoicell object.
  * \param[in] (i,j) the coordinates of the block that the test particle is
- *                  in.
+ *		    in.
  * \param[in] ij the index of the block that the test particle is in, set to
- *               i+nx*j.
+ *		 i+nx*j.
  * \param[in] s the index of the particle within the test block.
  * \param[in] (x,y) the coordinates of the particle.
  * \return False if the Voronoi cell was completely removed during the
@@ -536,7 +697,7 @@ voropp_loop_2d::voropp_loop_2d(container_2d &con) : boxx(con.bx-con.ax), boxy(co
  * \param[in] (vx,vy) the position vector of the center of the sphere.
  * \param[in] r the radius of the sphere.
  * \param[out] (px,py) the periodic displacement vector for the first block to
- *                     be tested.??????
+ * 		       be tested.??????
  * \return The index of the first block to be tested. */
 int voropp_loop_2d::init(double vx,double vy,double r,double &px,double &py) {
 	ai=step_int((vx-ax-r)*xsp);
@@ -565,7 +726,7 @@ int voropp_loop_2d::init(double vx,double vy,double r,double &px,double &py) {
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates of the box.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates of the box.
  * \param[out] (px,py) the periodic displacement vector for the first block
- *                     to be tested.
+ *		       to be tested.
  * \return The index of the first block to be tested. */
 int voropp_loop_2d::init(double xmin,double xmax,double ymin,double ymax,double &px,double &py) {
 	ai=step_int((xmin-ax)*xsp);

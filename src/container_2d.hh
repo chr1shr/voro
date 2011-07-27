@@ -64,15 +64,7 @@ class container_2d {
 		/** This array holds the number of particles within each
 		 * computational box of the container. */
 		int *co;
-		/** This array holds the vertices of the non-convex domain. If the domain is convex this 
-		* variable is not initialized. The format is (bnds[0],bnds[1])=(x1,y1) for some (x1,y1) 
-		boundary point
-		* and (bnds[2],bnds[3])=(x2,y2) is the next vertex in the boundary from (x1,y1) if we are
-		going clockwise
-		*/
-		double *bnds;
-		/** specifies the length of *bnds/2 */
-		int noofbnds;
+
 		/** This array holds the maximum amount of particle memory for
 		 * each computational box of the container. If the number of
 		 * particles in a particular box ever approaches this limit,
@@ -89,32 +81,36 @@ class container_2d {
 		 * derived container_poly class, this also holds particle
 		 * radii. */
 		double **p;
-		/** An array created and modified in the procedure semi-circle-labelling. It is used to create the array *soi. 
-		Format (box, particle #, wallid) **/
-		int *tmp;
-		/** holding the current capacity of *tmp **/
-		int tmpcap;
-		/** holds the used values of *tmp **/
-		int tmplength;
-		/** An array created from *tmp and is referenced my *soip. soi stands for "spheres of influence" **/
+		/** A two dimensional array for holding the number of labels per
+		 * particle, plus other status information. */
+		unsigned int **nlab;
+		/** A two dimensional array of pointers to label information.
+		 */
+		int ***plab;
+		/** An array created from *tmp and is referenced my *soip. soi
+		 * stands for "spheres of influence" */
 		int *soi;
-		/** An array referencing different parts of *soi. For a particle # q, soip[p] is a pointer to a spot of *soi that lists 		all walls for which q falls in an exterior semi-circle. **/
-		int *soip;
+		/** The current number of boundary points. */
+		int noofbnds;
+		/** Specifies the memory allocation for the boundary points. */
+		int bnds_size;
+		/** This array holds the vertices of the non-convex domain. If
+		 * the domain is convex this variable is not initialized. The
+		 * format is (bnds[0],bnds[1])=(x1,y1) for some (x1,y1) 
+		 * boundary point and (bnds[2],bnds[3])=(x2,y2) is the next
+		 * vertex in the boundary from (x1,y1) if we are going
+		 * clockwise. */
+		double *bnds;
+		/** Information about how the boundary vertices are connected.
+		 * A single integer is stored for each vertex, giving the index
+		 * of the connecting vertex in the counter-clockwise sense. */
+		int *edb;
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,bool convex_,int memi);
 		~container_2d();
 		void setup();
 		int crossproductz(double x1, double y1, double x2, double y2);
 		void semi_circle_labelling(double x1, double y1, double x2, double y2, int wid);
-		inline double max(double a, double b){
-			return (b<a)?a:b; 
-		}
-		inline double min(double a, double b){
-			return (b<a)?b:a;
-		}
-		inline double dist_squared(double x1,double y1,double x2,double y2){
-		
-			return (((y2-y1)*(y2-y1))+((x2-x1)*(x2-x1)));
-		}
+
 		void import(FILE *fp=stdin);
 		/** Imports a list of particles from a file.
 		 * \param[in] filename the file to read from. */
@@ -170,6 +166,12 @@ class container_2d {
 			draw_cells_pov(fp);
 			fclose(fp);
 		}
+		void draw_boundary(FILE *fp=stdout);
+		inline void draw_boundary(const char *filename) {
+			FILE *fp(voropp_safe_fopen(filename,"w"));
+			draw_boundary(fp);
+			fclose(fp);
+		}
 		void print_custom(const char *format,FILE *fp=stdout);
 		/** Computes the Voronoi cells for all particles in the
 		 * container, and for each cell, outputs a line containing
@@ -210,7 +212,15 @@ class container_2d {
 	private:
 		inline bool put_locate_block(int &ij,double &x,double &y);
 		inline bool put_remap(int &ij,double &x,double &y);
+		inline double max(double a, double b) {return b<a?a:b;}
+		inline double min(double a, double b) {return (b<a)?b:a;}
+		inline double dist_squared(double x1,double y1,double x2,double y2) {
+			return (((y2-y1)*(y2-y1))+((x2-x1)*(x2-x1)));
+		}
+		void create_label_table(int *tmp,int *tmpp);
+		void add_temporary_label_memory(int *&tmp,int *&tmpp,int *&tmpe);
 		void add_particle_memory(int i);
+		void add_boundary_memory();
 		/** Custom int function, that gives consistent stepping for
 		 * negative numbers. With normal int, we have
 		 * (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1). With this routine, we

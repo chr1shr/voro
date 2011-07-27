@@ -8,7 +8,7 @@
 include ../config.mk
 
 # List of executables
-EXECUTABLES=test_cell test_ctr test_import test_lloyd
+EXECUTABLES=test_cell test_ctr test_import test_lloyd test_bdry
 
 # Makefile rules
 all: $(EXECUTABLES) 
@@ -18,6 +18,9 @@ test_cell: $(SOURCE) test_cell.cc
 
 test_ctr: test_ctr.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_ctr test_ctr.cc -lvoro++_2d
+
+test_bdry: test_bdry.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_bdry test_bdry.cc -lvoro++_2d
 
 test_import: test_import.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_import test_import.cc -lvoro++_2d

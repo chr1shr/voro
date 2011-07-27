@@ -4,11 +4,16 @@
 #ifndef VOROPP_CONFIG_HH
 #define VOROPP_CONFIG_HH
 
-// These constants set the initial memory allocation for the Voronoi cell
+// These constants set the initial memory allocation for dynamically extended
+// arrays
 /** The initial memory allocation for the number of vertices. */
 const int init_vertices=256;
 /** The initial size for the delete stack. */
 const int init_delete_size=256;
+/** The initial size of the bnds array. */
+const int init_bnds_size=256;
+/** The initial size for the temporary label array. */
+const int init_temp_label_size=256;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
@@ -16,9 +21,16 @@ const int init_delete_size=256;
 const int max_vertices=16777216;
 /** The maximum size for the delete stack. */
 const int max_delete_size=16777216;
+/** The maximum size of the bnds array. */
+const int max_bnds_size=16777216;
+/** The maximum size for the temporary label array. */
+const int max_temp_label_size=16777216;
 
 /** The maximum amount of particle memory allocated for a single region. */
 const int max_particle_memory=16777216;
+
+/** The size of the buffer of file importing. */
+const int import_buffer_size=512;
 
 #ifndef VOROPP_VERBOSE
 /** Voro++ can print a number of different status and debugging messages to
