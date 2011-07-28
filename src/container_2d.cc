@@ -157,11 +157,15 @@ void container_2d::setup(){
 	nx=fx; ny=fy;
 	tag_walls(cx,cy,nx,ny,wid);
 	semi_circle_labelling(cx,cy,nx,ny,wid);
-	//CHECK IF (cx,cy) IS PROBLEM POINT, IF SO TAG APPROPRIATE DATA STRUCTURE
+	if((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>0){
+		probpts[wid]=true;
+	}
 	lx=cx; ly=cy; wid=0; cx=fx; cy=fy; nx=bnds[2]; ny=bnds[3];
 	tag_walls(cx,cy,nx,ny,wid);
 	semi_circle_labelling(cx,cy,nx,ny,wid);
-	//CHECK IF (cx,cy) IS PROBLEM POINT, IF SO TAG APPROPRIATE DATA STRUCTURE
+	if((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>0){
+		probpts[wid]=true;
+	}
 	//at this point *tmp is completed RUN CHRIS' ALGORITH TO CREATE *SOI and *SOIP
 	
 	
