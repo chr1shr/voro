@@ -105,6 +105,11 @@ class container_2d {
 		 * A single integer is stored for each vertex, giving the index
 		 * of the connecting vertex in the counter-clockwise sense. */
 		int *edb;
+		/** Contains information about which points are boundary points,
+		i.e. lie at a nonconvexity. **/
+		int **bndpts;
+		/** Contains information about which boundary points are problem points **/
+		bool *probpts;
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,bool convex_,int memi);
 		~container_2d();
 		void setup();
@@ -207,7 +212,7 @@ class container_2d {
 		}
 		bool compute_cell_sphere(voronoicell_2d	&c,int i,int j,int ij,int s,double x,double y);
 		bool initialize_voronoicell(voronoicell_2d &c,double x,double y);
-		void put(int n,double x,double y);
+		void put(int n,double x,double y, int bndloc);
 		void clear();
 	private:
 		inline bool put_locate_block(int &ij,double &x,double &y);

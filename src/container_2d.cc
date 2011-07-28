@@ -28,13 +28,16 @@ container_2d::container_2d(double ax_,double bx_,double ay_,
 	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]),
 	wid(new int*[nxy]), p(new double*[nxy]), nlab(new unsigned int*[nxy]),
 	plab(new int**[nxy]), soi(NULL), noofbnds(0), bnds_size(init_bnds_size),
-	bnds(new double[2*bnds_size]), edb(new int[bnds_size]) {
+	bnds(new double[2*bnds_size]), edb(new int[bnds_size]), bndpts(new int*[nxy]) {
 	int l;
 	debug=true;
 
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
-	for(l=0;l<nxy;l++) id[l]=new int[init_mem];
+	for(l=0;l<nxy;l++) {
+		id[l]=new int[init_mem];
+		bndpts[l]=new int[init_mem];
+	}
 	for(l=0;l<nxy;l++) p[l]=new double[2*init_mem];
 	for(l=0;l<nxy;l++) {
 		wid[l]=new int[6];
@@ -75,10 +78,11 @@ container_2d::~container_2d() {
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y) the position vector of the inserted particle. */
-void container_2d::put(int n,double x,double y) {
+void container_2d::put(int n,double x,double y, int boundloc) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
 		id[ij][co[ij]]=n;
+		bndpts[ij][co[ij]]=boundloc;
 		double *pp(p[ij]+2*co[ij]++);
 		*(pp++)=x;*pp=y;
 	}
@@ -133,6 +137,7 @@ inline bool container_2d::put_remap(int &ij,double &x,double &y) {
  * proceed to setup **wid, *soi, and THE PROBLEM POINTS BOOLEAN ARRAY.
  * This algorithm keeps the importing seperate from the set-up */
 void container_2d::setup(){
+	probpts=new bool[noofbnds];
 	double lx, ly, cx, cy, nx, ny, fx, fy, tmpx, tmpy;//last (x,y), current (x,y), next (x,y), temporary (x,y)
 	int wid=1;
 	lx=bnds[0]; ly=bnds[1]; cx=bnds[2]; cy=bnds[3]; nx=bnds[4]; ny=bnds[5];
@@ -140,7 +145,9 @@ void container_2d::setup(){
 	while(wid<(noofbnds-1)){
 		tag_walls(cx,cy,nx,ny,wid);
 		semi_circle_labelling(cx,cy,nx,ny,wid);
-		//CHECK IF PROBLEM POINT, IF SO TAG APPROPRIATE DATA STRUCTURE
+		if((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>0){
+			probpts[wid]=true;
+		}
 		tmpx=cx; tmpy=cy; cx=nx; cy=ny; lx=tmpx; ly=tmpy;
 		wid++;
 		if(!(wid==(noofbnds-1))){
@@ -401,7 +408,7 @@ void container_2d::draw_boundary(FILE *fp) {
 	int i;
 	
 	for(i=0;i<noofbnds;i++) {
-		fprintf(fp,"%g %g\n",i,bnds[2*i],bnds[2*i+1]);
+		fprintf(fp,"%d %g %g\n",i,bnds[2*i],bnds[2*i+1]);
 
 		// If a loop is detected, than complete the loop in the output file
 		// and insert a newline
@@ -509,9 +516,9 @@ void container_2d::import(FILE *fp) {
 
 			// Try and read three entries from the line
 			if(sscanf(buf,"%d %lg %lg",&i,&x,&y)!=3) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
-			put(i,x,y);
+			if(!boundary) put(i,x,y, -1);
 			if(boundary) {
-				
+				put(i,x,y,noofbnds);
 				// Unless this is the start of a boundary loop,
 				// connect the previous vertex to this one
 				if(noofbnds!=sm) edb[noofbnds-1]=noofbnds;
@@ -595,7 +602,7 @@ void container_2d::print_custom(const char *format,FILE *fp) {
 /** Initializes a voronoicell_2d class to fill the entire container.
  * \param[in] c a reference to a voronoicell_2d class.
  * \param[in] (x,y) the position of the particle that . */
-//MODIFIED
+//NEED TO CHANGE
 bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,double y) {
 	if(convex) {
 		double x1,x2,y1,y2;
@@ -652,16 +659,18 @@ void container_2d::compute_all_cells() {
  * \return False if the Voronoi cell was completely removed during the
  * computation and has zero volume, true otherwise. */
 bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s,double x,double y) {
-
+	
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
 	const double length_scale=0.5*sqrt((bx-ax)*(by-ay)/(nx*ny));
-
+	bool problem_point=false;
 	double x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs;
 	int q,t;
 	voropp_loop_2d l(*this);
-
+	
 	if(!initialize_voronoicell(c,x,y)) return false;
+	//CHECK HERE IF THE PARTICLE IS A PROBLEM POINT, IF SO, MODIFY THE BOOL ACCORDINGLY
+	//CUT BY ALL WALLS PASSING THROUGH THE COMPUTATIONAL BOX HERE, USE WID
 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
@@ -671,6 +680,7 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 		t=l.init(x,y,ur,qx,qy);
 		do {
 			for(q=0;q<co[t];q++) {
+				//HERE CHECK IF THE CUTTING PARTICLE IS ON THE WRONG SIDE OF ANY WALL USING SOI
 				x1=p[t][2*q]+qx-x;y1=p[t][2*q+1]+qy-y;//qx,qy??
 				rs=x1*x1+y1*y1;
 				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {
