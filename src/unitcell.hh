@@ -28,6 +28,9 @@ class unitcell {
 		}
 		void draw_domain_pov(FILE *fp=stdout);
 		bool intersects_image(double dx,double dy,double dz,double &vol);
+	protected:
+		double max_uv_y;
+		double max_uv_z;
 	private:
 		inline void unit_voro_apply(int i,int j,int k);
 		bool unit_voro_intersect(int l);

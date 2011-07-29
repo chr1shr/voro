@@ -26,15 +26,9 @@ using namespace std;
 
 class container_periodic_base : public unitcell, public voropp_base {
 	public:
-		/** The maximum x coordinate of the container. */
-		const double bx;
-		const double bxy;
-		/** The maximum y coordinate of the container. */
-		const double by;
-		const double bxz;
-		const double byz;
-		/** The maximum z coordinate of the container. */
-		const double bz;
+		int ey,ez;
+		int wy,wz;
+		int oy,oz,oxyz;		
 		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
@@ -51,6 +45,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * more is allocated using the add_particle_memory() function.
 		 */
 		int *mem;
+		char *img;
 		/** The amount of memory in the array structure for each
 		 * particle. This is set to 3 when the basic class is
 		 * initialized, so that the array holds (x,y,z) positions. If
@@ -77,15 +72,12 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * removed the cell, true otherwise. */
 		template<class v_cell>
 		inline bool initialize_voronoicell(v_cell &c,int ijk,int q,int ci,int cj,int ck,int &i,int &j,int &k,double &x,double &y,double &z,int &disp) {
+			c.init(unit_voro);
 			double x1,x2,y1,y2,z1,z2;
 			double *pp(p[ijk]+ps*q);
 			x=*(pp++);y=*(pp++);z=*pp;
-			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
-			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
-			if(zperiodic) {z1=-(z2=0.5*(bz-az));k=nz;} else {z1=az-z;z2=bz-z;k=ck;}
-			c.init(x1,x2,y1,y2,z1,z2);
-			if(!apply_walls(c,x,y,z)) return false;
-			disp=ijk-i-nx*(j+ny*k);
+			ci=nx;cj=ey;ck=ez;
+			disp=ijk-i-nx*(j+oy*k);
 			return true;
 		}
 		/** Returns the position of a particle currently being computed
@@ -96,28 +88,30 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * \param[out] (fx,fy,fz) the position relateive to the block.
 		 */
 		inline void frac_pos(double x,double y,double z,double ci,double cj,double ck,double &fx,double &fy,double &fz) {
-			fx=x-ax-boxx*ci;
-			fy=y-ay-boxy*cj;
-			fz=z-az-boxz*ck;
+			fx=x-boxx*ci;
+			fy=y-boxy*cj;
+			fz=z-boxz*ck;
 		}
 		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int disp) {
-			if(xperiodic) {if(ci+ei<nx) {ei+=nx;qx=-(bx-ax);} else if(ci+ei>=(nx<<1)) {ei-=nx;qx=bx-ax;} else qx=0;}
-			if(yperiodic) {if(cj+ej<ny) {ej+=ny;qy=-(by-ay);} else if(cj+ej>=(ny<<1)) {ej-=ny;qy=by-ay;} else qy=0;}
-			if(zperiodic) {if(ck+ek<nz) {ek+=nz;qz=-(bz-az);} else if(ck+ek>=(nz<<1)) {ek-=nz;qz=bz-az;} else qz=0;}
-			return disp+ei+nx*(ej+ny*ek);
+			int di(ci+ei),iv(step_div(di,nx));if(iv!=0) {qx=iv*bx;di-=nx*iv;} else qx=0;
+			create_periodic_image(di,cj+ej,ck+ek);
+			return disp+ei+nx*(ej+oy*ek);
 		}
 		void create_all_images();
 		void check_compartmentalized();
 	protected:
 		void add_particle_memory(int i);
-		inline bool put_locate_block(int &ijk,double &x,double &y,double &z);
-		inline bool put_remap(int &ijk,double &x,double &y,double &z);
+		void put_locate_block(int &ijk,double &x,double &y,double &z);
+		inline void create_periodic_image(int di,int dj,int dk);
+		void create_side_image(int di,int dj,int dk);
+		void create_vertical_image(int di,int dj,int dk);
+		inline void quick_put(int reg,int fijk,int l,double dx,double dy,double dz);		
 };
 
 class container_periodic : public container_periodic_base {
 	public:
 		container_periodic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-				int nx_,int ny_,int nz_,bool xperiodic_,int init_mem);
+				int nx_,int ny_,int nz_,int init_mem);
 		void clear();
 		void put(int n,double x,double y,double z);
 		void put(voropp_order &vo,int n,double x,double y,double z);
@@ -289,11 +283,11 @@ class container_periodic : public container_periodic_base {
 			return vc.compute_cell(c,ijk,q,i,j,k);
 		}		
 	private:
-		voropp_compute<container> vc;
+		voropp_compute<container_periodic> vc;
 		inline void r_init(int ijk,int s) {};
 		inline double r_cutoff(double lrs) {return lrs;}
 		inline double r_scale(double rs,int ijk,int q) {return rs;}
-		friend class voropp_compute<container>;
+		friend class voropp_compute<container_periodic>;
 };
 
 class container_periodic_poly : public container_periodic_base {
@@ -303,7 +297,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * */
 		double max_radius;
 		container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-				int nx_,int ny_,int nz_,bool xperiodic_,int init_mem);
+				int nx_,int ny_,int nz_,int init_mem);
 		void clear();
 		void put(int n,double x,double y,double z,double r);
 		void put(voropp_order &vo,int n,double x,double y,double z,double r);
@@ -477,7 +471,7 @@ class container_periodic_poly : public container_periodic_base {
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
 	private:
-		voropp_compute<container_poly> vc;
+		voropp_compute<container_periodic_poly> vc;
 		double r_rad,r_mul;
 		inline void r_init(int ijk,int s) {
 			r_rad=p[ijk][4*s+3];
@@ -490,7 +484,7 @@ class container_periodic_poly : public container_periodic_base {
 		inline double r_scale(double rs,int ijk,int q) {
 			return rs+r_rad-p[ijk][4*q+3]*p[ijk][4*q+3];
 		}
-		friend class voropp_compute<container_poly>;
+		friend class voropp_compute<container_periodic_poly>;
 };
 
 #endif

@@ -152,5 +152,5 @@ void unitcell::draw_domain_pov(FILE *fp) {
 	fprintf(fp,"sphere{<0,0,0>,rr}\nsphere{<%g,0,0>,rr}\n"
 		   "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",bx,bxy,by,bx+bxy,by);
 	fprintf(fp,"sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
-		   "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",bxz,byz,bz,bx+bxz,byz,bz,bxy+bxz,by+byz,bz,bx+bxy+bxz,by+byz,bz;);
+		   "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",bxz,byz,bz,bx+bxz,byz,bz,bxy+bxz,by+byz,bz,bx+bxy+bxz,by+byz,bz);
 }

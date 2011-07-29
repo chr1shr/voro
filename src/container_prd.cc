@@ -7,7 +7,7 @@
 /** \file container.cc
  * \brief Function implementations for the container and related classes. */
 
-#include "container.hh"
+#include "container_prd.hh"
 
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
@@ -23,11 +23,12 @@
  * \param[in] ps_ the number of floating point entries to store for each
  *                particle. */
 container_periodic_base::container_periodic_base(double bx_,double bxy_,double by_,
-		double bxz_,double byz_,double bz_,int nx_,int ny_,int nz_,int init_mem,int ps)
+		double bxz_,double byz_,double bz_,int nx_,int ny_,int nz_,int init_mem,int ps_)
 	: unitcell(bx_,bxy_,by_,bxz_,byz_,bz_), voropp_base(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_),
-	wy()
-	id(new int*[oxyz]), p(new double*[oxyz]), co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), ps(ps_) {
-	int i,j,k;
+	ey(int(max_uv_y*ysp)), ez(int(max_uv_z*zsp)), wy(ny+ey), wz(nz+ez),
+	oy(ny+2*ey), oz(nz+2*ez), oxyz(nx*oy*oz), id(new int*[oxyz]), p(new double*[oxyz]),
+	co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), ps(ps_) {
+	int i,j,k,l;
 
 	// Clear the global arrays
 	int *pp(co);while(pp<co+oxyz) *(pp++)=0;
@@ -55,45 +56,38 @@ container_periodic_base::~container_periodic_base() {
 }
 
 /** The class constructor sets up the geometry of container.
- * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
- * \param[in] (ay_,by_) the minimum and maximum y coordinates.
- * \param[in] (az_,bz_) the minimum and maximum z coordinates.
+ * \param[in] (bx_) exp. 
+ * \param[in] (bxy_,by_) exp.
+ * \param[in] (bxz_,byz_,bz_) exp.
  * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
- *                       coordinate directions.
- * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
- *                                                container is periodic in each
- *                                                coordinate direction.
+ *			    coordinate directions.
  * \param[in] init_mem the initial memory allocation for each block. */
-container_periodic::container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
-	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,3),
-	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_,zperiodic_?2*nz_+1:nz_) {}
+container_periodic::container_periodic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
+	int nx_,int ny_,int nz_,int init_mem)
+	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem,3),
+	vc(*this,2*nx_+1,2*ey+1,2*ez+1) {}
 
 /** The class constructor sets up the geometry of container.
- * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
- * \param[in] (ay_,by_) the minimum and maximum y coordinates.
- * \param[in] (az_,bz_) the minimum and maximum z coordinates.
+ * \param[in] (bx_) exp. 
+ * \param[in] (bxy_,by_) exp.
+ * \param[in] (bxz_,byz_,bz_) exp.
  * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
- *                       coordinate directions.
- * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
- *                                                container is periodic in each
- *                                                coordinate direction.
+ *			    coordinate directions.
  * \param[in] init_mem the initial memory allocation for each block. */
-container_periodic_poly::container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
-	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,4),
-	max_radius(0), vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_,zperiodic_?2*nz_+1:nz_) {}
+container_periodic_poly::container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
+	int nx_,int ny_,int nz_,int init_mem)
+	: container_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem,4),
+	max_radius(0), vc(*this,2*nx_+1:nx_,2*ey+1,2*ez+1) {}
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 void container_periodic::put(int n,double x,double y,double z) {
 	int ijk;
-	if(put_locate_block(ijk,x,y,z)) {
-		id[ijk][co[ijk]]=n;
-		double *pp(p[ijk]+3*co[ijk]++);
-		*(pp++)=x;*(pp++)=y;*pp=z;
-	}
+	put_locate_block(ijk,x,y,z);
+	id[ijk][co[ijk]]=n;
+	double *pp(p[ijk]+3*co[ijk]++);
+	*(pp++)=x;*(pp++)=y;*pp=z;
 }
 
 /** Put a particle into the correct region of the container.
@@ -102,12 +96,11 @@ void container_periodic::put(int n,double x,double y,double z) {
  * \param[in] r the radius of the particle. */
 void container_periodic_poly::put(int n,double x,double y,double z,double r) {
 	int ijk;
-	if(put_locate_block(ijk,x,y,z)) {
-		id[ijk][co[ijk]]=n;
-		double *pp(p[ijk]+4*co[ijk]++);
-		*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-		if(max_radius<r) max_radius=r;
-	}
+	put_locate_block(ijk,x,y,z);
+	id[ijk][co[ijk]]=n;
+	double *pp(p[ijk]+4*co[ijk]++);
+	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
+	if(max_radius<r) max_radius=r;
 }
 
 /** Put a particle into the correct region of the container, also recording
@@ -117,12 +110,11 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r) {
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 void container_periodic::put(voropp_order &vo,int n,double x,double y,double z) {
 	int ijk;
-	if(put_locate_block(ijk,x,y,z)) {
-		id[ijk][co[ijk]]=n;
-		vo.add(ijk,co[ijk]);
-		double *pp(p[ijk]+3*co[ijk]++);
-		*(pp++)=x;*(pp++)=y;*pp=z;
-	}
+	put_locate_block(ijk,x,y,z);
+	id[ijk][co[ijk]]=n;
+	vo.add(ijk,co[ijk]);
+	double *pp(p[ijk]+3*co[ijk]++);
+	*(pp++)=x;*(pp++)=y;*pp=z;
 }
 
 /** Put a particle into the correct region of the container, also recording
@@ -133,33 +125,12 @@ void container_periodic::put(voropp_order &vo,int n,double x,double y,double z) 
  * \param[in] r the radius of the particle. */
 void container_periodic_poly::put(voropp_order &vo,int n,double x,double y,double z,double r) {
 	int ijk;
-	if(put_locate_block(ijk,x,y,z)) {
-		id[ijk][co[ijk]]=n;
-		vo.add(ijk,co[ijk]);
-		double *pp(p[ijk]+4*co[ijk]++);
-		*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-		if(max_radius<r) max_radius=r;
-	}
-}
-
-/** This routine takes a particle position vector, tries to remap it into the
- * primary domain. If successful, it computes the region into which it can be
- * stored and checks that there is enough memory within this region to store
- * it.
- * \param[out] ijk the region index.
- * \param[in,out] (x,y,z) the particle position, remapped into the primary
- *                        domain if necessary.
- * \return True if the particle can be successfully placed into the container,
- * false otherwise. */
-inline bool container_base::put_locate_block(int &ijk,double &x,double &y,double &z) {
-	if(put_remap(ijk,x,y,z)) {
-		if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
-		return true;
-	}
-#if VOROPP_REPORT_OUT_OF_BOUNDS ==1
-	fprintf(stderr,"Out of bounds: (x,y,z)=(%g,%g,%g)\n",x,y,z);
-#endif
-	return false;
+	put_locate_block(ijk,x,y,z);
+	id[ijk][co[ijk]]=n;
+	vo.add(ijk,co[ijk]);
+	double *pp(p[ijk]+4*co[ijk]++);
+	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
+	if(max_radius<r) max_radius=r;
 }
 
 /** Takes a particle position vector and computes the region index into which
@@ -171,28 +142,29 @@ inline bool container_base::put_locate_block(int &ijk,double &x,double &y,double
  *                        domain if necessary.
  * \return True if the particle can be successfully placed into the container,
  * false otherwise. */
-inline bool container_base::put_remap(int &ijk,double &x,double &y,double &z) {
-	int l;
-
-	ijk=step_int((x-ax)*xsp);
-	if(xperiodic) {l=step_mod(ijk,nx);x+=boxx*(l-ijk);ijk=l;}
-	else if(ijk<0||ijk>=nx) return false;
-
-	int j(step_int((y-ay)*ysp));
-	if(yperiodic) {l=step_mod(j,ny);y+=boxy*(l-j);j=l;}
-	else if(j<0||j>=ny) return false;
-
-	int k(step_int((z-az)*zsp));
-	if(xperiodic) {l=step_mod(k,nz);z+=boxz*(l-k);k=l;}
-	else if(k<0||k>=nz) return false;
-
-	ijk+=nx*j+nxy*k;
-	return true;
+void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,double &z) {
+	int k=step_int(z*zsp);
+	if(k<0||k>=nz) {
+		int ak=step_div(k,nz);
+		z-=ak*bz;y-=ak*byz;x-=ak*bxz;k-=ak*nz;
+	}
+	int j=step_int(y*ysp);
+	if(j<0||j>=ny) {
+		int aj=step_div(j,ny);
+		y-=aj*by;x-=aj*bxy;j-=aj*ny;
+	}
+	ijk=step_int(x*xsp);
+	if(ijk<0||ijk>=nx) {
+		int ai=step_div(ijk,nx);
+		x-=ai*bx;ijk-=ai*nx;
+	}
+	j+=ey;k+=ez;
+	ijk+=nx*(j+oy*k);
 }
 
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
-void container_base::add_particle_memory(int i) {
+void container_periodic_base::add_particle_memory(int i) {
 	int *idp,l,nmem(mem[i]<<1);
 	double *pp;
 #if VOROPP_VERBOSE >=3
@@ -261,7 +233,7 @@ void container_periodic_poly::import(voropp_order &vo,FILE *fp) {
 
 /** Outputs the a list of all the container regions along with the number of
  * particles stored within each. */
-void container_base::region_count() {
+void container_periodic_base::region_count() {
 	int i,j,k,*cop(co);
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
 		printf("Region (%d,%d,%d): %d particles\n",i,j,k,*(cop++));
@@ -385,3 +357,190 @@ void container_periodic_base::check_compartmentalized() {
 	}
 }
 
+inline void container_periodic_base::create_periodic_image(int di,int dj,int dk) {
+	if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
+		voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
+	if(dk>=ez&&dk<wz) {
+		if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
+	} else create_vertical_image(di,dj,dk);
+}
+
+void container_periodic_base::create_side_image(int di,int dj,int dk) {
+	double boxx=bx/nx;
+	int l,dijk=di+nx*(dj+oy*dk),odijk,ima=step_div(dj-ey,ny);
+	int qua=di+step_int(-ima*bxy*xsp),quadiv=step_div(qua,nx);
+	int fi=qua-quadiv*nx,fijk=fi+nx*(dj-ima*ny+oy*dk);
+	double dis=ima*bxy+quadiv*bx,switchx=di*boxx-ima*bxy-quadiv*bx,adis;
+
+	// Left image computation
+	if((img[dijk]&1)==0) {
+		if(di>0) {
+			odijk=dijk-1;adis=dis;
+		} else {
+			odijk=dijk+nx-1;adis=dis+bx;
+		}
+		img[odijk]|=2;
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][ps*l]>switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
+			else quick_put(odijk,fijk,l,adis,by*ima,0);
+		}
+	}
+
+	// Right image computation
+	if((img[dijk]&2)==0) {
+		if(fi==nx-1) {
+			fijk+=1-nx;switchx+=(1-nx)*boxx;dis+=bx;
+		} else {
+			fijk++;switchx+=boxx;
+		}
+		if(di==nx-1) {
+			odijk=dijk-nx+1;adis=dis-bx;
+		} else {
+			odijk=dijk+1;adis=dis;
+		}
+		img[odijk]|=1;
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][ps*l]<switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
+			else quick_put(odijk,fijk,l,adis,by*ima,0);
+		}
+	}
+
+	// All contributions to the block now added, so set both two bits of
+	// the image information
+	img[dijk]=3;
+}
+
+void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
+	int l,dijk=di+nx*(dj+oy*dk),dijkl,dijkr,ima=step_div(dk-ez,nz);
+	int qj=dj+step_int(-ima*byz*ysp),qjdiv=step_div(qj-ey,ny);
+	int qi=di+step_int((-ima*bxz-qjdiv*bxy)*xsp),qidiv=step_div(qi,nx);
+	int fi=qi-qidiv*nx,fj=qj-qjdiv*ny,fijk=fi+nx*(fj+oy*(dk-ima*nz)),fijk2;
+	double disy=ima*byz+qjdiv*by,switchy=(dj-ey)*boxy-ima*byz-qjdiv*by;
+	double disx=ima*bxz+qjdiv*bxy+qidiv*bx,switchx=di*boxx-ima*bxz-qjdiv*bxy-qidiv*bx;
+	double switchx2,disxl,disxr,disx2,disxr2;
+
+	if(di==0) {dijkl=dijk+nx-1;disxl=disx+bx;}
+	else {dijkl=dijk-1;disxl=disx;}
+
+	if(di==nx-1) {dijkr=dijk-nx+1;disxr=disx-bx;}
+	else {dijkr=dijk+1;disxr=disx;}
+
+	// Down-left image computation
+	bool y_exist=dj!=0;
+	if((img[dijk]&1)==0) {
+		img[dijkl]|=2;
+		if(y_exist) {
+			img[dijkl-nx]|=8;
+			img[dijk-nx]|=4;
+		}
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][ps*l+1]>switchy) {
+				if(p[fijk][ps*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
+				else quick_put(dijkl,fijk,l,disxl,disy,bz*ima);
+			} else {
+				if(!y_exist) continue;
+				if(p[fijk][ps*l]>switchx) quick_put(dijk-nx,fijk,l,disx,disy,bz*ima);
+				else quick_put(dijkl-nx,fijk,l,disxl,disy,bz*ima);
+			}
+		}
+	}
+
+	// Down-right image computation
+	if((img[dijk]&2)==0) {
+		if(fi==nx-1) {
+			fijk2=fijk+1-nx;switchx2=switchx+(1-nx)*boxx;disx2=disx+bx;disxr2=disxr+bx;
+		} else {
+			fijk2=fijk+1;switchx2=switchx+boxx;disx2=disx;disxr2=disxr;
+		}
+		img[dijkr]|=1;
+		if(y_exist) {
+			img[dijkr-nx]|=4;
+			img[dijk-nx]|=8;
+		}
+		for(l=0;l<co[fijk2];l++) {
+			if(p[fijk2][ps*l+1]>switchy) {
+				if(p[fijk2][ps*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
+				else quick_put(dijk,fijk2,l,disx2,disy,bz*ima);
+			} else {
+				if(!y_exist) continue;
+				if(p[fijk2][ps*l]>switchx2) quick_put(dijkr-nx,fijk2,l,disxr2,disy,bz*ima);
+				else quick_put(dijk-nx,fijk2,l,disx2,disy,bz*ima);
+			}
+		}
+	}
+
+	// Recomputation for boundary cases
+	if(fj==wy-1) {
+		fijk+=nx*(1-ny)-fi;
+		switchy+=(1-ny)*boxy;
+		disy+=by;
+		qi=di+step_int(-(ima*bxz+(qjdiv+1)*bxy)*xsp);
+		int dqidiv=step_div(qi,nx)-qidiv;qidiv+=dqidiv;
+		fi=qi-qidiv*nx;
+		fijk+=fi;
+		disx+=bxy+bx*dqidiv;
+		disxl+=bxy+bx*dqidiv;
+		disxr+=bxy+bx*dqidiv;
+		switchx-=bxy+bx*dqidiv;
+	} else {
+		fijk+=nx;switchy+=boxy;
+	}
+
+	// Up-left image computation
+	y_exist=dj!=oy-1;
+	if((img[dijk]&4)==0) {
+		img[dijkl]|=8;
+		if(y_exist) {
+			img[dijkl+nx]|=2;
+			img[dijk+nx]|=1;
+		}
+		for(l=0;l<co[fijk];l++) {
+			if(p[fijk][ps*l+1]>switchy) {
+				if(!y_exist) continue;
+				if(p[fijk][ps*l]>switchx) quick_put(dijk+nx,fijk,l,disx,disy,bz*ima);
+				else quick_put(dijkl+nx,fijk,l,disxl,disy,bz*ima);
+			} else {
+				if(p[fijk][ps*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
+				else quick_put(dijkl,fijk,l,disxl,disy,bz*ima);
+			}
+		}
+	}
+
+	// Up-right image computation
+	if((img[dijk]&8)==0) {
+		if(fi==nx-1) {
+			fijk2=fijk+1-nx;switchx2=switchx+(1-nx)*boxx;disx2=disx+bx;disxr2=disxr+bx;
+		} else {
+			fijk2=fijk+1;switchx2=switchx+boxx;disx2=disx;disxr2=disxr;
+		}
+		img[dijkr]|=4;
+		if(y_exist) {
+			img[dijkr+nx]|=1;
+			img[dijk+nx]|=2;
+		}
+		for(l=0;l<co[fijk2];l++) {
+			if(p[fijk2][ps*l+1]>switchy) {
+				if(!y_exist) continue;
+				if(p[fijk2][ps*l]>switchx2) quick_put(dijkr+nx,fijk2,l,disxr2,disy,bz*ima);
+				else quick_put(dijk+nx,fijk2,l,disx2,disy,bz*ima);
+			} else {
+				if(p[fijk2][ps*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
+				else quick_put(dijk,fijk2,l,disx2,disy,bz*ima);
+			}
+		}
+	}
+	
+	// All contributions to the block now added, so set all four bits of
+	// the image information
+	img[dijk]=15;
+}
+
+inline void container_periodic_base::quick_put(int reg,int fijk,int l,double dx,double dy,double dz) {
+	double *p1(p[reg]+ps*co[reg]),*p2(p[fijk]+ps*l);
+	if(co[reg]==mem[reg]) add_particle_memory(reg);
+	*(p1++)=*(p2++)+dx;
+	*(p1++)=*(p2++)+dy;
+	*p1=*p2+dz;
+	if(ps==4) *(++p1)=*(++p2);
+	id[reg][co[reg]++]=id[fijk][l];
+}

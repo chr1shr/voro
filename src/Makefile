@@ -8,7 +8,8 @@
 include ../config.mk
 
 # List of the common source files
-objs=cell.o common.o container.o unitcell.o v_compute.o v_loops.o v_base.o wall.o pre_container.o
+objs=cell.o common.o container.o unitcell.o v_compute.o v_loops.o \
+     v_base.o wall.o pre_container.o container_prd.o
 src=$(patsubst %.o,%.cc,$(objs))
 
 # Lists of the command line utilities
