@@ -140,6 +140,13 @@ void container_2d::setup(){
 	probpts=new bool[noofbnds];
 	double lx, ly, cx, cy, nx, ny, fx, fy, tmpx, tmpy;//last (x,y), current (x,y), next (x,y), temporary (x,y)
 	int wid=1;
+
+	/** An array created and modified in the procedure
+	 * semi-circle-labelling. It is used to create the array *soi. Format
+	 * (box, particle #, wallid) **/
+	tmp=tmpp=new int[3*init_temp_label_size];
+	tmpe=tmp+3*init_temp_label_size;
+	
 	lx=bnds[0]; ly=bnds[1]; cx=bnds[2]; cy=bnds[3]; nx=bnds[4]; ny=bnds[5];
 	fx=lx; fy=ly;
 	while(wid<(noofbnds-1)){
@@ -166,10 +173,12 @@ void container_2d::setup(){
 	if((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>0){
 		probpts[wid]=true;
 	}
+
 	//at this point *tmp is completed RUN CHRIS' ALGORITH TO CREATE *SOI and *SOIP
-	
-	
-	
+	create_label_table();
+
+	// Remove temporary array
+	delete [] tmp;
 }
 	
 /** Given two points, tags all the computational boxes that the line segment
@@ -310,13 +319,7 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 	midy=(y1+y2)/2;
 	double cpx,cpy; //these stand for "current particle x" and "current particle y"
 	int box; //this holds the current computational box that we're in.
-
-	/** An array created and modified in the procedure
-	 * semi-circle-labelling. It is used to create the array *soi. Format
-	 * (box, particle #, wallid) **/
-	int *tmp(new int[3*init_temp_label_size]),*tmpp(tmp),
-	    *tmpe(tmp+3*init_temp_label_size);
-
+	
 	// First we will initialize the voropp_loop_2d object to a rectangle
 	// containing all the points we are interested in plus some extraneous
 	// points. The larger the slope between (x1,y1) and (x2,y2) is, the
@@ -357,21 +360,16 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 			cpy=p[box][2*j+1];
 			if((dist_squared(midx,midy,cpx,cpy)<=rs)&&
 			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)){
-				if(tmpp==tmpe) add_temporary_label_memory(tmp,tmpp,tmpe);
+				if(tmpp==tmpe) add_temporary_label_memory();
 				*(tmpp++)=box;
 				*(tmpp++)=j;
 				*(tmpp++)=wid;
 			}
 		}
 	} while((box=l.inc(dummy1,dummy2))!=-1);
-
-	// Pass the temporary label array to the routine to initialize the
-	// label table, then delete the temporary array	
-	create_label_table(tmp,tmpp);
-	delete [] tmp;
 }
 		
-void container_2d::create_label_table(int *tmp,int *tmpp) {
+void container_2d::create_label_table() {
 	int ij,q,*pp,tlab(0);
 
 	// Clear label counters
@@ -420,11 +418,8 @@ void container_2d::draw_boundary(FILE *fp) {
 	}
 }	
 
-/** Increases the size of the temporary label memory.
- * \param[in,out] tmp a reference to the start of the array.
- * \param[in,out] tmpp a reference to the next free slot of the array.
- * \param[in,out] tmpe a reference to the end of the array. */
-void container_2d::add_temporary_label_memory(int *&tmp,int *&tmpp,int *&tmpe) {
+/** Increases the size of the temporary label memory. */
+void container_2d::add_temporary_label_memory() {
 	int size(tmpe-tmp);
 	size<<=1;
 	if(size>3*max_temp_label_size)

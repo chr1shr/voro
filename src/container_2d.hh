@@ -215,6 +215,12 @@ class container_2d {
 		void put(int n,double x,double y, int bndloc);
 		void clear();
 	private:
+		/** A temporary array used in label creation. */
+		int *tmp;
+		/** The next free position in the temporary label array. */
+		int *tmpp;
+		/** The end of the temporary label array. */
+		int *tmpe;
 		inline bool put_locate_block(int &ij,double &x,double &y);
 		inline bool put_remap(int &ij,double &x,double &y);
 		inline double max(double a, double b) {return b<a?a:b;}
@@ -222,8 +228,8 @@ class container_2d {
 		inline double dist_squared(double x1,double y1,double x2,double y2) {
 			return (((y2-y1)*(y2-y1))+((x2-x1)*(x2-x1)));
 		}
-		void create_label_table(int *tmp,int *tmpp);
-		void add_temporary_label_memory(int *&tmp,int *&tmpp,int *&tmpe);
+		void create_label_table();
+		void add_temporary_label_memory();
 		void add_particle_memory(int i);
 		void add_boundary_memory();
 		/** Custom int function, that gives consistent stepping for
