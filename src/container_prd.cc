@@ -27,7 +27,7 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 	: unitcell(bx_,bxy_,by_,bxz_,byz_,bz_), voropp_base(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_),
 	wy()
 	id(new int*[oxyz]), p(new double*[oxyz]), co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), ps(ps_) {
-	int l;
+	int i,j,k;
 
 	// Clear the global arrays
 	int *pp(co);while(pp<co+oxyz) *(pp++)=0;
@@ -35,13 +35,12 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 	char *cp(img);while(cp<img+oxyz) *(cp++)=0;
 
 	// Initialize the
-	for(l=0;l<oxyz;l++) 
-	for(l=0;l<oxyz;l++) mem[l]=init_mem;
-	for(l=0;l<oxyz;l++) id[l]=new int[init_mem];
-	for(l=0;l<oxyz;l++) p[l]=new double[ps*init_mem];
-
-
-
+	for(k=ez;k<oz;k++) for(j=ey;j<oy;j++) for(i=0;i<nx;i++) {
+		l=i+nx*(j+oy*k);
+		mem[l]=init_mem;
+		id[l]=new int[init_mem];
+		p[l]=new double[ps*init_mem];
+	}
 }
 
 /** The container destructor frees the dynamically allocated memory. */

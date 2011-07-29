@@ -43,10 +43,10 @@ container_base::~container_base() {
 	int l;
 	for(l=0;l<nxyz;l++) delete [] p[l];
 	for(l=0;l<nxyz;l++) delete [] id[l];
-	delete [] p;
 	delete [] id;
-	delete [] mem;
+	delete [] p;
 	delete [] co;
+	delete [] mem;
 }
 
 /** The class constructor sets up the geometry of container.
