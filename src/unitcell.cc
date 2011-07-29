@@ -127,9 +127,30 @@ inline bool unitcell::unit_voro_test(int i,int j,int k) {
 
 /** Draws the periodic domain in gnuplot format.
  * \param[in] filename the filename to write to. */
-void unitcell::draw_domain(FILE *fp) {
+void unitcell::draw_domain_gnuplot(FILE *fp) {
 	fprintf(fp,"0 0 0\n%g 0 0\n%g %g 0\n%g %g 0\n",bx,bx+bxy,by,bxy,by);
 	fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",bxy+bxz,by+byz,bz,bx+bxy+bxz,by+byz,bz,bx+bxz,byz,bz,bxz,byz,bz);
 	fprintf(fp,"0 0 0\n%g %g 0\n\n%g %g %g\n%g %g %g\n\n",bxy,by,bxz,byz,bz,bxy+bxz,by+byz,bz);
 	fprintf(fp,"%g 0 0\n%g %g %g\n\n%g %g 0\n%g %g %g\n\n",bx,bx+bxz,byz,bz,bx+bxy,by,bx+bxy+bxz,by+byz,bz);
+}
+
+/** Draws the periodic domain in POV-Ray format.
+ * \param[in] filename the filename to write to. */
+void unitcell::draw_domain_pov(FILE *fp) {
+	fprintf(fp,"cylinder{0,0,0>,<%g,0,0>,rr}\n"
+		   "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n",bx,bxy,by,bx+bxy,by);
+	fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+		   "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",bxz,byz,bz,bx+bxz,byz,bz,bxy+bxz,by+byz,bz,bx+bxy+bxz,by+byz,bz);
+	fprintf(fp,"cylinder{<0,0,0>,<%g,%g,0>,rr}\n"
+		   "cylinder{<%g,0,0>,<%g,%g,0>,rr}\n",bxy,by,bx,bx+bxy,by);
+	fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+		   "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",bxz,byz,bz,bxy+bxz,by+byz,bz,bx+bxz,byz,bz,bx+bxy+bxz,by+byz,bz);
+	fprintf(fp,"cylinder{<0,0,0>,<%g,%g,%g>,rr}\n"
+		   "cylinder{<%g,0,0>,<%g,%g,%g>,rr}\n",bxz,byz,bz,bx,bx+bxz,byz,bz);
+	fprintf(fp,"cylinder{<%g,%g,0>,<%g,%g,%g>,rr}\n"
+		   "cylinder{<%g,%g,0>,<%g,%g,%g>,rr}\n",bxy,by,bxy+bxz,by+byz,bz,bx+bxy,by,bx+bxy+bxz,by+byz,bz);
+	fprintf(fp,"sphere{<0,0,0>,rr}\nsphere{<%g,0,0>,rr}\n"
+		   "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",bx,bxy,by,bx+bxy,by);
+	fprintf(fp,"sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
+		   "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",bxz,byz,bz,bx+bxz,byz,bz,bxy+bxz,by+byz,bz,bx+bxy+bxz,by+byz,bz;);
 }
