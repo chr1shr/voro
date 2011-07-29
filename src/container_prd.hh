@@ -22,98 +22,19 @@ using namespace std;
 #include "cell.hh"
 #include "v_loops.hh"
 #include "v_compute.hh"
+#include "unitcell.hh"
 
-/** \brief Pure virtual class from which wall objects are derived.
- *
- * This is a pure virtual class for a generic wall object. A wall object
- * can be specified by deriving a new class from this and specifying the
- * functions.*/
-class wall {
+class container_periodic_base : public unitcell, public voropp_base {
 	public:
-		virtual ~wall() {};
-		/** A pure virtual function for testing whether a point is
-		 * inside the wall object. */
-		virtual bool point_inside(double x,double y,double z) = 0;
-		/** A pure virtual function for cutting a cell without
-		 * neighbor-tracking with a wall. */
-		virtual bool cut_cell(voronoicell &c,double x,double y,double z) = 0;
-		/** A pure virtual function for cutting a cell with
-		 * neighbor-tracking enabled with a wall. */
-		virtual bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) = 0;
-};
-
-/** \brief A class for storing a list of pointers to walls. */
-class wall_list {
-	public:
-		/** An array holding pointers to wall objects. */
-		wall **walls;
-		/** A pointer to the next free position to add a wall pointer.
-		 */
-		wall **wep;
-		wall_list();
-		~wall_list();
-		/** Adds a wall to the list.
-		 * \param[in] w the wall to add. */
-		inline void add_wall(wall *w) {
-			if(wep==wel) increase_wall_memory();
-			*(wep++)=w;
-		}
-		/** Adds a wall to the list.
-		 * \param[in] w a reference to the wall to add. */
-		inline void add_wall(wall &w) {add_wall(&w);}
-		void add_wall(wall_list &wl);
-		/** Determines whether a given position is inside all of the
-		 * walls on the list.
-		 * \param[in] (x,y,z) the position to test.
-		 * \return True if it is inside, false if it is outside. */
-		inline bool point_inside_walls(double x,double y,double z) {
-			for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->point_inside(x,y,z))) return false;
-			return true;
-		}
-		/** Cuts a Voronoi cell by all of the walls currently on
-		 * the list.
-		 * \param[in] c a reference to the Voronoi cell class.
-		 * \param[in] (x,y,z) the position of the cell.
-		 * \return True if the cell still exists, false if the cell is
-		 * deleted. */
-		template<class c_class>
-		bool apply_walls(c_class &c,double x,double y,double z) {
-			for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->cut_cell(c,x,y,z))) return false;
-			return true;
-		}
-		void deallocate();
-	protected:
-		void increase_wall_memory();
-		/** A pointer to the limit of the walls array, used to
-		 * determine when array is full. */
-		wall **wel;
-		/** The current amount of memory allocated for walls. */
-		int current_wall_size;
-};
-
-class container_base : public voropp_base, public wall_list {
-	public:
-		/** The minimum x coordinate of the container. */
-		const double ax;
 		/** The maximum x coordinate of the container. */
 		const double bx;
-		/** The minimum y coordinate of the container. */
-		const double ay;
+		const double bxy;
 		/** The maximum y coordinate of the container. */
 		const double by;
-		/** The minimum z coordinate of the container. */
-		const double az;
+		const double bxz;
+		const double byz;
 		/** The maximum z coordinate of the container. */
 		const double bz;
-		/** A boolean value that determines if the x coordinate in
-		 * periodic or not. */
-		const bool xperiodic;
-		/** A boolean value that determines if the y coordinate in
-		 * periodic or not. */
-		const bool yperiodic;
-		/** A boolean value that determines if the z coordinate in
-		 * periodic or not. */
-		const bool zperiodic;
 		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
@@ -137,10 +58,9 @@ class container_base : public voropp_base, public wall_list {
 		 * class container_poly, then this is set to 4, to also hold
 		 * the particle radii. */
 		const int ps;
-		container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-				int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,
-				int init_mem,int ps_);
-		~container_base();
+		container_periodic_base(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
+				int nx_,int ny_,int nz_,int init_mem,int ps);
+		~container_periodic_base();
 		bool point_inside(double x,double y,double z);
 		void region_count();
 		/** Initialize the Voronoi cell to be the entire container. For
@@ -156,8 +76,7 @@ class container_base : public voropp_base, public wall_list {
 		 * \return False if the plane cuts applied by walls completely
 		 * removed the cell, true otherwise. */
 		template<class v_cell>
-		inline bool initialize_voronoicell(v_cell &c,int ijk,int q,int ci,int cj,int ck,
-				int &i,int &j,int &k,double &x,double &y,double &z,int &disp) {
+		inline bool initialize_voronoicell(v_cell &c,int ijk,int q,int ci,int cj,int ck,int &i,int &j,int &k,double &x,double &y,double &z,int &disp) {
 			double x1,x2,y1,y2,z1,z2;
 			double *pp(p[ijk]+ps*q);
 			x=*(pp++);y=*(pp++);z=*pp;
@@ -176,8 +95,7 @@ class container_base : public voropp_base, public wall_list {
 		 * \param[in] (ci,cj,ck) the block that the particle is within.
 		 * \param[out] (fx,fy,fz) the position relateive to the block.
 		 */
-		inline void frac_pos(double x,double y,double z,double ci,double cj,double ck,
-				double &fx,double &fy,double &fz) {
+		inline void frac_pos(double x,double y,double z,double ci,double cj,double ck,double &fx,double &fy,double &fz) {
 			fx=x-ax-boxx*ci;
 			fy=y-ay-boxy*cj;
 			fz=z-az-boxz*ck;
@@ -188,32 +106,18 @@ class container_base : public voropp_base, public wall_list {
 			if(zperiodic) {if(ck+ek<nz) {ek+=nz;qz=-(bz-az);} else if(ck+ek>=(nz<<1)) {ek-=nz;qz=bz-az;} else qz=0;}
 			return disp+ei+nx*(ej+ny*ek);
 		}
-		void draw_domain_gnuplot(FILE *fp=stdout);
-		/** Draws an outline of the domain in Gnuplot format.
-		 * \param[in] filename the filename to write to. */
-		inline void draw_domain_gnuplot(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
-			draw_domain_gnuplot(fp);
-			fclose(fp);
-		}
-		void draw_domain_pov(FILE *fp=stdout);
-		/** Draws an outline of the domain in Gnuplot format.
-		 * \param[in] filename the filename to write to. */
-		inline void draw_domain_pov(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
-			draw_domain_pov(fp);
-			fclose(fp);
-		}
+		void create_all_images();
+		void check_compartmentalized();
 	protected:
 		void add_particle_memory(int i);
 		inline bool put_locate_block(int &ijk,double &x,double &y,double &z);
 		inline bool put_remap(int &ijk,double &x,double &y,double &z);
 };
 
-class container : public container_base {
+class container_periodic : public container_periodic_base {
 	public:
-		container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-				int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem);
+		container_periodic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
+				int nx_,int ny_,int nz_,bool xperiodic_,int init_mem);
 		void clear();
 		void put(int n,double x,double y,double z);
 		void put(voropp_order &vo,int n,double x,double y,double z);
@@ -315,7 +219,7 @@ class container : public container_base {
 			v_loop_all vl(*this);
 			draw_cells_gnuplot(vl,fp);
 		}
-		/** Computes all Voronoi cells and saves the output in gnuplot
+		/** Compute all Voronoi cells and saves the output in gnuplot
 		 * format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_cells_gnuplot(const char *filename) {
@@ -392,14 +296,14 @@ class container : public container_base {
 		friend class voropp_compute<container>;
 };
 
-class container_poly : public container_base {
+class container_periodic_poly : public container_periodic_base {
 	public:
 		/** The current maximum radius of any particle, used to
 		 * determine when to cut off the radical Voronoi computation.
 		 * */
 		double max_radius;
-		container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-				int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem);
+		container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
+				int nx_,int ny_,int nz_,bool xperiodic_,int init_mem);
 		void clear();
 		void put(int n,double x,double y,double z,double r);
 		void put(voropp_order &vo,int n,double x,double y,double z,double r);
