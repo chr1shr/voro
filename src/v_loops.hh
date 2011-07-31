@@ -195,7 +195,8 @@ class v_loop_order : public v_loop_base {
 		int *cp,*op;
 		template<class c_class>
 		v_loop_order(c_class &con,voropp_order &vo_)
-		: v_loop_base(con), vo(vo_), nx(con.nx), nxy(con.nxy) {}
+		: v_loop_base(con), vo(vo_), nx(con.x_step()), nxy(con.y_step()),
+			disp(con.disp()) {}
 		inline bool start() {
 			cp=vo.o;op=vo.op;
 			if(cp!=op) {
@@ -216,6 +217,7 @@ class v_loop_order : public v_loop_base {
 	private:
 		const int nx;
 		const int nxy;
+		const int disp;
 		inline void decode() {
 			k=ijk/nxy;
 			int ijkt=ijk-nxy*k;
