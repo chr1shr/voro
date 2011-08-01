@@ -88,6 +88,7 @@ class voronoicell_2d {
 		bool plane(double x,double y,double rs);
 		bool plane_nonconvex(double x, double y, double rs);
 		bool halfplane(double x1, double y1, double rs, double x2, double y2); 
+		bool wallcut(double wx1, double wy1, double wx2, double wy2);
 		double max_radius_squared();
 		double perimeter();
 		double area();

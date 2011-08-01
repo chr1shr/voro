@@ -212,6 +212,9 @@ class container_2d {
 		}
 		bool compute_cell_sphere(voronoicell_2d	&c,int i,int j,int ij,int s,double x,double y);
 		bool initialize_voronoicell(voronoicell_2d &c,double x,double y);
+		bool initialize_voronoicell_nonconvex(voronoicell_2d &c,double x, double y, int bid);
+		bool OKCuttingParticle(double gx, double gy, int gbox, int gindex, double cx, double cy,
+					int cbox, int cindex);
 		void put(int n,double x,double y, int bndloc);
 		void clear();
 	private:

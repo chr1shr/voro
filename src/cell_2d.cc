@@ -412,6 +412,24 @@ if(debugging) cout << "part5";
 
 }
 
+bool voronoicell_2d::wallcut(double wx1,double wy1,double wx2,double wy2){
+	double wox, woy, wpx, wpy, wpl,nl, pcx, pcy, rs;
+	if((wx1==0 && wy1==0) || (wx2==0 && wy2==0)) return true; 
+	wox=wx2-wx1; woy=wy2-wy1;
+	wpx=-woy; wpy=wox;
+	wpl=pow((pow(wpx,2.0)+pow(wpy,2.0)),0.5);
+	wpx=wpx/wpl;
+	wpy=wpy/wpl;
+	nl=wx1*wpx+wy1*wpy;
+	pcx=wpx*nl;//MULTIPLY BY 2?
+	pcy=wpy*nl;//MULTIPLY BY 2?
+	rs=pcx*pcx+pcy*pcy;
+	this.plane(pcx,pcy,rs);	
+		
+	
+
+	return true;
+}
 
 
 /** Calculates the perimeter of the Voronoi cell.

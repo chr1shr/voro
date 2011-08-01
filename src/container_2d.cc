@@ -453,6 +453,21 @@ void container_2d::add_boundary_memory() {
 	delete [] edb;edb=nedb;
 }
 
+/** given two particles, a generator and a potential cutting particle, this returns true iff the cutting
+particle and the generator are on the same side of all relevant walls. **/
+
+bool OKCuttingParticle(double gx, double, gy, int gbox, int gindex, double cx, double cy, int cbox, int cindex){
+	int cwid;
+	double widx, widy;
+	for(int i=0;i<nlab[cbox][cindex];i++){
+		cwid=plab[cbox][cindex][i];
+		widx=bnds[2*cwid];
+		widy=bnds[2*cwid+1];
+		if(crossproductz(gx,gy,widx,widy)!=crossproductz(cx,cy,widx,widy)) return false;
+	}
+	return true;
+}
+
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 void container_2d::add_particle_memory(int i) {
@@ -603,23 +618,35 @@ void container_2d::print_custom(const char *format,FILE *fp) {
  * \param[in] (x,y) the position of the particle that . */
 //NEED TO CHANGE
 bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,double y) {
-	if(convex) {
+	
 		double x1,x2,y1,y2;
 		if(xperiodic) x1=-(x2=0.5*(bx-ax));else {x1=ax-x;x2=bx-x;}
 		if(yperiodic) y1=-(y2=0.5*(by-ay));else {y1=ay-y;y2=by-y;}
 		c.init(x1,x2,y1,y2);
 		return true;
-	} else {
-		double *relative_bnds(new double[noofbnds*2]);
-		for(int i=0;i<2*noofbnds;i+=2) {
-			relative_bnds[i]=*(bnds+i)-x;//POINTERS??
-			relative_bnds[i+1]=*(bnds+i+1)-y;
-		}
-		c.init_nonconvex(relative_bnds,noofbnds);
-		return true; //MODIFY SO ONLY RETURNS TRUE APPROPRIATELY
-	}
+	
 }
 
+bool container_2d::initialize_voronoicell_nonconvex(voronoicell_2d &c, double x, double y, int bid){
+	double* bnds_loc=new double[noofbnds*2];
+	bnds_loc[0]=0; bnds_loc[1]=0;
+	bid++;
+	int cntbndno=1;
+
+	while(cntbndno<noofbnds){
+		if(bid==(noofbnds-1)) bid=0;
+		bnds_loc[cntbndno*2]=bnds[bid*2]-x;
+		bnds_loc[cntbndno*2+1]=bnds[bid*2+1]-y;
+		cntbndno++;
+	}
+	c.init_nonconvex(bnds_loc, noofbnds);
+	return true;
+
+
+
+
+
+}
 /** Computes all Voronoi cells and sums their areas.
  * \return The computed area. */
 double container_2d::sum_cell_areas() {
@@ -663,13 +690,28 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	// be, and it should be set to approximately the particle diameter
 	const double length_scale=0.5*sqrt((bx-ax)*(by-ay)/(nx*ny));
 	bool problem_point=false;
-	double x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs;
-	int q,t;
+	double x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs,wx1,wy1,wx2,wy2;
+	int q,t,bid, widc;
 	voropp_loop_2d l(*this);
 	
-	if(!initialize_voronoicell(c,x,y)) return false;
-	//CHECK HERE IF THE PARTICLE IS A PROBLEM POINT, IF SO, MODIFY THE BOOL ACCORDINGLY
+
+	//Check if the current point is a problem point, if it is we will need to use plane-nonconvex, and init_nonconvex
+	bid=bndpts[bid][s];
+	if(bid!=-1 && probpts[bid]){
+			if(!initialize_voronoicell_nonconvex(c,x,y,bid)) return false;
+			problem_point=true;
+		
+	}else{
+		if(!initialize_voronoicell(c,x,y)) return false;
+	}
 	//CUT BY ALL WALLS PASSING THROUGH THE COMPUTATIONAL BOX HERE, USE WID
+	for(int b=1;b<wid[ij][0];b++){
+	widc=wid[ij][b];
+		wx1=bnds[2*widc]-x; wy1=bnds[2*widc-1]-y;
+		widc++;
+		wx2=bnds[2*widc]-x; wy2=bnds[2*widc-1]-y;
+		c.wallcut(wx1,wy1,wx2,wy2);
+	}
 
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
@@ -679,11 +721,17 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 		t=l.init(x,y,ur,qx,qy);
 		do {
 			for(q=0;q<co[t];q++) {
-				//HERE CHECK IF THE CUTTING PARTICLE IS ON THE WRONG SIDE OF ANY WALL USING SOI
-				x1=p[t][2*q]+qx-x;y1=p[t][2*q+1]+qy-y;//qx,qy??
-				rs=x1*x1+y1*y1;
-				if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {
-					if(!c.plane(x1,y1,rs)) return false;//practical???
+				//HERE CHECK IF THE CUTTING PARTICLE IS ON THE WRONG SIDE OF ANY WALL USING SOI				
+				if(OKCuttingParticle(x,y,ij,s,x1,y1,t,q)){
+					x1=p[t][2*q]+qx-x;y1=p[t][2*q+1]+qy-y;//qx,qy??
+					rs=x1*x1+y1*y1;
+					if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {
+						if(problem_point){
+							if(!c.plane_nonconvex(x1,y1,rs)) return false;
+						}else{
+							if(!c.plane(x1,y1,rs)) return false;
+						}
+					}
 				}
 			}
 		} while((t=l.inc(qx,qy))!=-1);//loops through boxes in the shell
