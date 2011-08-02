@@ -262,6 +262,7 @@ class v_loop_all_periodic : public v_loop_base {
 					ijk+=inc2;
 				} else ijk++;
 			} else ijk++;
+			return true;
 		}
 };
 

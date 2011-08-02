@@ -31,7 +31,10 @@ unitcell::unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,dou
 				unit_voro_apply(j,-l,i);
 			}
 			for(i=-l;i<=l;i++) for(j=-l;j<=l;j++) unit_voro_apply(i,j,l);
-		} else return;
+		} else {
+			max_uv_z=max_uv_y=sqrt(unit_voro.max_radius_squared());
+			return;			
+		}
 		l++;
 	}
 

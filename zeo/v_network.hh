@@ -1,6 +1,8 @@
 #ifndef ZEOPP_V_NETWORK_HH
 #define ZEOPP_V_NETWORK_HH
 
+#include <vector>
+
 #include "voro++.hh"
 
 const int init_network_edge_memory=4;
@@ -49,18 +51,19 @@ class voronoi_network {
 		int *vmap;
 		unsigned int *vper;
 		int netmem;
+		vector<int*> vc_record;
 		template<class c_class>
 		voronoi_network(c_class &c,double net_tol_=tolerance);
 		~voronoi_network();
 		void print_network(FILE *fp=stdout,bool reverse_remove=false);
 		inline void print_network(const char* filename,bool reverse_remove=false) {
-			FILE *fp(voropp_safe_fopen(filename,"r"));
+			FILE *fp(voropp_safe_fopen(filename,"w"));
 			print_network(fp);
 			fclose(fp);
 		}
 		void draw_network(FILE *fp=stdout);
 		inline void draw_network(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"r"));
+			FILE *fp(voropp_safe_fopen(filename,"w"));
 			print_network(fp);
 			fclose(fp);
 		}
@@ -82,7 +85,7 @@ class voronoi_network {
 		template<class v_cell>
 		void add_edges_to_network(v_cell &c,double x,double y,double z,double rad);
 		int not_already_there(int k,int j,unsigned int cper);
-		bool search_previous(double gx,double gy,double x,double y,double z,int &ijk,int &q,unsigned int &cper);
+		bool search_previous(double gx,double gy,double x,double y,double z,int &ijk,int &q,int &pi,int &pj,int &pk);
 		bool safe_search_previous_rect(double x,double y,double z,int &ijk,int &q,unsigned int &cper);
 		bool search_previous_rect(double x,double y,double z,int &ijk,int &q,unsigned int &cper);		
 };

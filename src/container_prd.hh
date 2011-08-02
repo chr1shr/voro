@@ -56,6 +56,11 @@ class container_periodic_base : public unitcell, public voropp_base {
 		container_periodic_base(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
 				int nx_,int ny_,int nz_,int init_mem,int ps);
 		~container_periodic_base();
+		inline void print_all_particles() {
+			int ijk,q;
+			for(ijk=0;ijk<oxyz;ijk++) for(q=0;q<co[ijk];q++)
+				printf("%d %g %g %g\n",id[ijk][q],p[ijk][ps*q],p[ijk][ps*q+1],p[ijk][ps*q+2]);
+		}
 		bool point_inside(double x,double y,double z);
 		void region_count();
 		/** Initialize the Voronoi cell to be the entire container. For
@@ -75,8 +80,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 			c=unit_voro;
 			double *pp(p[ijk]+ps*q);
 			x=*(pp++);y=*(pp++);z=*pp;
-			ci=nx;cj=ey;ck=ez;
-			disp=ijk-i-nx*(j+oy*k);
+			i=nx;j=ey;k=ez;
 			return true;
 		}
 		/** Returns the position of a particle currently being computed
@@ -92,9 +96,10 @@ class container_periodic_base : public unitcell, public voropp_base {
 			fz=z-boxz*(ck-ez);
 		}
 		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int disp) {
-			int di(ci+ei),iv(step_div(di,nx));if(iv!=0) {qx=iv*bx;di-=nx*iv;} else qx=0;
-			create_periodic_image(di,cj+ej,ck+ek);
-			return disp+ei+nx*(ej+oy*ek);
+			int qi=ci+(nx-ei),qj=cj+(ey-ej),qk=ck+(ez-ek);
+			int iv(step_div(qi,nx));if(iv!=0) {qx=iv*bx;qi-=nx*iv;} else qx=0;
+			create_periodic_image(qi,qj,qk);
+			return qi+nx*(qj+oy*qk);
 		}
 		void create_all_images();
 		void check_compartmentalized();
@@ -104,6 +109,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 		inline void create_periodic_image(int di,int dj,int dk) {
 			if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
 				voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
+			//printf("Create %d %d %d\n",di,dj,dk);
 			if(dk>=ez&&dk<wz) {
 				if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
 			} else create_vertical_image(di,dj,dk);
@@ -164,7 +170,7 @@ class container_periodic : public container_periodic_base {
 		/** Dumps all of the particle IDs and positions to a file.
 		 * \param[in] fp a file handle to write to. */
 		inline void draw_particles(FILE *fp=stdout) {
-			v_loop_all vl(*this);
+			v_loop_all_periodic vl(*this);
 			draw_particles(vl,fp);
 		}
 		/** Dumps all of the particle IDs and positions to a file.
@@ -189,7 +195,7 @@ class container_periodic : public container_periodic_base {
 		/** Dumps all particle positions in POV-Ray format.
 		 * \param[in] fp a file handle to write to. */
 		inline void draw_particles_pov(FILE *fp=stdout) {
-			v_loop_all vl(*this);
+			v_loop_all_periodic vl(*this);
 			draw_particles_pov(vl,fp);
 		}
 		/** Dumps all particle positions in POV-Ray format.
@@ -215,7 +221,7 @@ class container_periodic : public container_periodic_base {
 		 * format.
 		 * \param[in] fp a file handle to write to. */
 		inline void draw_cells_gnuplot(FILE *fp=stdout) {
-			v_loop_all vl(*this);
+			v_loop_all_periodic vl(*this);
 			draw_cells_gnuplot(vl,fp);
 		}
 		/** Compute all Voronoi cells and saves the output in gnuplot
@@ -243,7 +249,7 @@ class container_periodic : public container_periodic_base {
 		 * format.
 		 * \param[in] fp a file handle to write to. */
 		inline void draw_cells_pov(FILE *fp=stdout) {
-			v_loop_all vl(*this);
+			v_loop_all_periodic vl(*this);
 			draw_cells_pov(vl,fp);
 		}
 		/** Computes all Voronoi cells and saves the output in POV-Ray
@@ -351,7 +357,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * file.
 		 * \param[in] fp a file handle to write to. */
 		inline void draw_particles(FILE *fp=stdout) {
-			v_loop_all vl(*this);
+			v_loop_all_periodic vl(*this);
 			draw_particles(vl,fp);
 		}
 		/** Dumps all of the particle IDs, positions and radii to a
@@ -377,7 +383,7 @@ class container_periodic_poly : public container_periodic_base {
 		/** Dumps all the particle positions in POV-Ray format.
 		 * \param[in] fp a file handle to write to. */
 		inline void draw_particles_pov(FILE *fp=stdout) {
-			v_loop_all vl(*this);
+			v_loop_all_periodic vl(*this);
 			draw_particles_pov(vl,fp);
 		}
 		/** Dumps all the particle positions in POV-Ray format.
@@ -403,7 +409,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * format.
 		 * \param[in] fp a file handle to write to. */
 		inline void draw_cells_gnuplot(FILE *fp=stdout) {
-			v_loop_all vl(*this);
+			v_loop_all_periodic vl(*this);
 			draw_cells_gnuplot(vl,fp);
 		}
 		/** Compute all Voronoi cells and saves the output in gnuplot
@@ -431,7 +437,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * format.
 		 * \param[in] fp a file handle to write to. */
 		inline void draw_cells_pov(FILE *fp=stdout) {
-			v_loop_all vl(*this);
+			v_loop_all_periodic vl(*this);
 			draw_cells_pov(vl,fp);
 		}
 		/** Computes all Voronoi cells and saves the output in POV-Ray

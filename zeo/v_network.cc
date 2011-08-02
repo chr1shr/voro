@@ -10,6 +10,8 @@ voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 	xsp(nx/bx), ysp(ny/by), zsp(nz/bz), net_tol(net_tol_) {
 	int l;
 
+	vc_record.clear();
+
 	// Allocate memory for vertex structure
 	pts=new double*[nxyz];
 	idmem=new int*[nxyz];
@@ -295,14 +297,17 @@ inline void voronoi_network::unpack_periodicity(unsigned int pa,int &i,int &j,in
  * \param[in] idn the ID number of the particle associated with the cell. */
 template<class v_cell>
 void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double z,double rad) {
-	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;
+	int i,j,k,ijk,l,q,ai,aj,ak,ci,cj,ck;
 	double gx,gy,vx,vy,vz,crad,*cp(c.pts);
-	
+
+	int *vcr(new int[4*c.p]);
+	vc_record.push_back(vcr);
+
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
 	if(c.p>netmem) add_mapping_memory(c.p);
 	
-	// Loop over the vertices to t
+	// Loop over the vertices of the Voronoi cell
 	for(l=0;l<c.p;l++) {
 
 		// Compute the real position of this vertex, and evaluate its
@@ -316,12 +321,18 @@ void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double 
 	
 		// Check to see if a vertex very close to this one already
 		// exists in the network 
-		if(search_previous(gx,gy,vx,vy,vz,ijk,q,cper)) {
+		if(search_previous(gx,gy,vx,vy,vz,ijk,q,ci,cj,ck)) {
 
 			// If it does, then just map the Voronoi cell
 			// vertex to it
 			vmap[l]=idmem[ijk][q];
-			vper[l]=cper;
+			vper[l]=pack_periodicity(ci,cj,ck);
+			
+			// Add information to the Voronoi cell record
+			*(vcr++)=idmem[ijk][q];
+			*(vcr++)=ci;
+			*(vcr++)=cj;
+			*(vcr++)=ck;
 			
 			// Store this radius if it smaller than the current
 			// value
@@ -330,6 +341,12 @@ void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double 
 			k=step_int(vz*zsp);if(k<0||k>=nz) {ak=step_div(k,nz);vx-=bxz*ak;vy-=byz*ak;vz-=bz*ak;k-=ak*nz;} else ak=0;
 			j=step_int(gy*ysp);if(j<0||j>=ny) {aj=step_div(j,ny);vx-=bxy*aj;vy-=by*aj;j-=aj*ny;} else aj=0;
 			i=step_int(gx*xsp);if(i<0||i>=nx) {ai=step_div(i,nx);vx-=bx*ai;i-=ai*nx;} else ai=0;
+
+			// Add information to the Voronoi cell record
+			*(vcr++)=edc;
+			*(vcr++)=ai;
+			*(vcr++)=aj;
+			*(vcr++)=ak;
 
 			vper[l]=pack_periodicity(ai,aj,ak);
 			ijk=i+nx*(j+ny*k);
@@ -464,11 +481,11 @@ int voronoi_network::not_already_there(int k,int j,unsigned int cper) {
 	return nu[k];
 }
 
-bool voronoi_network::search_previous(double gx,double gy,double x,double y,double z,int &ijk,int &q,unsigned int &cper) {
+bool voronoi_network::search_previous(double gx,double gy,double x,double y,double z,int &ijk,int &q,int &pi,int &pj,int &pk) {
 	int ai=step_int((gx-net_tol)*xsp),bi=step_int((gx+net_tol)*xsp);
 	int aj=step_int((gy-net_tol)*ysp),bj=step_int((gy+net_tol)*ysp);
 	int ak=step_int((z-net_tol)*zsp),bk=step_int((z+net_tol)*zsp);
-	int i,j,k,pi,pj,pk,mi,mj,mk;
+	int i,j,k,mi,mj,mk;
 	double px,py,pz,px2,py2,px3;
 
 	for(k=ak;k<=bk;k++) {
@@ -478,10 +495,7 @@ bool voronoi_network::search_previous(double gx,double gy,double x,double y,doub
 			for(i=ai;i<=bi;i++) {
 				pi=step_div(i,nx);px3=px2+pi*bx;mi=i-nx*pi;
 				ijk=mi+nx*(mj+ny*mk);
-				for(q=0;q<ptsc[ijk];q++) if(abs(pts[ijk][4*q]+px3-x)<net_tol&&abs(pts[ijk][4*q+1]+py2-y)<net_tol&&abs(pts[ijk][4*q+2]+pz-z)<net_tol) {
-					cper=pack_periodicity(pi,pj,pk);
-					return true;
-				}
+				for(q=0;q<ptsc[ijk];q++) if(abs(pts[ijk][4*q]+px3-x)<net_tol&&abs(pts[ijk][4*q+1]+py2-y)<net_tol&&abs(pts[ijk][4*q+2]+pz-z)<net_tol) return true;
 			}
 		}
 	}

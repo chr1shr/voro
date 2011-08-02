@@ -528,8 +528,8 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 }
 
 inline void container_periodic_base::quick_put(int reg,int fijk,int l,double dx,double dy,double dz) {
-	double *p1(p[reg]+ps*co[reg]),*p2(p[fijk]+ps*l);
 	if(co[reg]==mem[reg]) add_particle_memory(reg);
+	double *p1(p[reg]+ps*co[reg]),*p2(p[fijk]+ps*l);
 	*(p1++)=*(p2++)+dx;
 	*(p1++)=*(p2++)+dy;
 	*p1=*p2+dz;

@@ -181,4 +181,6 @@ void compute(c_class &con,char *buffer,int bp,double vol) {
 	
 	// Output the unit cell in gnuplot format
 	extension("dom",bu);con.draw_domain_gnuplot(buffer);
+
+	con.print_all_particles();
 }
