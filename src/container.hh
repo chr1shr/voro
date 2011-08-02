@@ -174,7 +174,7 @@ class container_base : public voropp_base, public wall_list {
 		 * used to select the optimal worklist entry to use.
 		 * \param[in] (x,y,z) the position of the particle.
 		 * \param[in] (ci,cj,ck) the block that the particle is within.
-		 * \param[out] (fx,fy,fz) the position relateive to the block.
+		 * \param[out] (fx,fy,fz) the position relative to the block.
 		 */
 		inline void frac_pos(double x,double y,double z,double ci,double cj,double ck,
 				double &fx,double &fy,double &fz) {

@@ -20,6 +20,6 @@ const double rad_table[]={
 
 double radial_lookup(char *buffer) {
 	for(int i=0;i<n_table;i++) if(strcmp(rad_ctable[i],buffer)==0) return rad_table[i];
-	cerr << "Entry \"" << buffer << "\" not found in table" << endl;
-	exit(1);
+	fprintf(stderr,"Entry \"%s\" not found in table\n",buffer);
+	exit(VOROPP_FILE_ERROR);
 }

@@ -13,8 +13,15 @@ EXECUTABLES=network
 # Makefile rules
 all: $(EXECUTABLES) 
 
-network: network.cc v_network.cc v_network.hh r_table.cc
-	$(CC) $(CFLAGS) -I../src -L../src -o v_network v_network.cc -lvoro++
+# List of the common source files
+objs=v_network.cc
+src=$(patsubst %.o,%.cc,$(objs))
+
+%.o: %.cc
+	$(CXX) $(CFLAGS) -I../src -c $<
+
+network: network.cc v_network.o v_network.hh r_table.cc
+	$(CC) $(CFLAGS) -I../src -L../src -o network network.cc v_network.o -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

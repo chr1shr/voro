@@ -7,8 +7,8 @@
 /** \file container.hh
  * \brief Header file for the container_base template and related classes. */
 
-#ifndef VOROPP_CONTAINER_HH
-#define VOROPP_CONTAINER_HH
+#ifndef VOROPP_CONTAINER_PRD_HH
+#define VOROPP_CONTAINER_PRD_HH
 
 #include <cstdio>
 #include <cstdlib>
@@ -72,8 +72,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * removed the cell, true otherwise. */
 		template<class v_cell>
 		inline bool initialize_voronoicell(v_cell &c,int ijk,int q,int ci,int cj,int ck,int &i,int &j,int &k,double &x,double &y,double &z,int &disp) {
-			c.init(unit_voro);
-			double x1,x2,y1,y2,z1,z2;
+			c=unit_voro;
 			double *pp(p[ijk]+ps*q);
 			x=*(pp++);y=*(pp++);z=*pp;
 			ci=nx;cj=ey;ck=ez;
@@ -85,12 +84,12 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * used to select the optimal worklist entry to use.
 		 * \param[in] (x,y,z) the position of the particle.
 		 * \param[in] (ci,cj,ck) the block that the particle is within.
-		 * \param[out] (fx,fy,fz) the position relateive to the block.
+		 * \param[out] (fx,fy,fz) the position relative to the block.
 		 */
 		inline void frac_pos(double x,double y,double z,double ci,double cj,double ck,double &fx,double &fy,double &fz) {
 			fx=x-boxx*ci;
-			fy=y-boxy*cj;
-			fz=z-boxz*ck;
+			fy=y-boxy*(cj-ey);
+			fz=z-boxz*(ck-ez);
 		}
 		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int disp) {
 			int di(ci+ei),iv(step_div(di,nx));if(iv!=0) {qx=iv*bx;di-=nx*iv;} else qx=0;
@@ -102,7 +101,13 @@ class container_periodic_base : public unitcell, public voropp_base {
 	protected:
 		void add_particle_memory(int i);
 		void put_locate_block(int &ijk,double &x,double &y,double &z);
-		inline void create_periodic_image(int di,int dj,int dk);
+		inline void create_periodic_image(int di,int dj,int dk) {
+			if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
+				voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
+			if(dk>=ez&&dk<wz) {
+				if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
+			} else create_vertical_image(di,dj,dk);
+		}
 		void create_side_image(int di,int dj,int dk);
 		void create_vertical_image(int di,int dj,int dk);
 		inline void quick_put(int reg,int fijk,int l,double dx,double dy,double dz);		
@@ -279,7 +284,7 @@ class container_periodic : public container_periodic_base {
 		}
 		template<class v_cell>
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
-			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
+			int k(ijk/(nx*oy)),ijkt(ijk-(nx*oy)*k),j(ijkt/nx),i(ijkt-j*nx);
 			return vc.compute_cell(c,ijk,q,i,j,k);
 		}		
 	private:

@@ -9,6 +9,7 @@
 
 #include "v_compute.hh"
 #include "container.hh"
+#include "container_prd.hh"
 
 /** The class constructor initializes constants from the container class, and
  * sets up the mask and queue used for Voronoi computations.
@@ -733,3 +734,11 @@ template bool voropp_compute<container>::compute_cell(voronoicell&,int,int,int,i
 template bool voropp_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
 template bool voropp_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+
+// Explicit template instantiation
+template voropp_compute<container_periodic>::voropp_compute(container_periodic&,int,int,int);
+template voropp_compute<container_periodic_poly>::voropp_compute(container_periodic_poly&,int,int,int);
+template bool voropp_compute<container_periodic>::compute_cell(voronoicell&,int,int,int,int,int);
+template bool voropp_compute<container_periodic>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell&,int,int,int,int,int);
+template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);

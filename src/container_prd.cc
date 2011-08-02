@@ -35,7 +35,7 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 	pp=mem;while(pp<mem+oxyz) *(pp++)=0;
 	char *cp(img);while(cp<img+oxyz) *(cp++)=0;
 
-	// Initialize the
+	// Set up memory for the blocks in the primary domain
 	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
 		l=i+nx*(j+oy*k);
 		mem[l]=init_mem;
@@ -355,14 +355,6 @@ void container_periodic_base::check_compartmentalized() {
 				      ||p[l][ps*c+1]<miy||p[l][ps*c+1]>may
 				      ||p[l][ps*c+2]<miz||p[l][ps*c+2]>maz) printf("%d %d %d %f %f %f %f %f %f %f %f %f\n",i,j,k,p[l][ps*c],p[l][ps*c+1],p[l][ps*c+2],mix,max,miy,may,miz,maz);
 	}
-}
-
-inline void container_periodic_base::create_periodic_image(int di,int dj,int dk) {
-	if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
-		voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
-	if(dk>=ez&&dk<wz) {
-		if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
-	} else create_vertical_image(di,dj,dk);
 }
 
 void container_periodic_base::create_side_image(int di,int dj,int dk) {

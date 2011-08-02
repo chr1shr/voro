@@ -6,7 +6,8 @@
 
 #include <cstring>
 
-#include "voro++.cc"
+#include "voro++.hh"
+#include "v_network.hh"
 #include "r_table.cc"
 
 // A guess for the memory allocation per region
@@ -21,13 +22,12 @@ const int bsize=2048;
 
 // Output routine
 template<class c_class>
-void compute(c_class &con,char *buffer,int bp);
+void compute(c_class &con,char *buffer,int bp,double vol);
 
 int main(int argc,char **argv) {
-
 	char *farg,buffer[bsize];
 	bool radial;int i,n,bp;
-	double bx,bxy,by,bxz,byz,bz,x,y,z;
+	double bx,bxy,by,bxz,byz,bz,x,y,z,vol;
 
 	// Check the command line syntax
 	if(argc==2) {
@@ -42,16 +42,16 @@ int main(int argc,char **argv) {
 	// Check that the file has a ".v1" extension
 	bp=strlen(farg);
 	if(bp+2>bsize) {
-		fprintf("Filename too long\n",stderr);
+		fputs("Filename too long\n",stderr);
 		return VOROPP_CMD_LINE_ERROR;
 	}
 	if(bp<3||farg[bp-3]!='.'||farg[bp-2]!='v'||farg[bp-1]!='1') {
-		fprintf("Filename must end in '.v1'\n",stderr);
+		fputs("Filename must end in '.v1'\n",stderr);
 		return VOROPP_CMD_LINE_ERROR;
 	}
 
 	// Try opening the file
-	FILE *fp(farg,"r");
+	FILE *fp(fopen(farg,"r"));
 	if(fp==NULL) voropp_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
 
 	// Read header line
@@ -59,20 +59,14 @@ int main(int argc,char **argv) {
 	if(strcmp(buffer,"Unit cell vectors:\n")!=0)
 		voropp_fatal_error("Invalid header line",VOROPP_FILE_ERROR);
 	
-	// Read in the box dimensions
-	fgets(buffer,bsize,fp)
-	is.width(bsize);
-	is >> buffer;
-	if(strcmp(buffer,"va=\n")!=0) voropp_fatal_error("Invalid first vector",VOROPP_FILE_ERROR);
-	is >> bx >> x >> x;
-	is >> buffer;
-	if(strcmp(buffer,"vb=\n")!=0) voropp_fatal_error("Invalid second vector",VOROPP_FILE_ERROR);
-	is >> bxy >> by >> x;	
-	is >> buffer;
-	if(strcmp(buffer,"vc=\n")!=0) voropp_fatal_error("Invalid third vector",VOROPP_FILE_ERROR);
-	is >> bxz >> byz >> bz;
-	
-	is >> n;
+	// Read in the box dimensions and the number of particles
+	fscanf(fp,"%s %lg %lg %lg",buffer,&bx,&x,&x);
+	if(strcmp(buffer,"va=")!=0) voropp_fatal_error("Invalid first vector",VOROPP_FILE_ERROR);
+	fscanf(fp,"%s %lg %lg %lg",buffer,&bxy,&by,&x);
+	if(strcmp(buffer,"vb=")!=0) voropp_fatal_error("Invalid second vector",VOROPP_FILE_ERROR);
+	fscanf(fp,"%s %lg %lg %lg",buffer,&bxz,&byz,&bz);
+	if(strcmp(buffer,"vc=")!=0) voropp_fatal_error("Invalid third vector",VOROPP_FILE_ERROR);
+	fscanf(fp,"%d",&n);
 
 	// Print the box dimensions
 	printf("Box dimensions:\n"
@@ -109,6 +103,7 @@ int main(int argc,char **argv) {
 	int nz=int(nzf);
 	printf("Total particles = %d\n\nInternal grid size = (%d %d %d)\n\n",n,nx,ny,nz);
 
+	vol=bx*by*bz;
 	if(radial) {
 
 		// Create a container with the geometry given above
@@ -120,14 +115,11 @@ int main(int argc,char **argv) {
 				voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
 			con.put(i,x,y,z,radial_lookup(buffer));
 		}
-
-		// Carry out the volume check
-		printf("Volume check:\n  Total domain volume  = %f\n"
-		       "  Total Voronoi volume = %f\n",bx*by*bz,con.sum_cell_volumes());
+		fclose(fp);
 
 		// Copy the output filename
 		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
-		compute(con,buffer,bp);
+		compute(con,buffer,bp,vol);
 	} else {
 
 		// Create a container with the geometry given above
@@ -139,10 +131,11 @@ int main(int argc,char **argv) {
 				voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
 			con.put(i,x,y,z);			
 		}
+		fclose(fp);
 
 		// Copy the output filename
 		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
-		compute(con,buffer,bp);
+		compute(con,buffer,bp,vol);
 	}
 }
 
@@ -152,16 +145,17 @@ inline void extension(const char *ext,char *bu) {
 }
 
 template<class c_class>
-void compute(c_class &con,char *buffer,int bp) {
+void compute(c_class &con,char *buffer,int bp,double vol) {
 	char *bu(buffer+bp-2);
 	int id;
-	double vol(0),x,y,z,r;
+	double vvol(0),x,y,z,r;
+	voronoicell c;
 	voronoi_network vn(con),vn2(con);
 
 	// Compute Voronoi cells and 
-	v_loop_all vl(*this);
-	if(vl.start()) do if(compute_cell(c,vl)) {
-		vol+=c.volume();
+	v_loop_all vl(con);
+	if(vl.start()) do if(con.compute_cell(c,vl)) {
+		vvol+=c.volume();
 		vl.pos(id,x,y,z,r);
 		vn.add_to_network(c,id,x,y,z,r);
 		vn.add_to_network_rectangular(c,id,x,y,z,r);
@@ -169,7 +163,7 @@ void compute(c_class &con,char *buffer,int bp) {
 
 	// Carry out the volume check
 	printf("Volume check:\n  Total domain volume  = %f\n"
-	       "  Total Voronoi volume = %f\n",bx*by*bz,con.sum_cell_volumes());
+	       "  Total Voronoi volume = %f\n",vol,vvol);
 
 	// Print non-rectangular cell network
 	extension("nd2",bu);vn.draw_network(buffer);
@@ -186,5 +180,5 @@ void compute(c_class &con,char *buffer,int bp) {
 	extension("out",bu);con.draw_cells_gnuplot(buffer);
 	
 	// Output the unit cell in gnuplot format
-	extension("dom",bu);con.draw_domain(buffer);
+	extension("dom",bu);con.draw_domain_gnuplot(buffer);
 }

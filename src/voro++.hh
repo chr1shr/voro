@@ -284,6 +284,8 @@
 #include "cell.hh"
 #include "v_base.hh"
 #include "container.hh"
+#include "unitcell.hh"
+#include "container_prd.hh"
 #include "pre_container.hh"
 #include "v_compute.hh"
 #include "v_loops.hh"

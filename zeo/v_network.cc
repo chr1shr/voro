@@ -16,13 +16,13 @@ voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 	ptsc=new int[nxyz];
 	ptsmem=new int[nxyz];
 	for(l=0;l<nxyz;l++) {
-		pts[l]=new double[4*c.init_mem];
-		idmem[l]=new int[c.init_mem];
-		ptsc[l]=0;ptsmem[l]=c.init_mem;
+		pts[l]=new double[4*init_network_vertex_memory];
+		idmem[l]=new int[init_network_vertex_memory];
+		ptsc[l]=0;ptsmem[l]=init_network_vertex_memory;
 	}
 
 	// Allocate memory for network edges and related statistics 
-	edc=0;edmem=c.init_mem*nxyz;
+	edc=0;edmem=init_network_vertex_memory*nxyz;
 	ed=new int*[edmem];
 	ne=new int*[edmem];
 	pered=new unsigned int*[edmem];
@@ -37,12 +37,12 @@ voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 
 	// Allocate edge memory
 	for(l=0;l<edmem;l++) {
-		ed[l]=new int[2*init_edge_alloc];
-		ne[l]=ed[l]+init_edge_alloc;
+		ed[l]=new int[2*init_network_edge_memory];
+		ne[l]=ed[l]+init_network_edge_memory;
 	}
-	for(l=0;l<edmem;l++) raded[l]=new block[init_edge_alloc];
-	for(l=0;l<edmem;l++) pered[l]=new unsigned int[init_edge_alloc];
-	for(l=0;l<edmem;l++) {nu[l]=nec[l]=0;numem[l]=init_edge_alloc;}
+	for(l=0;l<edmem;l++) raded[l]=new block[init_network_edge_memory];
+	for(l=0;l<edmem;l++) pered[l]=new unsigned int[init_network_edge_memory];
+	for(l=0;l<edmem;l++) {nu[l]=nec[l]=0;numem[l]=init_network_edge_memory;}
 
 	// Allocate arrays that are used for mapping Voronoi cell vertices into
 	// network vertices
@@ -87,7 +87,7 @@ void voronoi_network::add_network_memory(int l) {
 	
 	// Check to see that an absolute maximum in memory allocation
 	// has not been reached, to prevent runaway allocation
-	if(ptsmem[l]>max_container_vertex_memory)
+	if(ptsmem[l]>max_network_vertex_memory)
 		voropp_fatal_error("Container vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 	
 	// Allocate new arrays
@@ -134,11 +134,11 @@ void voronoi_network::add_edge_network_memory() {
 
 	// Carry out new allocation
 	while(i<edmem) {
-		ned[i]=new int[2*init_edge_alloc];
-		nne[i]=ned[i]+init_edge_alloc;
-		nnu[i]=nnec[i]=0;nnumem[i]=init_edge_alloc;
-		nraded[i]=new block[init_edge_alloc];
-		npered[i++]=new unsigned int[init_edge_alloc];
+		ned[i]=new int[2*init_network_edge_memory];
+		nne[i]=ned[i]+init_network_edge_memory;
+		nnu[i]=nnec[i]=0;nnumem[i]=init_network_edge_memory;
+		nraded[i]=new block[init_network_edge_memory];
+		npered[i++]=new unsigned int[init_network_edge_memory];
 	}
 
 	// Delete old arrays and update pointers to the new ones
@@ -251,7 +251,7 @@ void voronoi_network::print_network(FILE *fp,bool reverse_remove) {
 			// print edges from i to j for j<i.
 			if(reverse_remove) if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
 			
-			fprintf("%d -> %d",l,ed[l][q]);
+			fprintf(fp,"%d -> %d",l,ed[l][q]);
 			raded[l][q].print(fp);
 			
 			// Compute and print the length of the edge 
@@ -294,9 +294,9 @@ inline void voronoi_network::unpack_periodicity(unsigned int pa,int &i,int &j,in
  * \param[in] (x,y,z) the position of the Voronoi cell.
  * \param[in] idn the ID number of the particle associated with the cell. */
 template<class v_cell>
-void voronoi_network::add_to_network(v_cell &c,double x,double y,double z,int idn,double rad) {
+void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double z,double rad) {
 	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;
-	double gx,gy,vx,vy,vz,crad,*pts(c.pts);
+	double gx,gy,vx,vy,vz,crad,*cp(c.pts);
 	
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
@@ -307,12 +307,12 @@ void voronoi_network::add_to_network(v_cell &c,double x,double y,double z,int id
 
 		// Compute the real position of this vertex, and evaluate its
 		// position along the non-rectangular axes
-		vx=x+pts[3*l]*0.5;vy=y+pts[3*l+1]*0.5;vz=z+pts[3*l+2]*0.5;
+		vx=x+cp[3*l]*0.5;vy=y+cp[3*l+1]*0.5;vz=z+cp[3*l+2]*0.5;
 		gx=vx-vy*(bxy/by)+vz*(bxy*byz-by*bxz)/(by*bz);
 		gy=vy-vz*(byz/bz);
 
 		// Compute the adjusted radius, which will be needed either way
-		crad=0.5*sqrt(pts[3*l]*pts[3*l]+pts[3*l+1]*pts[3*l+1]+pts[3*l+2]*pts[3*l+2])-rad;
+		crad=0.5*sqrt(cp[3*l]*cp[3*l]+cp[3*l+1]*cp[3*l+1]+cp[3*l+2]*cp[3*l+2])-rad;
 	
 		// Check to see if a vertex very close to this one already
 		// exists in the network 
@@ -366,8 +366,8 @@ inline void voronoi_network::add_neighbor(int k,int idn) {
 /** Adds edges to the network structure, after the vertices have been
  * considered. This routine assumes that the vmap and vper arrays provide a
  * mapping from the */
-template<class n_option>
-void voronoi_network::add_edges_to_network(voronoicell_base<n_option> &c,double x,double y,double z,double rad) {
+template<class v_cell>
+void voronoi_network::add_edges_to_network(v_cell &c,double x,double y,double z,double rad) {
 	int i,j,ai,aj,ak,bi,bj,bk,k,l,q;unsigned int cper;
 	double vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;double *pp;
 	for(l=0;l<c.p;l++) {
@@ -405,18 +405,18 @@ void voronoi_network::add_edges_to_network(voronoicell_base<n_option> &c,double 
 	}
 }
 
-template<class n_option>
-void voronoi_network::add_to_network_rectangular(voronoicell_base<n_option> &c,double x,double y,double z,int idn,double rad) {
+template<class v_cell>
+void voronoi_network::add_to_network_rectangular(v_cell &c,int idn,double x,double y,double z,double rad) {
 	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;
-	double vx,vy,vz,crad,*pts(c.pts);
+	double vx,vy,vz,crad,*cp(c.pts);
 	
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
 	if(c.p>netmem) add_mapping_memory(c.p);
 	
 	for(l=0;l<c.p;l++) {
-		vx=x+pts[3*l]*0.5;vy=y+pts[3*l+1]*0.5;vz=z+pts[3*l+2]*0.5;
-		crad=0.5*sqrt(pts[3*l]*pts[3*l]+pts[3*l+1]*pts[3*l+1]+pts[3*l+2]*pts[3*l+2])-rad;
+		vx=x+cp[3*l]*0.5;vy=y+cp[3*l+1]*0.5;vz=z+cp[3*l+2]*0.5;
+		crad=0.5*sqrt(cp[3*l]*cp[3*l]+cp[3*l+1]*cp[3*l+1]+cp[3*l+2]*cp[3*l+2])-rad;
 		if(safe_search_previous_rect(vx,vy,vz,ijk,q,cper)) {
 			vmap[l]=idmem[ijk][q];
 			vper[l]=cper;
@@ -542,3 +542,11 @@ inline int voronoi_network::step_int(double a) {
 inline int voronoi_network::step_div(int a,int b) {
 	return a>=0?a/b:-1+(a+1)/b;
 }
+
+// Explicit instantiation
+template voronoi_network::voronoi_network(container_periodic&, double);
+template voronoi_network::voronoi_network(container_periodic_poly&, double);
+template void voronoi_network::add_to_network<voronoicell>(voronoicell&, int, double, double, double, double);
+template void voronoi_network::add_to_network<voronoicell_neighbor>(voronoicell_neighbor&, int, double, double, double, double);
+template void voronoi_network::add_to_network_rectangular<voronoicell>(voronoicell&, int, double, double, double, double);
+template void voronoi_network::add_to_network_rectangular<voronoicell_neighbor>(voronoicell_neighbor&, int, double, double, double, double);

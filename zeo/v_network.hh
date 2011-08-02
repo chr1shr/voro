@@ -1,8 +1,11 @@
 #ifndef ZEOPP_V_NETWORK_HH
 #define ZEOPP_V_NETWORK_HH
 
-#include "cell.hh"
-#include "container.hh"
+#include "voro++.hh"
+
+const int init_network_edge_memory=4;
+const int init_network_vertex_memory=64;
+const int max_network_vertex_memory=65536;
 
 struct block {
 	double dis;
@@ -47,17 +50,17 @@ class voronoi_network {
 		unsigned int *vper;
 		int netmem;
 		template<class c_class>
-		explicit voronoi_network(c_class &c,double net_tol_=tolerance);
+		voronoi_network(c_class &c,double net_tol_=tolerance);
 		~voronoi_network();
 		void print_network(FILE *fp=stdout,bool reverse_remove=false);
 		inline void print_network(const char* filename,bool reverse_remove=false) {
-			FILE *fp(voropp_safe_fopen(filename,"r");
+			FILE *fp(voropp_safe_fopen(filename,"r"));
 			print_network(fp);
 			fclose(fp);
 		}
 		void draw_network(FILE *fp=stdout);
 		inline void draw_network(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"r");
+			FILE *fp(voropp_safe_fopen(filename,"r"));
 			print_network(fp);
 			fclose(fp);
 		}

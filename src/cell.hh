@@ -274,7 +274,8 @@ class voronoicell_base {
 		inline bool search_edge(int l,int &m,int &k);
 		inline int m_test(int n,double &ans);
 		int check_marginal(int n,double &ans);
-		friend class neighbor_track;
+		friend class voronoicell;
+		friend class voronoicell_neighbor;
 };
 
 class voronoicell : public voronoicell_base {
@@ -385,7 +386,8 @@ class voronoicell_neighbor : public voronoicell_base {
 		int **ne;
 		voronoicell_neighbor();
 		~voronoicell_neighbor();
-		inline void operator=(voronoicell_neighbor &c);
+		void operator=(voronoicell &c);
+		void operator=(voronoicell_neighbor &c);
 		inline bool nplane(double x,double y,double z,double rsq,int p_id) {
 			return nplane(*this,x,y,z,rsq,p_id);
 		}
