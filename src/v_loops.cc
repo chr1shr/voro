@@ -56,7 +56,6 @@ void v_loop_subset::setup_common() {
 		if(aj<0) {aj=0;if(bj<0) bj=0;}
 		if(bj>=ny) {bj=ny-1;if(aj>=ny) aj=ny-1;}
 	}
-
 	if(!zperiodic) {
 		if(ak<0) {ak=0;if(bk<0) bk=0;}
 		if(bk>=nz) {bk=nz-1;if(ak>=nz) ak=nz-1;}

@@ -3,20 +3,20 @@
 /** Initializes the Voronoi network object. The geometry is set up to match a
  * corresponding container class, and memory is allocated for the network.
  * \param[in] c a reference to a container or container_poly class. */
-template<class r_option>
-voronoi_network::voronoi_network(container_periodic_base<r_option> &c,fpoint net_tol_) :
+template<class c_class>
+voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 	bx(c.bx), bxy(c.bxy), by(c.by), bxz(c.bxz), byz(c.byz), bz(c.bz),
 	nx(c.nx), ny(c.ny), nz(c.nz), nxyz(nx*ny*nz),
 	xsp(nx/bx), ysp(ny/by), zsp(nz/bz), net_tol(net_tol_) {
 	int l;
 
 	// Allocate memory for vertex structure
-	pts=new fpoint*[nxyz];
+	pts=new double*[nxyz];
 	idmem=new int*[nxyz];
 	ptsc=new int[nxyz];
 	ptsmem=new int[nxyz];
 	for(l=0;l<nxyz;l++) {
-		pts[l]=new fpoint[4*c.init_mem];
+		pts[l]=new double[4*c.init_mem];
 		idmem[l]=new int[c.init_mem];
 		ptsc[l]=0;ptsmem[l]=c.init_mem;
 	}
@@ -91,7 +91,7 @@ void voronoi_network::add_network_memory(int l) {
 		voropp_fatal_error("Container vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 	
 	// Allocate new arrays
-	fpoint *npts(new fpoint[4*ptsmem[l]]);
+	double *npts(new double[4*ptsmem[l]]);
 	int *nidmem(new int[ptsmem[l]]);
 
 	// Copy the contents of the old arrays into the new ones
@@ -200,8 +200,8 @@ void voronoi_network::clear_network() {
 }
 
 /** Outputs the network in a format that can be read by gnuplot.
- * \param[in] os an output stream to write to. */
-void voronoi_network::draw_network(ostream &os) {
+ * \param[in] fp a file handle to write to. */
+void voronoi_network::draw_network(FILE *fp) {
 	voronoicell c;
 	int i,j,l,q,ai,aj,ak;
 	for(l=0;l<edc;l++) {
@@ -209,33 +209,33 @@ void voronoi_network::draw_network(ostream &os) {
 			unpack_periodicity(pered[l][q],ai,aj,ak);
 			if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
 			i=reg[l];j=4*regp[l];
-			os << pts[i][j] << " " << pts[i][j+1] << " " << pts[i][j+2] << "\n";
+			fprintf(fp,"%g %g %g\n",pts[i][j],pts[i][j+1],pts[i][j+2]);
 			i=reg[ed[l][q]];j=4*regp[ed[l][q]];
-			os << pts[i][j]+bx*ai+bxy*aj+bxz*ak << " " << pts[i][j+1]+by*aj+byz*ak << " " << pts[i][j+2]+bz*ak << "\n\n\n";
+			fprintf(fp,"%g %g %g\n",pts[i][j]+bx*ai+bxy*aj+bxz*ak,
+				pts[i][j+1]+by*aj+byz*ak,pts[i][j+2]+bz*ak);
 		}
 	}
 }
 
-/** Prints out the network to an open output stream.
- * \param[in] os an output stream to write to.
+/** Prints out the network.
+ * \param[in] fp a file handle to write to.
  * \param[in] reverse_remove a boolean value, setting whether or not to remove
  *                           reverse edges. */
-void voronoi_network::print_network(ostream &os,bool reverse_remove) {
+void voronoi_network::print_network(FILE *fp,bool reverse_remove) {
 	int ai,aj,ak,j,l,ll,q;
-	fpoint x,y,z,x2,y2,z2,*ptsp;
+	double x,y,z,x2,y2,z2,*ptsp;
 
 	// Print the vertex table
-	os << "Vertex table:\n";
-	os << edc << "\n";
+	fprintf(fp,"Vertex table:\n%d\n",edc);
 	for(l=0;l<edc;l++) {
 		ptsp=pts[reg[l]];j=4*regp[l];
-		os << l << " " << ptsp[j] << " " << ptsp[j+1] << " " << ptsp[j+2] << " " << ptsp[j+3];
-		for(ll=0;ll<nec[l];ll++) os << " " << ne[l][ll];
-		os << "\n";
+		fprintf(fp,"%d %g %g %g %g",l,ptsp[j],ptsp[j+1],ptsp[j+2],ptsp[j+3]);
+		for(ll=0;ll<nec[l];ll++) fprintf(fp," %d",ne[l][ll]);
+		fputs("\n",fp);
 	}
 	
 	// Print out the edge table, loop over vertices
-	os << "\nEdge table:\n";
+	fputs("\nEdge table:\n",fp);
 	for(l=0;l<edc;l++) {
 		
 		// Store the position of this vertex
@@ -251,16 +251,15 @@ void voronoi_network::print_network(ostream &os,bool reverse_remove) {
 			// print edges from i to j for j<i.
 			if(reverse_remove) if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
 			
-			os << l << " -> " << ed[l][q] << " ";
-			raded[l][q].print(os);
-			os << " " << ai << " " << aj << " " << ak;
-
+			fprintf("%d -> %d",l,ed[l][q]);
+			raded[l][q].print(fp);
+			
 			// Compute and print the length of the edge 
 			ptsp=pts[reg[ed[l][q]]];j=4*regp[ed[l][q]];
 			x2=ptsp[j]+ai*bx+aj*bxy+ak*bxz-x;
 			y2=ptsp[j+1]+aj*by+ak*byz-y;
 			z2=ptsp[j+2]+ak*bz-z;
-			os << " " << (sqrt(x2*x2+y2*y2+z2*z2)) << "\n"; 
+			fprintf(fp," %d %d %d %g\n",ai,aj,ak,sqrt(x2*x2+y2*y2+z2*z2));
 		}
 	}
 }
@@ -294,10 +293,10 @@ inline void voronoi_network::unpack_periodicity(unsigned int pa,int &i,int &j,in
  * \param[in] c a reference to a Voronoi cell.
  * \param[in] (x,y,z) the position of the Voronoi cell.
  * \param[in] idn the ID number of the particle associated with the cell. */
-template<class n_option>
-void voronoi_network::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn,fpoint rad) {
+template<class v_cell>
+void voronoi_network::add_to_network(v_cell &c,double x,double y,double z,int idn,double rad) {
 	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;
-	fpoint gx,gy,vx,vy,vz,crad;
+	double gx,gy,vx,vy,vz,crad,*pts(c.pts);
 	
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
@@ -308,12 +307,12 @@ void voronoi_network::add_to_network(voronoicell_base<n_option> &c,fpoint x,fpoi
 
 		// Compute the real position of this vertex, and evaluate its
 		// position along the non-rectangular axes
-		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
+		vx=x+pts[3*l]*0.5;vy=y+pts[3*l+1]*0.5;vz=z+pts[3*l+2]*0.5;
 		gx=vx-vy*(bxy/by)+vz*(bxy*byz-by*bxz)/(by*bz);
 		gy=vy-vz*(byz/bz);
 
 		// Compute the adjusted radius, which will be needed either way
-		crad=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2])-rad;
+		crad=0.5*sqrt(pts[3*l]*pts[3*l]+pts[3*l+1]*pts[3*l+1]+pts[3*l+2]*pts[3*l+2])-rad;
 	
 		// Check to see if a vertex very close to this one already
 		// exists in the network 
@@ -368,9 +367,9 @@ inline void voronoi_network::add_neighbor(int k,int idn) {
  * considered. This routine assumes that the vmap and vper arrays provide a
  * mapping from the */
 template<class n_option>
-void voronoi_network::add_edges_to_network(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,fpoint rad) {
+void voronoi_network::add_edges_to_network(voronoicell_base<n_option> &c,double x,double y,double z,double rad) {
 	int i,j,ai,aj,ak,bi,bj,bk,k,l,q;unsigned int cper;
-	fpoint vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;fpoint *pp;
+	double vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;double *pp;
 	for(l=0;l<c.p;l++) {
 		k=vmap[l];
 		unpack_periodicity(vper[l],ai,aj,ak);
@@ -407,17 +406,17 @@ void voronoi_network::add_edges_to_network(voronoicell_base<n_option> &c,fpoint 
 }
 
 template<class n_option>
-void voronoi_network::add_to_network_rectangular(voronoicell_base<n_option> &c,fpoint x,fpoint y,fpoint z,int idn,fpoint rad) {
+void voronoi_network::add_to_network_rectangular(voronoicell_base<n_option> &c,double x,double y,double z,int idn,double rad) {
 	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;
-	fpoint vx,vy,vz,crad;
+	double vx,vy,vz,crad,*pts(c.pts);
 	
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
 	if(c.p>netmem) add_mapping_memory(c.p);
 	
 	for(l=0;l<c.p;l++) {
-		vx=x+c.pts[3*l]*0.5;vy=y+c.pts[3*l+1]*0.5;vz=z+c.pts[3*l+2]*0.5;
-		crad=0.5*sqrt(c.pts[3*l]*c.pts[3*l]+c.pts[3*l+1]*c.pts[3*l+1]+c.pts[3*l+2]*c.pts[3*l+2])-rad;
+		vx=x+pts[3*l]*0.5;vy=y+pts[3*l+1]*0.5;vz=z+pts[3*l+2]*0.5;
+		crad=0.5*sqrt(pts[3*l]*pts[3*l]+pts[3*l+1]*pts[3*l+1]+pts[3*l+2]*pts[3*l+2])-rad;
 		if(safe_search_previous_rect(vx,vy,vz,ijk,q,cper)) {
 			vmap[l]=idmem[ijk][q];
 			vper[l]=cper;
@@ -465,12 +464,12 @@ int voronoi_network::not_already_there(int k,int j,unsigned int cper) {
 	return nu[k];
 }
 
-bool voronoi_network::search_previous(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper) {
+bool voronoi_network::search_previous(double gx,double gy,double x,double y,double z,int &ijk,int &q,unsigned int &cper) {
 	int ai=step_int((gx-net_tol)*xsp),bi=step_int((gx+net_tol)*xsp);
 	int aj=step_int((gy-net_tol)*ysp),bj=step_int((gy+net_tol)*ysp);
 	int ak=step_int((z-net_tol)*zsp),bk=step_int((z+net_tol)*zsp);
 	int i,j,k,pi,pj,pk,mi,mj,mk;
-	fpoint px,py,pz,px2,py2,px3;
+	double px,py,pz,px2,py2,px3;
 
 	for(k=ak;k<=bk;k++) {
 		pk=step_div(k,nz);px=pk*bxz;py=pk*byz;pz=pk*bz;mk=k-nz*pk;
@@ -489,8 +488,8 @@ bool voronoi_network::search_previous(fpoint gx,fpoint gy,fpoint x,fpoint y,fpoi
 	return false;
 }
 
-bool voronoi_network::safe_search_previous_rect(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper) {
-	const fpoint tol(0.5*net_tol);
+bool voronoi_network::safe_search_previous_rect(double x,double y,double z,int &ijk,int &q,unsigned int &cper) {
+	const double tol(0.5*net_tol);
 	if(search_previous_rect(x+tol,y+tol,z+tol,ijk,q,cper)) return true;
 	if(search_previous_rect(x-tol,y+tol,z+tol,ijk,q,cper)) return true;
 	if(search_previous_rect(x+tol,y-tol,z+tol,ijk,q,cper)) return true;
@@ -501,7 +500,7 @@ bool voronoi_network::safe_search_previous_rect(fpoint x,fpoint y,fpoint z,int &
 	return search_previous_rect(x-tol,y-tol,z-tol,ijk,q,cper);
 }
 
-bool voronoi_network::search_previous_rect(fpoint x,fpoint y,fpoint z,int &ijk,int &q,unsigned int &cper) {	
+bool voronoi_network::search_previous_rect(double x,double y,double z,int &ijk,int &q,unsigned int &cper) {	
 	int k=step_int(z*zsp);
 	int ai,aj,ak;
 
@@ -534,7 +533,7 @@ bool voronoi_network::search_previous_rect(fpoint x,fpoint y,fpoint z,int &ijk,i
 /** Custom int function, that gives consistent stepping for negative numbers.
  * With normal int, we have (-1.5,-0.5,0.5,1.5) -> (-1,0,0,1).
  * With this routine, we have (-1.5,-0.5,0.5,1.5) -> (-2,-1,0,1). */
-inline int voronoi_network::step_int(fpoint a) {
+inline int voronoi_network::step_int(double a) {
 	return a<0?int(a)-1:int(a);
 }
 

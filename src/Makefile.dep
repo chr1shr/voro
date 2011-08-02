@@ -11,5 +11,5 @@ wall.o: wall.cc wall.hh cell.hh config.hh common.hh container.hh \
   v_base.hh worklist.hh v_loops.hh v_compute.hh
 pre_container.o: pre_container.cc config.hh pre_container.hh v_loops.hh \
   container.hh common.hh v_base.hh worklist.hh cell.hh v_compute.hh
-container_prd.o: container_prd.cc container.hh config.hh common.hh \
-  v_base.hh worklist.hh cell.hh v_loops.hh v_compute.hh
+container_prd.o: container_prd.cc container_prd.hh config.hh common.hh \
+  v_base.hh worklist.hh cell.hh v_loops.hh v_compute.hh unitcell.hh

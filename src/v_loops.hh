@@ -116,17 +116,7 @@ class v_loop_all : public v_loop_base {
 		v_loop_all(c_class &con) : v_loop_base(con) {}
 		inline bool start() {
 			i=j=k=ijk=q=0;
-			while(co[ijk]==0) {
-				ijk++;
-				i++;
-				if(i==nx) {
-					i=0;j++;
-					if(j==ny) {
-						j=0;k++;
-						if(ijk==nxyz) return false;
-					}
-				}
-			}
+			while(co[ijk]==0) if(!next_block()) return false;
 			return true;
 		}
 		/** Finds the next particle to test.
@@ -134,17 +124,24 @@ class v_loop_all : public v_loop_base {
 		 * particles are available. */		
 		inline bool inc() {
 			q++;
-			while(q>=co[ijk]) {
-				ijk++;
-				i++;
-				if(i==nx) {
-					i=0;j++;
-					if(j==ny) {
-						j=0;k++;
-						if(ijk==nxyz) return false;
-					}
-				}
+			if(q>=co[ijk]) {
 				q=0;
+				do {
+					if(!next_block()) return false;
+				} while(co[ijk]==0);
+			}
+			return true;
+		}
+	private:
+		inline bool next_block() {
+			ijk++;
+			i++;
+			if(i==nx) {
+				i=0;j++;
+				if(j==ny) {
+					j=0;k++;
+					if(ijk==nxyz) return false;
+				}
 			}
 			return true;
 		}
@@ -195,8 +192,7 @@ class v_loop_order : public v_loop_base {
 		int *cp,*op;
 		template<class c_class>
 		v_loop_order(c_class &con,voropp_order &vo_)
-		: v_loop_base(con), vo(vo_), nx(con.x_step()), nxy(con.y_step()),
-			disp(con.disp()) {}
+		: v_loop_base(con), vo(vo_), nx(con.nx), nxy(con.nxy) {}
 		inline bool start() {
 			cp=vo.o;op=vo.op;
 			if(cp!=op) {
@@ -217,12 +213,55 @@ class v_loop_order : public v_loop_base {
 	private:
 		const int nx;
 		const int nxy;
-		const int disp;
 		inline void decode() {
 			k=ijk/nxy;
 			int ijkt=ijk-nxy*k;
 			j=ijkt/nx;
 			i=ijkt-j*nx;
+		}
+};
+
+class v_loop_all_periodic : public v_loop_base {
+	public:
+		int ey,ez;
+		int wy,wz;
+		int ijk0,inc2;
+		template<class c_class>
+		v_loop_all_periodic(c_class &con) : v_loop_base(con), ey(con.ey), ez(con.ez), wy(con.wy), wz(con.wz),
+			ijk0(nx*(ey+con.oy*ez)), inc2(2*nx*con.ey+1) {}
+		inline bool start() {
+			i=0;
+			j=ey;
+			k=ez;
+			ijk=ijk0;
+			q=0;
+			while(co[ijk]==0) if(!next_block()) return false;
+			return true;
+		}
+		/** Finds the next particle to test.
+		 * \return True if there is another particle, false if no more
+		 * particles are available. */		
+		inline bool inc() {
+			q++;
+			if(q>=co[ijk]) {
+				q=0;
+				do {
+					if(!next_block()) return false;
+				} while(co[ijk]==0);
+			}
+			return true;
+		}
+	private:
+		inline bool next_block() {
+			i++;
+			if(i==nx) {
+				i=0;j++;
+				if(j==wy) {
+					j=ey;k++;
+					if(k==wz) return false;
+					ijk+=inc2;
+				} else ijk++;
+			} else ijk++;
 		}
 };
 

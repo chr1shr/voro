@@ -36,7 +36,7 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 	char *cp(img);while(cp<img+oxyz) *(cp++)=0;
 
 	// Initialize the
-	for(k=ez;k<oz;k++) for(j=ey;j<oy;j++) for(i=0;i<nx;i++) {
+	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
 		l=i+nx*(j+oy*k);
 		mem[l]=init_mem;
 		id[l]=new int[init_mem];
@@ -76,8 +76,8 @@ container_periodic::container_periodic(double bx_,double bxy_,double by_,double 
  * \param[in] init_mem the initial memory allocation for each block. */
 container_periodic_poly::container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
 	int nx_,int ny_,int nz_,int init_mem)
-	: container_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem,4),
-	max_radius(0), vc(*this,2*nx_+1:nx_,2*ey+1,2*ez+1) {}
+	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem,4),
+	max_radius(0), vc(*this,2*nx_+1,2*ey+1,2*ez+1) {}
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
