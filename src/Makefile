@@ -12,9 +12,6 @@ objs=cell.o common.o container.o unitcell.o v_compute.o v_loops.o \
      v_base.o wall.o pre_container.o container_prd.o
 src=$(patsubst %.o,%.cc,$(objs))
 
-# Lists of the command line utilities
-execs=single_cell
-
 # Makefile rules
 all: libvoro++.a ../bin/voro++
 

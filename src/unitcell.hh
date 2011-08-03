@@ -1,3 +1,12 @@
+// Voro++, a 3D cell-based Voronoi library
+//
+// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Email    : chr@alum.mit.edu
+// Date     : May 18th 2011
+
+/** \file unitcell.hh
+ * \brief Header file for the unitcell class. */
+
 #ifndef VOROPP_UNITCELL_HH
 #define VOROPP_UNITCELL_HH
 
@@ -7,6 +16,8 @@ using namespace std;
 #include "config.hh"
 #include "cell.hh"
 
+/** \brief Class for computation of the unit Voronoic cell associated with
+ * a 3D non-rectangular periodic domain. */
 class unitcell {
 	public:
 		const double bx;

@@ -1,3 +1,12 @@
+// Voro++, a 3D cell-based Voronoi library
+//
+// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Email    : chr@alum.mit.edu
+// Date     : May 18th 2011
+
+/** \file unitcell.cc
+ * \brief Function implementations for the unitcell class. */
+
 #include <queue>
 using namespace std;
 
@@ -35,6 +44,14 @@ unitcell::unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,dou
 			}
 			for(i=-l;i<=l;i++) for(j=-l;j<=l;j++) unit_voro_apply(i,j,l);
 		} else {
+
+			// Calculate a bound on the maximum y and z coordinates
+			// that could possibly cut the cell. This is based upon
+			// a geometric result that particles with z>l can't cut
+			// a cell lying within the paraboloid
+			// z<=(l*l-x*x-y*y)/(2*l). It is always a tighter bound
+			// than the one based on computing the maximum radius
+			// of a Voronoi cell vertex.
 			max_uv_y=max_uv_z=0;
 			double y,z,q,*pts(unit_voro.pts),*pp(pts);
 			while(pp<pts+3*unit_voro.p) {
@@ -86,6 +103,12 @@ bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
 	return true;
 }
 
+/** Computes a list of periodic domain images that intersect the unit Voronoi cell.
+ * \param[out] vi a vector containing triplets (i,j,k) corresponding to domain
+ *                images that intersect the unit Voronoi cell, when it is
+ *                centered in the middle of the primary domain.
+ * \param[out] vd a vector containing the fraction of the Voronoi cell volume
+ *                within each corresponding image listed in vi. */
 void unitcell::images(vector<int> &vi,vector<double> &vd) {
 	const int ms2(max_unit_voro_shells*2+1),mss(ms2*ms2*ms2);
 	bool *a(new bool[mss]),*ac(a+max_unit_voro_shells*(1+ms2*(1+ms2))),*ap(a);

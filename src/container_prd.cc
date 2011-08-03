@@ -4,8 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : May 18th 2011
 
-/** \file container.cc
- * \brief Function implementations for the container and related classes. */
+/** \file container_prd.cc
+ * \brief Function implementations for the container_periodic_base and
+ * related classes. */
 
 #include "container_prd.hh"
 

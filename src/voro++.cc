@@ -11,6 +11,8 @@
 #include "common.cc"
 #include "v_base.cc"
 #include "container.cc"
+#include "unitcell.cc"
+#include "container_prd.cc"
 #include "pre_container.cc"
 #include "v_compute.cc"
 #include "v_loops.cc"

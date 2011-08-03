@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : May 18th 2011
 
-/** \file container.hh
- * \brief Header file for the container_base template and related classes. */
+/** \file container_prd.hh
+ * \brief Header file for the container_periodic_base and related classes. */
 
 #ifndef VOROPP_CONTAINER_PRD_HH
 #define VOROPP_CONTAINER_PRD_HH
@@ -26,9 +26,26 @@ using namespace std;
 
 class container_periodic_base : public unitcell, public voropp_base {
 	public:
-		int ey,ez;
-		int wy,wz;
-		int oy,oz,oxyz;		
+		/** The lower y index (inclusive) of the primary domain within
+		 * the block structure. */
+		int ey;
+		/** The lower y index (inclusive) of the primary domain within
+		 * the block structure. */
+		int ez;
+		/** The upper y index (exclusive) of the primary domain within
+		 * the block structure. */
+		int wy;
+		/** The upper z index (exclusive) of the primary domain within
+		 * the block structure. */
+		int wz;
+		/** The total size of the block structure (including images) in
+		 * the y direction. */
+		int oy;
+		/** The total size of the block structure (including images) in
+		 * the z direction. */
+		int oz;
+		/** The total number of blocks. */
+		int oxyz;		
 		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
@@ -45,7 +62,11 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * more is allocated using the add_particle_memory() function.
 		 */
 		int *mem;
+		/** An array holding information about periodic image
+		 * construction at a given location. */ 
 		char *img;
+		/** The initial amount of memory to allocate for particles
+		 * for each block. */
 		const int init_mem;
 		/** The amount of memory in the array structure for each
 		 * particle. This is set to 3 when the basic class is
