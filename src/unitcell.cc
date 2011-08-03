@@ -65,6 +65,12 @@ inline void unitcell::unit_voro_apply(int i,int j,int k) {
 	unit_voro.plane(-x,-y,-z);
 }
 
+/** Calculates whether the unit Voronoi cell intersects a given periodic image
+ * of the domain.
+ * \param[in] (dx,dy,dz) the displacement of the periodic image.
+ * \param[out] vol the proportion of the unit cell volume within this image,
+ *                 only computed in the case that the two intersect.
+ * \return True if they intersect, false otherwise. */
 bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
 	const double bxinv=1/bx,byinv=1/by,bzinv=1/bz,ivol=bxinv*byinv*bzinv;
 	voronoicell c;
