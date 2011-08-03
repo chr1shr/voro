@@ -57,6 +57,8 @@ voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 voronoi_network::~voronoi_network() {
 	int l;
 
+	for(unsigned int k=0;k<vc_record.size();k++) delete [] vc_record[k];
+
 	// Remove Voronoi mapping arrays
 	delete [] vper;
 	delete [] vmap;

@@ -11,7 +11,7 @@
 #include "r_table.cc"
 
 // A guess for the memory allocation per region
-const int memory=8;
+const int memory=16;
 
 // A maximum allowed number of regions, to prevent enormous amounts of memory
 // being allocated
@@ -151,9 +151,9 @@ void compute(c_class &con,char *buffer,int bp,double vol) {
 	double vvol(0),x,y,z,r;
 	voronoicell c;
 	voronoi_network vn(con),vn2(con);
-
+con.check_compartmentalized();	
 	// Compute Voronoi cells and 
-	v_loop_all vl(con);
+	v_loop_all_periodic vl(con);
 	if(vl.start()) do if(con.compute_cell(c,vl)) {
 		vvol+=c.volume();
 		vl.pos(id,x,y,z,r);
@@ -177,10 +177,8 @@ void compute(c_class &con,char *buffer,int bp,double vol) {
 	extension("par",bu);con.draw_particles(buffer);
 
 	// Output the Voronoi cells in gnuplot format
-	extension("out",bu);con.draw_cells_gnuplot(buffer);
+//	extension("out",bu);con.draw_cells_gnuplot(buffer);
 	
 	// Output the unit cell in gnuplot format
 	extension("dom",bu);con.draw_domain_gnuplot(buffer);
-
-	con.print_all_particles();
 }
