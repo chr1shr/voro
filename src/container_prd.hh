@@ -116,13 +116,13 @@ class container_periodic_base : public unitcell, public voropp_base {
 		}
 		void create_side_image(int di,int dj,int dk);
 		void create_vertical_image(int di,int dj,int dk);
-		inline void quick_put(int reg,int fijk,int l,double dx,double dy,double dz);		
+		void put_image(int reg,int fijk,int l,double dx,double dy,double dz);		
 };
 
 class container_periodic : public container_periodic_base {
 	public:
 		container_periodic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-				int nx_,int ny_,int nz_,int init_mem);
+				int nx_,int ny_,int nz_,int init_mem_);
 		void clear();
 		void put(int n,double x,double y,double z);
 		void put(voropp_order &vo,int n,double x,double y,double z);
@@ -308,7 +308,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * */
 		double max_radius;
 		container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-				int nx_,int ny_,int nz_,int init_mem);
+				int nx_,int ny_,int nz_,int init_mem_);
 		void clear();
 		void put(int n,double x,double y,double z,double r);
 		void put(voropp_order &vo,int n,double x,double y,double z,double r);

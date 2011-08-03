@@ -14,12 +14,13 @@
  * direction is periodic or not. It divides the container into a rectangular
  * grid of blocks, and allocates memory for each of these for storing particle
  * positions and IDs.
- * \param[in] (bx_) exp. 
- * \param[in] (bxy_,by_) exp.
- * \param[in] (bxz_,byz_,bz_) exp.
+ * \param[in] (bx_) The x coordinate of the first unit vector. 
+ * \param[in] (bxy_,by_) The x and y coordinates of the second unit vector.
+ * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
+ *                            vector.
  * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
  *                       coordinate directions.
- * \param[in] init_mem the initial memory allocation for each block.
+ * \param[in] init_mem_ the initial memory allocation for each block.
  * \param[in] ps_ the number of floating point entries to store for each
  *                particle. */
 container_periodic_base::container_periodic_base(double bx_,double bxy_,double by_,
@@ -56,27 +57,29 @@ container_periodic_base::~container_periodic_base() {
 }
 
 /** The class constructor sets up the geometry of container.
- * \param[in] (bx_) exp. 
- * \param[in] (bxy_,by_) exp.
- * \param[in] (bxz_,byz_,bz_) exp.
+ * \param[in] (bx_) The x coordinate of the first unit vector. 
+ * \param[in] (bxy_,by_) The x and y coordinates of the second unit vector.
+ * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
+ *                            vector.
  * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
  *			    coordinate directions.
- * \param[in] init_mem the initial memory allocation for each block. */
+ * \param[in] init_mem_ the initial memory allocation for each block. */
 container_periodic::container_periodic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-	int nx_,int ny_,int nz_,int init_mem)
+	int nx_,int ny_,int nz_,int init_mem_)
 	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem,3),
 	vc(*this,2*nx_+1,2*ey+1,2*ez+1) {}
 
 /** The class constructor sets up the geometry of container.
- * \param[in] (bx_) exp. 
- * \param[in] (bxy_,by_) exp.
- * \param[in] (bxz_,byz_,bz_) exp.
+ * \param[in] (bx_) The x coordinate of the first unit vector. 
+ * \param[in] (bxy_,by_) The x and y coordinates of the second unit vector.
+ * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
+ *                            vector.
  * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
  *			    coordinate directions.
- * \param[in] init_mem the initial memory allocation for each block. */
+ * \param[in] init_mem_ the initial memory allocation for each block. */
 container_periodic_poly::container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
 	int nx_,int ny_,int nz_,int init_mem)
-	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem,4),
+	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem_,4),
 	max_radius(0), vc(*this,2*nx_+1,2*ey+1,2*ez+1) {}
 
 /** Put a particle into the correct region of the container.
@@ -177,6 +180,7 @@ void container_periodic_base::add_particle_memory(int i) {
 		return;
 	}
 
+	// Otherwise, double the memory allocation for this block
 	int *idp,l,nmem(mem[i]<<1);
 	double *pp;
 #if VOROPP_VERBOSE >=3
@@ -352,23 +356,33 @@ void container_periodic_base::create_all_images() {
 	for(k=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++) create_periodic_image(i,j,k);
 }
 
-/** Dumps all the particle positions and identifies to a file.
- * \param[in] os an output stream to write to. */
+/** Checks that the particles within each block lie within that block's bounds.
+ * This is useful for diagnosing problems with periodic image computation. */
 void container_periodic_base::check_compartmentalized() {
 	int c,l,i,j,k;
-	double mix,miy,miz,max,may,maz;
-	for(k=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++) {
-		l=i+nx*(j+oy*k);
-		if(mem[l]==0) continue;
+	double mix,miy,miz,max,may,maz,*pp;
+	for(k=l=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++,l++) if(mem[l]>0) {
+		
+		// Compute the block's bounds, adding in a small tolerance
 		mix=i*boxx-tolerance;max=mix+boxx+tolerance;
 		miy=(j-ey)*boxy-tolerance;may=miy+boxy+tolerance;
 		miz=(k-ez)*boxz-tolerance;maz=miz+boxz+tolerance;
-		for(c=0;c<co[l];c++) if(p[l][ps*c]<mix||p[l][ps*c]>max
-				      ||p[l][ps*c+1]<miy||p[l][ps*c+1]>may
-				      ||p[l][ps*c+2]<miz||p[l][ps*c+2]>maz) printf("%d %d %d %d %f %f %f %f %f %f %f %f %f\n",id[l][c],i,j,k,p[l][ps*c],p[l][ps*c+1],p[l][ps*c+2],mix,max,miy,may,miz,maz);
+
+		// Print entries for any particles that lie outside the block's
+		// bounds
+		for(pp=p[l],c=0;c<co[l];c++,pp+=ps) if(*pp<mix||*pp>max||p[1]<miy||p[1]>may||p[2]<miz||p[2]>maz)
+			printf("%d %d %d %d %f %f %f %f %f %f %f %f %f\n",
+			       id[l][c],i,j,k,*pp,pp[1],pp[2],mix,max,miy,may,miz,maz);
 	}
 }
 
+/** Creates particles within an image block that is aligned with the primary
+ * domain in the z axis. In this case, the image block may be comprised of
+ * particles from two primary blocks. The routine considers these two primary
+ * blocks, and adds the needed particles to the image. The remaining particles
+ * from the primary blocks are also filled into the neighboring images.
+ * \param[in] (di,dj,dk) the index of the block to consider. The z index must
+ *			 satisfy ez<=dk<wz. */
 void container_periodic_base::create_side_image(int di,int dj,int dk) {
 	int l,dijk=di+nx*(dj+oy*dk),odijk,ima=step_div(dj-ey,ny);
 	int qua=di+step_int(-ima*bxy*xsp),quadiv=step_div(qua,nx);
@@ -384,8 +398,8 @@ void container_periodic_base::create_side_image(int di,int dj,int dk) {
 		}
 		img[odijk]|=2;
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][ps*l]>switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
-			else quick_put(odijk,fijk,l,adis,by*ima,0);
+			if(p[fijk][ps*l]>switchx) put_image(dijk,fijk,l,dis,by*ima,0);
+			else put_image(odijk,fijk,l,adis,by*ima,0);
 		}
 	}
 
@@ -403,8 +417,8 @@ void container_periodic_base::create_side_image(int di,int dj,int dk) {
 		}
 		img[odijk]|=1;
 		for(l=0;l<co[fijk];l++) {
-			if(p[fijk][ps*l]<switchx) quick_put(dijk,fijk,l,dis,by*ima,0);
-			else quick_put(odijk,fijk,l,adis,by*ima,0);
+			if(p[fijk][ps*l]<switchx) put_image(dijk,fijk,l,dis,by*ima,0);
+			else put_image(odijk,fijk,l,adis,by*ima,0);
 		}
 	}
 
@@ -413,6 +427,14 @@ void container_periodic_base::create_side_image(int di,int dj,int dk) {
 	img[dijk]=3;
 }
 
+/** Creates particles within an image block that is not aligned with the
+ * primary domain in the z axis. In this case, the image block may be comprised
+ * of particles from four primary blocks. The routine considers these four
+ * primary blocks, and adds the needed particles to the image. The remaining
+ * particles from the primary blocks are also filled into the neighboring
+ * images.
+ * \param[in] (di,dj,dk) the index of the block to consider. The z index must
+ *			 satisfy dk<ez or dk>=wz. */
 void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 	int l,dijk=di+nx*(dj+oy*dk),dijkl,dijkr,ima=step_div(dk-ez,nz);
 	int qj=dj+step_int(-ima*byz*ysp),qjdiv=step_div(qj-ey,ny);
@@ -437,12 +459,12 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 		}
 		for(l=0;l<co[fijk];l++) {
 			if(p[fijk][ps*l+1]>switchy) {
-				if(p[fijk][ps*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
-				else quick_put(dijkl,fijk,l,disxl,disy,bz*ima);
+				if(p[fijk][ps*l]>switchx) put_image(dijk,fijk,l,disx,disy,bz*ima);
+				else put_image(dijkl,fijk,l,disxl,disy,bz*ima);
 			} else {
 				if(!y_exist) continue;
-				if(p[fijk][ps*l]>switchx) quick_put(dijk-nx,fijk,l,disx,disy,bz*ima);
-				else quick_put(dijkl-nx,fijk,l,disxl,disy,bz*ima);
+				if(p[fijk][ps*l]>switchx) put_image(dijk-nx,fijk,l,disx,disy,bz*ima);
+				else put_image(dijkl-nx,fijk,l,disxl,disy,bz*ima);
 			}
 		}
 	}
@@ -461,17 +483,17 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 		}
 		for(l=0;l<co[fijk2];l++) {
 			if(p[fijk2][ps*l+1]>switchy) {
-				if(p[fijk2][ps*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
-				else quick_put(dijk,fijk2,l,disx2,disy,bz*ima);
+				if(p[fijk2][ps*l]>switchx2) put_image(dijkr,fijk2,l,disxr2,disy,bz*ima);
+				else put_image(dijk,fijk2,l,disx2,disy,bz*ima);
 			} else {
 				if(!y_exist) continue;
-				if(p[fijk2][ps*l]>switchx2) quick_put(dijkr-nx,fijk2,l,disxr2,disy,bz*ima);
-				else quick_put(dijk-nx,fijk2,l,disx2,disy,bz*ima);
+				if(p[fijk2][ps*l]>switchx2) put_image(dijkr-nx,fijk2,l,disxr2,disy,bz*ima);
+				else put_image(dijk-nx,fijk2,l,disx2,disy,bz*ima);
 			}
 		}
 	}
 
-	// Recomputation for boundary cases
+	// Recomputation of some intermediate quantities for boundary cases
 	if(fj==wy-1) {
 		fijk+=nx*(1-ny)-fi;
 		switchy+=(1-ny)*boxy;
@@ -499,11 +521,11 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 		for(l=0;l<co[fijk];l++) {
 			if(p[fijk][ps*l+1]>switchy) {
 				if(!y_exist) continue;
-				if(p[fijk][ps*l]>switchx) quick_put(dijk+nx,fijk,l,disx,disy,bz*ima);
-				else quick_put(dijkl+nx,fijk,l,disxl,disy,bz*ima);
+				if(p[fijk][ps*l]>switchx) put_image(dijk+nx,fijk,l,disx,disy,bz*ima);
+				else put_image(dijkl+nx,fijk,l,disxl,disy,bz*ima);
 			} else {
-				if(p[fijk][ps*l]>switchx) quick_put(dijk,fijk,l,disx,disy,bz*ima);
-				else quick_put(dijkl,fijk,l,disxl,disy,bz*ima);
+				if(p[fijk][ps*l]>switchx) put_image(dijk,fijk,l,disx,disy,bz*ima);
+				else put_image(dijkl,fijk,l,disxl,disy,bz*ima);
 			}
 		}
 	}
@@ -523,11 +545,11 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 		for(l=0;l<co[fijk2];l++) {
 			if(p[fijk2][ps*l+1]>switchy) {
 				if(!y_exist) continue;
-				if(p[fijk2][ps*l]>switchx2) quick_put(dijkr+nx,fijk2,l,disxr2,disy,bz*ima);
-				else quick_put(dijk+nx,fijk2,l,disx2,disy,bz*ima);
+				if(p[fijk2][ps*l]>switchx2) put_image(dijkr+nx,fijk2,l,disxr2,disy,bz*ima);
+				else put_image(dijk+nx,fijk2,l,disx2,disy,bz*ima);
 			} else {
-				if(p[fijk2][ps*l]>switchx2) quick_put(dijkr,fijk2,l,disxr2,disy,bz*ima);
-				else quick_put(dijk,fijk2,l,disx2,disy,bz*ima);
+				if(p[fijk2][ps*l]>switchx2) put_image(dijkr,fijk2,l,disxr2,disy,bz*ima);
+				else put_image(dijk,fijk2,l,disx2,disy,bz*ima);
 			}
 		}
 	}
@@ -537,7 +559,13 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 	img[dijk]=15;
 }
 
-inline void container_periodic_base::quick_put(int reg,int fijk,int l,double dx,double dy,double dz) {
+/** Copies a particle position from the primary domain into an image block.
+ * \param[in] reg the block index within the primary domain that the particle
+ *                is within.
+ * \param[in] fijk the index of the image block.
+ * \param[in] l the index of the particle entry within the primary block.
+ * \param[in] (dx,dy,dz) the displacement vector to add to the particle. */
+void container_periodic_base::put_image(int reg,int fijk,int l,double dx,double dy,double dz) {
 	if(co[reg]==mem[reg]) add_particle_memory(reg);
 	double *p1(p[reg]+ps*co[reg]),*p2(p[fijk]+ps*l);
 	*(p1++)=*(p2++)+dx;
