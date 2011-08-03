@@ -1,3 +1,6 @@
+#include <queue>
+using namespace std;
+
 #include "unitcell.hh"
 #include "cell.hh"
 
@@ -58,6 +61,7 @@ bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
 	const double bxinv=1/bx,byinv=1/by,bzinv=1/bz,ivol=bxinv*byinv*bzinv;
 	voronoicell c;
 	c=unit_voro;
+	dx*=2;dy*=2;dz*=2;
 	if(!c.plane(0,0,bzinv,dx+1)) return false;
 	if(!c.plane(0,0,-bzinv,-dx+1)) return false;
 	if(!c.plane(0,byinv,-byz*byinv*bzinv,dy+1)) return false;
@@ -68,33 +72,52 @@ bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
 	return true;
 }
 
-/*bool unitcell::images(vector &vi,vector &vd) {
-	for(i=0;i<ms2*ms2*ms2;i++) a[i]=true;
+void unitcell::images(vector<int> &vi,vector<double> &vd) {
+	const int ms2(max_unit_voro_shells*2+1),mss(ms2*ms2*ms2);
+	bool *a(new bool[mss]),*ac(a+max_unit_voro_shells*(1+ms2*(1+ms2))),*ap(a);
+	int i,j,k;
+	double vol;
 
-	*ac=false;
+	// Initialize mask
+	while(ap<ac) *(ap++)=true;
+	*(ap++)=false;
+	while(ap<a+mss) *(ap++)=true;
+
+	// Set up the queue and add (0,0,0) image to it
 	queue<int> q;
 	q.push(0);q.push(0);q.push(0);
-
+	
 	while(!q.empty()) {
+
+		// Read the next entry on the queue
 		i=q.front();q.pop();
 		j=q.front();q.pop();
 		k=q.front();q.pop();
-		if(intersects(i,j,k,vol)) {
+
+		// Check intersection of this image
+		if(intersects_image(i,j,k,vol)) {
+
+			// Add this entry to the output vectors
 			vi.push_back(i);
 			vi.push_back(j);
 			vi.push_back(k);
 			vd.push_back(vol);
-			printf("%d %d %d %g\n",i,j,k,vol);
-			acp=ac+i+ms2*(j+ms2*k);
-			if(k>-max_shells&&*(acp-ms2*ms2)) {q.push(i);q.push(j);q.push(k-1);*(acp-ms2*ms2)=false;}
-			if(j>-max_shells&&*(acp-ms2)) {q.push(i);q.push(j-1);q.push(k);*(acp-ms2)=false;}
-			if(i>-max_shells&&*(acp-1)) {q.push(i-1);q.push(j);q.push(k);*(acp-1)=false;}
-			if(i<max_shells&&*(acp+1)) {q.push(i+1);q.push(j);q.push(k);*(acp+1)=false;}
-			if(j<max_shells&&*(acp+ms2)) {q.push(i);q.push(j+1);q.push(k);*(acp+ms2)=false;}
-			if(k<max_shells&&*(acp+ms2*ms2)) {q.push(i);q.push(j);q.push(k+1);*(acp+ms2*ms2)=false;}
+
+			// Add neighbors to the queue if they have not been
+			// tested
+			ap=ac+i+ms2*(j+ms2*k);
+			if(k>-max_unit_voro_shells&&*(ap-ms2*ms2)) {q.push(i);q.push(j);q.push(k-1);*(ap-ms2*ms2)=false;}
+			if(j>-max_unit_voro_shells&&*(ap-ms2)) {q.push(i);q.push(j-1);q.push(k);*(ap-ms2)=false;}
+			if(i>-max_unit_voro_shells&&*(ap-1)) {q.push(i-1);q.push(j);q.push(k);*(ap-1)=false;}
+			if(i<max_unit_voro_shells&&*(ap+1)) {q.push(i+1);q.push(j);q.push(k);*(ap+1)=false;}
+			if(j<max_unit_voro_shells&&*(ap+ms2)) {q.push(i);q.push(j+1);q.push(k);*(ap+ms2)=false;}
+			if(k<max_unit_voro_shells&&*(ap+ms2*ms2)) {q.push(i);q.push(j);q.push(k+1);*(ap+ms2*ms2)=false;}
 		}
 	}
-}*/
+
+	// Remove mask memory
+	delete [] a;
+}
 
 /** Tests to see if a shell of periodic images could possibly cut the periodic
  * unit cell.

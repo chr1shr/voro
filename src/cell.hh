@@ -269,6 +269,10 @@ class voronoicell_base {
 		inline bool collapse_order2(vc_class &vc);
 		template<class vc_class>
 		inline bool delete_connection(vc_class &vc,int j,int k,bool hand);
+		template<class vc_class>
+		inline bool search_for_outside_edge(vc_class &vc,int &up);
+		template<class vc_class>
+		inline void add_to_stack(vc_class &vc,int lp,int *&stackp2);
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
 		inline void normals_search(vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);

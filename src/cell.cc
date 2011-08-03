@@ -357,6 +357,30 @@ void voronoicell_base::construct_relations() {
 	}
 }
 
+template<class vc_class>
+inline bool voronoicell_base::search_for_outside_edge(vc_class &vc,int &up) {
+	int i,lp,lw,*j(ds2),*stackp2(ds2);
+	double l;
+	*(stackp2++)=up;
+	while(j<stackp2) {
+		up=*(j++);
+		for(i=0;i<nu[up];i++) {
+			lp=ed[up][i];
+			lw=m_test(lp,l);
+			if(lw==-1) return true;
+			else if(lw==0) add_to_stack(vc,lp,stackp2);
+		}
+	}
+	return false;
+}
+
+template<class vc_class>
+inline void voronoicell_base::add_to_stack(vc_class &vc,int lp,int *&stackp2) {
+	for(int *k(ds2);k<stackp2;k++) if(*k==lp) return;
+	if(stackp2==stacke2) add_memory_ds2(stackp2);
+	*(stackp2++)=lp;
+}
+
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
  * (x,y,z) from the cell center. The value of rsq should be initially set to
  * \f$x^2+y^2+z^2\f$.
@@ -547,6 +571,14 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	if(p==current_vertices) add_memory_vertices(vc);
 
 	if(complicated_setup) {
+
+		// We want to be strict about reaching the conclusion that the
+		// cell is entirely within the cutting plane. It's not enough
+		// to find a vertex that has edges which are all inside or on
+		// the plane. If the vertex has neighbors that are also on the
+		// plane, we should check those too.
+		if(!search_for_outside_edge(vc,up)) return false;
+		
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
 		// the same location.
