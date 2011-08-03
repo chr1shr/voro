@@ -11,12 +11,14 @@
 all:
 	cd src && $(MAKE)
 	cd examples && $(MAKE)
+	cd zeo && $(MAKE)
 
-# Build the help files (with doxygen)
+# Build the help files (with Doxygen)
 help:
 	cd src && $(MAKE) help
 
 # Clean up the executable files
 clean:
-	cd examples && $(MAKE) clean
 	cd src && $(MAKE) clean
+	cd examples && $(MAKE) clean
+	cd zeo && $(MAKE) clean

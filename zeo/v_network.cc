@@ -10,8 +10,6 @@ voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 	xsp(nx/bx), ysp(ny/by), zsp(nz/bz), net_tol(net_tol_) {
 	int l;
 
-	vc_record.clear();
-
 	// Allocate memory for vertex structure
 	pts=new double*[nxyz];
 	idmem=new int*[nxyz];
@@ -46,21 +44,17 @@ voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 	for(l=0;l<edmem;l++) pered[l]=new unsigned int[init_network_edge_memory];
 	for(l=0;l<edmem;l++) {nu[l]=nec[l]=0;numem[l]=init_network_edge_memory;}
 
-	// Allocate arrays that are used for mapping Voronoi cell vertices into
-	// network vertices
-	vmap=new int[init_vertices];
-	vper=new unsigned int[init_vertices];
-	netmem=init_vertices;
+	// Allocate array for mapping Voronoi cell vertices into network
+	// vertices
+	vmap=new int[4*init_vertices];
+	map_mem=init_vertices;
 }
 
 /** The voronoi_network destructor removes the dynamically allocated memory. */
 voronoi_network::~voronoi_network() {
 	int l;
 
-	for(unsigned int k=0;k<vc_record.size();k++) delete [] vc_record[k];
-
-	// Remove Voronoi mapping arrays
-	delete [] vper;
+	// Remove Voronoi mapping array
 	delete [] vmap;
 
 	// Remove individual edge arrays
@@ -190,9 +184,9 @@ void voronoi_network::add_particular_vertex_memory(int l) {
 /** Increases the memory for the vertex mapping.
  * \param[in] pmem the amount of memory needed. */
 void voronoi_network::add_mapping_memory(int pmem) {
-	do {netmem<<=1;} while(netmem<pmem);
-	delete [] vper;delete [] vmap;
-	vmap=new int[netmem];vper=new unsigned int[netmem];
+	do {map_mem<<=1;} while(map_mem<pmem);
+	delete [] vmap;
+	vmap=new int[4*map_mem];
 }
 
 /** Clears the class of all vertices and edges. */
@@ -207,16 +201,18 @@ void voronoi_network::clear_network() {
  * \param[in] fp a file handle to write to. */
 void voronoi_network::draw_network(FILE *fp) {
 	voronoicell c;
-	int i,j,l,q,ai,aj,ak;
+	int l,q,ai,aj,ak;
+	double x,y,z,*ptsp;
 	for(l=0;l<edc;l++) {
+		ptsp=pts[reg[l]]+4*regp[l];
+		x=*(ptsp++);y=*(ptsp++);z=*ptsp;
 		for(q=0;q<nu[l];q++) {
 			unpack_periodicity(pered[l][q],ai,aj,ak);
 			if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
-			i=reg[l];j=4*regp[l];
-			fprintf(fp,"%g %g %g\n",pts[i][j],pts[i][j+1],pts[i][j+2]);
-			i=reg[ed[l][q]];j=4*regp[ed[l][q]];
-			fprintf(fp,"%g %g %g\n",pts[i][j]+bx*ai+bxy*aj+bxz*ak,
-				pts[i][j+1]+by*aj+byz*ak,pts[i][j+2]+bz*ak);
+			ptsp=pts[reg[ed[l][q]]]+4*regp[ed[l][q]];
+			fprintf(fp,"%g %g %g\n%g %g %g\n\n\n",x,y,z,
+				*ptsp+bx*ai+bxy*aj+bxz*ak,
+				ptsp[1]+by*aj+byz*ak,ptsp[2]+bz*ak);
 		}
 	}
 }
@@ -299,18 +295,16 @@ inline void voronoi_network::unpack_periodicity(unsigned int pa,int &i,int &j,in
  * \param[in] idn the ID number of the particle associated with the cell. */
 template<class v_cell>
 void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double z,double rad) {
-	int i,j,k,ijk,l,q,ai,aj,ak,ci,cj,ck;
+	int i,j,k,ijk,l,q,ai,aj,ak;
 	double gx,gy,vx,vy,vz,crad,*cp(c.pts);
-
-	int *vcr(new int[4*c.p]);
-	vc_record.push_back(vcr);
 
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
-	if(c.p>netmem) add_mapping_memory(c.p);
+	if(c.p>map_mem) add_mapping_memory(c.p);
+	int *vmp(vmap);
 	
 	// Loop over the vertices of the Voronoi cell
-	for(l=0;l<c.p;l++) {
+	for(l=0;l<c.p;l++,vmp+=4) {
 
 		// Compute the real position of this vertex, and evaluate its
 		// position along the non-rectangular axes
@@ -323,18 +317,11 @@ void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double 
 	
 		// Check to see if a vertex very close to this one already
 		// exists in the network 
-		if(search_previous(gx,gy,vx,vy,vz,ijk,q,ci,cj,ck)) {
+		if(search_previous(gx,gy,vx,vy,vz,ijk,q,vmp[1],vmp[2],vmp[3])) {
 
 			// If it does, then just map the Voronoi cell
 			// vertex to it
-			vmap[l]=idmem[ijk][q];
-			vper[l]=pack_periodicity(ci,cj,ck);
-			
-			// Add information to the Voronoi cell record
-			*(vcr++)=idmem[ijk][q];
-			*(vcr++)=ci;
-			*(vcr++)=cj;
-			*(vcr++)=ck;
+			*vmp=idmem[ijk][q];
 			
 			// Store this radius if it smaller than the current
 			// value
@@ -344,13 +331,7 @@ void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double 
 			j=step_int(gy*ysp);if(j<0||j>=ny) {aj=step_div(j,ny);vx-=bxy*aj;vy-=by*aj;j-=aj*ny;} else aj=0;
 			i=step_int(gx*xsp);if(i<0||i>=nx) {ai=step_div(i,nx);vx-=bx*ai;i-=ai*nx;} else ai=0;
 
-			// Add information to the Voronoi cell record
-			*(vcr++)=edc;
-			*(vcr++)=ai;
-			*(vcr++)=aj;
-			*(vcr++)=ak;
-
-			vper[l]=pack_periodicity(ai,aj,ak);
+			vmp[1]=ai;vmp[2]=aj;vmp[3]=ak;
 			ijk=i+nx*(j+ny*k);
 
 			if(edc==edmem) add_edge_network_memory();
@@ -362,11 +343,11 @@ void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double 
 			pts[ijk][4*ptsc[ijk]+2]=vz;
 			pts[ijk][4*ptsc[ijk]+3]=crad;
 			idmem[ijk][ptsc[ijk]++]=edc;
-			vmap[l]=edc++;
+			*vmp=edc++;
 		}
 
 		// Add the neighbor information to this vertex
-		add_neighbor(vmap[l],idn);
+		add_neighbor(*vmp,idn);
 	}
 
 	add_edges_to_network(c,x,y,z,rad);
@@ -383,24 +364,25 @@ inline void voronoi_network::add_neighbor(int k,int idn) {
 }
 
 /** Adds edges to the network structure, after the vertices have been
- * considered. This routine assumes that the vmap and vper arrays provide a
- * mapping from the */
+ * considered. This routine assumes that the vmap array has a mapping between
+ * Voronoi cell vertices and Voronoi network vertices. */
 template<class v_cell>
 void voronoi_network::add_edges_to_network(v_cell &c,double x,double y,double z,double rad) {
-	int i,j,ai,aj,ak,bi,bj,bk,k,l,q;unsigned int cper;
+	int i,j,ai,aj,ak,bi,bj,bk,k,l,q,*vmp;unsigned int cper;
 	double vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;double *pp;
 	for(l=0;l<c.p;l++) {
-		k=vmap[l];
-		unpack_periodicity(vper[l],ai,aj,ak);
+		vmp=vmap+4*l;k=*(vmp++);ai=*(vmp++);aj=*(vmp++);ak=*vmp;
 		pp=pts[reg[k]]+4*regp[k];
 		vx=pp[0]+ai*bx+aj*bxy+ak*bxz;
 		vy=pp[1]+aj*by+ak*byz;
 		vz=pp[2]+ak*bz;
 		for(q=0;q<c.nu[l];q++) {
 			i=c.ed[l][q];
-			j=vmap[i];
-			if(j==k&&vper[i]==vper[l]) continue;	// New check to prevent self-connecting edges
-			unpack_periodicity(vper[i],bi,bj,bk);
+			vmp=vmap+4*i;
+			j=*(vmp++);bi=*(vmp++);bj=*(vmp++);bk=*vmp;
+
+			// Skip if this is a self-connecting edge
+			if(j==k&&bi==ai&&bj==aj&&bk==ak) continue;
 			cper=pack_periodicity(bi-ai,bj-aj,bk-ak);
 			pp=pts[reg[j]]+(4*regp[j]);
 			wx=pp[0]+bi*bx+bj*bxy+bk*bxz;
@@ -426,19 +408,19 @@ void voronoi_network::add_edges_to_network(v_cell &c,double x,double y,double z,
 
 template<class v_cell>
 void voronoi_network::add_to_network_rectangular(v_cell &c,int idn,double x,double y,double z,double rad) {
-	int i,j,k,ijk,l,q,ai,aj,ak;unsigned int cper;
+	int i,j,k,ijk,l,q,ai,aj,ak;
 	double vx,vy,vz,crad,*cp(c.pts);
-	
+
 	// Check that there is enough memory to map Voronoi cell vertices
 	// to network vertices
-	if(c.p>netmem) add_mapping_memory(c.p);
+	if(c.p>map_mem) add_mapping_memory(c.p);
+	int *vmp(vmap);
 	
-	for(l=0;l<c.p;l++) {
+	for(l=0;l<c.p;l++,vmp+=4) {
 		vx=x+cp[3*l]*0.5;vy=y+cp[3*l+1]*0.5;vz=z+cp[3*l+2]*0.5;
 		crad=0.5*sqrt(cp[3*l]*cp[3*l]+cp[3*l+1]*cp[3*l+1]+cp[3*l+2]*cp[3*l+2])-rad;
-		if(safe_search_previous_rect(vx,vy,vz,ijk,q,cper)) {
-			vmap[l]=idmem[ijk][q];
-			vper[l]=cper;
+		if(safe_search_previous_rect(vx,vy,vz,ijk,q,vmp[1],vmp[2],vmp[3])) {
+			*vmp=idmem[ijk][q];
 
 			// Store this radius if it smaller than the current
 			// value
@@ -459,7 +441,9 @@ void voronoi_network::add_to_network_rectangular(v_cell &c,int idn,double x,doub
 				ai=step_div(i,nx);
 				vx-=ai*bx;i-=ai*nx;
 			} else ai=0;
-			vper[l]=pack_periodicity(ai,aj,ak);
+			vmp[1]=ai;
+			vmp[2]=aj;
+			vmp[3]=ak;
 			ijk=i+nx*(j+ny*k);
 			if(edc==edmem) add_edge_network_memory();
 			if(ptsc[ijk]==ptsmem[ijk]) add_network_memory(ijk);
@@ -469,10 +453,10 @@ void voronoi_network::add_to_network_rectangular(v_cell &c,int idn,double x,doub
 			pts[ijk][4*ptsc[ijk]+2]=vz;
 			pts[ijk][4*ptsc[ijk]+3]=crad;
 			idmem[ijk][ptsc[ijk]++]=edc;
-			vmap[l]=edc++;
+			*vmp=edc++;
 		}
 
-		add_neighbor(vmap[l],idn);
+		add_neighbor(*vmp,idn);
 	}
 
 	add_edges_to_network(c,x,y,z,rad);
@@ -488,7 +472,7 @@ bool voronoi_network::search_previous(double gx,double gy,double x,double y,doub
 	int aj=step_int((gy-net_tol)*ysp),bj=step_int((gy+net_tol)*ysp);
 	int ak=step_int((z-net_tol)*zsp),bk=step_int((z+net_tol)*zsp);
 	int i,j,k,mi,mj,mk;
-	double px,py,pz,px2,py2,px3;
+	double px,py,pz,px2,py2,px3,*pp;
 
 	for(k=ak;k<=bk;k++) {
 		pk=step_div(k,nz);px=pk*bxz;py=pk*byz;pz=pk*bz;mk=k-nz*pk;
@@ -497,52 +481,48 @@ bool voronoi_network::search_previous(double gx,double gy,double x,double y,doub
 			for(i=ai;i<=bi;i++) {
 				pi=step_div(i,nx);px3=px2+pi*bx;mi=i-nx*pi;
 				ijk=mi+nx*(mj+ny*mk);
-				for(q=0;q<ptsc[ijk];q++) if(abs(pts[ijk][4*q]+px3-x)<net_tol&&abs(pts[ijk][4*q+1]+py2-y)<net_tol&&abs(pts[ijk][4*q+2]+pz-z)<net_tol) return true;
+				pp=pts[ijk];
+				for(q=0;q<ptsc[ijk];q++,pp+=4) if(abs(*pp+px3-x)<net_tol&&abs(pp[1]+py2-y)<net_tol&&abs(pp[2]+pz-z)<net_tol) return true;
 			}
 		}
 	}
 	return false;
 }
 
-bool voronoi_network::safe_search_previous_rect(double x,double y,double z,int &ijk,int &q,unsigned int &cper) {
+bool voronoi_network::safe_search_previous_rect(double x,double y,double z,int &ijk,int &q,int &ci,int &cj,int &ck) {
 	const double tol(0.5*net_tol);
-	if(search_previous_rect(x+tol,y+tol,z+tol,ijk,q,cper)) return true;
-	if(search_previous_rect(x-tol,y+tol,z+tol,ijk,q,cper)) return true;
-	if(search_previous_rect(x+tol,y-tol,z+tol,ijk,q,cper)) return true;
-	if(search_previous_rect(x-tol,y-tol,z+tol,ijk,q,cper)) return true;
-	if(search_previous_rect(x+tol,y+tol,z-tol,ijk,q,cper)) return true;
-	if(search_previous_rect(x-tol,y+tol,z-tol,ijk,q,cper)) return true;
-	if(search_previous_rect(x+tol,y-tol,z-tol,ijk,q,cper)) return true;
-	return search_previous_rect(x-tol,y-tol,z-tol,ijk,q,cper);
+	if(search_previous_rect(x+tol,y+tol,z+tol,ijk,q,ci,cj,ck)) return true;
+	if(search_previous_rect(x-tol,y+tol,z+tol,ijk,q,ci,cj,ck)) return true;
+	if(search_previous_rect(x+tol,y-tol,z+tol,ijk,q,ci,cj,ck)) return true;
+	if(search_previous_rect(x-tol,y-tol,z+tol,ijk,q,ci,cj,ck)) return true;
+	if(search_previous_rect(x+tol,y+tol,z-tol,ijk,q,ci,cj,ck)) return true;
+	if(search_previous_rect(x-tol,y+tol,z-tol,ijk,q,ci,cj,ck)) return true;
+	if(search_previous_rect(x+tol,y-tol,z-tol,ijk,q,ci,cj,ck)) return true;
+	return search_previous_rect(x-tol,y-tol,z-tol,ijk,q,ci,cj,ck);
 }
 
-bool voronoi_network::search_previous_rect(double x,double y,double z,int &ijk,int &q,unsigned int &cper) {	
+bool voronoi_network::search_previous_rect(double x,double y,double z,int &ijk,int &q,int &ci,int &cj,int &ck) {	
 	int k=step_int(z*zsp);
-	int ai,aj,ak;
-
 	if(k<0||k>=nz) {
-		ak=step_div(k,nz);
-		z-=ak*bz;y-=ak*byz;x-=ak*bxz;k-=ak*nz;
-	} else ak=0;
+		ck=step_div(k,nz);
+		z-=ck*bz;y-=ck*byz;x-=ck*bxz;k-=ck*nz;
+	} else ck=0;
 
 	int j=step_int(y*ysp);
 	if(j<0||j>=ny) {
-		aj=step_div(j,ny);
-		y-=aj*by;x-=aj*bxy;j-=aj*ny;
-	} else aj=0;
+		cj=step_div(j,ny);
+		y-=cj*by;x-=cj*bxy;j-=cj*ny;
+	} else cj=0;
 
-	int i=step_int(x*xsp);
-	if(i<0||i>=nx) {
-		ai=step_div(i,nx);
-		x-=ai*bx;i-=ai*nx;
-	} else ai=0;
+	ijk=step_int(x*xsp);
+	if(ijk<0||ijk>=nx) {
+		ci=step_div(ijk,nx);
+		x-=ci*bx;ijk-=ci*nx;
+	} else ci=0;
 
-	ijk=i+nx*(j+ny*k);
-	
-	for(q=0;q<ptsc[ijk];q++) if(abs(pts[ijk][4*q]-x)<net_tol&&abs(pts[ijk][4*q+1]-y)<net_tol&&abs(pts[ijk][4*q+2]-z)<net_tol) {
-		cper=pack_periodicity(ai,aj,ak);
-		return true;
-	}
+	ijk+=nx*(j+ny*k);double *pp(pts[ijk]);
+	for(q=0;q<ptsc[ijk];q++,pp+=4)
+		if(abs(*pp-x)<net_tol&&abs(pp[1]-y)<net_tol&&abs(pp[2]-z)<net_tol) return true;
 	return false;
 }
 

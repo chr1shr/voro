@@ -357,6 +357,11 @@ void voronoicell_base::construct_relations() {
 	}
 }
 
+/** Starting from a point within the current cutting plane, this routine attempts
+ * to find an edge to a point outside the cutting plane. This prevents the plane
+ * routine from .
+ * \param[in] vc a reference to the specialized version of the calling class.
+ * \param[in,out] up */
 template<class vc_class>
 inline bool voronoicell_base::search_for_outside_edge(vc_class &vc,int &up) {
 	int i,lp,lw,*j(ds2),*stackp2(ds2);
@@ -374,6 +379,10 @@ inline bool voronoicell_base::search_for_outside_edge(vc_class &vc,int &up) {
 	return false;
 }
 
+/** Adds a point to the auxiliary delete stack if it is not already there.
+ * \param[in] vc a reference to the specialized version of the calling class.
+ * \param[in] lp the index of the point to add.
+ * \param[in,out] stackp2 a pointer to the end of the stack entries. */
 template<class vc_class>
 inline void voronoicell_base::add_to_stack(vc_class &vc,int lp,int *&stackp2) {
 	for(int *k(ds2);k<stackp2;k++) if(*k==lp) return;
@@ -395,11 +404,11 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	int *edp,*edd;
 	double u,l,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
 
-	//Initialize the safe testing routine
+	// Initialize the safe testing routine
 	n_marg=0;px=x;py=y;pz=z;prsq=rsq;
 
-	//Test approximately sqrt(n)/4 points for their proximity to the plane
-	//and keep the one which is closest
+	// Test approximately sqrt(n)/4 points for their proximity to the plane
+	// and keep the one which is closest
 	uw=m_test(up,u);
 
 	// Starting from an initial guess, we now move from vertex to vertex,

@@ -26,7 +26,7 @@ execs: $(execs)
 include Makefile.dep
 
 libvoro++.a: $(objs)
-	rm libvoro++.a
+	rm -f libvoro++.a
 	ar rs libvoro++.a $^
 
 ../bin/voro++: libvoro++.a cmd_line.cc

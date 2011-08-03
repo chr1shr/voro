@@ -150,15 +150,15 @@ void compute(c_class &con,char *buffer,int bp,double vol) {
 	int id;
 	double vvol(0),x,y,z,r;
 	voronoicell c;
-	voronoi_network vn(con),vn2(con);
-con.check_compartmentalized();	
+	voronoi_network vn(con,1e-5),vn2(con,1e-5);
+	
 	// Compute Voronoi cells and 
 	v_loop_all_periodic vl(con);
 	if(vl.start()) do if(con.compute_cell(c,vl)) {
 		vvol+=c.volume();
 		vl.pos(id,x,y,z,r);
 		vn.add_to_network(c,id,x,y,z,r);
-		vn.add_to_network_rectangular(c,id,x,y,z,r);
+		vn2.add_to_network_rectangular(c,id,x,y,z,r);
 	} while(vl.inc());
 
 	// Carry out the volume check
@@ -177,7 +177,7 @@ con.check_compartmentalized();
 	extension("par",bu);con.draw_particles(buffer);
 
 	// Output the Voronoi cells in gnuplot format
-//	extension("out",bu);con.draw_cells_gnuplot(buffer);
+	extension("out",bu);con.draw_cells_gnuplot(buffer);
 	
 	// Output the unit cell in gnuplot format
 	extension("dom",bu);con.draw_domain_gnuplot(buffer);

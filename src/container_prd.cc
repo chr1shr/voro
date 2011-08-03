@@ -25,7 +25,7 @@
 container_periodic_base::container_periodic_base(double bx_,double bxy_,double by_,
 		double bxz_,double byz_,double bz_,int nx_,int ny_,int nz_,int init_mem_,int ps_)
 	: unitcell(bx_,bxy_,by_,bxz_,byz_,bz_), voropp_base(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_),
-	ey(int(max_uv_y*ysp)), ez(int(max_uv_z*zsp)), wy(ny+ey), wz(nz+ez),
+	ey(int(max_uv_y*ysp+1)), ez(int(max_uv_z*zsp+1)), wy(ny+ey), wz(nz+ez),
 	oy(ny+2*ey), oz(nz+2*ez), oxyz(nx*oy*oz), id(new int*[oxyz]), p(new double*[oxyz]),
 	co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), init_mem(init_mem_), ps(ps_) {
 	int i,j,k,l;
