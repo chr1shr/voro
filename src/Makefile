@@ -26,11 +26,10 @@ execs: $(execs)
 include Makefile.dep
 
 libvoro++.a: $(objs)
-	ar rs libvoro++.a $^
+	ar rsv libvoro++.a $^
 
 ../bin/voro++: libvoro++.a cmd_line.cc
 	$(CXX) $(CFLAGS) -L. -o ../bin/voro++ cmd_line.cc -lvoro++
-
 
 %.o: %.cc
 	$(CXX) $(CFLAGS) -c $<
