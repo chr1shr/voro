@@ -78,7 +78,7 @@ container_periodic::container_periodic(double bx_,double bxy_,double by_,double 
  *			    coordinate directions.
  * \param[in] init_mem_ the initial memory allocation for each block. */
 container_periodic_poly::container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-	int nx_,int ny_,int nz_,int init_mem)
+	int nx_,int ny_,int nz_,int init_mem_)
 	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem_,4),
 	max_radius(0), vc(*this,2*nx_+1,2*ey+1,2*ez+1) {}
 
@@ -370,7 +370,7 @@ void container_periodic_base::check_compartmentalized() {
 
 		// Print entries for any particles that lie outside the block's
 		// bounds
-		for(pp=p[l],c=0;c<co[l];c++,pp+=ps) if(*pp<mix||*pp>max||p[1]<miy||p[1]>may||p[2]<miz||p[2]>maz)
+		for(pp=p[l],c=0;c<co[l];c++,pp+=ps) if(*pp<mix||*pp>max||pp[1]<miy||pp[1]>may||pp[2]<miz||pp[2]>maz)
 			printf("%d %d %d %d %f %f %f %f %f %f %f %f %f\n",
 			       id[l][c],i,j,k,*pp,pp[1],pp[2],mix,max,miy,may,miz,maz);
 	}
