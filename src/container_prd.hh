@@ -497,7 +497,7 @@ class container_periodic_poly : public container_periodic_base {
 		}
 		template<class v_cell>
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
-			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
+			int k(ijk/(nx*oy)),ijkt(ijk-(nx*oy)*k),j(ijkt/nx),i(ijkt-j*nx);
 			return vc.compute_cell(c,ijk,q,i,j,k);
 		}		
 		void print_custom(const char *format,FILE *fp=stdout);

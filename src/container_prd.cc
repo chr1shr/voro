@@ -147,25 +147,31 @@ void container_periodic_poly::put(voropp_order &vo,int n,double x,double y,doubl
  * \return True if the particle can be successfully placed into the container,
  * false otherwise. */
 void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,double &z) {
+
+	// Remap particle in the z direction if necessary
 	int k=step_int(z*zsp);
 	if(k<0||k>=nz) {
 		int ak=step_div(k,nz);
 		z-=ak*bz;y-=ak*byz;x-=ak*bxz;k-=ak*nz;
 	}
+
+	// Remap particle in the y direction if necessary
 	int j=step_int(y*ysp);
 	if(j<0||j>=ny) {
 		int aj=step_div(j,ny);
 		y-=aj*by;x-=aj*bxy;j-=aj*ny;
 	}
+
+	// Remap particle in the x direction if necessary
 	ijk=step_int(x*xsp);
 	if(ijk<0||ijk>=nx) {
 		int ai=step_div(ijk,nx);
 		x-=ai*bx;ijk-=ai*nx;
 	}
+
+	// Compute the block index and check memory allocation
 	j+=ey;k+=ez;
 	ijk+=nx*(j+oy*k);
-
-	// Check memory allocation
 	if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
 }
 
@@ -442,7 +448,8 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 	int qi=di+step_int((-ima*bxz-qjdiv*bxy)*xsp),qidiv=step_div(qi,nx);
 	int fi=qi-qidiv*nx,fj=qj-qjdiv*ny,fijk=fi+nx*(fj+oy*(dk-ima*nz)),fijk2;
 	double disy=ima*byz+qjdiv*by,switchy=(dj-ey)*boxy-ima*byz-qjdiv*by;
-	double disx=ima*bxz+qjdiv*bxy+qidiv*bx,switchx=di*boxx-ima*bxz-qjdiv*bxy-qidiv*bx,switchx2,disxl,disxr,disx2,disxr2;
+	double disx=ima*bxz+qjdiv*bxy+qidiv*bx,switchx=di*boxx-ima*bxz-qjdiv*bxy-qidiv*bx;
+	double switchx2,disxl,disxr,disx2,disxr2;
 
 	if(di==0) {dijkl=dijk+nx-1;disxl=disx+bx;}
 	else {dijkl=dijk-1;disxl=disx;}
