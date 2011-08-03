@@ -23,11 +23,11 @@
  * \param[in] ps_ the number of floating point entries to store for each
  *                particle. */
 container_periodic_base::container_periodic_base(double bx_,double bxy_,double by_,
-		double bxz_,double byz_,double bz_,int nx_,int ny_,int nz_,int init_mem,int ps_)
+		double bxz_,double byz_,double bz_,int nx_,int ny_,int nz_,int init_mem_,int ps_)
 	: unitcell(bx_,bxy_,by_,bxz_,byz_,bz_), voropp_base(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_),
 	ey(int(max_uv_y*ysp)), ez(int(max_uv_z*zsp)), wy(ny+ey), wz(nz+ez),
 	oy(ny+2*ey), oz(nz+2*ez), oxyz(nx*oy*oz), id(new int*[oxyz]), p(new double*[oxyz]),
-	co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), ps(ps_) {
+	co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), init_mem(init_mem_), ps(ps_) {
 	int i,j,k,l;
 
 	// Clear the global arrays
@@ -160,11 +160,23 @@ void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,doub
 	}
 	j+=ey;k+=ez;
 	ijk+=nx*(j+oy*k);
+
+	// Check memory allocation
+	if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
 }
 
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 void container_periodic_base::add_particle_memory(int i) {
+
+	// Handle the case when no memory has been allocated for this block
+	if(mem[i]==0) {
+		mem[i]=init_mem;
+		id[i]=new int[init_mem];
+		p[i]=new double[ps*init_mem];
+		return;
+	}
+
 	int *idp,l,nmem(mem[i]<<1);
 	double *pp;
 #if VOROPP_VERBOSE >=3
@@ -353,17 +365,16 @@ void container_periodic_base::check_compartmentalized() {
 		miz=(k-ez)*boxz-tolerance;maz=miz+boxz+tolerance;
 		for(c=0;c<co[l];c++) if(p[l][ps*c]<mix||p[l][ps*c]>max
 				      ||p[l][ps*c+1]<miy||p[l][ps*c+1]>may
-				      ||p[l][ps*c+2]<miz||p[l][ps*c+2]>maz) printf("%d %d %d %f %f %f %f %f %f %f %f %f\n",i,j,k,p[l][ps*c],p[l][ps*c+1],p[l][ps*c+2],mix,max,miy,may,miz,maz);
+				      ||p[l][ps*c+2]<miz||p[l][ps*c+2]>maz) printf("%d %d %d %d %f %f %f %f %f %f %f %f %f\n",id[l][c],i,j,k,p[l][ps*c],p[l][ps*c+1],p[l][ps*c+2],mix,max,miy,may,miz,maz);
 	}
 }
 
 void container_periodic_base::create_side_image(int di,int dj,int dk) {
-	double boxx=bx/nx;
 	int l,dijk=di+nx*(dj+oy*dk),odijk,ima=step_div(dj-ey,ny);
 	int qua=di+step_int(-ima*bxy*xsp),quadiv=step_div(qua,nx);
 	int fi=qua-quadiv*nx,fijk=fi+nx*(dj-ima*ny+oy*dk);
 	double dis=ima*bxy+quadiv*bx,switchx=di*boxx-ima*bxy-quadiv*bx,adis;
-
+	
 	// Left image computation
 	if((img[dijk]&1)==0) {
 		if(di>0) {
@@ -408,8 +419,7 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 	int qi=di+step_int((-ima*bxz-qjdiv*bxy)*xsp),qidiv=step_div(qi,nx);
 	int fi=qi-qidiv*nx,fj=qj-qjdiv*ny,fijk=fi+nx*(fj+oy*(dk-ima*nz)),fijk2;
 	double disy=ima*byz+qjdiv*by,switchy=(dj-ey)*boxy-ima*byz-qjdiv*by;
-	double disx=ima*bxz+qjdiv*bxy+qidiv*bx,switchx=di*boxx-ima*bxz-qjdiv*bxy-qidiv*bx;
-	double switchx2,disxl,disxr,disx2,disxr2;
+	double disx=ima*bxz+qjdiv*bxy+qidiv*bx,switchx=di*boxx-ima*bxz-qjdiv*bxy-qidiv*bx,switchx2,disxl,disxr,disx2,disxr2;
 
 	if(di==0) {dijkl=dijk+nx-1;disxl=disx+bx;}
 	else {dijkl=dijk-1;disxl=disx;}

@@ -46,6 +46,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 */
 		int *mem;
 		char *img;
+		const int init_mem;
 		/** The amount of memory in the array structure for each
 		 * particle. This is set to 3 when the basic class is
 		 * initialized, so that the array holds (x,y,z) positions. If
@@ -54,7 +55,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * the particle radii. */
 		const int ps;
 		container_periodic_base(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-				int nx_,int ny_,int nz_,int init_mem,int ps);
+				int nx_,int ny_,int nz_,int init_mem_,int ps);
 		~container_periodic_base();
 		inline void print_all_particles() {
 			int ijk,q;
@@ -96,7 +97,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 			fz=z-boxz*(ck-ez);
 		}
 		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int disp) {
-			int qi=ci+(nx-ei),qj=cj+(ey-ej),qk=ck+(ez-ek);
+			int qi=ci+(ei-nx),qj=cj+(ej-ey),qk=ck+(ek-ez);
 			int iv(step_div(qi,nx));if(iv!=0) {qx=iv*bx;qi-=nx*iv;} else qx=0;
 			create_periodic_image(qi,qj,qk);
 			return qi+nx*(qj+oy*qk);
@@ -109,7 +110,6 @@ class container_periodic_base : public unitcell, public voropp_base {
 		inline void create_periodic_image(int di,int dj,int dk) {
 			if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
 				voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
-			//printf("Create %d %d %d\n",di,dj,dk);
 			if(dk>=ez&&dk<wz) {
 				if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
 			} else create_vertical_image(di,dj,dk);

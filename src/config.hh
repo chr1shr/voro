@@ -73,13 +73,13 @@ const int pre_container_chunk_size=1024;
 
 /** If a point is within this distance of a cutting plane, then the code
  * assumes that point exactly lies on the plane. */
-const double tolerance=1e-10;
+const double tolerance=1e-11;
 
 /** If a point is within this distance of a cutting plane, then the code stores
  * whether this point is inside, outside, or exactly on the cutting plane in
  * the marginal cases buffer, to prevent the test giving a different result on
  * a subsequent evaluation due to floating point rounding errors. */
-const double tolerance2=2e-10;
+const double tolerance2=2e-11;
 
 /** The square of the tolerance, used when deciding whether some squared
  * quantities are large enough to be used. */

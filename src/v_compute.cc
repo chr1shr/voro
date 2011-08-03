@@ -61,7 +61,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,l,disp;
 	double fx,fy,fz,gxs,gys,gzs,*radp;
 	unsigned int q,*e,*mijk;
-
+	
 	if(!con.initialize_voronoicell(c,ijk,s,ci,cj,ck,i,j,k,x,y,z,disp)) return false;
 	con.r_init(ijk,s);
 
@@ -100,7 +100,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 	unsigned int m1,m2;
 	con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
 	di=int(fx*xsp*fgrid);dj=int(fy*ysp*fgrid);dk=int(fz*zsp*fgrid);
-
+	
 	// The indices (di,dj,dk) tell us which worklist to use, to test the
 	// blocks in the optimal order. But we only store worklists for the
 	// eighth of the region where di, dj, and dk are all less than half the

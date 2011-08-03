@@ -11,7 +11,7 @@
 CC=g++
 
 # Flags for the C++ compiler
-CFLAGS=-Wall -ansi -pedantic -ggdb
+CFLAGS=-Wall -ansi -pedantic -O3 -fast
 
 # Relative include and library paths for compilation of the examples
 E_INC=-I../../src
