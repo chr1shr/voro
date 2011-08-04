@@ -421,10 +421,10 @@ bool voronoicell_2d::wallcut(double wx1,double wy1,double wx2,double wy2){
 	wpx=wpx/wpl;
 	wpy=wpy/wpl;
 	nl=wx1*wpx+wy1*wpy;
-	pcx=wpx*nl;//MULTIPLY BY 2?
-	pcy=wpy*nl;//MULTIPLY BY 2?
+	pcx=wpx*nl*2;
+	pcy=wpy*nl*2;
 	rs=pcx*pcx+pcy*pcy;
-	this.plane(pcx,pcy,rs);	
+	this->plane(pcx,pcy,rs);	
 		
 	
 

@@ -194,6 +194,7 @@ class container_2d {
 		}
 		double sum_cell_areas();
 		void compute_all_cells();
+		void debug_output();
 		/** An overloaded version of the compute_cell_sphere routine,
 		 * that sets up the x and y variables.
 		 *\param[in,out] c a reference to a voronoicell object.

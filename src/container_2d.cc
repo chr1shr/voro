@@ -141,9 +141,7 @@ void container_2d::setup(){
 	double lx, ly, cx, cy, nx, ny, fx, fy, tmpx, tmpy;//last (x,y), current (x,y), next (x,y), temporary (x,y)
 	int wid=1;
 
-	/** An array created and modified in the procedure
-	 * semi-circle-labelling. It is used to create the array *soi. Format
-	 * (box, particle #, wallid) **/
+	cout << "beginning";
 	tmp=tmpp=new int[3*init_temp_label_size];
 	tmpe=tmp+3*init_temp_label_size;
 	
@@ -456,14 +454,16 @@ void container_2d::add_boundary_memory() {
 /** given two particles, a generator and a potential cutting particle, this returns true iff the cutting
 particle and the generator are on the same side of all relevant walls. **/
 
-bool OKCuttingParticle(double gx, double, gy, int gbox, int gindex, double cx, double cy, int cbox, int cindex){
+bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex, double cx, double cy, int cbox, int cindex){
 	int cwid;
-	double widx, widy;
-	for(int i=0;i<nlab[cbox][cindex];i++){
+	double widx1, widy1, widx2, widy2;
+	for(int i=0;i<(signed int)nlab[cbox][cindex];i++){
 		cwid=plab[cbox][cindex][i];
-		widx=bnds[2*cwid];
-		widy=bnds[2*cwid+1];
-		if(crossproductz(gx,gy,widx,widy)!=crossproductz(cx,cy,widx,widy)) return false;
+		widx1=bnds[2*cwid];
+		widy1=bnds[2*cwid+1];
+		widx2=bnds[2*cwid+2];
+		widy2=bnds[2*cwid+3];
+		if(crossproductz(gx-widx1,gy-widy1,widx2-widx1,widy2-widy1)!=crossproductz(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return false;
 	}
 	return true;
 }
@@ -671,6 +671,36 @@ void container_2d::compute_all_cells() {
 		compute_cell_sphere(c,i,j,ij,q);
 }
 
+void container_2d::debug_output(){
+	int id;
+	
+	cout << "problem points   ";
+	for(int i=0; i<nxy; i++){
+		for(int j=0; j<co[i]; j++){
+			id=bndpts[i][j];
+			if(id!=-1 && probpts[id]) cout << id << "   ";
+		}
+	}
+	
+	cout << "semi_circle_labelling    ";
+	for(int i=0; i<nxy; i++){
+		for(int j=0; j<co[i]; j++){
+			cout << "computational box=" << i << "   paricle_no=" << j << "wall_ids=";
+			for(int q=0;q<(signed int)nlab[i][j];q++){	
+				cout << "  " << plab[i][j][q] << "   ";
+			}
+		}
+	}
+
+	cout << "wall_tags    ";
+	for(int i=0; i<nxy; i++){
+		cout << "computational box # " << i << "  wall tags  ";
+		for(int j=1; j<wid[i][0] ; j++){
+			cout << wid[i][j] << "   ";
+		}
+
+	}
+}
 /** This routine computes the Voronoi cell for a give particle, by successively
  * testing over particles within larger and larger concentric circles. This
  * routine is simple and fast, although it may not work well for anisotropic
