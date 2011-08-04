@@ -56,6 +56,8 @@ template<class c_class>
 template<class v_cell>
 bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck) {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
+	static const int count_list[8]={7,11,15,19,26,35,45,59};
+	const int list_size=8;
 	double x,y,z,x1,y1,z1,qx=0,qy=0,qz=0;
 	double xlo,ylo,zlo,xhi,yhi,zhi,rs;
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,l,disp;
@@ -68,8 +70,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 	// Initialize the Voronoi cell to fill the entire container
 	double crs,mrs;
 
-	int next_count=3,list_index=0,list_size=8;
-	int count_list[]={7,11,15,19,26,35,45,59};
+	int next_count=3,list_index=0;
 
 	// Test all particles in the particle's local region first
 	for(l=0;l<s;l++) {
