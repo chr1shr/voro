@@ -67,7 +67,7 @@ container_periodic_base::~container_periodic_base() {
  * \param[in] init_mem_ the initial memory allocation for each block. */
 container_periodic::container_periodic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
 	int nx_,int ny_,int nz_,int init_mem_)
-	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem,3),
+	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem_,3),
 	vc(*this,2*nx_+1,2*ey+1,2*ez+1) {}
 
 /** The class constructor sets up the geometry of container.
