@@ -24,6 +24,11 @@ const int bsize=2048;
 template<class c_class>
 void compute(c_class &con,char *buffer,int bp,double vol);
 
+// Commonly used error message
+void file_import_error() {
+	voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+}
+
 int main(int argc,char **argv) {
 	char *farg,buffer[bsize];
 	bool radial;int i,n,bp;
@@ -55,18 +60,18 @@ int main(int argc,char **argv) {
 	if(fp==NULL) voropp_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
 
 	// Read header line
-	fgets(buffer,bsize,fp);
+	if(fgets(buffer,bsize,fp)!=buffer) file_import_error();
 	if(strcmp(buffer,"Unit cell vectors:\n")!=0)
 		voropp_fatal_error("Invalid header line",VOROPP_FILE_ERROR);
 	
 	// Read in the box dimensions and the number of particles
-	fscanf(fp,"%s %lg %lg %lg",buffer,&bx,&x,&x);
+	if(fscanf(fp,"%s %lg %lg %lg",buffer,&bx,&x,&x)!=4) file_import_error();
 	if(strcmp(buffer,"va=")!=0) voropp_fatal_error("Invalid first vector",VOROPP_FILE_ERROR);
-	fscanf(fp,"%s %lg %lg %lg",buffer,&bxy,&by,&x);
+	if(fscanf(fp,"%s %lg %lg %lg",buffer,&bxy,&by,&x)!=4) file_import_error();
 	if(strcmp(buffer,"vb=")!=0) voropp_fatal_error("Invalid second vector",VOROPP_FILE_ERROR);
-	fscanf(fp,"%s %lg %lg %lg",buffer,&bxz,&byz,&bz);
+	if(fscanf(fp,"%s %lg %lg %lg",buffer,&bxz,&byz,&bz)!=4) file_import_error();
 	if(strcmp(buffer,"vc=")!=0) voropp_fatal_error("Invalid third vector",VOROPP_FILE_ERROR);
-	fscanf(fp,"%d",&n);
+	if(fscanf(fp,"%d",&n)!=1) file_import_error();
 
 	// Print the box dimensions
 	printf("Box dimensions:\n"
@@ -111,8 +116,7 @@ int main(int argc,char **argv) {
 
 		// Read in the particles from the file
 		for(i=0;i<n;i++) {
-			if(fscanf(fp,"%s %lg %lg %lg",buffer,&x,&y,&z)!=4)
-				voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+			if(fscanf(fp,"%s %lg %lg %lg",buffer,&x,&y,&z)!=4) file_import_error();
 			con.put(i,x,y,z,radial_lookup(buffer));
 		}
 		fclose(fp);
