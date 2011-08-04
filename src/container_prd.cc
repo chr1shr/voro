@@ -175,6 +175,64 @@ void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,doub
 	if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
 }
 
+inline void container_periodic_base::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk) {
+
+	// Remap particle in the z direction if necessary
+	ck=step_int(z*zsp);
+	if(ck<0||ck>=nz) {
+		ak=step_div(ck,nz);
+		z-=ak*bz;y-=ak*byz;x-=ak*bxz;ck-=ak*nz;
+	} else ak=0;
+
+	// Remap particle in the y direction if necessary
+	cj=step_int(y*ysp);
+	if(cj<0||cj>=ny) {
+		aj=step_div(cj,ny);
+		y-=aj*by;x-=aj*bxy;cj-=aj*ny;
+	} else aj=0;
+
+	// Remap particle in the x direction if necessary
+	ci=step_int(x*xsp);
+	if(ci<0||ci>=nx) {
+		ai=step_div(ci,nx);
+		x-=ai*bx;ci-=ai*nx;
+	} else ai=0;
+
+	ijk=ci+nx*((cj+ey)+oy*(ck+ez));
+}
+
+bool container_periodic::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz) {
+	int ai,aj,ak,ci,cj,ck,wijk,wq,ijk;
+	double mrs;
+
+	remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk);
+	vc.find_voronoi_cell(x,y,z,ijk,ci,cj,ck,wijk,wq,mrs);
+
+	if(wijk!=-1) {
+		rx=p[wijk][3*wq]+ak*bxz+aj*bxy+ai*bx;
+		ry=p[wijk][3*wq]+ak*byz+aj*by;
+		rz=p[wijk][3*wq]+ak*bz;
+		return true;
+	}
+	return false;
+}
+
+bool container_periodic_poly::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz) {
+	int ai,aj,ak,ci,cj,ck,wijk,wq,ijk;
+	double mrs;
+	
+	remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk);
+	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,wijk,wq,mrs);
+
+	if(wijk!=-1) {
+		rx=p[wijk][4*wq]+ak*bxz+aj*bxy+ai*bx;
+		ry=p[wijk][4*wq]+ak*byz+aj*by;
+		rz=p[wijk][4*wq]+ak*bz;
+		return true;
+	}
+	return false;
+}
+
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 void container_periodic_base::add_particle_memory(int i) {

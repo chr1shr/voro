@@ -28,6 +28,203 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
 	reset_mask();
 }
 
+template<class c_class>
+inline void voropp_compute<c_class>::scan_all(int ijk,double x,double y,double z,int &wijk,int &wq,double &mrs) {
+	double x1,y1,z1,rs;
+	for(int l=0;l<co[ijk];l++) {
+		x1=p[ijk][ps*l]-x;
+		y1=p[ijk][ps*l+1]-y;
+		z1=p[ijk][ps*l+2]-z;
+		rs=con.r_current_sub(x1*x1+y1*y1+z1*z1,ijk,l);
+		if(rs<mrs) {mrs=rs;wijk=ijk;wq=l;}
+	}
+}
+
+template<class c_class>
+void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,int &wijk,int &wq,double &mrs) {
+	double qx=0,qy=0,qz=0,rs;
+	int i,j,k,di,dj,dk,ei,ej,ek,f,g,disp;
+	double fx,fy,fz,gxs,gys,gzs,*radp;
+	unsigned int q,*e,*mijk;
+
+	// Init setup for parameters to return
+	wijk=-1;mrs=large_number;
+
+	con.initialize_search(ci,cj,ck,ijk,i,j,k,disp);
+
+	// Test all particles in the particle's local region first
+	scan_all(ijk,x,y,z,wijk,wq,mrs);
+
+	// Now compute the fractional position of the particle within its
+	// region and store it in (fx,fy,fz). We use this to compute an index
+	// (di,dj,dk) of which subregion the particle is within.
+	unsigned int m1,m2;
+	con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
+	di=int(fx*xsp*fgrid);dj=int(fy*ysp*fgrid);dk=int(fz*zsp*fgrid);
+	
+	// The indices (di,dj,dk) tell us which worklist to use, to test the
+	// blocks in the optimal order. But we only store worklists for the
+	// eighth of the region where di, dj, and dk are all less than half the
+	// full grid. The rest of the cases are handled by symmetry. In this
+	// section, we detect for these cases, by reflecting high values of di,
+	// dj, and dk. For these cases, a mask is constructed in m1 and m2
+	// which is used to flip the worklist information when it is loaded.
+	if(di>=hgrid) {
+		gxs=fx;
+		m1=127+(3<<21);m2=1+(1<<21);di=fgrid-1-di;if(di<0) di=0;
+	} else {m1=m2=0;gxs=boxx-fx;}
+	if(dj>=hgrid) {
+		gys=fy;
+		m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=fgrid-1-dj;if(dj<0) dj=0;
+	} else gys=boxy-fy;
+	if(dk>=hgrid) {
+		gzs=fz;
+		m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=fgrid-1-dk;if(dk<0) dk=0;
+	} else gzs=boxz-fz;
+
+	// Do a quick test to account for the case when the neare
+	rs=con.r_max_add(mrs);
+	if(gxs*gxs>rs&&gys*gys>rs&&gzs*gzs>rs) return;
+
+	// Now compute which worklist we are going to use, and set radp and e to
+	// point at the right offsets
+	ijk=di+hgrid*(dj+hgrid*dk);
+	radp=mrad+ijk*seq_length;
+	e=(const_cast<unsigned int*> (wl))+ijk*seq_length;
+
+	// Read in how many items in the worklist can be tested without having to
+	// worry about writing to the mask
+	f=e[0];g=0;
+	do {
+
+		// If mrs is less than the minimum distance to any untested
+		// block, then we are done
+		if(con.r_max_add(mrs)<radp[g]) return;
+		g++;
+
+		// Load in a block off the worklist, permute it with the
+		// symmetry mask, and decode its position. These are all
+		// integer bit operations so they should run very fast.
+		q=e[g];q^=m1;q+=m2;
+		di=q&127;di-=64;
+		dj=(q>>7)&127;dj-=64;
+		dk=(q>>14)&127;dk-=64;
+
+		// Check that the worklist position is in range
+		ei=di+i;if(ei<0||ei>=hx) continue;
+		ej=dj+j;if(ej<0||ej>=hy) continue;
+		ek=dk+k;if(ek<0||ek>=hz) continue;
+
+		// Call the compute_min_max_radius() function. This returns
+		// true if the minimum distance to the block is bigger than the
+		// current mrs, in which case we skip this block and move on.
+		// Otherwise, it computes the maximum distance to the block and
+		// returns it in crs.
+		if(compute_min_radius(di,dj,dk,fx,fy,fz,mrs)) continue;
+
+		// Now compute which region we are going to loop over, adding a
+		// displacement for the periodic cases
+		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
+
+		// If mrs is bigger than the maximum distance to the block,
+		// then we have to test all particles in the block for
+		// intersections. Otherwise, we do additional checks and skip
+		// those particles which can't possibly intersect the block.
+		scan_all(ijk,x-qx,y-qy,z-qz,wijk,wq,mrs);
+	} while(g<f);
+
+	mv++;
+	if(mv==0) {reset_mask();mv=1;}
+	int *qu_s(qu),*qu_e(qu);
+
+	while(g<seq_length-1) {
+
+		// If mrs is less than the minimum distance to any untested
+		// block, then we are done
+		if(con.r_max_add(mrs)<radp[g]) return;
+		g++;
+
+		// Load in a block off the worklist, permute it with the
+		// symmetry mask, and decode its position. These are all
+		// integer bit operations so they should run very fast.
+		q=e[g];q^=m1;q+=m2;
+		di=q&127;di-=64;
+		dj=(q>>7)&127;dj-=64;
+		dk=(q>>14)&127;dk-=64;
+
+		// Compute the position in the mask of the current block. If
+		// this lies outside the mask, then skip it. Otherwise, mark
+		// it.
+		ei=di+i;if(ei<0||ei>=hx) continue;
+		ej=dj+j;if(ej<0||ej>=hy) continue;
+		ek=dk+k;if(ek<0||ek>=hz) continue;
+		mijk=mask+ei+hx*(ej+hy*ek);
+		*mijk=mv;
+
+		// Call the compute_min_max_radius() function. This returns
+		// true if the minimum distance to the block is bigger than the
+		// current mrs, in which case we skip this block and move on.
+		// Otherwise, it computes the maximum distance to the block and
+		// returns it in crs.
+		if(compute_min_radius(di,dj,dk,fx,fy,fz,mrs)) continue;
+
+		// Now compute which region we are going to loop over, adding a
+		// displacement for the periodic cases
+		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
+		scan_all(ijk,x-qx,y-qy,z-qz,wijk,wq,mrs);
+		
+		if(qu_e>qu_l-18) add_list_memory(qu_s,qu_e);
+		scan_bits_mask_add(q,mijk,ei,ej,ek,qu_e);
+	}
+
+	// Do a check to see if we've reached the radius cutoff
+	if(con.r_max_add(mrs)<radp[g]) return;
+
+	// We were unable to completely compute the cell based on the blocks in
+	// the worklist, so now we have to go block by block, reading in items
+	// off the list
+	while(qu_s!=qu_e) {
+
+		if(qu_s==qu_l) qu_s=qu;
+		ei=*(qu_s++);ej=*(qu_s++);ek=*(qu_s++);
+		if(compute_min_radius(ei-i,ej-j,ek-k,fx,fy,fz,mrs)) continue;
+		
+		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
+		scan_all(ijk,x-qx,y-qy,z-qz,wijk,wq,mrs);
+
+		// Test the neighbors of the current block, and add them to the
+		// block list if they haven't already been tested
+		if((qu_s<=qu_e?(qu_l-qu_e)+(qu_s-qu):qu_s-qu_e)<18) add_list_memory(qu_s,qu_e);
+		add_to_mask(ei,ej,ek,qu_e);
+	}
+}
+
+template<class c_class>
+inline void voropp_compute<c_class>::add_to_mask(int ei,int ej,int ek,int *&qu_e) {
+	unsigned int *mijk(mask+ei+hx*(ej+hy*ek));
+	if(ek>0) if(*(mijk-hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
+	if(ej>0) if(*(mijk-hx)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
+	if(ei>0) if(*(mijk-1)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
+	if(ei<hx-1) if(*(mijk+1)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
+	if(ej<hy-1) if(*(mijk+hx)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
+	if(ek<hz-1) if(*(mijk+hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+}
+
+template<class c_class>
+inline void voropp_compute<c_class>::scan_bits_mask_add(unsigned int q,unsigned int *mijk,int ei,int ej,int ek,int *&qu_e) {
+	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
+	if((q&b2)==b2) {
+		if(ei>0) if(*(mijk-1)!=mv) {*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
+		if((q&b1)==0) if(ei<hx-1) if(*(mijk+1)!=mv) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
+	} else if((q&b1)==b1) {if(ei<hx-1) if(*(mijk+1)!=mv) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}}
+	if((q&b4)==b4) {if(ej>0) if(*(mijk-hx)!=mv) {*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
+		if((q&b3)==0) if(ej<hy-1) if(*(mijk+hx)!=mv) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
+	} else if((q&b3)==b3) {if(ej<hy-1) if(*(mijk+hx)!=mv) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}}
+	if((q&b6)==b6) {if(ek>0) if(*(mijk-hxy)!=mv) {*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
+		if((q&b5)==0) if(ek<hz-1) if(*(mijk+hxy)!=mv) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+	} else if((q&b5)==b5) if(ek<hz-1) if(*(mijk+hxy)!=mv) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+}
+
 /** This routine computes a Voronoi cell for a single particle in the
  * container. It can be called by the user, but is also forms the core part of
  * several of the main functions, such as store_cell_volumes(), print_all(),
@@ -55,7 +252,6 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
 template<class c_class>
 template<class v_cell>
 bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck) {
-	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
 	static const int count_list[8]={7,11,15,19,26,35,45,59};
 	const int list_size=8;
 	double x,y,z,x1,y1,z1,qx=0,qy=0,qz=0;
@@ -280,19 +476,10 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 		// Test the parts of the worklist element which tell us what
 		// neighbors of this block are not on the worklist. Store them
 		// on the block list, and mark the mask.
-		if((q&b2)==b2) {
-			if(ei>0) if(*(mijk-1)!=mv) {*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
-			if((q&b1)==0) if(ei<hx-1) if(*(mijk+1)!=mv) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
-		} else if((q&b1)==b1) {if(ei<hx-1) if(*(mijk+1)!=mv) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}}
-		if((q&b4)==b4) {if(ej>0) if(*(mijk-hx)!=mv) {*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
-			if((q&b3)==0) if(ej<hy-1) if(*(mijk+hx)!=mv) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
-		} else if((q&b3)==b3) {if(ej<hy-1) if(*(mijk+hx)!=mv) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}}
-		if((q&b6)==b6) {if(ek>0) if(*(mijk-hxy)!=mv) {*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
-			if((q&b5)==0) if(ek<hz-1) if(*(mijk+hxy)!=mv) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
-		} else if((q&b5)==b5) if(ek<hz-1) if(*(mijk+hxy)!=mv) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+		scan_bits_mask_add(q,mijk,ei,ej,ek,qu_e);
 	}
 
-	// Do a check to see if we've reach the radius cutoff
+	// Do a check to see if we've reached the radius cutoff
 	if(mrs<con.r_cutoff(radp[g])) return true;
 
 	// We were unable to completely compute the cell based on the blocks in
@@ -377,13 +564,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 
 		// Test the neighbors of the current block, and add them to the
 		// block list if they haven't already been tested
-		mijk=mask+ei+hx*(ej+hy*ek);
-		if(ek>0) if(*(mijk-hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
-		if(ej>0) if(*(mijk-hx)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
-		if(ei>0) if(*(mijk-1)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
-		if(ei<hx-1) if(*(mijk+1)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
-		if(ej<hy-1) if(*(mijk+hx)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
-		if(ek<hz-1) if(*(mijk+hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+		add_to_mask(ei,ej,ek,qu_e);
 	}
 
 	return true;
@@ -706,6 +887,22 @@ bool voropp_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double
 	return false;
 }
 
+template<class c_class>
+bool voropp_compute<c_class>::compute_min_radius(int di,int dj,int dk,double fx,double fy,double fz,double mrs) {
+	double t,crs;
+
+	if(di>0) {t=di*boxx-fx;crs=t*t;}
+	else if(di<0) {t=(di+1)*boxx-fx;crs=t*t;}
+
+	if(dj>0) {t=dj*boxy-fy;crs+=t*t;}
+	else if(dj<0) {t=(dj+1)*boxy-fy;crs+=t*t;}
+
+	if(dk>0) {t=dk*boxz-fz;crs+=t*t;}
+	else if(dk<0) {t=(dk+1)*boxz-fz;crs+=t*t;}
+	
+	return crs>con.r_max_add(mrs);
+}
+
 /** Adds memory to the queue.
  * \param[in,out] qu_s a reference to the queue start pointer.
  * \param[in,out] qu_e a reference to the queue end pointer. */
@@ -733,13 +930,17 @@ template voropp_compute<container>::voropp_compute(container&,int,int,int);
 template voropp_compute<container_poly>::voropp_compute(container_poly&,int,int,int);
 template bool voropp_compute<container>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template void voropp_compute<container>::find_voronoi_cell(double,double,double,int,int,int,int,int&,int&,double&);
 template bool voropp_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template void voropp_compute<container_poly>::find_voronoi_cell(double,double,double,int,int,int,int,int&,int&,double&);
 
 // Explicit template instantiation
 template voropp_compute<container_periodic>::voropp_compute(container_periodic&,int,int,int);
 template voropp_compute<container_periodic_poly>::voropp_compute(container_periodic_poly&,int,int,int);
 template bool voropp_compute<container_periodic>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container_periodic>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template void voropp_compute<container_periodic>::find_voronoi_cell(double,double,double,int,int,int,int,int&,int&,double&);
 template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template void voropp_compute<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,int&,int&,double&);

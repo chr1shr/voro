@@ -105,6 +105,9 @@ class container_periodic_base : public unitcell, public voropp_base {
 			i=nx;j=ey;k=ez;
 			return true;
 		}
+		inline void initialize_search(int ci,int cj,int ck,int ijk,int &i,int &j,int &k,int &disp) {
+			i=nx;j=ey;k=ez;
+		}		
 		/** Returns the position of a particle currently being computed
 		 * relative to the computational block that it is within. It is
 		 * used to select the optimal worklist entry to use.
@@ -138,6 +141,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 		void create_side_image(int di,int dj,int dk);
 		void create_vertical_image(int di,int dj,int dk);
 		void put_image(int reg,int fijk,int l,double dx,double dy,double dz);		
+		inline void remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
 };
 
 class container_periodic : public container_periodic_base {
@@ -305,6 +309,7 @@ class container_periodic : public container_periodic_base {
 		}
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
+		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz);
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
@@ -318,6 +323,8 @@ class container_periodic : public container_periodic_base {
 		voropp_compute<container_periodic> vc;
 		inline void r_init(int ijk,int s) {};
 		inline double r_cutoff(double lrs) {return lrs;}
+		inline double r_max_add(double rs) {return rs;}
+		inline double r_current_sub(double rs,int ijk,int q) {return rs;}
 		inline double r_scale(double rs,int ijk,int q) {return rs;}
 		friend class voropp_compute<container_periodic>;
 };
@@ -502,6 +509,7 @@ class container_periodic_poly : public container_periodic_base {
 		}		
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
+		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz);
 	private:
 		voropp_compute<container_periodic_poly> vc;
 		double r_rad,r_mul;
@@ -510,8 +518,10 @@ class container_periodic_poly : public container_periodic_base {
 			r_mul=1+(r_rad*r_rad-max_radius*max_radius)/((max_radius+r_rad)*(max_radius+r_rad));
 			r_rad*=r_rad;
 		}
-		inline double r_cutoff(double lrs) {
-			return r_mul*lrs;
+		inline double r_cutoff(double lrs) {return r_mul*lrs;}
+		inline double r_max_add(double rs) {return rs+max_radius*max_radius;}
+		inline double r_current_sub(double rs,int ijk,int q) {
+			return rs-p[ijk][4*q+3]*p[ijk][4*q+3];
 		}
 		inline double r_scale(double rs,int ijk,int q) {
 			return rs+r_rad-p[ijk][4*q+3]*p[ijk][4*q+3];
