@@ -44,7 +44,6 @@ voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 	for(l=0;l<edmem;l++) pered[l]=new unsigned int[init_network_edge_memory];
 	for(l=0;l<edmem;l++) {nu[l]=nec[l]=0;numem[l]=init_network_edge_memory;}
 
-	// Allocate array for mapping Voronoi cell vertices into network
 	// vertices
 	vmap=new int[4*init_vertices];
 	map_mem=init_vertices;
@@ -227,6 +226,7 @@ void voronoi_network::print_network(FILE *fp,bool reverse_remove) {
 
 	// Print the vertex table
 	fprintf(fp,"Vertex table:\n%d\n",edc);
+	//os << edc << "\n";
 	for(l=0;l<edc;l++) {
 		ptsp=pts[reg[l]];j=4*regp[l];
 		fprintf(fp,"%d %g %g %g %g",l,ptsp[j],ptsp[j+1],ptsp[j+2],ptsp[j+3]);
@@ -294,14 +294,9 @@ inline void voronoi_network::unpack_periodicity(unsigned int pa,int &i,int &j,in
  * \param[in] (x,y,z) the position of the Voronoi cell.
  * \param[in] idn the ID number of the particle associated with the cell. */
 template<class v_cell>
-void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double z,double rad) {
-	int i,j,k,ijk,l,q,ai,aj,ak;
+void voronoi_network::add_to_network_internal(v_cell &c,int idn,double x,double y,double z,double rad,int *cmap) {
+	int i,j,k,ijk,l,q,ai,aj,ak,*vmp(cmap);
 	double gx,gy,vx,vy,vz,crad,*cp(c.pts);
-
-	// Check that there is enough memory to map Voronoi cell vertices
-	// to network vertices
-	if(c.p>map_mem) add_mapping_memory(c.p);
-	int *vmp(vmap);
 	
 	// Loop over the vertices of the Voronoi cell
 	for(l=0;l<c.p;l++,vmp+=4) {
@@ -350,7 +345,7 @@ void voronoi_network::add_to_network(v_cell &c,int idn,double x,double y,double 
 		add_neighbor(*vmp,idn);
 	}
 
-	add_edges_to_network(c,x,y,z,rad);
+	add_edges_to_network(c,x,y,z,rad,cmap);
 }
 
 /** Adds a neighboring particle ID to a vertex in the Voronoi network, first
@@ -364,21 +359,21 @@ inline void voronoi_network::add_neighbor(int k,int idn) {
 }
 
 /** Adds edges to the network structure, after the vertices have been
- * considered. This routine assumes that the vmap array has a mapping between
+ * considered. This routine assumes that the cmap array has a mapping between
  * Voronoi cell vertices and Voronoi network vertices. */
 template<class v_cell>
-void voronoi_network::add_edges_to_network(v_cell &c,double x,double y,double z,double rad) {
+void voronoi_network::add_edges_to_network(v_cell &c,double x,double y,double z,double rad,int *cmap) {
 	int i,j,ai,aj,ak,bi,bj,bk,k,l,q,*vmp;unsigned int cper;
 	double vx,vy,vz,wx,wy,wz,dx,dy,dz,dis;double *pp;
 	for(l=0;l<c.p;l++) {
-		vmp=vmap+4*l;k=*(vmp++);ai=*(vmp++);aj=*(vmp++);ak=*vmp;
+		vmp=cmap+4*l;k=*(vmp++);ai=*(vmp++);aj=*(vmp++);ak=*vmp;
 		pp=pts[reg[k]]+4*regp[k];
 		vx=pp[0]+ai*bx+aj*bxy+ak*bxz;
 		vy=pp[1]+aj*by+ak*byz;
 		vz=pp[2]+ak*bz;
 		for(q=0;q<c.nu[l];q++) {
 			i=c.ed[l][q];
-			vmp=vmap+4*i;
+			vmp=cmap+4*i;
 			j=*(vmp++);bi=*(vmp++);bj=*(vmp++);bk=*vmp;
 
 			// Skip if this is a self-connecting edge
@@ -407,14 +402,9 @@ void voronoi_network::add_edges_to_network(v_cell &c,double x,double y,double z,
 }
 
 template<class v_cell>
-void voronoi_network::add_to_network_rectangular(v_cell &c,int idn,double x,double y,double z,double rad) {
-	int i,j,k,ijk,l,q,ai,aj,ak;
+void voronoi_network::add_to_network_rectangular_internal(v_cell &c,int idn,double x,double y,double z,double rad,int *cmap) {
+	int i,j,k,ijk,l,q,ai,aj,ak,*vmp(cmap);
 	double vx,vy,vz,crad,*cp(c.pts);
-
-	// Check that there is enough memory to map Voronoi cell vertices
-	// to network vertices
-	if(c.p>map_mem) add_mapping_memory(c.p);
-	int *vmp(vmap);
 	
 	for(l=0;l<c.p;l++,vmp+=4) {
 		vx=x+cp[3*l]*0.5;vy=y+cp[3*l+1]*0.5;vz=z+cp[3*l+2]*0.5;
@@ -459,7 +449,7 @@ void voronoi_network::add_to_network_rectangular(v_cell &c,int idn,double x,doub
 		add_neighbor(*vmp,idn);
 	}
 
-	add_edges_to_network(c,x,y,z,rad);
+	add_edges_to_network(c,x,y,z,rad,cmap);
 }
 
 int voronoi_network::not_already_there(int k,int j,unsigned int cper) {

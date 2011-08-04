@@ -66,9 +66,26 @@ class voronoi_network {
 			fclose(fp);
 		}
 		template<class v_cell>
-		void add_to_network(v_cell &c,int idn,double x,double y,double z,double rad);	
+		inline void add_to_network(v_cell &c,int idn,double x,double y,double z,double rad,int *&cmap) {
+			cmap=new int[4*c.p];
+			add_to_network_internal(c,idn,x,y,z,rad,cmap);
+		}
 		template<class v_cell>
-		void add_to_network_rectangular(v_cell &c,int idn,double x,double y,double z,double rad);
+		inline void add_to_network_rectangular(v_cell &c,int idn,double x,double y,double z,double rad,int *&cmap) {
+			cmap=new int[4*c.p];
+			add_to_network_rectangular_internal(c,idn,x,y,z,rad,cmap);
+		}
+		template<class v_cell>
+		inline void add_to_network(v_cell &c,int idn,double x,double y,double z,double rad) {
+			if(c.p>map_mem) add_mapping_memory(c.p);
+			add_to_network_internal(c,idn,x,y,z,rad,vmap);
+		}
+		template<class v_cell>
+		inline void add_to_network_rectangular(v_cell &c,int idn,double x,double y,double z,double rad) {
+			if(c.p>map_mem) add_mapping_memory(c.p);
+			add_to_network_rectangular_internal(c,idn,x,y,z,rad,vmap);
+		}
+
 		void clear_network();
 	private:
 		inline int step_div(int a,int b);
@@ -81,11 +98,15 @@ class voronoi_network {
 		inline unsigned int pack_periodicity(int i,int j,int k);
 		inline void unpack_periodicity(unsigned int pa,int &i,int &j,int &k);
 		template<class v_cell>
-		void add_edges_to_network(v_cell &c,double x,double y,double z,double rad);
+		void add_edges_to_network(v_cell &c,double x,double y,double z,double rad,int *cmap);
 		int not_already_there(int k,int j,unsigned int cper);
 		bool search_previous(double gx,double gy,double x,double y,double z,int &ijk,int &q,int &ci,int &cj,int &ck);
 		bool safe_search_previous_rect(double x,double y,double z,int &ijk,int &q,int &ci,int &cj,int &ck);
-		bool search_previous_rect(double x,double y,double z,int &ijk,int &q,int &ci,int &cj,int &ck);		
+		bool search_previous_rect(double x,double y,double z,int &ijk,int &q,int &ci,int &cj,int &ck);
+		template<class v_cell>
+		void add_to_network_internal(v_cell &c,int idn,double x,double y,double z,double rad,int *cmap);
+		template<class v_cell>
+		void add_to_network_rectangular_internal(v_cell &c,int idn,double x,double y,double z,double rad,int *cmap);
 };
 
 #endif
