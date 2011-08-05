@@ -29,31 +29,32 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
 }
 
 template<class c_class>
-inline void voropp_compute<c_class>::scan_all(int ijk,double x,double y,double z,int &wijk,int &wq,double &mrs) {
-	double x1,y1,z1,rs;
+inline void voropp_compute<c_class>::scan_all(int ijk,double x,double y,double z,int di,int dj,int dk,particle_record &w,double &mrs) {
+	double x1,y1,z1,rs;bool in_block(false);
 	for(int l=0;l<co[ijk];l++) {
 		x1=p[ijk][ps*l]-x;
 		y1=p[ijk][ps*l+1]-y;
 		z1=p[ijk][ps*l+2]-z;
 		rs=con.r_current_sub(x1*x1+y1*y1+z1*z1,ijk,l);
-		if(rs<mrs) {mrs=rs;wijk=ijk;wq=l;}
+		if(rs<mrs) {mrs=rs;w.l=l;in_block=true;}
 	}
+	if(in_block) {w.ijk=ijk;w.di=di;w.dj=dj,w.dk=dk;}
 }
 
 template<class c_class>
-void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,int &wijk,int &wq,double &mrs) {
+void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record &w,double &mrs) {
 	double qx=0,qy=0,qz=0,rs;
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,disp;
 	double fx,fy,fz,gxs,gys,gzs,*radp;
 	unsigned int q,*e,*mijk;
 
 	// Init setup for parameters to return
-	wijk=-1;mrs=large_number;
+	w.ijk=-1;mrs=large_number;
 
 	con.initialize_search(ci,cj,ck,ijk,i,j,k,disp);
-
+	
 	// Test all particles in the particle's local region first
-	scan_all(ijk,x,y,z,wijk,wq,mrs);
+	scan_all(ijk,x,y,z,0,0,0,w,mrs);
 
 	// Now compute the fractional position of the particle within its
 	// region and store it in (fx,fy,fz). We use this to compute an index
@@ -85,7 +86,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	// Do a quick test to account for the case when the neare
 	rs=con.r_max_add(mrs);
 	if(gxs*gxs>rs&&gys*gys>rs&&gzs*gzs>rs) return;
-
+	
 	// Now compute which worklist we are going to use, and set radp and e to
 	// point at the right offsets
 	ijk=di+hgrid*(dj+hgrid*dk);
@@ -130,7 +131,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		// then we have to test all particles in the block for
 		// intersections. Otherwise, we do additional checks and skip
 		// those particles which can't possibly intersect the block.
-		scan_all(ijk,x-qx,y-qy,z-qz,wijk,wq,mrs);
+		scan_all(ijk,x-qx,y-qy,z-qz,di,dj,dk,w,mrs);
 	} while(g<f);
 
 	mv++;
@@ -161,17 +162,12 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		mijk=mask+ei+hx*(ej+hy*ek);
 		*mijk=mv;
 
-		// Call the compute_min_max_radius() function. This returns
-		// true if the minimum distance to the block is bigger than the
-		// current mrs, in which case we skip this block and move on.
-		// Otherwise, it computes the maximum distance to the block and
-		// returns it in crs.
 		if(compute_min_radius(di,dj,dk,fx,fy,fz,mrs)) continue;
 
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
-		scan_all(ijk,x-qx,y-qy,z-qz,wijk,wq,mrs);
+		scan_all(ijk,x-qx,y-qy,z-qz,di,dj,dk,w,mrs);
 		
 		if(qu_e>qu_l-18) add_list_memory(qu_s,qu_e);
 		scan_bits_mask_add(q,mijk,ei,ej,ek,qu_e);
@@ -187,10 +183,11 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 
 		if(qu_s==qu_l) qu_s=qu;
 		ei=*(qu_s++);ej=*(qu_s++);ek=*(qu_s++);
-		if(compute_min_radius(ei-i,ej-j,ek-k,fx,fy,fz,mrs)) continue;
+		di=ei-i;dj=ej-j;dk=ek-k;
+		if(compute_min_radius(di,dj,dk,fx,fy,fz,mrs)) continue;
 		
 		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
-		scan_all(ijk,x-qx,y-qy,z-qz,wijk,wq,mrs);
+		scan_all(ijk,x-qx,y-qy,z-qz,di,dj,dk,w,mrs);
 
 		// Test the neighbors of the current block, and add them to the
 		// block list if they haven't already been tested
@@ -893,13 +890,14 @@ bool voropp_compute<c_class>::compute_min_radius(int di,int dj,int dk,double fx,
 
 	if(di>0) {t=di*boxx-fx;crs=t*t;}
 	else if(di<0) {t=(di+1)*boxx-fx;crs=t*t;}
+	else crs=0;
 
 	if(dj>0) {t=dj*boxy-fy;crs+=t*t;}
 	else if(dj<0) {t=(dj+1)*boxy-fy;crs+=t*t;}
 
 	if(dk>0) {t=dk*boxz-fz;crs+=t*t;}
 	else if(dk<0) {t=(dk+1)*boxz-fz;crs+=t*t;}
-	
+
 	return crs>con.r_max_add(mrs);
 }
 
@@ -930,17 +928,17 @@ template voropp_compute<container>::voropp_compute(container&,int,int,int);
 template voropp_compute<container_poly>::voropp_compute(container_poly&,int,int,int);
 template bool voropp_compute<container>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voropp_compute<container>::find_voronoi_cell(double,double,double,int,int,int,int,int&,int&,double&);
+template void voropp_compute<container>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
 template bool voropp_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voropp_compute<container_poly>::find_voronoi_cell(double,double,double,int,int,int,int,int&,int&,double&);
+template void voropp_compute<container_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
 
 // Explicit template instantiation
 template voropp_compute<container_periodic>::voropp_compute(container_periodic&,int,int,int);
 template voropp_compute<container_periodic_poly>::voropp_compute(container_periodic_poly&,int,int,int);
 template bool voropp_compute<container_periodic>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container_periodic>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voropp_compute<container_periodic>::find_voronoi_cell(double,double,double,int,int,int,int,int&,int&,double&);
+template void voropp_compute<container_periodic>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
 template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voropp_compute<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,int&,int&,double&);
+template void voropp_compute<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
