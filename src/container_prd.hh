@@ -309,7 +309,7 @@ class container_periodic : public container_periodic_base {
 		}
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
-		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz);
+		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
@@ -509,7 +509,7 @@ class container_periodic_poly : public container_periodic_base {
 		}		
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
-		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz);
+		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
 	private:
 		voropp_compute<container_periodic_poly> vc;
 		double r_rad,r_mul;

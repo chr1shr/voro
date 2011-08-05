@@ -208,7 +208,7 @@ inline bool container_base::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &c
 	return true;
 }
 
-bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz) {
+bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
 	int ai,aj,ak,ci,cj,ck,ijk;
 	particle_record w;
 	double mrs;
@@ -224,13 +224,13 @@ bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &
 		rx=p[w.ijk][3*w.l]+ai*(bx-ax);
 		ry=p[w.ijk][3*w.l+1]+aj*(by-ay);
 		rz=p[w.ijk][3*w.l+2]+ak*(bz-az);
-
+		pid=id[w.ijk][w.l];
 		return true;
 	}
 	return false;
 }
 
-bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz) {
+bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
 	int ai,aj,ak,ci,cj,ck,ijk;
 	particle_record w;
 	double mrs;
@@ -246,6 +246,7 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 		rx=p[w.ijk][4*w.l]+ai*(bx-ax);
 		ry=p[w.ijk][4*w.l+1]+aj*(by-ay);
 		rz=p[w.ijk][4*w.l+2]+ak*(bz-az);
+		pid=id[w.ijk][w.l];
 		return true;
 	}
 	return false;
