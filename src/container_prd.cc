@@ -44,7 +44,6 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 		id[l]=new int[init_mem];
 		p[l]=new double[ps*init_mem];
 	}
-	printf("Setup: %d %d %d %d %d %d\n",ey,ez,wy,wz,oy,oz);
 }
 
 /** The container destructor frees the dynamically allocated memory. */

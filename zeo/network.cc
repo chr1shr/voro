@@ -105,7 +105,7 @@ int main(int argc,char **argv) {
 	// create integer versions of them
 	int nx=int(nxf);
 	int ny=int(nyf);
-	int nz=int(nzf);nx=ny=nz=1;
+	int nz=int(nzf);
 	printf("Total particles = %d\n\nInternal grid size = (%d %d %d)\n\n",n,nx,ny,nz);
 
 	vol=bx*by*bz;
@@ -118,22 +118,6 @@ int main(int argc,char **argv) {
 		for(i=0;i<n;i++) {
 			if(fscanf(fp,"%s %lg %lg %lg",buffer,&x,&y,&z)!=4) file_import_error();
 			con.put(i,x,y,z,radial_lookup(buffer));
-		}
-		fclose(fp);
-
-		// Copy the output filename
-		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
-		compute(con,buffer,bp,vol);
-	} else {
-
-		// Create a container with the geometry given above
-		container_periodic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
-
-		// Read in the particles from the file
-		for(i=0;i<n;i++) {
-			if(fscanf(fp,"%s %lg %lg %lg",buffer,&x,&y,&z)!=4)
-				voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
-			con.put(i,x,y,z);			
 		}
 		fclose(fp);
         // Open an output file
@@ -149,8 +133,24 @@ int main(int argc,char **argv) {
                         fprintf(of,"%g %g %g %d %g %g %g\n",x,y,z,i,rx,ry,rz);
                 }
         }
-
         fclose(of);
+		// Copy the output filename
+		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
+		compute(con,buffer,bp,vol);
+	} else {
+
+		// Create a container with the geometry given above
+		container_periodic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
+
+		// Read in the particles from the file
+		for(i=0;i<n;i++) {
+			if(fscanf(fp,"%s %lg %lg %lg",buffer,&x,&y,&z)!=4)
+				voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+			con.put(i,x,y,z);			
+		}
+		fclose(fp);
+
+
 
 		// Copy the output filename
 		for(i=0;i<bp-2;i++) buffer[i]=farg[i];

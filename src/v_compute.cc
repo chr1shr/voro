@@ -45,7 +45,7 @@ template<class c_class>
 void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record &w,double &mrs) {
 	double qx=0,qy=0,qz=0,rs;
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,disp;
-	double fx,fy,fz,gxs,gys,gzs,*radp;
+	double fx,fy,fz,mxs,mys,mzs,*radp;
 	unsigned int q,*e,*mijk;
 
 	// Init setup for parameters to return
@@ -62,7 +62,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	unsigned int m1,m2;
 	con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
 	di=int(fx*xsp*fgrid);dj=int(fy*ysp*fgrid);dk=int(fz*zsp*fgrid);
-	
+
 	// The indices (di,dj,dk) tell us which worklist to use, to test the
 	// blocks in the optimal order. But we only store worklists for the
 	// eighth of the region where di, dj, and dk are all less than half the
@@ -71,21 +71,21 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	// dj, and dk. For these cases, a mask is constructed in m1 and m2
 	// which is used to flip the worklist information when it is loaded.
 	if(di>=hgrid) {
-		gxs=fx;
+		mxs=boxx-fx;
 		m1=127+(3<<21);m2=1+(1<<21);di=fgrid-1-di;if(di<0) di=0;
-	} else {m1=m2=0;gxs=boxx-fx;}
+	} else {m1=m2=0;mxs=fx;}
 	if(dj>=hgrid) {
-		gys=fy;
+		mys=boxy-fy;
 		m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=fgrid-1-dj;if(dj<0) dj=0;
-	} else gys=boxy-fy;
+	} else mys=fy;
 	if(dk>=hgrid) {
-		gzs=fz;
+		mzs=boxz-fz;
 		m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=fgrid-1-dk;if(dk<0) dk=0;
-	} else gzs=boxz-fz;
+	} else mzs=fz;
 
 	// Do a quick test to account for the case when the neare
 	rs=con.r_max_add(mrs);
-	if(gxs*gxs>rs&&gys*gys>rs&&gzs*gzs>rs) return;
+	if(mxs*mxs>rs&&mys*mys>rs&&mzs*mzs>rs) return;
 
 	// Now compute which worklist we are going to use, and set radp and e to
 	// point at the right offsets
@@ -126,7 +126,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
-
+		
 		// If mrs is bigger than the maximum distance to the block,
 		// then we have to test all particles in the block for
 		// intersections. Otherwise, we do additional checks and skip
@@ -137,7 +137,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	mv++;
 	if(mv==0) {reset_mask();mv=1;}
 	int *qu_s(qu),*qu_e(qu);
-
+	
 	while(g<seq_length-1) {
 
 		// If mrs is less than the minimum distance to any untested
@@ -727,7 +727,7 @@ inline bool voropp_compute<c_class>::face_z_test(v_cell &c,double x0,double y0,d
  * \param[in] (di,dj,dk) the position of the nearby region to be tested,
  *                       relative to the region that the point is in.
  * \param[in] (fx,fy,fz) the displacement of the point within its region.
- * \param[in] (gxs,gys,gzs) the minimum squared distances from the point to the
+ * \param[in] (gxs,gys,gzs) the maximum squared distances from the point to the
  *                          sides of its region.
  * \param[out] crs a reference in which to return the maximum distance to the
  *                 region (only computed if the routine returns positive).
