@@ -44,6 +44,7 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 		id[l]=new int[init_mem];
 		p[l]=new double[ps*init_mem];
 	}
+	printf("Setup: %d %d %d %d %d %d\n",ey,ez,wy,wz,oy,oz);
 }
 
 /** The container destructor frees the dynamically allocated memory. */
@@ -198,7 +199,8 @@ inline void container_periodic_base::remap(int &ai,int &aj,int &ak,int &ci,int &
 		x-=ai*bx;ci-=ai*nx;
 	} else ai=0;
 
-	ijk=ci+nx*((cj+ey)+oy*(ck+ez));
+	cj+=ey;ck+=ez;
+	ijk=ci+nx*(cj+oy*ck);
 }
 
 bool container_periodic::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz) {
@@ -207,7 +209,7 @@ bool container_periodic::find_voronoi_cell(double x,double y,double z,double &rx
 	double mrs;
 
 	remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk);
-	vc.find_voronoi_cell(x,y,z,ijk,ci,cj,ck,w,mrs);
+	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
 	if(w.ijk!=-1) {
 		ci+=w.di;if(ci<0||ci>=nx) ai+=step_div(ci,nx);

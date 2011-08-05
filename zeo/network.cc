@@ -105,7 +105,7 @@ int main(int argc,char **argv) {
 	// create integer versions of them
 	int nx=int(nxf);
 	int ny=int(nyf);
-	int nz=int(nzf);
+	int nz=int(nzf);nx=ny=nz=1;
 	printf("Total particles = %d\n\nInternal grid size = (%d %d %d)\n\n",n,nx,ny,nz);
 
 	vol=bx*by*bz;
@@ -136,6 +136,21 @@ int main(int argc,char **argv) {
 			con.put(i,x,y,z);			
 		}
 		fclose(fp);
+        // Open an output file
+        
+	FILE *of(fopen("nearest_vecs","wb"));
+        if(of==NULL) fputs("Can't open output file\n",stderr);
+
+        // Loop over a bunch of positions on one of the faces of the unit cell
+        double rx,ry,rz;z=0;
+        for(x=-0.5*by;x<1.5*bx;x+=0.02*bx) {
+                for(y=-0.5*by;y<1.5*by;y+=0.02*by) {
+                        i=con.find_voronoi_cell(x,y,z,rx,ry,rz);
+                        fprintf(of,"%g %g %g %d %g %g %g\n",x,y,z,i,rx,ry,rz);
+                }
+        }
+
+        fclose(of);
 
 		// Copy the output filename
 		for(i=0;i<bp-2;i++) buffer[i]=farg[i];

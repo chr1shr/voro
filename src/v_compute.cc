@@ -86,13 +86,13 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	// Do a quick test to account for the case when the neare
 	rs=con.r_max_add(mrs);
 	if(gxs*gxs>rs&&gys*gys>rs&&gzs*gzs>rs) return;
-	
+
 	// Now compute which worklist we are going to use, and set radp and e to
 	// point at the right offsets
 	ijk=di+hgrid*(dj+hgrid*dk);
 	radp=mrad+ijk*seq_length;
 	e=(const_cast<unsigned int*> (wl))+ijk*seq_length;
-
+	
 	// Read in how many items in the worklist can be tested without having to
 	// worry about writing to the mask
 	f=e[0];g=0;
