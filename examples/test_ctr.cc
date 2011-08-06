@@ -15,7 +15,7 @@ int main() {
 	for(i=0;i<1000;i++) {
 		x=rnd();
 		y=rnd();
-		con.put(i,x,y);
+		con.put(i,x,y,-1);
 	}
 
 	// Output the particle positions to a file

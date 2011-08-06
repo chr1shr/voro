@@ -113,6 +113,7 @@ class container_2d {
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,bool convex_,int memi);
 		~container_2d();
 		void setup();
+		void initial_cut(voronoicell_2d &c, int bid,double x, double y);
 		int crossproductz(double x1, double y1, double x2, double y2);
 		void semi_circle_labelling(double x1, double y1, double x2, double y2, int wid);
 

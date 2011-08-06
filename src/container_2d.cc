@@ -30,7 +30,7 @@ container_2d::container_2d(double ax_,double bx_,double ay_,
 	plab(new int**[nxy]), soi(NULL), noofbnds(0), bnds_size(init_bnds_size),
 	bnds(new double[2*bnds_size]), edb(new int[bnds_size]), bndpts(new int*[nxy]) {
 	int l;
-	debug=true;
+	debug=false;
 
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
@@ -141,7 +141,7 @@ void container_2d::setup(){
 	double lx, ly, cx, cy, nx, ny, fx, fy, tmpx, tmpy;//last (x,y), current (x,y), next (x,y), temporary (x,y)
 	int wid=1;
 
-	cout << "beginning";
+	
 	tmp=tmpp=new int[3*init_temp_label_size];
 	tmpe=tmp+3*init_temp_label_size;
 	
@@ -149,10 +149,13 @@ void container_2d::setup(){
 	fx=lx; fy=ly;
 	while(wid<(noofbnds-1)){
 		tag_walls(cx,cy,nx,ny,wid);
-		semi_circle_labelling(cx,cy,nx,ny,wid);
-		if((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>0){
-			probpts[wid]=true;
-		}
+//make sure cx isn't part of the wall being considered
+		if(!(((bnds[2*wid]-cx==0) && (bnds[2*wid+1]-cy==0)) || 
+			((bnds[2*wid+2]-cx==0) && (bnds[2*wid+3]==0))))	semi_circle_labelling(cx,cy,nx,ny,wid);
+//make sure that the cos(angle)>1 and the angle points inward	
+		if(((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>tolerance) && 
+		(crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)) probpts[wid]=true;
+		
 		tmpx=cx; tmpy=cy; cx=nx; cy=ny; lx=tmpx; ly=tmpy;
 		wid++;
 		if(!(wid==(noofbnds-1))){
@@ -162,13 +165,13 @@ void container_2d::setup(){
 	nx=fx; ny=fy;
 	tag_walls(cx,cy,nx,ny,wid);
 	semi_circle_labelling(cx,cy,nx,ny,wid);
-	if((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>0){
+	if(((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>tolerance) && (crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
 		probpts[wid]=true;
 	}
 	lx=cx; ly=cy; wid=0; cx=fx; cy=fy; nx=bnds[2]; ny=bnds[3];
 	tag_walls(cx,cy,nx,ny,wid);
 	semi_circle_labelling(cx,cy,nx,ny,wid);
-	if((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>0){
+	if(((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>tolerance) && (crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
 		probpts[wid]=true;
 	}
 
@@ -188,7 +191,7 @@ void container_2d::setup(){
 void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid){
 	int cgrid=0, cgridx=0, cgridy=0, fgrid=0;
 	double slope, slopec, cx=ax+boxx, cy=ay+boxy, gridx, gridy;
-
+	
 	if(x2<x1){
 		double tmpx=x1, tmpy=y1;
 		x1=x2; y1=y2; x2=tmpx; y2=tmpy;
@@ -209,12 +212,13 @@ void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid
 	}while(cx<x2){
 		fgrid++;
 		cx+=boxx;
-	}
+	}if(cx==x2 && x2!=x1 && cx!=ax+(boxx*nx)) fgrid++;
 	if (debug) cout << cgrid << "   ";
 	if((x2-x1)==0){
 		while(cgrid!=fgrid){
 			tag(wid,cgrid);
-			cgrid+=nx;
+			if(y1<y2) cgrid+=nx;
+			if(y1>y2) cgrid-=nx;
 			if (debug) cout<< cgrid << "   ";
 		}
 	tag(wid,cgrid);
@@ -222,14 +226,32 @@ void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid
 		}
 
 	slope=((y2-y1)/(x2-x1));
-
-
-	if(slope>=0){
+	if(slope>0 && cy==y2 && cy!=ay+(boxy*ny)) fgrid+=nx;
+	if(slope==0){
+		for(int i=cgrid; i<=fgrid; i++){
+			tag(wid,i);
+			if(x1>=x2){
+				tag(fgrid,wid);
+				return;
+			}
+		}
+	}
+	
+	if(slope>0){
 		gridx=ax+((1+cgridx)*boxx);
 		gridy=ay+((1+cgridy)*boxy);
 
 		while(cgrid!=fgrid){
 			tag(wid,cgrid);
+			if(gridx==x1){
+				cgrid++;
+				gridx+=boxx;
+				continue;
+			}if(gridy==y1){
+				cgrid+=nx;	
+				gridy+=boxy;
+				continue;
+			}
 			slopec=((gridy-y1)/(gridx-x1));
 			if(slope>slopec){
 				cgrid+=nx;
@@ -254,8 +276,12 @@ void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid
 			if(debug) cout << cgrid-1 << "   " << cgrid-nx << "   ";
 			gridx+=boxx;
 			gridy+=boxy;
-		}
-		if (debug) cout << cgrid << "   ";
+			}
+			if (debug) cout << cgrid << "   ";
+			if (x1>=x2){
+				tag(fgrid, wid);
+				return;
+			}
 		}
 	
 		tag(wid,cgrid);
@@ -268,6 +294,15 @@ void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid
 		
 		while(cgrid!=fgrid){
 			tag(wid, cgrid);
+			if(gridx==x1){
+				cgrid++;
+				gridx+=boxx;
+				continue;
+			}if(gridy==y1){
+				cgrid-=nx;
+				gridy-=boxy;
+				continue;
+			}
 			slopec=((gridy-y1)/(gridx-x1));
 			if(slope>slopec){
 				cgrid++;
@@ -294,7 +329,11 @@ void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid
 				if(debug) cout << cgrid-1 << "    " << cgrid+nx << "   ";
 			}
 
-		if (debug) cout << cgrid << "   ";
+			if (debug) cout << cgrid << "   ";
+			if (x1>=x2){		
+				tag(fgrid, wid);
+				return;
+			}
 		}
 		tag(wid,cgrid);
 	}
@@ -461,8 +500,15 @@ bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex,
 		cwid=plab[cbox][cindex][i];
 		widx1=bnds[2*cwid];
 		widy1=bnds[2*cwid+1];
-		widx2=bnds[2*cwid+2];
-		widy2=bnds[2*cwid+3];
+		if(cwid!=(noofbnds-1)){
+			widx2=bnds[2*cwid+2];
+		
+			widy2=bnds[2*cwid+3];
+		}else{
+			widx2=bnds[0];
+			widy2=bnds[1];
+		}
+		if((cx==widx1 && cy==widy1) || (cx==widx2 && cy==widy2)) continue;
 		if(crossproductz(gx-widx1,gy-widy1,widx2-widx1,widy2-widy1)!=crossproductz(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return false;
 	}
 	return true;
@@ -481,7 +527,11 @@ void container_2d::add_particle_memory(int i) {
 
 	// Create new arrays and copy across the data
 	int *idp(new int[mem[i]]);
-	for(l=0;l<co[i];l++) idp[l]=id[i][l];
+	int *bndptsp(new int[mem[i]]);
+	for(l=0;l<co[i];l++) {
+		idp[l]=id[i][l];
+		bndptsp[l]=id[i][l];
+	}
 	double *pp(new double[2*mem[i]]);
 	for(l=0;l<2*co[i];l++) pp[l]=p[i][l];
 	unsigned int *nlabp(new unsigned int[mem[i]]);
@@ -491,6 +541,7 @@ void container_2d::add_particle_memory(int i) {
 
 	// Delete the original arrays and update the pointers
 	delete [] id[i];id[i]=idp;
+	delete [] bndpts[i]; bndpts[i]=bndptsp;
 	delete [] p[i];p[i]=pp;
 	delete [] nlab[i];nlab[i]=nlabp;
 	delete [] plab[i];plab[i]=plabp;
@@ -529,7 +580,7 @@ void container_2d::import(FILE *fp) {
 		} else {
 
 			// Try and read three entries from the line
-			if(sscanf(buf,"%d %lg %lg",&i,&x,&y)!=3) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+			if(sscanf(buf,"%d %lg %lg",&i,&x,&y)!=3) voropp_fatal_error("File import error #1",VOROPP_FILE_ERROR);
 			if(!boundary) put(i,x,y, -1);
 			if(boundary) {
 				put(i,x,y,noofbnds);
@@ -542,7 +593,7 @@ void container_2d::import(FILE *fp) {
 		}
 	}
 
-	if(!feof(fp)) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	if(!feof(fp)) voropp_fatal_error("File import error #2",VOROPP_FILE_ERROR);
 	delete [] buf;	
 }
 
@@ -634,10 +685,11 @@ bool container_2d::initialize_voronoicell_nonconvex(voronoicell_2d &c, double x,
 	int cntbndno=1;
 
 	while(cntbndno<noofbnds){
-		if(bid==(noofbnds-1)) bid=0;
+		if(bid==(noofbnds)) bid=0;
 		bnds_loc[cntbndno*2]=bnds[bid*2]-x;
 		bnds_loc[cntbndno*2+1]=bnds[bid*2+1]-y;
 		cntbndno++;
+		bid++;
 	}
 	c.init_nonconvex(bnds_loc, noofbnds);
 	return true;
@@ -666,9 +718,16 @@ double container_2d::sum_cell_areas() {
  * volume evaluation or cell output. */
 void container_2d::compute_all_cells() {
 	int i,j,ij=0,q;
-	voronoicell_2d c;
-	for(j=0;j<ny;j++) for(i=0;i<nx;i++,ij++) for(q=0;q<co[ij];q++)
-		compute_cell_sphere(c,i,j,ij,q);
+	for(j=0;j<ny;j++){ 
+		for(i=0;i<nx;i++,ij++){ 
+			for(q=0;q<co[ij];q++){
+				voronoicell_2d c;
+				cout << "   " << i << "   " << j << "   " << q << "    " << endl;
+				compute_cell_sphere(c,i,j,ij,q);
+				
+			}
+		}
+	}
 }
 
 void container_2d::debug_output(){
@@ -701,6 +760,25 @@ void container_2d::debug_output(){
 
 	}
 }
+
+void container_2d::initial_cut(voronoicell_2d &c, int bid,double x, double y){
+	double widx1, widx2, widy1, widy2;
+	if(bid==0){
+		widx1=bnds[2*(noofbnds-1)]-x;
+		widy1=bnds[2*(noofbnds-1)+1]-y;
+	}else{
+		widx1=bnds[2*(bid-1)]-x;
+		widy1=bnds[2*(bid-1)+1]-y;
+	}if(bid==(noofbnds-1)){
+		widx2=bnds[0]-x;
+		widy2=bnds[1]-y;
+	}else{
+		widx2=bnds[2*(bid+1)]-x;
+		widy2=bnds[2*(bid+1)+1]-y;
+	}
+	c.plane_nonconvex(widx1,widy1,(widx1*widx1)+(widy1*widy1));
+	c.plane_nonconvex(widx2,widy2,(widx2*widx2)+(widy2*widy2));
+}
 /** This routine computes the Voronoi cell for a give particle, by successively
  * testing over particles within larger and larger concentric circles. This
  * routine is simple and fast, although it may not work well for anisotropic
@@ -715,7 +793,6 @@ void container_2d::debug_output(){
  * \return False if the Voronoi cell was completely removed during the
  * computation and has zero volume, true otherwise. */
 bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s,double x,double y) {
-	
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
 	const double length_scale=0.5*sqrt((bx-ax)*(by-ay)/(nx*ny));
@@ -724,25 +801,36 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	int q,t,bid, widc;
 	voropp_loop_2d l(*this);
 	
-
+	cout << "    problem point?    " ;
 	//Check if the current point is a problem point, if it is we will need to use plane-nonconvex, and init_nonconvex
-	bid=bndpts[bid][s];
+	bid=bndpts[ij][s];
+	cout << " x=" << x << " y=" << y << "  box#=" << ij << "  bndloc=" << bid << endl;
 	if(bid!=-1 && probpts[bid]){
-			if(!initialize_voronoicell_nonconvex(c,x,y,bid)) return false;
-			problem_point=true;
+		if(!initialize_voronoicell_nonconvex(c,x,y,bid)) return false;
+		problem_point=true;
+                initial_cut(c,bid,x,y);
 		
-	}else{
+	}else if(bid!=-1){
+		if(!initialize_voronoicell_nonconvex(c,x,y,bid)) return false;
+	        initial_cut(c,bid,x,y);
+		cout << "   BOUNDARY POINT!!!    ";
+	}else{	
 		if(!initialize_voronoicell(c,x,y)) return false;
 	}
+	if(problem_point) cout << "yes   ";
+	cout << "    wall cuts   ";
 	//CUT BY ALL WALLS PASSING THROUGH THE COMPUTATIONAL BOX HERE, USE WID
 	for(int b=1;b<wid[ij][0];b++){
-	widc=wid[ij][b];
-		wx1=bnds[2*widc]-x; wy1=bnds[2*widc-1]-y;
+		widc=wid[ij][b];
+		if(widc>(noofbnds-1)) continue;
+		wx1=bnds[2*widc]-x; wy1=bnds[2*widc+1]-y;
 		widc++;
-		wx2=bnds[2*widc]-x; wy2=bnds[2*widc-1]-y;
+		if(widc>(noofbnds-1)) widc=0;
+		wx2=bnds[2*widc]-x; wy2=bnds[2*widc+1]-y;
+		if((wx1==0 && wy1==0) || (wx2==0 && wy2==0)) continue;
 		c.wallcut(wx1,wy1,wx2,wy2);
 	}
-
+	cout << "    plane cuts   ";
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
@@ -752,8 +840,10 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 		do {
 			for(q=0;q<co[t];q++) {
 				//HERE CHECK IF THE CUTTING PARTICLE IS ON THE WRONG SIDE OF ANY WALL USING SOI				
-				if(OKCuttingParticle(x,y,ij,s,x1,y1,t,q)){
-					x1=p[t][2*q]+qx-x;y1=p[t][2*q+1]+qy-y;//qx,qy??
+				x1=p[t][2*q]+qx;y1=p[t][2*q+1]+qy;//qx,qy??
+				
+				if((x1!=x && y1!=y) && (OKCuttingParticle(x,y,ij,s,x1,y1,t,q))){
+					x1=x1-x; y1=y1-y;
 					rs=x1*x1+y1*y1;
 					if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {
 						if(problem_point){
@@ -762,11 +852,12 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 							if(!c.plane(x1,y1,rs)) return false;
 						}
 					}
-				}
+				}cout << "    particle cut   " << endl;
 			}
 		} while((t=l.inc(qx,qy))!=-1);//loops through boxes in the shell
+		cout << "LEFT!" << endl;
 		lr=ur;lrs=urs;
-	}
+	}cout << "ALL THE WAY OUT!" << endl;
 	return true;
 }
 

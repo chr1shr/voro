@@ -11,7 +11,8 @@
 CC=g++
 
 # C++ compiler flags
-CFLAGS=-Wall -ansi -pedantic -O3
+#CFLAGS=-Wall -ansi -pedantic -O3
+CFLAGS=-Wall -ansi -pedantic -ggdb
 
 # Include and library mat
 E_INC=-I../src
