@@ -249,8 +249,7 @@ inline void voropp_compute<c_class>::scan_bits_mask_add(unsigned int q,unsigned 
 template<class c_class>
 template<class v_cell>
 bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck) {
-	static const int count_list[8]={7,11,15,19,26,35,45,59};
-	const int list_size=8;
+	static const int count_list[8]={7,11,15,19,26,35,45,59}, *count_e(count_list+8);
 	double x,y,z,x1,y1,z1,qx=0,qy=0,qz=0;
 	double xlo,ylo,zlo,xhi,yhi,zhi,rs;
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,l,disp;
@@ -263,7 +262,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 	// Initialize the Voronoi cell to fill the entire container
 	double crs,mrs;
 
-	int next_count=3,list_index=0;
+	int next_count=3,*count_p(const_cast<int*> (count_list));
 
 	// Test all particles in the particle's local region first
 	for(l=0;l<s;l++) {
@@ -331,7 +330,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 		// maximum radius squared
 		if(g==next_count) {
 			mrs=c.max_radius_squared();
-			if(list_index!=list_size) next_count=count_list[list_index++];
+			if(count_p!=count_e) next_count=*(count_p++);
 		}
 
 		// If mrs is less than the minimum distance to any untested
@@ -408,7 +407,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 		// maximum radius squared
 		if(g==next_count) {
 			mrs=c.max_radius_squared();
-			if(list_index!=list_size) next_count=count_list[list_index++];
+			if(count_p!=count_e) next_count=*(count_p++);
 		}
 
 		// If mrs is less than the minimum distance to any untested
