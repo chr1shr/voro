@@ -131,6 +131,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 	protected:
 		void add_particle_memory(int i);
 		void put_locate_block(int &ijk,double &x,double &y,double &z);
+		void put_locate_block(int &ijk,double &x,double &y,double &z,int &ai,int &aj,int &ak);
 		inline void create_periodic_image(int di,int dj,int dk) {
 			if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
 				voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
@@ -150,6 +151,7 @@ class container_periodic : public container_periodic_base {
 				int nx_,int ny_,int nz_,int init_mem_);
 		void clear();
 		void put(int n,double x,double y,double z);
+		void put(int n,double x,double y,double z,int &ai,int &aj,int &ak);
 		void put(voropp_order &vo,int n,double x,double y,double z);
 		void import(FILE *fp=stdin);
 		void import(voropp_order &vo,FILE *fp=stdin);
@@ -339,6 +341,7 @@ class container_periodic_poly : public container_periodic_base {
 				int nx_,int ny_,int nz_,int init_mem_);
 		void clear();
 		void put(int n,double x,double y,double z,double r);
+		void put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak);
 		void put(voropp_order &vo,int n,double x,double y,double z,double r);
 		void import(FILE *fp=stdin);
 		void import(voropp_order &vo,FILE *fp=stdin);

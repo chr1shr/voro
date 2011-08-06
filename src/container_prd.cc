@@ -107,6 +107,30 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r) {
 	if(max_radius<r) max_radius=r;
 }
 
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle. */
+void container_periodic::put(int n,double x,double y,double z,int &ai,int &aj,int &ak) {
+	int ijk;
+	put_locate_block(ijk,x,y,z,ai,aj,ak);
+	id[ijk][co[ijk]]=n;
+	double *pp(p[ijk]+3*co[ijk]++);
+	*(pp++)=x;*(pp++)=y;*pp=z;
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle.
+ * \param[in] r the radius of the particle. */
+void container_periodic_poly::put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
+	int ijk;
+	put_locate_block(ijk,x,y,z,ai,aj,ak);
+	id[ijk][co[ijk]]=n;
+	double *pp(p[ijk]+4*co[ijk]++);
+	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
+	if(max_radius<r) max_radius=r;
+}
+
 /** Put a particle into the correct region of the container, also recording
  * into which region it was stored.
  * \param[in] vo the ordering class in which to record the region.
@@ -168,6 +192,35 @@ void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,doub
 		int ai=step_div(ijk,nx);
 		x-=ai*bx;ijk-=ai*nx;
 	}
+
+	// Compute the block index and check memory allocation
+	j+=ey;k+=ez;
+	ijk+=nx*(j+oy*k);
+	if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
+}
+
+void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,double &z,int &ai,int &aj,int &ak) {
+
+	// Remap particle in the z direction if necessary
+	int k=step_int(z*zsp);
+	if(k<0||k>=nz) {
+		ak=step_div(k,nz);
+		z-=ak*bz;y-=ak*byz;x-=ak*bxz;k-=ak*nz;
+	} else ak=0;
+
+	// Remap particle in the y direction if necessary
+	int j=step_int(y*ysp);
+	if(j<0||j>=ny) {
+		aj=step_div(j,ny);
+		y-=aj*by;x-=aj*bxy;j-=aj*ny;
+	} else aj=0;
+
+	// Remap particle in the x direction if necessary
+	ijk=step_int(x*xsp);
+	if(ijk<0||ijk>=nx) {
+		ai=step_div(ijk,nx);
+		x-=ai*bx;ijk-=ai*nx;
+	} else ai=0;
 
 	// Compute the block index and check memory allocation
 	j+=ey;k+=ez;
