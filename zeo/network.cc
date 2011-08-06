@@ -120,25 +120,12 @@ int main(int argc,char **argv) {
 			con.put(i,x,y,z,radial_lookup(buffer));
 		}
 		fclose(fp);
-        // Open an output file
-        
-	FILE *of(fopen("nearest_vecs","wb"));
-        if(of==NULL) fputs("Can't open output file\n",stderr);
 
-        // Loop over a bunch of positions on one of the faces of the unit cell
-        double rx,ry,rz;z=0;
-        for(x=-0.5*by;x<1.5*bx;x+=0.02*bx) {
-                for(y=-0.5*by;y<1.5*by;y+=0.02*by) {
-                        i=con.find_voronoi_cell(x,y,z,rx,ry,rz);
-                        fprintf(of,"%g %g %g %d %g %g %g\n",x,y,z,i,rx,ry,rz);
-                }
-        }
-        fclose(of);
 		// Copy the output filename
 		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
 		compute(con,buffer,bp,vol);
 	} else {
-
+		
 		// Create a container with the geometry given above
 		container_periodic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
 
@@ -146,11 +133,9 @@ int main(int argc,char **argv) {
 		for(i=0;i<n;i++) {
 			if(fscanf(fp,"%s %lg %lg %lg",buffer,&x,&y,&z)!=4)
 				voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
-			con.put(i,x,y,z);			
+			con.put(i,x,y,z);
 		}
 		fclose(fp);
-
-
 
 		// Copy the output filename
 		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
