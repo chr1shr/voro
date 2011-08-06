@@ -251,7 +251,7 @@ template<class v_cell>
 bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck) {
 	static const int count_list[8]={7,11,15,19,26,35,45,59}, *count_e(count_list+8);
 	double x,y,z,x1,y1,z1,qx=0,qy=0,qz=0;
-	double xlo,ylo,zlo,xhi,yhi,zhi,rs;
+	double xlo,ylo,zlo,xhi,yhi,zhi,x2,y2,z2,rs;
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,l,disp;
 	double fx,fy,fz,gxs,gys,gzs,*radp;
 	unsigned int q,*e,*mijk;
@@ -366,21 +366,26 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 		// then we have to test all particles in the block for
 		// intersections. Otherwise, we do additional checks and skip
 		// those particles which can't possibly intersect the block.
-		if(mrs>con.r_cutoff(crs)) {
-			for(l=0;l<co[ijk];l++) {
-				x1=p[ijk][ps*l]+qx-x;
-				y1=p[ijk][ps*l+1]+qy-y;
-				z1=p[ijk][ps*l+2]+qz-z;
-				rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
-				if(!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
-			}
-		} else {
-			for(l=0;l<co[ijk];l++) {
-				x1=p[ijk][ps*l]+qx-x;
-				y1=p[ijk][ps*l+1]+qy-y;
-				z1=p[ijk][ps*l+2]+qz-z;
-				rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
-				if(rs<mrs&&!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+		if(co[ijk]>0) {
+			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
+			if(mrs>con.r_cutoff(crs)) {
+				do {
+					x1=p[ijk][ps*l]-x2;
+					y1=p[ijk][ps*l+1]-y2;
+					z1=p[ijk][ps*l+2]-z2;
+					rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
+					if(!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+					l++;
+				} while (l<co[ijk]);
+			} else {
+				do {
+					x1=p[ijk][ps*l]-x2;
+					y1=p[ijk][ps*l+1]-y2;
+					z1=p[ijk][ps*l+2]-z2;
+					rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
+					if(rs<mrs&&!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+					l++;
+				} while (l<co[ijk]);
 			}
 		}
 	} while(g<f);
@@ -447,21 +452,26 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 		// then we have to test all particles in the block for
 		// intersections. Otherwise, we do additional checks and skip
 		// those particles which can't possibly intersect the block.
-		if(mrs>con.r_cutoff(crs)) {
-			for(l=0;l<co[ijk];l++) {
-				x1=p[ijk][ps*l]+qx-x;
-				y1=p[ijk][ps*l+1]+qy-y;
-				z1=p[ijk][ps*l+2]+qz-z;
-				rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
-				if(!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
-			}
-		} else {
-			for(l=0;l<co[ijk];l++) {
-				x1=p[ijk][ps*l]+qx-x;
-				y1=p[ijk][ps*l+1]+qy-y;
-				z1=p[ijk][ps*l+2]+qz-z;
-				rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
-				if(rs<mrs&&!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+		if(co[ijk]>0) {
+			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
+			if(mrs>con.r_cutoff(crs)) {
+				do {
+					x1=p[ijk][ps*l]-x2;
+					y1=p[ijk][ps*l+1]-y2;
+					z1=p[ijk][ps*l+2]-z2;
+					rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
+					if(!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+					l++;
+				} while (l<co[ijk]);
+			} else {
+				do {
+					x1=p[ijk][ps*l]-x2;
+					y1=p[ijk][ps*l+1]-y2;
+					z1=p[ijk][ps*l+2]-z2;
+					rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
+					if(rs<mrs&&!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+					l++;
+				} while (l<co[ijk]);
 			}
 		}
 
@@ -547,12 +557,16 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 		// Loop over all the elements in the block to test for cuts. It
 		// would be possible to exclude some of these cases by testing
 		// against mrs, but this will probably not save time.
-		for(l=0;l<co[ijk];l++) {
-			x1=p[ijk][ps*l]+qx-x;
-			y1=p[ijk][ps*l+1]+qy-y;
-			z1=p[ijk][ps*l+2]+qz-z;
-			rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
-			if(!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+		if(co[ijk]>0) {
+			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
+			do {
+				x1=p[ijk][ps*l]-x2;
+				y1=p[ijk][ps*l+1]-y2;
+				z1=p[ijk][ps*l+2]-z2;
+				rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
+				if(!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+				l++;
+			} while (l<co[ijk]);
 		}
 
 		// If there's not much memory on the block list then add more
