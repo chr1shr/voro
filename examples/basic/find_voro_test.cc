@@ -40,8 +40,9 @@ int main() {
 	}
 
 	for(x=-1.95;x<2;x+=0.1) for(y=-1.95;y<2;y+=0.1) {
-		con.find_voronoi_cell(x,y,0,rx,ry,rz);
-		printf("%g %g %g %g %g %g %g\n",x,y,0.0,rx,ry,rz,sqrt((x-rx)*(x-rx)+(y-ry)*(y-ry)+rz*rz));
+		if(con.find_voronoi_cell(x,y,0,rx,ry,rz,i))
+			printf("%g %g %g %g %g %g %g\n",x,y,0.0,rx,ry,rz,sqrt((x-rx)*(x-rx)+(y-ry)*(y-ry)+rz*rz));
+		else printf("# Error for %g %g 0\n",x,y);
 	}
 
 	// Output the particle positions in gnuplot format
