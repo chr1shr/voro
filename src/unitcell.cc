@@ -93,12 +93,12 @@ bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
 	voronoicell c;
 	c=unit_voro;
 	dx*=2;dy*=2;dz*=2;
-	if(!c.plane(0,0,bzinv,dx+1)) return false;
-	if(!c.plane(0,0,-bzinv,-dx+1)) return false;
+	if(!c.plane(0,0,bzinv,dz+1)) return false;
+	if(!c.plane(0,0,-bzinv,-dz+1)) return false;
 	if(!c.plane(0,byinv,-byz*byinv*bzinv,dy+1)) return false;
 	if(!c.plane(0,-byinv,byz*byinv*bzinv,-dy+1)) return false;
-	if(!c.plane(bxinv,-bxy*bxinv*byinv,(bxy*byz-by*bxz)*ivol,dz+1)) return false;
-	if(!c.plane(-bxinv,bxy*bxinv*byinv,(-bxy*byz+by*bxz)*ivol,-dz+1)) return false;
+	if(!c.plane(bxinv,-bxy*bxinv*byinv,(bxy*byz-by*bxz)*ivol,dx+1)) return false;
+	if(!c.plane(-bxinv,bxy*bxinv*byinv,(-bxy*byz+by*bxz)*ivol,-dx+1)) return false;
 	vol=c.volume()*ivol;
 	return true;
 }
