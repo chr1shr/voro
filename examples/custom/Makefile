@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=cell_statistics custom_output radical
+EXECUTABLES=cell_statistics custom_output radical boundaries
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -21,6 +21,9 @@ custom_output: custom_output.cc
 
 radical: radical.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o radical radical.cc -lvoro++
+
+boundaries: boundaries.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o boundaries boundaries.cc
 
 clean:
 	rm -f $(EXECUTABLES)
