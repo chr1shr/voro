@@ -23,7 +23,7 @@ radical: radical.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o radical radical.cc -lvoro++
 
 boundaries: boundaries.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o boundaries boundaries.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o boundaries boundaries.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)
