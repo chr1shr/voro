@@ -162,14 +162,20 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 			while(u2<tolerance) {
 				up2=ed[2*up2];
 				u2=pos(x,y,rsq,up2);
-				if(up2==up3) return true;
+				if(up2==up3){
+					cout << "   NOTHING CUT!   " << endl;
+					 return true;
+				}
 			}
 			up=up2;u=u2;
 		} else {
 			while(u3<tolerance) {
 				up3=ed[2*up3+1];
 				u3=pos(x,y,rsq,up3);
-				if(up2==up3) return true;
+				if(up2==up3){
+					cout << "   NOTHING CUT!!   " << endl;
+					 return true;
+				}
 			}
 			up=up3;u=u3;
 		}
@@ -259,9 +265,9 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 bool voronoicell_2d::plane_nonconvex(double x,double y,double rsq) {
 
 //first determine which region we are in.
-	if(((x*reg1[0]+y*reg1[1])>0)&&((x*reg1[2]+y*reg1[3])>0)){
+	if(!(reg1[0]==x && reg1[1]==y) && ((x*reg1[0]+y*reg1[1])>0) &&((x*reg1[2]+y*reg1[3])>0)){
 		return halfplane(x, y, rsq, reg1[2], reg1[3]);
-	}if(((x*reg2[0]+y*reg2[1])>0)&&((x*reg2[2]+y*reg2[3])>0)){
+	}if(!(reg2[0]==x && reg2[1]==y) && ((x*reg2[0]+y*reg2[1])>0)&&((x*reg2[2]+y*reg2[3])>0)){
 		return halfplane(x, y, rsq, reg2[2], reg2[3]);
 	
 	}else{
@@ -279,7 +285,7 @@ bool voronoicell_2d::halfplane(double x1, double y1, double rsq, double x2, doub
 	double cid=pos(x1,y1,rsq,ci), nid, fac;
 	bool rightchunk=false;
 	if(debugging) cout << "beginning";
-//first find a vertex that is not being cut by the plane
+	//first find a vertex that is not being cut by the plane
 	while(cid>tolerance){
 		ci=ed[2*ci+1];
 		cid=pos(x1, y1, rsq, ci);
@@ -288,6 +294,10 @@ bool voronoicell_2d::halfplane(double x1, double y1, double rsq, double x2, doub
 		}
 	}
 	si=ci;
+	
+	 cout << "reg1   " << x2 << "   " << y2 << "   " << endl;
+	
+	cout << si << "    " << endl;
 
 
 
@@ -300,6 +310,7 @@ if(debugging)	cout << "part1     ";
 //if nothing is cut, return true.
 	while(!rightchunk){
 		ni=ed[ci*2];
+		cout << ni << "     " << endl;
 		if(ni==si){
 			cout << "error1";
 			return true;
@@ -313,12 +324,12 @@ if(debugging)	cout << "part1     ";
 		}
 		else{
 			rightchunk=true;
-		if(debugging){
+		
 			cout << pts[ni*2];
 			cout << "     ";
 			cout << pts[ni*2+1];
 			cout << "     ";
-		}
+		
 		}
 	}
 
@@ -421,10 +432,15 @@ bool voronoicell_2d::wallcut(double wx1,double wy1,double wx2,double wy2){
 	wpx=wpx/wpl;
 	wpy=wpy/wpl;
 	nl=wx1*wpx+wy1*wpy;
-	pcx=wpx*nl*2;
-	pcy=wpy*nl*2;
-	rs=pcx*pcx+pcy*pcy;
-	this->plane(pcx,pcy,rs);	
+	pcx=wpx*nl;
+	pcy=wpy*nl;
+	if((((pcx>wx1) && (pcx>wx2)) || ((pcx<wx1) && (pcx<wx2))) || 
+	(((pcy>wy1) && (pcy>wy2)) || ((pcy<wy1) && (pcy<wy2)))) return true;
+	else{
+		pcx*=2; pcy*=2;
+		rs=pcx*pcx+pcy*pcy;
+		this->plane(pcx,pcy,rs);
+	 }	
 		
 	
 

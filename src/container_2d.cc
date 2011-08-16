@@ -149,11 +149,11 @@ void container_2d::setup(){
 	fx=lx; fy=ly;
 	while(wid<(noofbnds-1)){
 		tag_walls(cx,cy,nx,ny,wid);
-//make sure cx isn't part of the wall being considered
-		if(!(((bnds[2*wid]-cx==0) && (bnds[2*wid+1]-cy==0)) || 
-			((bnds[2*wid+2]-cx==0) && (bnds[2*wid+3]==0))))	semi_circle_labelling(cx,cy,nx,ny,wid);
-//make sure that the cos(angle)>1 and the angle points inward	
-		if(((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>tolerance) && 
+
+		semi_circle_labelling(cx,cy,nx,ny,wid);
+
+		//make sure that the cos(angle)>1 and the angle points inward	
+		if(((((lx-cx)*(nx-cx))+((ly-cy)*(ny-cy)))>tolerance) && 
 		(crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)) probpts[wid]=true;
 		
 		tmpx=cx; tmpy=cy; cx=nx; cy=ny; lx=tmpx; ly=tmpy;
@@ -699,6 +699,288 @@ bool container_2d::initialize_voronoicell_nonconvex(voronoicell_2d &c, double x,
 
 
 }
+
+bool container_2d::initialize_voronoicell_boundary(voronoicell_2d &c, double x, double y, int bid){
+	double* bnds_loc=new double[14];
+	double ccx, ccy, cx, cy, ccs, cs, slope, distx, disty, nx, ny;
+	int noofbndsloc;
+	if(bid==(noofbnds-1)){
+		ccx=bnds[0]; ccy=bnds[1];
+	}else{
+		ccx=bnds[2*(bid+1)]; ccy=bnds[2*(bid+1)+1];
+	}if(bid==0){
+		cx=bnds[2*(noofbnds-1)]; cy=bnds[2*(noofbnds-1)+1];
+	}else{
+		cx=bnds[2*(bid-1)]; cy=bnds[2*(bid-1)+1];
+	}
+	//compute the counter-clockwise projection;
+	while(true){
+		if((ccx-x)==0 && (ccy>y)){
+			ccy=by; ccx=x;
+			nx=ax; ny=by;
+			break;
+		}else if((ccx-x)==0 && (ccy<y)){
+			ccy=ay; ccx=x;
+			nx=bx; ny=ay;
+			break;
+		}
+		ccs= (ccy-y)/(ccx-x);
+		if((ccs==0) && (ccx>x)){
+			ccx=bx; ccy=y;
+			nx=bx; ny=by;
+			break;
+		}else if((ccs==0) && (ccx<x)){
+			ccx=ax; ccy=y;
+			nx=ax; ny=ay;
+			break;
+		}
+		if(ccs>0){
+			if(ccx>x){	
+				slope=(by-y)/(bx-x);
+				if(ccs==slope){
+					ccx=bx; ccy=by;
+					nx=ax; ny=by;
+					break;
+				}else if(ccs>slope){
+					disty=by-y;
+					ccy=by;
+					ccx=x+(disty/ccs);
+					nx=ax; ny=by;
+					break;
+				}else{
+					distx=bx-x;
+					ccx=bx;
+					ccy=y+(ccs*distx);
+					nx=bx; ny=by;
+					break;
+				}
+			}else{
+				slope=(ay-y)/(ax-x);
+				if(ccs==slope){
+					ccx=ax; ccy=ay;
+					nx=bx; ny=ay;
+					break;
+				}else if(ccs>slope){
+					disty=ay-y;
+					ccy=ay;
+					ccx=x+(disty/ccs);
+					nx=bx;ny=ay;
+					break;
+				}else{
+					distx=ax-x;
+					ccx=ax;
+					ccy=y+(ccs*distx);
+					nx=ax; ny=ay;
+					break;
+				}
+			}
+		}else{
+			if(ccx>x){
+				slope=(ay-y)/(bx-x);
+				if(ccs==slope){
+					ccx=bx;
+					ccy=ay;
+					nx=bx; ny=by;
+					break;
+				}else if(ccs>slope){
+					distx=bx-x;
+					ccx=bx;
+					ccy=y+(ccs*distx);
+					nx=bx; ny=by;
+					break;
+				}else{
+					disty=ay-y;
+					ccy=ay;
+					ccx=x+(disty/ccs);
+					nx=bx; ny=ay;
+					break;
+				}
+			}else{
+				slope=(by-y)/(ax-x);
+				if(ccs==slope){
+					ccx=ax;
+					ccy=by;
+					nx=ax; ny=ay;
+					break;
+				}else if(ccs>slope){
+					distx=ax-x;
+					ccx=ax;
+					ccy=y+(distx*ccs);
+					nx=ax; ny=ay;
+					break;
+				}else{
+					disty=by-y;
+					ccy=by;
+					ccx=x+(disty/ccs);
+					nx=ax; ny=by;
+					break;
+				}
+			}
+		}
+	}
+	//compute the clockwise projection
+	while(true){
+		if((cx-x)==0 && (cy>y)){
+			cy=by; cx=x;
+			break;
+		}else if((cx-x)==0 && (cy<y)){
+			cy=ay; cx=x;
+			break;
+		}
+		cs= (cy-y)/(cx-x);
+		if((cs==0) && (cx>x)){
+			cx=bx; cy=y;
+			break;
+		}else if((cs==0) && (cx<x)){
+			cx=ax; cy=y;
+			break;
+		}
+		if(cs>0){
+			if(cx>x){	
+				slope=(by-y)/(bx-x);
+				if(cs==slope){
+					cx=bx; cy=by;
+					break;
+				}else if(cs>slope){
+					disty=by-y;
+					cy=by;
+					cx=x+(disty/cs);
+					break;
+				}else{
+					distx=bx-x;
+					cx=bx;
+					cy=y+(cs*distx);;
+					break;
+				}
+			}else{
+				slope=(ay-y)/(ax-x);
+				if(cs==slope){
+					cx=ax; cy=ay;
+					break;
+				}else if(cs>slope){
+					disty=ay-y;
+					cy=ay;
+					cx=x+(disty/cs);
+					break;
+				}else{
+					distx=ax-x;
+					cx=ax;
+					cy=y+(cs*distx);
+					break;
+				}
+			}
+		}else{
+			if(cx>x){
+				slope=(ay-y)/(bx-x);
+				if(cs==slope){
+					cx=bx;
+					cy=ay;
+					break;
+				}else if(cs>slope){
+					distx=bx-x;
+					cx=bx;
+					cy=y+(cs*distx);
+					break;
+				}else{
+					disty=ay-y;
+					cy=ay;
+					cx=x+(disty/cs);
+					break;
+				}
+			}else{
+				slope=(by-y)/(ax-x);
+				if(cs==slope){
+					cx=ax;
+					cy=by;
+					break;
+				}else if(cs>slope){
+					distx=ax-x;
+					cx=ax;
+					cy=y+(distx*cs);
+					break;
+				}else{
+					disty=by-y;
+					cy=by;
+					cx=x+(disty/cs);
+					break;
+				}
+			}
+		}
+	}
+	//construct bnds_loc;
+	bnds_loc[0]=0; bnds_loc[1]=0;
+	bnds_loc[2]=ccx-x; bnds_loc[3]=ccy-y;
+	noofbndsloc=2;
+	while(true){
+		if(nx==ax && ny==ay){
+			if(cx==ax && (fabs(cy-ay)<fabs(ccy-ay))){
+				bnds_loc[2*noofbndsloc]=cx-x;
+				bnds_loc[2*noofbndsloc+1]=cy-y;
+				noofbndsloc++;
+				c.init_nonconvex(bnds_loc,noofbndsloc);
+				return true;
+			}else{
+				bnds_loc[2*noofbndsloc]=nx-x;
+				bnds_loc[2*noofbndsloc+1]=ny-y;
+				noofbndsloc++;
+				ccx=ax; ccy=ay; nx=bx; ny=ay;
+				continue;
+			}
+		}else if(nx==bx && ny==ay){
+			if(cy==ay && (fabs(cx-bx)<fabs(ccx-bx))){
+				bnds_loc[2*noofbndsloc]=cx-x;
+				bnds_loc[2*noofbndsloc+1]=cy-y;
+				noofbndsloc++;
+				c.init_nonconvex(bnds_loc,noofbndsloc);
+				return true;
+			}else{
+				bnds_loc[2*noofbndsloc]=nx-x;
+				bnds_loc[2*noofbndsloc+1]=ny-y;
+				noofbndsloc++;
+				ccx=bx; ccy=ay; nx=bx; ny=by;
+				continue;
+			}
+		}else if(nx==bx && ny==by){
+			if(cx==bx && (fabs(cy-by)<fabs(ccy-by))){
+				bnds_loc[2*noofbndsloc]=cx-x;
+				bnds_loc[2*noofbndsloc+1]=cy-y;
+				noofbndsloc++;
+				c.init_nonconvex(bnds_loc,noofbndsloc);
+				return true;
+			}else{
+				bnds_loc[2*noofbndsloc]=nx-x;
+				bnds_loc[2*noofbndsloc+1]=ny-y;
+				noofbndsloc++;
+				nx=ax; ny=by; ccx=bx; ccy=by;
+				continue;
+			}
+		}else if(nx==ax && ny==by){
+			if(cy==by && (fabs(cx-ax)<fabs(ccx-ax))){
+				bnds_loc[2*noofbndsloc]=cx-x;
+				bnds_loc[2*noofbndsloc+1]=cy-y;
+				noofbndsloc++;
+				c.init_nonconvex(bnds_loc,noofbndsloc);
+				return true;
+			}else{
+				bnds_loc[2*noofbndsloc]=nx-x;
+				bnds_loc[2*noofbndsloc+1]=ny-y;
+				noofbndsloc++;
+				nx=ax; ny=ay; ccx=ax; ccy=by;
+			}
+		}else{
+			cout << "major error in init_boundary" << endl;
+		}
+	}
+}
+			
+
+
+
+
+
+
+
+	
 /** Computes all Voronoi cells and sums their areas.
  * \return The computed area. */
 double container_2d::sum_cell_areas() {
@@ -731,20 +1013,20 @@ void container_2d::compute_all_cells() {
 }
 
 void container_2d::debug_output(){
-	int id;
+	int lid;
 	
 	cout << "problem points   ";
 	for(int i=0; i<nxy; i++){
 		for(int j=0; j<co[i]; j++){
-			id=bndpts[i][j];
-			if(id!=-1 && probpts[id]) cout << id << "   ";
+			lid=bndpts[i][j];
+			if(lid!=-1 && probpts[lid]) cout << lid << "   ";
 		}
 	}
 	
 	cout << "semi_circle_labelling    ";
 	for(int i=0; i<nxy; i++){
 		for(int j=0; j<co[i]; j++){
-			cout << "computational box=" << i << "   paricle_no=" << j << "wall_ids=";
+			cout << "computational box=" << i << "   paricle_no=   " << id[i][j] << "wall_ids=";
 			for(int q=0;q<(signed int)nlab[i][j];q++){	
 				cout << "  " << plab[i][j][q] << "   ";
 			}
@@ -776,8 +1058,14 @@ void container_2d::initial_cut(voronoicell_2d &c, int bid,double x, double y){
 		widx2=bnds[2*(bid+1)]-x;
 		widy2=bnds[2*(bid+1)+1]-y;
 	}
-	c.plane_nonconvex(widx1,widy1,(widx1*widx1)+(widy1*widy1));
-	c.plane_nonconvex(widx2,widy2,(widx2*widx2)+(widy2*widy2));
+	if(probpts[bid]){
+		c.plane_nonconvex(widx1,widy1,(widx1*widx1)+(widy1*widy1));
+		c.plane_nonconvex(widx2,widy2,(widx2*widx2)+(widy2*widy2));
+	}else{
+		c.plane(widx1,widy1,(widx1*widx1)+(widy1*widy1));
+		c.plane(widx2,widy2,(widx2*widx2)+(widy2*widy2));
+	}
+	
 }
 /** This routine computes the Voronoi cell for a give particle, by successively
  * testing over particles within larger and larger concentric circles. This
@@ -811,25 +1099,13 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
                 initial_cut(c,bid,x,y);
 		
 	}else if(bid!=-1){
-		if(!initialize_voronoicell_nonconvex(c,x,y,bid)) return false;
+		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
 	        initial_cut(c,bid,x,y);
 		cout << "   BOUNDARY POINT!!!    ";
 	}else{	
 		if(!initialize_voronoicell(c,x,y)) return false;
 	}
 	if(problem_point) cout << "yes   ";
-	cout << "    wall cuts   ";
-	//CUT BY ALL WALLS PASSING THROUGH THE COMPUTATIONAL BOX HERE, USE WID
-	for(int b=1;b<wid[ij][0];b++){
-		widc=wid[ij][b];
-		if(widc>(noofbnds-1)) continue;
-		wx1=bnds[2*widc]-x; wy1=bnds[2*widc+1]-y;
-		widc++;
-		if(widc>(noofbnds-1)) widc=0;
-		wx2=bnds[2*widc]-x; wy2=bnds[2*widc+1]-y;
-		if((wx1==0 && wy1==0) || (wx2==0 && wy2==0)) continue;
-		c.wallcut(wx1,wy1,wx2,wy2);
-	}
 	cout << "    plane cuts   ";
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
@@ -838,11 +1114,27 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 		ur=lr+0.5*length_scale;urs=ur*ur;
 		t=l.init(x,y,ur,qx,qy);
 		do {
+			cout << "    wall cuts   \n";
+			//CUT BY ALL WALLS PASSING THROUGH THE COMPUTATIONAL BOX HERE, USE WID
+			for(int b=1;b<wid[t][0];b++){
+				widc=wid[t][b];
+				if(widc>(noofbnds-1)) continue;
+				wx1=bnds[2*widc]-x; wy1=bnds[2*widc+1]-y;
+				widc++;
+				if(widc>(noofbnds-1)) widc=0;
+				wx2=bnds[2*widc]-x; wy2=bnds[2*widc+1]-y;
+				if((wx1==0 && wy1==0) || (wx2==0 && wy2==0)) continue;
+				c.wallcut(wx1,wy1,wx2,wy2);
+			}
+
 			for(q=0;q<co[t];q++) {
+				
 				//HERE CHECK IF THE CUTTING PARTICLE IS ON THE WRONG SIDE OF ANY WALL USING SOI				
 				x1=p[t][2*q]+qx;y1=p[t][2*q+1]+qy;//qx,qy??
-				
-				if((x1!=x && y1!=y) && (OKCuttingParticle(x,y,ij,s,x1,y1,t,q))){
+				cout << " x=" << x1 << "   y=" << y1 << "  \n " << endl;
+
+				if(!(x1==x && y1==y) && (OKCuttingParticle(x,y,ij,s,x1,y1,t,q))){
+					cout << "   entering...   " << endl;
 					x1=x1-x; y1=y1-y;
 					rs=x1*x1+y1*y1;
 					if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {
@@ -851,8 +1143,10 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 						}else{
 							if(!c.plane(x1,y1,rs)) return false;
 						}
+						cout << "particle cut \n" << endl;
 					}
-				}cout << "    particle cut   " << endl;
+				}cout << "   done  \n ";	
+						
 			}
 		} while((t=l.inc(qx,qy))!=-1);//loops through boxes in the shell
 		cout << "LEFT!" << endl;
