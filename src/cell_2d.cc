@@ -424,19 +424,29 @@ if(debugging) cout << "part5";
 }
 
 bool voronoicell_2d::wallcut(double wx1,double wy1,double wx2,double wy2){
-	double wox, woy, wpx, wpy, wpl,nl, pcx, pcy, rs;
+	double wox, woy, wpx, wpy, wpl, nl, pcx, pcy, rs, s, a, b, c;
 	if((wx1==0 && wy1==0) || (wx2==0 && wy2==0)) return true; 
 	wox=wx2-wx1; woy=wy2-wy1;
 	wpx=-woy; wpy=wox;
 	wpl=pow((pow(wpx,2.0)+pow(wpy,2.0)),0.5);
+//
 	wpx=wpx/wpl;
 	wpy=wpy/wpl;
+
+
+//
 	nl=wx1*wpx+wy1*wpy;
+//
+
 	pcx=wpx*nl;
 	pcy=wpy*nl;
-	if((((pcx>wx1) && (pcx>wx2)) || ((pcx<wx1) && (pcx<wx2))) || 
-	(((pcy>wy1) && (pcy>wy2)) || ((pcy<wy1) && (pcy<wy2)))) return true;
-	else{
+
+
+//
+	if(((pcx<wx1 && pcx<wx2) || (pcx>wx1 && pcx>wx2)) ||
+	((pcy<wy1 && pcy<wy2) || (pcy>wy1 && pcy>wy2))){	
+		return true;
+	}else{
 		pcx*=2; pcy*=2;
 		rs=pcx*pcx+pcy*pcy;
 		this->plane(pcx,pcy,rs);

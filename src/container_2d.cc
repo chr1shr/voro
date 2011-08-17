@@ -139,40 +139,60 @@ inline bool container_2d::put_remap(int &ij,double &x,double &y) {
 void container_2d::setup(){
 	probpts=new bool[noofbnds];
 	double lx, ly, cx, cy, nx, ny, fx, fy, tmpx, tmpy;//last (x,y), current (x,y), next (x,y), temporary (x,y)
-	int wid=1;
-
+	int widl=1;
+	cout << "BEGINNING SETUP!    " << endl;
 	
 	tmp=tmpp=new int[3*init_temp_label_size];
 	tmpe=tmp+3*init_temp_label_size;
 	
 	lx=bnds[0]; ly=bnds[1]; cx=bnds[2]; cy=bnds[3]; nx=bnds[4]; ny=bnds[5];
 	fx=lx; fy=ly;
-	while(wid<(noofbnds-1)){
-		tag_walls(cx,cy,nx,ny,wid);
+	while(widl<(noofbnds-1)){
+		tag_walls(cx,cy,nx,ny,widl);
 
-		semi_circle_labelling(cx,cy,nx,ny,wid);
-
+		semi_circle_labelling(cx,cy,nx,ny,widl);
+		cout << "wid=" << widl << "\n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << 
+		") \n (nx,ny)=(" << nx << "," << ny << ") \n problempoint?=" << endl;
 		//make sure that the cos(angle)>1 and the angle points inward	
 		if(((((lx-cx)*(nx-cx))+((ly-cy)*(ny-cy)))>tolerance) && 
-		(crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)) probpts[wid]=true;
-		
+		(crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
+			 probpts[widl]=true;
+			 cout << "True!\n" << endl;
+		}else{
+			cout << "False!\n" << endl;
+			probpts[widl]=false;
+		}
 		tmpx=cx; tmpy=cy; cx=nx; cy=ny; lx=tmpx; ly=tmpy;
-		wid++;
-		if(!(wid==(noofbnds-1))){
-		nx=bnds[(wid*2)+2]; ny=bnds[(wid*2)+3];
+		widl++;
+		if(!(widl==(noofbnds-1))){
+		nx=bnds[(widl*2)+2]; ny=bnds[(widl*2)+3];
 		}
 	}
 	nx=fx; ny=fy;
-	tag_walls(cx,cy,nx,ny,wid);
-	semi_circle_labelling(cx,cy,nx,ny,wid);
+	tag_walls(cx,cy,nx,ny,widl);
+	semi_circle_labelling(cx,cy,nx,ny,widl);
+	cout << "wid=" << widl << "\n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << 
+		") \n (nx,ny)=(" << nx << "," << ny << ") \n problempoint?=" << endl;
+
 	if(((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>tolerance) && (crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
-		probpts[wid]=true;
+		probpts[widl]=true;
+		cout << "True!\n" << endl;
+	}else{
+		cout << "False!\n" << endl;
+		probpts[widl]=false;
 	}
-	lx=cx; ly=cy; wid=0; cx=fx; cy=fy; nx=bnds[2]; ny=bnds[3];
-	tag_walls(cx,cy,nx,ny,wid);
-	semi_circle_labelling(cx,cy,nx,ny,wid);
+	lx=cx; ly=cy; widl=0; cx=fx; cy=fy; nx=bnds[2]; ny=bnds[3];
+	tag_walls(cx,cy,nx,ny,widl);
+	semi_circle_labelling(cx,cy,nx,ny,widl);
+		cout << "wid=" << widl << "\n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << 
+		") \n (nx,ny)=(" << nx << "," << ny << ") \n problempoint?=" << endl;
+
 	if(((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>tolerance) && (crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
-		probpts[wid]=true;
+		probpts[widl]=true;
+		cout << "True! \n" << endl;
+	}else{
+		cout << "False! \n" << endl;
+		probpts[widl]=false;
 	}
 
 	//at this point *tmp is completed RUN CHRIS' ALGORITH TO CREATE *SOI and *SOIP
@@ -1019,7 +1039,7 @@ void container_2d::debug_output(){
 	for(int i=0; i<nxy; i++){
 		for(int j=0; j<co[i]; j++){
 			lid=bndpts[i][j];
-			if(lid!=-1 && probpts[lid]) cout << lid << "   ";
+			if(lid!=-1 && probpts[lid]) cout << lid << ", (x,y)=(" << p[i][2*j] << "," << p[i][2*j+1] << ") \n" << endl;
 		}
 	}
 	
@@ -1028,7 +1048,7 @@ void container_2d::debug_output(){
 		for(int j=0; j<co[i]; j++){
 			cout << "computational box=" << i << "   paricle_no=   " << id[i][j] << "wall_ids=";
 			for(int q=0;q<(signed int)nlab[i][j];q++){	
-				cout << "  " << plab[i][j][q] << "   ";
+				cout << "  " << plab[i][j][q] << "   \n";
 			}
 		}
 	}
@@ -1037,7 +1057,7 @@ void container_2d::debug_output(){
 	for(int i=0; i<nxy; i++){
 		cout << "computational box # " << i << "  wall tags  ";
 		for(int j=1; j<wid[i][0] ; j++){
-			cout << wid[i][j] << "   ";
+			cout << wid[i][j] << "   \n";
 		}
 
 	}
