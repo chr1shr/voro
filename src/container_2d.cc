@@ -28,7 +28,7 @@ container_2d::container_2d(double ax_,double bx_,double ay_,
 	co(new int[nxy]), mem(new int[nxy]), id(new int*[nxy]),
 	wid(new int*[nxy]), p(new double*[nxy]), nlab(new unsigned int*[nxy]),
 	plab(new int**[nxy]), soi(NULL), noofbnds(0), bnds_size(init_bnds_size),
-	bnds(new double[2*bnds_size]), edb(new int[bnds_size]), bndpts(new int*[nxy]) {
+	bnds(new double[2*bnds_size]), edb(new int[50]), bndpts(new int*[nxy]) {
 	int l;
 	debug=false;
 
@@ -138,62 +138,41 @@ inline bool container_2d::put_remap(int &ij,double &x,double &y) {
  * This algorithm keeps the importing seperate from the set-up */
 void container_2d::setup(){
 	probpts=new bool[noofbnds];
-	double lx, ly, cx, cy, nx, ny, fx, fy, tmpx, tmpy;//last (x,y), current (x,y), next (x,y), temporary (x,y)
-	int widl=1;
-	cout << "BEGINNING SETUP!    " << endl;
+	double lx, ly, cx, cy, nx, ny;//last (x,y), current (x,y), next (x,y)
+	int widl=1, maxwid=1, fwid=1, nwid, lwid;
+	bool first=true;
 	
 	tmp=tmpp=new int[3*init_temp_label_size];
 	tmpe=tmp+3*init_temp_label_size;
 	
-	lx=bnds[0]; ly=bnds[1]; cx=bnds[2]; cy=bnds[3]; nx=bnds[4]; ny=bnds[5];
-	fx=lx; fy=ly;
-	while(widl<(noofbnds-1)){
+	while(widl!=noofbnds){
+		cx=bnds[2*widl]; cy=bnds[2*widl+1];
+		nwid=edb[2*widl]; lwid=edb[2*widl+1];
+		lx=bnds[lwid*2]; ly=bnds[lwid*2+1];
+		nx=bnds[2*nwid]; ny=bnds[2*nwid+1];
+		
 		tag_walls(cx,cy,nx,ny,widl);
 
 		semi_circle_labelling(cx,cy,nx,ny,widl);
-		cout << "wid=" << widl << "\n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << 
-		") \n (nx,ny)=(" << nx << "," << ny << ") \n problempoint?=" << endl;
+	
+	
 		//make sure that the cos(angle)>1 and the angle points inward	
 		if(((((lx-cx)*(nx-cx))+((ly-cy)*(ny-cy)))>tolerance) && 
-		(crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
+		((first && (crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)) || (!first && (crossproductz(nx-cx,ny-cy,lx-cx,ly-cy))==1))){
 			 probpts[widl]=true;
-			 cout << "True!\n" << endl;
 		}else{
-			cout << "False!\n" << endl;
 			probpts[widl]=false;
 		}
-		tmpx=cx; tmpy=cy; cx=nx; cy=ny; lx=tmpx; ly=tmpy;
-		widl++;
-		if(!(widl==(noofbnds-1))){
-		nx=bnds[(widl*2)+2]; ny=bnds[(widl*2)+3];
-		}
+		widl=edb[2*widl];
+		if(widl>maxwid) maxwid=widl;
+		if(widl==fwid){
+			widl=maxwid+1;
+			fwid=widl;
+			maxwid++;
+			first=false;
+		}		
 	}
-	nx=fx; ny=fy;
-	tag_walls(cx,cy,nx,ny,widl);
-	semi_circle_labelling(cx,cy,nx,ny,widl);
-	cout << "wid=" << widl << "\n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << 
-		") \n (nx,ny)=(" << nx << "," << ny << ") \n problempoint?=" << endl;
 
-	if(((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>tolerance) && (crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
-		probpts[widl]=true;
-		cout << "True!\n" << endl;
-	}else{
-		cout << "False!\n" << endl;
-		probpts[widl]=false;
-	}
-	lx=cx; ly=cy; widl=0; cx=fx; cy=fy; nx=bnds[2]; ny=bnds[3];
-	tag_walls(cx,cy,nx,ny,widl);
-	semi_circle_labelling(cx,cy,nx,ny,widl);
-		cout << "wid=" << widl << "\n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << 
-		") \n (nx,ny)=(" << nx << "," << ny << ") \n problempoint?=" << endl;
-
-	if(((((lx-cx)*(ly-cy))+((nx-cx)*(ny-cy)))>tolerance) && (crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
-		probpts[widl]=true;
-		cout << "True! \n" << endl;
-	}else{
-		cout << "False! \n" << endl;
-		probpts[widl]=false;
-	}
 
 	//at this point *tmp is completed RUN CHRIS' ALGORITH TO CREATE *SOI and *SOIP
 	create_label_table();
@@ -233,13 +212,11 @@ void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid
 		fgrid++;
 		cx+=boxx;
 	}if(cx==x2 && x2!=x1 && cx!=ax+(boxx*nx)) fgrid++;
-	if (debug) cout << cgrid << "   ";
 	if((x2-x1)==0){
 		while(cgrid!=fgrid){
 			tag(wid,cgrid);
 			if(y1<y2) cgrid+=nx;
 			if(y1>y2) cgrid-=nx;
-			if (debug) cout<< cgrid << "   ";
 		}
 	tag(wid,cgrid);
 	return;
@@ -293,11 +270,9 @@ void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid
 			cgridy++;
 			tag(wid,cgrid-1);
 			tag(wid,cgrid-nx);
-			if(debug) cout << cgrid-1 << "   " << cgrid-nx << "   ";
 			gridx+=boxx;
 			gridy+=boxy;
 			}
-			if (debug) cout << cgrid << "   ";
 			if (x1>=x2){
 				tag(fgrid, wid);
 				return;
@@ -346,10 +321,8 @@ void container_2d::tag_walls(double x1, double y1, double x2, double y2, int wid
 				cgridy++;
 				tag(wid,cgrid-1);
 				tag(wid,cgrid+nx);
-				if(debug) cout << cgrid-1 << "    " << cgrid+nx << "   ";
 			}
 
-			if (debug) cout << cgrid << "   ";
 			if (x1>=x2){		
 				tag(fgrid, wid);
 				return;
@@ -514,20 +487,15 @@ void container_2d::add_boundary_memory() {
 particle and the generator are on the same side of all relevant walls. **/
 
 bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex, double cx, double cy, int cbox, int cindex){
-	int cwid;
+	int cwid, nwid;
 	double widx1, widy1, widx2, widy2;
 	for(int i=0;i<(signed int)nlab[cbox][cindex];i++){
 		cwid=plab[cbox][cindex][i];
 		widx1=bnds[2*cwid];
 		widy1=bnds[2*cwid+1];
-		if(cwid!=(noofbnds-1)){
-			widx2=bnds[2*cwid+2];
-		
-			widy2=bnds[2*cwid+3];
-		}else{
-			widx2=bnds[0];
-			widy2=bnds[1];
-		}
+		nwid=edb[2*cwid];
+		widx2=bnds[2*nwid];
+		widy2=bnds[2*nwid+1];
 		if((cx==widx1 && cy==widy1) || (cx==widx2 && cy==widy2)) continue;
 		if(crossproductz(gx-widx1,gy-widy1,widx2-widx1,widy2-widy1)!=crossproductz(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return false;
 	}
@@ -567,6 +535,13 @@ void container_2d::add_particle_memory(int i) {
 	delete [] plab[i];plab[i]=plabp;
 }
 
+void container_2d::add_edb_memory(int i){
+	int *edbp(new int[50*(i+1)]);
+	for(int l=0;l<(50*i);l++){
+		edbp[l]=edb[l];
+	}
+	delete [] edb; edb=edbp;
+}
 /** Imports a list of particles from an input stream.
  * \param[in] fp a file handle to read from. */
 void container_2d::import(FILE *fp) {
@@ -581,7 +556,6 @@ void container_2d::import(FILE *fp) {
 			// Check that two consecutive start tokens haven't been
 			// encountered
 			if(boundary) voropp_fatal_error("File import error - two start tokens found",VOROPP_FILE_ERROR);
-			
 			// Remember this position in the boundary array to
 			// connect the end of the loop
 			sm=noofbnds;
@@ -592,10 +566,10 @@ void container_2d::import(FILE *fp) {
 			// Check that two consecutive end tokens haven't been
 			// encountered
 			if(!boundary) voropp_fatal_error("File import error - two end tokens found",VOROPP_FILE_ERROR);
-			
 			// Assuming that at least one point was read, set the edge
 			// to connect back to the start point
-			if(noofbnds!=sm) edb[noofbnds-1]=sm;
+			edb[2*sm+1]=noofbnds-1;
+			edb[2*(noofbnds-1)]=sm;
 			boundary=false;
 		} else {
 
@@ -606,7 +580,13 @@ void container_2d::import(FILE *fp) {
 				put(i,x,y,noofbnds);
 				// Unless this is the start of a boundary loop,
 				// connect the previous vertex to this one
-				if(noofbnds!=sm) edb[noofbnds-1]=noofbnds;
+				if(noofbnds%25==0){
+					add_edb_memory(noofbnds/25);
+				}
+				if(noofbnds!=sm){
+					edb[(noofbnds-1)*2]=noofbnds;
+					edb[(noofbnds*2)+1]=noofbnds-1;
+				}
 				bnds[2*noofbnds]=x;
 				bnds[2*(noofbnds++)+1]=y;
 			}
@@ -700,18 +680,18 @@ bool container_2d::initialize_voronoicell(voronoicell_2d &c,double x,double y) {
 
 bool container_2d::initialize_voronoicell_nonconvex(voronoicell_2d &c, double x, double y, int bid){
 	double* bnds_loc=new double[noofbnds*2];
+	int fbid=bid, cntbndno=1;
 	bnds_loc[0]=0; bnds_loc[1]=0;
-	bid++;
-	int cntbndno=1;
-
-	while(cntbndno<noofbnds){
+	bid=edb[2*bid];
+	
+	while(bid!=fbid){
 		if(bid==(noofbnds)) bid=0;
 		bnds_loc[cntbndno*2]=bnds[bid*2]-x;
 		bnds_loc[cntbndno*2+1]=bnds[bid*2+1]-y;
 		cntbndno++;
-		bid++;
+		bid=edb[2*bid];	
 	}
-	c.init_nonconvex(bnds_loc, noofbnds);
+	c.init_nonconvex(bnds_loc, cntbndno);
 	return true;
 
 
@@ -723,16 +703,11 @@ bool container_2d::initialize_voronoicell_nonconvex(voronoicell_2d &c, double x,
 bool container_2d::initialize_voronoicell_boundary(voronoicell_2d &c, double x, double y, int bid){
 	double* bnds_loc=new double[14];
 	double ccx, ccy, cx, cy, ccs, cs, slope, distx, disty, nx, ny;
-	int noofbndsloc;
-	if(bid==(noofbnds-1)){
-		ccx=bnds[0]; ccy=bnds[1];
-	}else{
-		ccx=bnds[2*(bid+1)]; ccy=bnds[2*(bid+1)+1];
-	}if(bid==0){
-		cx=bnds[2*(noofbnds-1)]; cy=bnds[2*(noofbnds-1)+1];
-	}else{
-		cx=bnds[2*(bid-1)]; cy=bnds[2*(bid-1)+1];
-	}
+	int noofbndsloc, ccwid, cwid;
+	ccwid=edb[2*bid];
+	cwid=edb[2*bid+1];
+	ccx=bnds[2*ccwid]; ccy=bnds[2*ccwid+1];
+	cx=bnds[2*cwid]; cy=bnds[2*cwid+1];
 	//compute the counter-clockwise projection;
 	while(true){
 		if((ccx-x)==0 && (ccy>y)){
@@ -1031,11 +1006,11 @@ void container_2d::compute_all_cells() {
 		}
 	}
 }
-
+//Reports the state of bndpts, plab, nlab, wid, and edb after setup() has been run.
 void container_2d::debug_output(){
 	int lid;
 	
-	cout << "problem points   ";
+	cout << "problem points \n";
 	for(int i=0; i<nxy; i++){
 		for(int j=0; j<co[i]; j++){
 			lid=bndpts[i][j];
@@ -1043,50 +1018,29 @@ void container_2d::debug_output(){
 		}
 	}
 	
-	cout << "semi_circle_labelling    ";
+	cout << "semi_circle_labelling  \n";
 	for(int i=0; i<nxy; i++){
 		for(int j=0; j<co[i]; j++){
-			cout << "computational box=" << i << "   paricle_no=   " << id[i][j] << "wall_ids=";
+			cout << " \t computational box= " << i << "\n \t \t  paricle_no=   " << id[i][j] << "\n \t \t \t wall_ids=";
 			for(int q=0;q<(signed int)nlab[i][j];q++){	
-				cout << "  " << plab[i][j][q] << "   \n";
+				cout << "\n \t \t \t \t  " << plab[i][j][q] << "   ";
 			}
 		}
 	}
 
-	cout << "wall_tags    ";
+	cout << "wall_tags    \n";
 	for(int i=0; i<nxy; i++){
-		cout << "computational box # " << i << "  wall tags  ";
+		cout << " \t computational box # " << i << "  wall tags \n ";
 		for(int j=1; j<wid[i][0] ; j++){
-			cout << wid[i][j] << "   \n";
+			cout << "\t \t" << wid[i][j] << "   \n";
 		}
 
 	}
+	for (int i=0; i<noofbnds; i++){
+		cout << "\n wid=" << i << "\n lwid=" << edb[2*i+1] << "\n nwid=" << edb[2*i] << endl;
+	}
 }
 
-void container_2d::initial_cut(voronoicell_2d &c, int bid,double x, double y){
-	double widx1, widx2, widy1, widy2;
-	if(bid==0){
-		widx1=bnds[2*(noofbnds-1)]-x;
-		widy1=bnds[2*(noofbnds-1)+1]-y;
-	}else{
-		widx1=bnds[2*(bid-1)]-x;
-		widy1=bnds[2*(bid-1)+1]-y;
-	}if(bid==(noofbnds-1)){
-		widx2=bnds[0]-x;
-		widy2=bnds[1]-y;
-	}else{
-		widx2=bnds[2*(bid+1)]-x;
-		widy2=bnds[2*(bid+1)+1]-y;
-	}
-	if(probpts[bid]){
-		c.plane_nonconvex(widx1,widy1,(widx1*widx1)+(widy1*widy1));
-		c.plane_nonconvex(widx2,widy2,(widx2*widx2)+(widy2*widy2));
-	}else{
-		c.plane(widx1,widy1,(widx1*widx1)+(widy1*widy1));
-		c.plane(widx2,widy2,(widx2*widx2)+(widy2*widy2));
-	}
-	
-}
 /** This routine computes the Voronoi cell for a give particle, by successively
  * testing over particles within larger and larger concentric circles. This
  * routine is simple and fast, although it may not work well for anisotropic
@@ -1106,27 +1060,22 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	const double length_scale=0.5*sqrt((bx-ax)*(by-ay)/(nx*ny));
 	bool problem_point=false;
 	double x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs,wx1,wy1,wx2,wy2;
-	int q,t,bid, widc;
+	int q,t,bid, widc, widc2;
 	voropp_loop_2d l(*this);
 	
-	cout << "    problem point?    " ;
 	//Check if the current point is a problem point, if it is we will need to use plane-nonconvex, and init_nonconvex
 	bid=bndpts[ij][s];
-	cout << " x=" << x << " y=" << y << "  box#=" << ij << "  bndloc=" << bid << endl;
 	if(bid!=-1 && probpts[bid]){
-		if(!initialize_voronoicell_nonconvex(c,x,y,bid)) return false;
+		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
 		problem_point=true;
-                initial_cut(c,bid,x,y);
 		
 	}else if(bid!=-1){
 		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
-	        initial_cut(c,bid,x,y);
-		cout << "   BOUNDARY POINT!!!    ";
+		
+
 	}else{	
 		if(!initialize_voronoicell(c,x,y)) return false;
 	}
-	if(problem_point) cout << "yes   ";
-	cout << "    plane cuts   ";
 	// Now the cell is cut by testing neighboring particles in concentric
 	// shells. Once the test shell becomes twice as large as the Voronoi
 	// cell we can stop testing.
@@ -1134,27 +1083,23 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 		ur=lr+0.5*length_scale;urs=ur*ur;
 		t=l.init(x,y,ur,qx,qy);
 		do {
-			cout << "    wall cuts   \n";
 			//CUT BY ALL WALLS PASSING THROUGH THE COMPUTATIONAL BOX HERE, USE WID
 			for(int b=1;b<wid[t][0];b++){
 				widc=wid[t][b];
 				if(widc>(noofbnds-1)) continue;
 				wx1=bnds[2*widc]-x; wy1=bnds[2*widc+1]-y;
-				widc++;
-				if(widc>(noofbnds-1)) widc=0;
-				wx2=bnds[2*widc]-x; wy2=bnds[2*widc+1]-y;
+				
+				widc2=edb[2*widc];
+				wx2=bnds[2*widc2]-x; wy2=bnds[2*widc2+1]-y;
 				if((wx1==0 && wy1==0) || (wx2==0 && wy2==0)) continue;
 				c.wallcut(wx1,wy1,wx2,wy2);
 			}
-
 			for(q=0;q<co[t];q++) {
 				
 				//HERE CHECK IF THE CUTTING PARTICLE IS ON THE WRONG SIDE OF ANY WALL USING SOI				
 				x1=p[t][2*q]+qx;y1=p[t][2*q+1]+qy;//qx,qy??
-				cout << " x=" << x1 << "   y=" << y1 << "  \n " << endl;
 
 				if(!(x1==x && y1==y) && (OKCuttingParticle(x,y,ij,s,x1,y1,t,q))){
-					cout << "   entering...   " << endl;
 					x1=x1-x; y1=y1-y;
 					rs=x1*x1+y1*y1;
 					if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {
@@ -1163,15 +1108,13 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 						}else{
 							if(!c.plane(x1,y1,rs)) return false;
 						}
-						cout << "particle cut \n" << endl;
 					}
-				}cout << "   done  \n ";	
+				}	
 						
 			}
 		} while((t=l.inc(qx,qy))!=-1);//loops through boxes in the shell
-		cout << "LEFT!" << endl;
 		lr=ur;lrs=urs;
-	}cout << "ALL THE WAY OUT!" << endl;
+	}
 	return true;
 }
 
