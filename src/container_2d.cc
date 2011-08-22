@@ -1041,6 +1041,17 @@ void container_2d::debug_output(){
 	}
 }
 
+void container_2d::initial_cut(voronoicell_2d &c,double x, double y, int bid){
+	int wid1, wid2;
+	double widx1, widy1, widx2, widy2, rs;
+	wid1=edb[2*bid]; wid2=edb[2*bid+1];
+	widx1=bnds[2*wid1]-x; widy1=bnds[2*wid1+1]-y;
+	widx2=bnds[2*wid2]-x; widy2=bnds[2*wid2+1]-y;
+	rs=widx1*widx1+widy1*widy1;
+	c.plane(widx1,widy1,rs);
+	rs=widx2*widx2+widy2*widy2;
+	c.plane(widx2,widy2,rs);
+}
 /** This routine computes the Voronoi cell for a give particle, by successively
  * testing over particles within larger and larger concentric circles. This
  * routine is simple and fast, although it may not work well for anisotropic
@@ -1067,11 +1078,11 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	bid=bndpts[ij][s];
 	if(bid!=-1 && probpts[bid]){
 		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
-		problem_point=true;
-		
+		problem_point=true;	
+		initial_cut(c,x,y,bid);
 	}else if(bid!=-1){
 		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
-		
+		initial_cut(c,x,y,bid);
 
 	}else{	
 		if(!initialize_voronoicell(c,x,y)) return false;

@@ -116,6 +116,7 @@ class container_2d {
 		int crossproductz(double x1, double y1, double x2, double y2);
 		void semi_circle_labelling(double x1, double y1, double x2, double y2, int wid);
 		void add_edb_memory(int i);
+		void initial_cut(voronoicell_2d &c, double x, double y, int bid);
 		void import(FILE *fp=stdin);
 		/** Imports a list of particles from a file.
 		 * \param[in] filename the file to read from. */
