@@ -1,5 +1,31 @@
-Version 0.4 (May 2011)
-======================
+Version 0.4 (August 2011)
+=========================
+* New classes called container_periodic and container_periodic_poly have been
+  added in container class. These classes can carry out Voronoi computations in
+  3D periodic parallelepiped unit cells. This adds significant complexity to
+  the computation, and the memory organization of these classes is different,
+  requiring allocation for ghost regions. Currently these classes cannot be
+  accessed by the command-line utility, but will be integrated further in future
+  releases. These classes are currently mainly exploited by a sister software
+  project Zeo++ for chemical informatics (Maciej Haranczyk, Chris Rycroft,
+  Thomas Willems, Richard Martin) to be released in late 2011.
+* As part of the new container_periodic classes, a new class called unitcell
+  has been added, which will compute the Voronoi cell for a single particle in
+  a 3D periodic parallelepiped class. The Voronoi cell is formed by the
+  influences of the periodic images of itself only. This turns out to be an
+  important component of the calculations done by the container_periodic
+  classes but can also be used independently.
+* The container classes now have a routine called find_voronoi_cell which will
+  take a given position vector and return the Voronoi cell which is contained
+  within. For the regular Voronoi tessellation, this is just the Voronoi cell
+  corresponding to the closest particle (by definition). For the radical
+  Voronoi tessellation, this is weighted by the particle radii.
+* The library is now enclosed within the "voro" namespace. This requires
+  specifying "using namespace voro;" in the preamble of codes or prepending
+  "voro::" to access functions. This greatly minimizes the possiblity of naming
+  conflicts when using multiple libraries, particularly since many of the
+  classes iin the library have fairly generic names (eg. "container"). Thanks to
+  Allan Johns (Dr. D Studios) for suggesting this.
 * Voro++ can now be built as a shared library that can be installed and linked
   to. As part of this, the .cc and .hh have been revised with some small inline
   functions and template code being written into the header files.
@@ -67,6 +93,8 @@ Version 0.4 (May 2011)
 * Added routines to copy a Voronoi cell
 * Created a new wall_list class to handle a list of walls. This simplifies the
   command-line utility code.
+* Labels in the worklist that are used in the transition from the radius search
+  to the block search have been optimized
 * The command-line utility can produce POV-Ray output. Also, the main loop in
   the utility has been combined so that the Voronoi tessellation is only
   carried out once, even if POV-Ray and Gnuplot output is also required.

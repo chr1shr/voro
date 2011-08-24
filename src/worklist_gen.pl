@@ -168,12 +168,6 @@ sub worklist {
 		last if $m[$k-1]!=$v;
 		last if $m[$k-$d]!=$v;
 		last if $m[$k-$dd]!=$v;
-		#last if $m[$k+1]!=$v && $la[$k+1]==$j;
-		#last if $m[$k+$d]!=$v && $la[$k+$d]==$j;
-		#last if $m[$k+$dd]!=$v && $la[$k+$dd]==$j;
-		#last if $m[$k-1]!=$v && $la[$k-1]==$j;
-		#last if $m[$k-$d]!=$v && $la[$k-$d]==$j;
-		#last if $m[$k-$dd]!=$v && $la[$k-$dd]==$j;
 	}
 	print W "\t$j";
 
@@ -183,14 +177,6 @@ sub worklist {
 		$xt=shift @b;$yt=shift @b;$zt=shift @b;
 		$k=$d0+$xt+$yt*$d+$zt*$dd;
 		$o=0;
-#		if($ind==63) {
-#			print "$j $xt $yt $zt 1 0 0\n" if $m[$k+1]!=$v && $la[$k+1]==$j;
-#			print "$j $xt $yt $zt 0 1 0\n" if $m[$k+$d]!=$v && $la[$k+$d]==$j;
-#			print "$j $xt $yt $zt 0 0 1\n" if $m[$k+$dd]!=$v && $la[$k+$dd]==$j;
-#			print "$j $xt $yt $zt -1 0 0\n" if $m[$k-1]!=$v && $la[$k-1]==$j;
-#			print "$j $xt $yt $zt 0 -1 0\n" if $m[$k-$d]!=$v && $la[$k-$d]==$j;
-#			print "$j $xt $yt $zt 0 0 -1\n" if $m[$k-$dd]!=$v && $la[$k-$dd]==$j;
-#		}
 		$o|=1 if $m[$k+1]!=$v && $la[$k+1]==$j;
 		$o^=3 if $m[$k-1]!=$v && $la[$k-1]==$j;
 		$o|=8 if $m[$k+$d]!=$v && $la[$k+$d]==$j;
