@@ -71,6 +71,9 @@ void v_loop_subset::setup_common() {
 	q=0;
 }
 
+/** Starts the loop by finding the first particle within the container to
+ * consider.
+ * \return True if there is any particle to consider, false otherwise. */
 bool v_loop_subset::start() {
 	while(co[ijk]==0) {if(!next_block()) return false;}
 	while(mode!=no_check&&out_of_bounds()) {

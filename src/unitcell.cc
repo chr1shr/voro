@@ -189,7 +189,7 @@ inline bool unitcell::unit_voro_test(int i,int j,int k) {
 }
 
 /** Draws the periodic domain in gnuplot format.
- * \param[in] filename the filename to write to. */
+ * \param[in] fp the file handle to write to. */
 void unitcell::draw_domain_gnuplot(FILE *fp) {
 	fprintf(fp,"0 0 0\n%g 0 0\n%g %g 0\n%g %g 0\n",bx,bx+bxy,by,bxy,by);
 	fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",bxy+bxz,by+byz,bz,bx+bxy+bxz,by+byz,bz,bx+bxz,byz,bz,bxz,byz,bz);
@@ -198,7 +198,7 @@ void unitcell::draw_domain_gnuplot(FILE *fp) {
 }
 
 /** Draws the periodic domain in POV-Ray format.
- * \param[in] filename the filename to write to. */
+ * \param[in] fp the file handle to write to. */
 void unitcell::draw_domain_pov(FILE *fp) {
 	fprintf(fp,"cylinder{0,0,0>,<%g,0,0>,rr}\n"
 		   "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n",bx,bxy,by,bx+bxy,by);

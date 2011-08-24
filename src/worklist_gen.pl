@@ -21,10 +21,13 @@ $r=$hr*2;
 # This parameter sets the total number of block entries in each worklist
 $ls=63;
 
-# When the worklists are being constructed, a 3D array is made use of. To
+# When the worklists are being constructed, a mask array is made use of. To
 # prevent the creation of array elements with negative indices, this parameter
 # sets an arbitrary displacement.
-$d=8;
+$dis=8;
+
+# Constants used mask indexing
+$d=$dis*(2*$d+1);$dd=$d*$d;$d0=(1+$d+$dd)*$dis;
 
 use Math::Trig;
 
@@ -100,15 +103,16 @@ for($kk=0;$kk<$hr;$kk++) {
 print W "};\n";
 close W;
 
+# A subroutine
 sub worklist {
 #	print "@_[0] @_[1] @_[2]\n";
 	$ind=@_[0]+$hr*(@_[1]+$hr*@_[2]);
-	$ac=0;$v++;
+	$ac=0;$v+=2;
 	$xp=$yp=$zp=0;
 	$x=(@_[0]+0.5)/$r;
 	$y=(@_[1]+0.5)/$r;
 	$z=(@_[2]+0.5)/$r;
-	$m[$d][$d][$d]=$v;
+	$m[$d0]=$v;
 	add(1,0,0);add(0,1,0);add(0,0,1);
 	add(-1,0,0);add(0,-1,0);add(0,0,-1);
 	foreach $l (1..$ls) {
@@ -125,47 +129,84 @@ sub worklist {
 #		print "=> $l $xp $yp $zp\n" if $l<4;
 		push @b,(splice @a,3*$nx,3);$ac--;
 	}
-	$v++;
+
+	# Mark all blocks that are on this worklist entry
+	$m[$d0]=++$v;
 	for($i=0;$i<$#b;$i+=3) {
-		$xt=@b[$i];$yt=@b[$i+1];$zt=@b[$i+2];
-		$m[$d+$xt][$d+$yt][$d+$zt]=$v;
+		$xt=$b[$i];$yt=$b[$i+1];$zt=$b[$i+2];
+		$m[$d0+$xt+$d*$yt+$dd*$zt]=$v;
 	}
-	$m[$d][$d][$d]=$v;
+
+	# Find which neighboring outside blocks need to be marked when
+	# considering this block, being as conservative as possible by
+	# overwriting the marks, so that the last possible entry that can reach
+	# a block is used
+	for($i=$j=0;$i<$#b;$i+=3,$j++) {
+		$xt=$b[$i];$yt=$b[$i+1];$zt=$b[$i+2];
+		$k=$d0+$xt+$yt*$d+$zt*$dd;
+		$la[$k+1]=$j, $m[$k+1]=$v+1 if $xt>=0 && $m[$k+1]!=$v;
+		$la[$k+$d]=$j, $m[$k+$d]=$v+1 if $yt>=0 && $m[$k+$d]!=$v;
+		$la[$k+$dd]=$j, $m[$k+$dd]=$v+1 if $zt>=0 && $m[$k+$dd]!=$v;
+		$la[$k-1]=$j, $m[$k-1]=$v+1 if $xt<=0 && $m[$k-1]!=$v;
+		$la[$k-$d]=$j, $m[$k-$d]=$v+1 if $yt<=0 && $m[$k-$d]!=$v;
+		$la[$k-$dd]=$j, $m[$k-$dd]=$v+1 if $zt<=0 && $m[$k-$dd]!=$v;
+	}
+
+	# Scan to ensure that no neighboring blocks have been missed by the
+	# outwards-looking logic in the above section
 	for($i=0;$i<$#b;$i+=3) {
-		$xt=@b[$i];$yt=@b[$i+1];$zt=@b[$i+2];
-		last if $m[$d+$xt+1][$d+$yt][$d+$zt]!=$v;
-		last if $m[$d+$xt][$d+$yt+1][$d+$zt]!=$v;
-		last if $m[$d+$xt][$d+$yt][$d+$zt+1]!=$v;
-		last if $m[$d+$xt-1][$d+$yt][$d+$zt]!=$v;
-		last if $m[$d+$xt][$d+$yt-1][$d+$zt]!=$v;
-		last if $m[$d+$xt][$d+$yt][$d+$zt-1]!=$v;
+		wl_check($d0+$b[$i]+$b[$i+1]*$d+$b[$i+2]*$dd);
 	}
-	$j=$i/3;
+
+	# Compute the number of entries where outside blocks do not need to be
+	# consider
+	for($i=$j=0;$i<$#b;$i+=3,$j++) {
+		$k=$d0+$b[$i]+$b[$i+1]*$d+$b[$i+2]*$dd;
+		last if $m[$k+1]!=$v && $la[$k+1]==$j;
+		last if $m[$k+$d]!=$v && $la[$k+$d]==$j;
+		last if $m[$k+$dd]!=$v && $la[$k+$dd]==$j;
+		last if $m[$k-1]!=$v && $la[$k-1]==$j;
+		last if $m[$k-$d]!=$v && $la[$k-$d]==$j;
+		last if $m[$k-$dd]!=$v && $la[$k-$dd]==$j;
+	}
 	print W "\t$j";
+
+	# Create worklist entry and save to file
+	$j=0;
 	while ($#b>0) {
-		$i-=3;
 		$xt=shift @b;$yt=shift @b;$zt=shift @b;
+		$k=$d0+$xt+$yt*$d+$zt*$dd;
 		$o=0;
-		$o|=1 if $m[$d+$xt+1][$d+$yt][$d+$zt]!=$v;
-		$o^=3 if $m[$d+$xt-1][$d+$yt][$d+$zt]!=$v;
-		$o|=8 if $m[$d+$xt][$d+$yt+1][$d+$zt]!=$v;
-		$o^=24 if $m[$d+$xt][$d+$yt-1][$d+$zt]!=$v;
-		$o|=64 if $m[$d+$xt][$d+$yt][$d+$zt+1]!=$v;
-		$o^=192 if $m[$d+$xt][$d+$yt][$d+$zt-1]!=$v;
-		$pack=($xt+64)|($yt+64)<<7|($zt+64)<<14|$o<<21;
-		printf W ",%#x",$pack;
+#		if($ind==63) {
+#			print "$j $xt $yt $zt 1 0 0\n" if $m[$k+1]!=$v && $la[$k+1]==$j;
+#		print "$j $xt $yt $zt 0 1 0\n" if $m[$k+$d]!=$v && $la[$k+$d]==$j;
+#		print "$j $xt $yt $zt 0 0 1\n" if $m[$k+$dd]!=$v && $la[$k+$dd]==$j;
+#		print "$j $xt $yt $zt -1 0 0\n" if $m[$k-1]!=$v && $la[$k-1]==$j;
+#		print "$j $xt $yt $zt 0 -1 0\n" if $m[$k-$d]!=$v && $la[$k-$d]==$j;
+#		print "$j $xt $yt $zt 0 0 -1\n" if $m[$k-$dd]!=$v && $la[$k-$dd]==$j;
+#		}
+		$o|=1 if $m[$k+1]!=$v && $la[$k+1]==$j;
+		$o^=3 if $m[$k-1]!=$v && $la[$k-1]==$j;
+		$o|=8 if $m[$k+$d]!=$v && $la[$k+$d]==$j;
+		$o^=24 if $m[$k-$d]!=$v && $la[$k-$d]==$j;
+		$o|=64 if $m[$k+$dd]!=$v && $la[$k+$dd]==$j;
+		$o^=192 if $m[$k-$dd]!=$v && $la[$k-$dd]==$j;
+		printf W ",%#x",(($xt+64)|($yt+64)<<7|($zt+64)<<14|$o<<21);
+		$j++;
 	}
 	print W "," unless $ind==$hr*$hr*$hr-1;
 	print W "\n";
+	
+	# Remove list memory
 	undef @a;
 	undef @b;
 }
 
 sub add {
-	if ($m[$d+@_[0]][$d+@_[1]][$d+@_[2]]!=$v) {
+	if ($m[$d0+@_[0]+$d*@_[1]+$dd*@_[2]]!=$v) {
 		$ac++;
 		push @a,@_[0],@_[1],@_[2];
-		$m[$d+@_[0]][$d+@_[1]][$d+@_[2]]=$v;
+		$m[$d0+@_[0]+$d*@_[1]+$dd*@_[2]]=$v;
 	}
 }
 
@@ -188,4 +229,10 @@ sub adis {
 	$zco=@_[2]-@_[5] if @_[5]>0;
 	$zco=@_[2]-@_[5]-1 if @_[5]<0;
 	return sqrt $xco*$xco+$yco*$yco+$zco*$zco;
+}
+
+sub wl_check {
+	die "Failure in worklist construction\n" if $m[@_[0]+1]<$v||$m[@_[0]-1]<$v
+						  ||$m[@_[0]+$d]<$v||$m[@_[0]-$d]<$v
+						  ||$m[@_[0]+$dd]<$v||$m[@_[0]-$dd]<$v;
 }

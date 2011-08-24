@@ -25,6 +25,11 @@ enum v_loop_subset_mode {
 	no_check
 };
 
+/** \brief A class for storing ordering information when particles are added to
+ * a container.
+ *
+ * By default, when particles are added to a container class, they are sorted
+ * into an.  */
 class voropp_order {
 	public:
 		/** A pointer to the array holding the ordering. */
@@ -59,6 +64,13 @@ class voropp_order {
 		void add_ordering_memory();
 };
 
+/** \brief Base class for looping over particles in a container.
+ *
+ * This class forms the base of all classes that can loop over a subset of
+ * particles in a contaner in some order. When initialized, it stores constants
+ * about the corresponding container geometry. It also contains a number of
+ * routines for interrogating which particle currently being considered by the
+ * loop, which are common between all of the derived classes. */
 class v_loop_base {
 	public:
 		/** The number of blocks in the x direction. */
@@ -86,30 +98,59 @@ class v_loop_base {
 		/** A pointer to the particle counts in the associated
 		 * container data structure. */
 		int *co;
+		/** The current x-index of the block under consideration by the
+		 * loop. */
 		int i;
+		/** The current y-index of the block under consideration by the
+		 * loop. */
 		int j;
+		/** The current z-index of the block under consideration by the
+		 * loop. */
 		int k;
+		/** The current index of the block under consideration by the
+		 * loop. */
 		int ijk;
+		/** The index of the particle under consideration within the current
+		 * block. */
 		int q;
 		template<class c_class>
 		v_loop_base(c_class &con) : nx(con.nx), ny(con.ny), nz(con.nz), nxy(con.nxy), nxyz(con.nxyz), ps(con.ps),
 					    p(con.p), id(con.id), co(con.co) {}
+		/** Returns the position vector of the particle currently being
+		 * considered by the loop.
+		 * \param[out] (x,y,z) the position vector. */
 		inline void pos(double &x,double &y,double &z) {
 			double *pp(p[ijk]+ps*q);
 			x=*(pp++);y=*(pp++);z=*pp;
 		}
+		/** Returns the ID, position vector, and radius of the particle
+		 * currently being considered by the loop.
+		 * \param[out] pid the particle ID.
+		 * \param[out] (x,y,z) */
 		inline void pos(int &pid,double &x,double &y,double &z,double &r) {
 			pid=id[ijk][q];
 			double *pp(p[ijk]+ps*q);
 			x=*(pp++);y=*(pp++);z=*pp;
 			r=ps==3?default_radius:*(++pp);
-		}		
+		}
+		/** Returns the x position of the particle currently being
+		 * considered by the loop. */
 		inline double x() {return p[ijk][ps*q];}
+		/** Returns the y position of the particle currently being
+		 * considered by the loop. */
 		inline double y() {return p[ijk][ps*q+1];}
+		/** Returns the z position of the particle currently being
+		 * considered by the loop. */
 		inline double z() {return p[ijk][ps*q+2];}
+		/** Returns the ID of the particle currently being considered
+		 * by the loop. */
 		inline double pid() {return id[ijk][q];}
 };
 
+/** \brief Class for looping over all of the particles in a container.
+ * 
+ * This is one of the simplest loop classes, that scans the computational
+ * blocks in order, and scans all the particles within each block in order. */
 class v_loop_all : public v_loop_base {
 	public:
 		template<class c_class>
@@ -147,6 +188,9 @@ class v_loop_all : public v_loop_base {
 		}
 };
 
+/** \brief Class for looping over a subset of particles in a container.
+ *
+ * This class can loop over a subset of particles.*/ 
 class v_loop_subset : public v_loop_base {
 	public:
 		/** The current mode of operation, determining whether tests
@@ -186,6 +230,11 @@ class v_loop_subset : public v_loop_base {
 		bool out_of_bounds();
 };
 
+/** \brief Class for looping over all of the particles specified in a
+ * pre-assembled voropp_order class.
+ *
+ * The voropp_order class can be used to create a specific order of particles
+ * within the container. This loop class will loop over all of this. */
 class v_loop_order : public v_loop_base {
 	public:
 		voropp_order &vo;
@@ -221,11 +270,30 @@ class v_loop_order : public v_loop_base {
 		}
 };
 
+/** \brief A class for looping over all particles in a container_periodic or
+ * container_periodic_poly class.
+ *
+ * Since the container_periodic and container_periodic_poly classes have a
+ * fundamentally different memory organization, the regular loop classes cannot
+ * be used with them. */
 class v_loop_all_periodic : public v_loop_base {
 	public:
-		int ey,ez;
-		int wy,wz;
-		int ijk0,inc2;
+		/** The lower y index (inclusive) of the primary domain within
+		 * the block structure. */
+		int ey;
+		/** The lower y index (inclusive) of the primary domain within
+		 * the block structure. */
+		int ez;
+		/** The upper y index (exclusive) of the primary domain within
+		 * the block structure. */
+		int wy;
+		/** The upper z index (exclusive) of the primary domain within
+		 * the block structure. */
+		int wz;
+		/** The index of the (0,0,0) block within the block structure.
+		 */
+		int ijk0;
+		int inc2;
 		template<class c_class>
 		v_loop_all_periodic(c_class &con) : v_loop_base(con), ey(con.ey), ez(con.ez), wy(con.wy), wz(con.wz),
 			ijk0(nx*(ey+con.oy*ez)), inc2(2*nx*con.ey+1) {}

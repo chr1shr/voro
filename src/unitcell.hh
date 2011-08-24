@@ -16,13 +16,30 @@ using namespace std;
 #include "config.hh"
 #include "cell.hh"
 
-/** \brief Class for computation of the unit Voronoic cell associated with
+/** \brief Class for computation of the unit Voronoi cell associated with
  * a 3D non-rectangular periodic domain. */
 class unitcell {
 	public:
+		/** The x coordinate of the first vector defining the periodic
+		 * domain. */
 		const double bx;
-		const double bxy,by;
-		const double bxz,byz,bz;
+		/** The x coordinate of the second vector defining the periodic
+		 * domain. */
+		const double bxy;
+		/** The y coordinate of the second vector defining the periodic
+		 * domain. */
+		const double by;
+		/** The x coordinate of the third vector defining the periodic
+		 * domain. */
+		const double bxz;
+		/** The y coordinate of the third vector defining the periodic
+		 * domain. */
+		const double byz;
+		/** The z coordinate of the third vector defining the periodic
+		 * domain. */
+		const double bz;
+		/** The computed unit Voronoi cell corresponding the given
+		 * 3D non-rectangular periodic domain geometry. */
 		voronoicell unit_voro;
 		unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_);
 		/** Draws an outline of the domain in Gnuplot format.
@@ -44,7 +61,11 @@ class unitcell {
 		bool intersects_image(double dx,double dy,double dz,double &vol);
 		void images(vector<int> &vi,vector<double> &vd);
 	protected:
+		/** The maximum y-coordinate that could possibly cut the
+		 * computed unit Voronoi cell. */
 		double max_uv_y;
+		/** The maximum z-coordinate that could possibly cut the
+		 * computed unit Voronoi cell. */
 		double max_uv_z;
 	private:
 		inline void unit_voro_apply(int i,int j,int k);

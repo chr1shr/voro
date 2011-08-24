@@ -83,7 +83,8 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=fgrid-1-dk;if(dk<0) dk=0;
 	} else mzs=fz;
 
-	// Do a quick test to account for the case when the neare
+	// Do a quick test to account for the case when the minimum radius is
+	// small enought that no other blocks need to be considered
 	rs=con.r_max_add(mrs);
 	if(mxs*mxs>rs&&mys*mys>rs&&mzs*mzs>rs) return;
 
@@ -134,6 +135,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		scan_all(ijk,x-qx,y-qy,z-qz,di,dj,dk,w,mrs);
 	} while(g<f);
 
+	// Update mask value and initialize queue
 	mv++;
 	if(mv==0) {reset_mask();mv=1;}
 	int *qu_s(qu),*qu_e(qu);
@@ -162,6 +164,8 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		mijk=mask+ei+hx*(ej+hy*ek);
 		*mijk=mv;
 
+		// Skip this block if it is further away than the current
+		// minimum radius
 		if(compute_min_radius(di,dj,dk,fx,fy,fz,mrs)) continue;
 
 		// Now compute which region we are going to loop over, adding a
@@ -181,6 +185,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	// off the list
 	while(qu_s!=qu_e) {
 
+		// Read the next entry of the queue
 		if(qu_s==qu_l) qu_s=qu;
 		ei=*(qu_s++);ej=*(qu_s++);ek=*(qu_s++);
 		di=ei-i;dj=ej-j;dk=ek-k;
@@ -196,6 +201,11 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	}
 }
 
+/** Scans the six orthogonal neighbors of a given block and adds them to the
+ * queue if they haven't been considered already. It assumes that the queue
+ * will definitely have enough memory to add six entries at the end.
+ * \param[in] (ei,ej,ek) the block to consider.
+ * \param[in,out] qu_e a pointer to the end of the queue. */
 template<class c_class>
 inline void voropp_compute<c_class>::add_to_mask(int ei,int ej,int ek,int *&qu_e) {
 	unsigned int *mijk(mask+ei+hx*(ej+hy*ek));
@@ -207,19 +217,24 @@ inline void voropp_compute<c_class>::add_to_mask(int ei,int ej,int ek,int *&qu_e
 	if(ek<hz-1) if(*(mijk+hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
 }
 
+/** Scans a worklist entry and adds any blocks to the queue 
+ * \param[in] (ei,ej,ek) the block to consider.
+ * \param[in,out] qu_e a pointer to the end of the queue. */
 template<class c_class>
 inline void voropp_compute<c_class>::scan_bits_mask_add(unsigned int q,unsigned int *mijk,int ei,int ej,int ek,int *&qu_e) {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
 	if((q&b2)==b2) {
-		if(ei>0) if(*(mijk-1)!=mv) {*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
-		if((q&b1)==0) if(ei<hx-1) if(*(mijk+1)!=mv) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
-	} else if((q&b1)==b1) {if(ei<hx-1) if(*(mijk+1)!=mv) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}}
-	if((q&b4)==b4) {if(ej>0) if(*(mijk-hx)!=mv) {*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
-		if((q&b3)==0) if(ej<hy-1) if(*(mijk+hx)!=mv) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
-	} else if((q&b3)==b3) {if(ej<hy-1) if(*(mijk+hx)!=mv) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}}
-	if((q&b6)==b6) {if(ek>0) if(*(mijk-hxy)!=mv) {*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
-		if((q&b5)==0) if(ek<hz-1) if(*(mijk+hxy)!=mv) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
-	} else if((q&b5)==b5) if(ek<hz-1) if(*(mijk+hxy)!=mv) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+		if(ei>0) {*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
+		if((q&b1)==0&&ei<hx-1) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
+	} else if((q&b1)==b1&&ei<hx-1) {*(mijk+1)=mv;*(qu_e++)=ei+1;*(qu_e++)=ej;*(qu_e++)=ek;}
+	if((q&b4)==b4) {
+		if(ej>0) {*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
+		if((q&b3)==0&&ej<hy-1) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
+	} else if((q&b3)==b3&&ej<hy-1) {*(mijk+hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej+1;*(qu_e++)=ek;}
+	if((q&b6)==b6) {
+		if(ek>0) {*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
+		if((q&b5)==0&&ek<hz-1) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
+	} else if((q&b5)==b5&&ek<hz-1) {*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
 }
 
 /** This routine computes a Voronoi cell for a single particle in the
