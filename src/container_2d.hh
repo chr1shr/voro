@@ -118,6 +118,7 @@ class container_2d {
 		void add_edb_memory(int i);
 		void initial_cut(voronoicell_2d &c, double x, double y, int bid);
 		void import(FILE *fp=stdin);
+		void container_projection(double x, double y, double &ccy, double &ccy, double &nx, double &ny);
 		/** Imports a list of particles from a file.
 		 * \param[in] filename the file to read from. */
 		inline void import(const char *filename) {

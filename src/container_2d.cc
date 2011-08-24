@@ -699,16 +699,8 @@ bool container_2d::initialize_voronoicell_nonconvex(voronoicell_2d &c, double x,
 
 
 }
-
-bool container_2d::initialize_voronoicell_boundary(voronoicell_2d &c, double x, double y, int bid){
-	double* bnds_loc=new double[14];
-	double ccx, ccy, cx, cy, ccs, cs, slope, distx, disty, nx, ny;
-	int noofbndsloc, ccwid, cwid;
-	ccwid=edb[2*bid];
-	cwid=edb[2*bid+1];
-	ccx=bnds[2*ccwid]; ccy=bnds[2*ccwid+1];
-	cx=bnds[2*cwid]; cy=bnds[2*cwid+1];
-	//compute the counter-clockwise projection;
+void container_2d::container_projection(double x, double y, double &ccx, double &ccy, double &nx, double &ny){
+	double ccs, slope, distx, disty;
 	while(true){
 		if((ccx-x)==0 && (ccy>y)){
 			ccy=by; ccx=x;
@@ -813,95 +805,21 @@ bool container_2d::initialize_voronoicell_boundary(voronoicell_2d &c, double x, 
 			}
 		}
 	}
-	//compute the clockwise projection
-	while(true){
-		if((cx-x)==0 && (cy>y)){
-			cy=by; cx=x;
-			break;
-		}else if((cx-x)==0 && (cy<y)){
-			cy=ay; cx=x;
-			break;
-		}
-		cs= (cy-y)/(cx-x);
-		if((cs==0) && (cx>x)){
-			cx=bx; cy=y;
-			break;
-		}else if((cs==0) && (cx<x)){
-			cx=ax; cy=y;
-			break;
-		}
-		if(cs>0){
-			if(cx>x){	
-				slope=(by-y)/(bx-x);
-				if(cs==slope){
-					cx=bx; cy=by;
-					break;
-				}else if(cs>slope){
-					disty=by-y;
-					cy=by;
-					cx=x+(disty/cs);
-					break;
-				}else{
-					distx=bx-x;
-					cx=bx;
-					cy=y+(cs*distx);;
-					break;
-				}
-			}else{
-				slope=(ay-y)/(ax-x);
-				if(cs==slope){
-					cx=ax; cy=ay;
-					break;
-				}else if(cs>slope){
-					disty=ay-y;
-					cy=ay;
-					cx=x+(disty/cs);
-					break;
-				}else{
-					distx=ax-x;
-					cx=ax;
-					cy=y+(cs*distx);
-					break;
-				}
-			}
-		}else{
-			if(cx>x){
-				slope=(ay-y)/(bx-x);
-				if(cs==slope){
-					cx=bx;
-					cy=ay;
-					break;
-				}else if(cs>slope){
-					distx=bx-x;
-					cx=bx;
-					cy=y+(cs*distx);
-					break;
-				}else{
-					disty=ay-y;
-					cy=ay;
-					cx=x+(disty/cs);
-					break;
-				}
-			}else{
-				slope=(by-y)/(ax-x);
-				if(cs==slope){
-					cx=ax;
-					cy=by;
-					break;
-				}else if(cs>slope){
-					distx=ax-x;
-					cx=ax;
-					cy=y+(distx*cs);
-					break;
-				}else{
-					disty=by-y;
-					cy=by;
-					cx=x+(disty/cs);
-					break;
-				}
-			}
-		}
-	}
+}
+
+bool container_2d::initialize_voronoicell_boundary(voronoicell_2d &c, double x, double y, int bid){
+	double* bnds_loc=new double[14];
+	double ccx, ccy, cx, cy, ccs, cs, slope, distx, disty, nx, ny, dum1, dum2;
+	int noofbndsloc, ccwid, cwid;
+	ccwid=edb[2*bid];
+	cwid=edb[2*bid+1];
+	ccx=bnds[2*ccwid]; ccy=bnds[2*ccwid+1];
+	cx=bnds[2*cwid]; cy=bnds[2*cwid+1];
+	//compute the counter-clockwise and clockwise projection;
+	container_projection(x,y,ccx,ccy, nx, ny);
+	container_projection(x,y,cx,cy, dum1, dum2);
+
+
 	//construct bnds_loc;
 	bnds_loc[0]=0; bnds_loc[1]=0;
 	bnds_loc[2]=ccx-x; bnds_loc[3]=ccy-y;
