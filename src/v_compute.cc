@@ -28,6 +28,18 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
 	reset_mask();
 }
 
+/** Scans all of the particles within a block to see if any of them have a
+ * smaller distance to the given test vector. If one is found, the routine
+ * updates the minimum distance and store information about this particle.
+ * \param[in] ijk the index of the block.
+ * \param[in] (x,y,z) the test vector to consider (which may have already had a
+ *                    periodic displacement applied to it).
+ * \param[in] (di,dj,dk)
+ * \param[in,out] w a reference to a particle record in which to store
+ *		    information about the particle whose Voronoi cell the
+ *		    vector is within. 
+ * \param[in,out] mrs the current minimum distance, that may be updated if a
+ * 		      closer particle is found. */
 template<class c_class>
 inline void voropp_compute<c_class>::scan_all(int ijk,double x,double y,double z,int di,int dj,int dk,particle_record &w,double &mrs) {
 	double x1,y1,z1,rs;bool in_block(false);
@@ -41,6 +53,17 @@ inline void voropp_compute<c_class>::scan_all(int ijk,double x,double y,double z
 	if(in_block) {w.ijk=ijk;w.di=di;w.dj=dj,w.dk=dk;}
 }
 
+/** Finds the Voronoi cell that given vector is within. For containers that are
+ * not radially dependent, this corresponds to findig the particle that is
+ * closest to the vector; for the radical tessellation containers, this
+ * corresponds to a finding the minimum weighted distance.
+ * \param[in] (x,y,z) the vector to consider.
+ * \param[in] (ci,cj,ck) the coordinates of the block that the test particle is
+ *                       in relative to the container data structure.
+ * \param[in] ijk the index of the block that the test particle is in.
+ * \param[out] w a reference to a particle record in which to store information
+ * 		 about the particle whose Voronoi cell the vector is within.
+ * \param[out] mrs the minimum computed distance. */ 
 template<class c_class>
 void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record &w,double &mrs) {
 	double qx=0,qy=0,qz=0,rs;
@@ -254,8 +277,7 @@ inline void voropp_compute<c_class>::scan_bits_mask_add(unsigned int q,unsigned 
  * the particles in that block, and then adds the block neighbors to the list
  * of potential places to consider.
  * \param[in,out] c a reference to a voronoicell object.
- * \param[in] ijk the index of the block that the test particle is in, set to
- *                i+nx*(j+ny*k).
+ * \param[in] ijk the index of the block that the test particle is in.
  * \param[in] s the index of the particle within the test block.
  * \param[in] (ci,cj,ck) the coordinates of the block that the test particle is
  *                       in relative to the container data structure.

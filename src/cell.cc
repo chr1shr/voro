@@ -393,6 +393,7 @@ inline void voronoicell_base::add_to_stack(vc_class &vc,int lp,int *&stackp2) {
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
  * (x,y,z) from the cell center. The value of rsq should be initially set to
  * \f$x^2+y^2+z^2\f$.
+ * \param[in] vc a reference to the specialized version of the calling class.
  * \param[in] (x,y,z) the normal vector to the plane.
  * \param[in] rsq the distance along this vector of the plane.
  * \param[in] p_id the plane ID (for neighbor tracking only).

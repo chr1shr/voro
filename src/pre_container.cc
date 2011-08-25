@@ -198,7 +198,6 @@ void pre_container::import(FILE *fp) {
  * of that the particles are read. Entries of four numbers (Particle ID, x
  * position, y position, z position) are searched for. If the file cannot be
  * successfully read, then the routine causes a fatal error.
- * \param[in,out] vo a reference to an ordering class to use.
  * \param[in] fp the file handle to read from. */
 void pre_container_poly::import(FILE *fp) {
 	int i,j;

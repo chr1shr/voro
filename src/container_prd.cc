@@ -109,7 +109,10 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r) {
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
- * \param[in] (x,y,z) the position vector of the inserted particle. */
+ * \param[in] (x,y,z) the position vector of the inserted particle.
+ * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
+ * 			  in, with (0,0,0) corresponding to the primary domain.
+ */
 void container_periodic::put(int n,double x,double y,double z,int &ai,int &aj,int &ak) {
 	int ijk;
 	put_locate_block(ijk,x,y,z,ai,aj,ak);
@@ -121,7 +124,10 @@ void container_periodic::put(int n,double x,double y,double z,int &ai,int &aj,in
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
- * \param[in] r the radius of the particle. */
+ * \param[in] r the radius of the particle.
+ * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
+ * 			  in, with (0,0,0) corresponding to the primary domain.
+ */
 void container_periodic_poly::put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
 	int ijk;
 	put_locate_block(ijk,x,y,z,ai,aj,ak);
@@ -199,6 +205,17 @@ void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,doub
 	if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
 }
 
+/** Takes a particle position vector and computes the region index into which
+ * it should be stored. If the container is periodic, then the routine also
+ * maps the particle position to ensure it is in the primary domain. If the
+ * container is not periodic, the routine bails out.
+ * \param[out] ijk the region index.
+ * \param[in,out] (x,y,z) the particle position, remapped into the primary
+ *                        domain if necessary.
+ * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
+ *                        in, with (0,0,0) corresponding to the primary domain.
+ * \return True if the particle can be successfully placed into the container,
+ * false otherwise. */
 void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,double &z,int &ai,int &aj,int &ak) {
 
 	// Remap particle in the z direction if necessary
@@ -228,6 +245,14 @@ void container_periodic_base::put_locate_block(int &ijk,double &x,double &y,doub
 	if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
 }
 
+/** Takes a position vector and remaps it into the primary domain.
+ * \param[out] (ai,aj,ak) the periodic image displacement that the vector is in,
+ *                        with (0,0,0) corresponding to the primary domain.
+ * \param[out] (ci,cj,ck) the index of the block that the position vector is
+ *                        within, once it has been remapped.
+ * \param[in,out] (x,y,z) the position vector to consider, which is remapped
+ *                        into the primary domain during the routine.
+ * \param[out] ijk the block index that the vector is within. */
 inline void container_periodic_base::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk) {
 
 	// Remap particle in the z direction if necessary
@@ -255,15 +280,30 @@ inline void container_periodic_base::remap(int &ai,int &aj,int &ak,int &ci,int &
 	ijk=ci+nx*(cj+oy*ck);
 }
 
+/** Takes a vector and finds the particle whose Voronoi cell contains that
+ * vector. This is equivalent to finding the particle which is nearest to the
+ * vector.
+ * \param[in] (x,y,z) the vector to test.
+ * \param[out] (rx,ry,rz) the position of the particle whose Voronoi cell
+ *                        contains the vector. This may point to a particle in
+ *                        a periodic image of the primary domain.
+ * \param[out] pid the ID of the particle.
+ * \return True if a particle was found. If the container has no particles,
+ * then the search will not find a Voronoi cell and false is returned. */
 bool container_periodic::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
 	int ai,aj,ak,ci,cj,ck,ijk;
 	particle_record w;
 	double mrs;
 
+	// Remap the vector into the primary domain and then search for the
+	// Voronoi cell that it is within
 	remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk);
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
 	if(w.ijk!=-1) {
+		
+		// Assemble the position vector of the particle to be returned,
+		// applying a periodic remapping if necessary
 		ci+=w.di;if(ci<0||ci>=nx) ai+=step_div(ci,nx);
 		rx=p[w.ijk][3*w.l]+ak*bxz+aj*bxy+ai*bx;
 		ry=p[w.ijk][3*w.l+1]+ak*byz+aj*by;
@@ -274,15 +314,30 @@ bool container_periodic::find_voronoi_cell(double x,double y,double z,double &rx
 	return false;
 }
 
+/** Takes a vector and finds the particle whose Voronoi cell contains that
+ * vector. Additional wall classes are not considered by this routine.
+ * \param[in] (x,y,z) the vector to test.
+ * \param[out] (rx,ry,rz) the position of the particle whose Voronoi cell
+ *                        contains the vector. If the container is periodic,
+ *                        this may point to a particle in a periodic image of
+ *                        the primary domain.
+ * \param[out] pid the ID of the particle.
+ * \return True if a particle was found. If the container has no particles,
+ * then the search will not find a Voronoi cell and false is returned. */
 bool container_periodic_poly::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
 	int ai,aj,ak,ci,cj,ck,ijk;
 	particle_record w;
 	double mrs;
 	
+	// Remap the vector into the primary domain and then search for the
+	// Voronoi cell that it is within
 	remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk);
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
 	if(w.ijk!=-1) {
+
+		// Assemble the position vector of the particle to be returned,
+		// applying a periodic remapping if necessary
 		ci+=w.di;if(ci<0||ci>=nx) ai+=step_div(ci,nx);
 		rx=p[w.ijk][4*w.l]+ak*bxz+aj*bxy+ai*bx;
 		ry=p[w.ijk][4*w.l+1]+ak*byz+aj*by;
@@ -305,18 +360,23 @@ void container_periodic_base::add_particle_memory(int i) {
 		return;
 	}
 
-	// Otherwise, double the memory allocation for this block
-	int *idp,l,nmem(mem[i]<<1);
-	double *pp;
+	// Otherwise, double the memory allocation for this block. Carry out a
+	// check on the memory allocation size, and print a status message if
+	// requested.
+	int l,nmem(mem[i]<<1);
+	if(nmem>max_particle_memory)
+		voropp_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
 	fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
 #endif
-	if(nmem>max_particle_memory)
-		voropp_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
-	idp=new int[nmem];
+	
+	// Allocate new memory and copy in the contents of the old arrays
+	int *idp(new int[nmem]);
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
-	pp=new double[ps*nmem];
+	double *pp(new double[ps*nmem]);
 	for(l=0;l<ps*co[i];l++) pp[l]=p[i][l];
+
+	// Update pointers and delete old arrays 
 	mem[i]=nmem;
 	delete [] id[i];id[i]=idp;
 	delete [] p[i];p[i]=pp;

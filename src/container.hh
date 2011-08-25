@@ -143,16 +143,25 @@ class container_base : public voropp_base, public wall_list {
 		~container_base();
 		bool point_inside(double x,double y,double z);
 		void region_count();
-		/** Initialize the Voronoi cell to be the entire container. For
-		 * non-periodic coordinates, this is set by the position of the
-		 * walls. For periodic coordinates, the space is equally
-		 * divided in either direction from the particle's initial
-		 * position. That makes sense since those boundaries would be
-		 * made by the neighboring periodic images of this particle. It
-		 * also applies plane cuts made by any walls that have been
-		 * added to the container.
+		/** Initializes the Voronoi cell prior to a compute_cell
+		 * operation for a specific particle being carried out by a
+		 * voropp_compute class. The cell is initialized to fill the
+		 * entire container. For non-periodic coordinates, this is set
+		 * by the position of the walls. For periodic coordinates, the
+		 * space is equally divided in either direction from the
+		 * particle's initial position. Plane cuts made by any walls
+		 * that have been added are then applied to the cell.
 		 * \param[in,out] c a reference to a voronoicell object.
-		 * \param[in] (x,y,z) the position of the particle.
+		 * \param[in] ijk the block that the particle is within.
+		 * \param[in] q the index of the particle within its block.
+		 * \param[in] (ci,cj,ck) the coordinates of the block in the
+		 * 			 container coordinate system.
+		 * \param[out] (i,j,k) the coordinates of the test block
+		 * 		       relative to the voropp_compute
+		 * 		       coordinate system.
+		 * \param[out] (x,y,z) the position of the particle.
+		 * \param[out] disp a block displacement used internally by the
+		 *		    compute_cell routine.
 		 * \return False if the plane cuts applied by walls completely
 		 * removed the cell, true otherwise. */
 		template<class v_cell>
@@ -169,6 +178,16 @@ class container_base : public voropp_base, public wall_list {
 			disp=ijk-i-nx*(j+ny*k);
 			return true;
 		}
+		/** Initializes parameters for a find_voronoi_cell call within
+		 * the voropp_compute template.
+		 * \param[in] (ci,cj,ck) the coordinates of the test block in
+		 * 			 the container coordinate system.
+		 * \param[in] ijk the index of the test block
+		 * \param[out] (i,j,k) the coordinates of the test block
+		 * 		       relative to the voropp_compute
+		 * 		       coordinate system. 
+		 * \param[out] disp a block displacement used internally by the
+		 *		    find_voronoi_cell routine. */
 		inline void initialize_search(int ci,int cj,int ck,int ijk,int &i,int &j,int &k,int &disp) {
 			i=xperiodic?nx:ci;
 			j=yperiodic?ny:cj;
@@ -188,6 +207,19 @@ class container_base : public voropp_base, public wall_list {
 			fy=y-ay-boxy*cj;
 			fz=z-az-boxz*ck;
 		}
+		/** Calculates the index of block in the container structure
+		 * corresponding to given coordinates.
+		 * \param[in] (ci,cj,ck) the coordinates of the original block
+		 * 			 in the current computation, relative
+		 * 			 to the container coordinate system.
+		 * \param[in] (ei,ej,ek) the displacement of the current block
+		 * 			 from the original block.
+		 * \param[in,out] (qx,qy,qz) the periodic displacement that
+		 * 			     must be added to the particles
+		 * 			     within the computed block.
+		 * \param[out] disp a block displacement used internally by the
+		 * 		    find_voronoi_cell and compute_cell routines.
+		 * \return The block index. */
 		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int disp) {
 			if(xperiodic) {if(ci+ei<nx) {ei+=nx;qx=-(bx-ax);} else if(ci+ei>=(nx<<1)) {ei-=nx;qx=bx-ax;} else qx=0;}
 			if(yperiodic) {if(cj+ej<ny) {ej+=ny;qy=-(by-ay);} else if(cj+ej>=(ny<<1)) {ej-=ny;qy=by-ay;} else qy=0;}
@@ -383,10 +415,26 @@ class container : public container_base {
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
 		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
+		/** Computes the Voronoi cell for a particle currently being
+		 * referenced by a loop class.
+		 * \param[out] c a Voronoi cell class in which to store the
+		 * 		 computed cell.
+		 * \param[in] vl the loop class to use.
+		 * \return True if the cell was computed. If the cell cannot be
+		 * computed, if it is removed entirely by a wall or boundary
+		 * condition, then the routine returns false. */
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
 		}
+		/** Computes the Voronoi cell for given particle.
+		 * \param[out] c a Voronoi cell class in which to store the
+		 * 		 computed cell.
+		 * \param[in] ijk the block that the particle is within.
+		 * \param[in] q the index of the particle within the block.
+		 * \return True if the cell was computed. If the cell cannot be
+		 * computed, if it is removed entirely by a wall or boundary
+		 * condition, then the routine returns false. */
 		template<class v_cell>
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
 			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
@@ -571,10 +619,26 @@ class container_poly : public container_base {
 				} while(vl.inc());
 			}
 		}
+		/** Computes the Voronoi cell for a particle currently being
+		 * referenced by a loop class.
+		 * \param[out] c a Voronoi cell class in which to store the
+		 * 		 computed cell.
+		 * \param[in] vl the loop class to use.
+		 * \return True if the cell was computed. If the cell cannot be
+		 * computed, if it is removed entirely by a wall or boundary
+		 * condition, then the routine returns false. */
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
 		}
+		/** Computes the Voronoi cell for given particle.
+		 * \param[out] c a Voronoi cell class in which to store the
+		 * 		 computed cell.
+		 * \param[in] ijk the block that the particle is within.
+		 * \param[in] q the index of the particle within the block.
+		 * \return True if the cell was computed. If the cell cannot be
+		 * computed, if it is removed entirely by a wall or boundary
+		 * condition, then the routine returns false. */
 		template<class v_cell>
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
 			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);

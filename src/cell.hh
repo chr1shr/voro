@@ -195,8 +195,23 @@ class voronoicell_base {
 		void check_relations();
 		void check_duplicates();
 		void print_edges();
+		/** Returns a list of IDs of neighboring particles
+		 * corresponding to each face.
+		 * \param[out] v a reference to a vector in which to return the
+		 *               results. If no neighbor information is
+		 *               available, a blank vector is returned. */
 		virtual void neighbors(vector<int> &v) {v.clear();}
+		/** This is a virtual function that is overridden by a routine
+		 * to print a list of IDs of neighboring particles
+		 * corresponding to each face. By default, when no neighbor
+		 * information is available, the routine does nothing.
+		 * \param[in] fp the file handle to write to. */
 		virtual void output_neighbors(FILE *fp=stdout) {}
+		/** This a virtual function that is overridden by a routine to
+		 * print the neighboring particle IDs for a given vertex. By
+		 * default, when no neighbor information is available, the
+		 * routine does nothing.
+		 * \param[in] i the vertex to consider. */
 		virtual void print_edges_neighbors(int i) {};
 		/** This is a simple inline function for picking out the index
 		 * of the next edge counterclockwise at the current vertex.
@@ -332,6 +347,11 @@ class voronoicell : public voronoicell_base {
 			double rsq=x*x+y*y+z*z;
 			return nplane(*this,x,y,z,rsq,0);
 		}
+		/** Initializes the Voronoi cell to be rectangular box with the
+		 * given dimensions.
+		 * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
+		 * \param[in] (ymin,ymax) the minimum and maximum y coordinates.
+		 * \param[in] (zmin,zmax) the minimum and maximum z coordinates. */
 		inline void init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
 			init_base(xmin,xmax,ymin,ymax,zmin,zmax);
 		}
@@ -346,7 +366,7 @@ class voronoicell : public voronoicell_base {
 		 * \param[in] (x0,y0,z0) the coordinates of the first vertex.
 		 * \param[in] (x1,y1,z1) the coordinates of the second vertex.
 		 * \param[in] (x2,y2,z2) the coordinates of the third vertex.
-		 * \param[in] (x3,y3,ze) the coordinates of the fourth vertex.
+		 * \param[in] (x3,y3,z3) the coordinates of the fourth vertex.
 		 */
 		inline void init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
 			init_tetrahedron_base(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3);
@@ -392,6 +412,14 @@ class voronoicell_neighbor : public voronoicell_base {
 		~voronoicell_neighbor();
 		void operator=(voronoicell &c);
 		void operator=(voronoicell_neighbor &c);
+		/** Cuts the Voronoi cell by a particle whose center is at a
+		 * separation of (x,y,z) from the cell center. The value of rsq
+		 * should be initially set to \f$x^2+y^2+z^2\f$.
+		 * \param[in] (x,y,z) the normal vector to the plane.
+		 * \param[in] rsq the distance along this vector of the plane.
+		 * \param[in] p_id the plane ID (for neighbor tracking only).
+		 * \return False if the plane cut deleted the cell entirely,
+		 * true otherwise. */		
 		inline bool nplane(double x,double y,double z,double rsq,int p_id) {
 			return nplane(*this,x,y,z,rsq,p_id);
 		}

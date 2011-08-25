@@ -114,12 +114,16 @@ class v_loop_base {
 		/** The index of the particle under consideration within the current
 		 * block. */
 		int q;
+		/** The constructor copies several necessary constants from the
+		 * base container class.
+		 * \param[in] con the container class to use. */
 		template<class c_class>
-		v_loop_base(c_class &con) : nx(con.nx), ny(con.ny), nz(con.nz), nxy(con.nxy), nxyz(con.nxyz), ps(con.ps),
+		v_loop_base(c_class &con) : nx(con.nx), ny(con.ny), nz(con.nz),
+					    nxy(con.nxy), nxyz(con.nxyz), ps(con.ps),
 					    p(con.p), id(con.id), co(con.co) {}
 		/** Returns the position vector of the particle currently being
 		 * considered by the loop.
-		 * \param[out] (x,y,z) the position vector. */
+		 * \param[out] (x,y,z) the position vector of the particle. */
 		inline void pos(double &x,double &y,double &z) {
 			double *pp(p[ijk]+ps*q);
 			x=*(pp++);y=*(pp++);z=*pp;
@@ -127,7 +131,10 @@ class v_loop_base {
 		/** Returns the ID, position vector, and radius of the particle
 		 * currently being considered by the loop.
 		 * \param[out] pid the particle ID.
-		 * \param[out] (x,y,z) */
+		 * \param[out] (x,y,z) the position vector of the particle.
+		 * \param[out] r the radius of the particle. If no radius
+		 * 		 information is available the default radius
+		 * 		 value is returned. */
 		inline void pos(int &pid,double &x,double &y,double &z,double &r) {
 			pid=id[ijk][q];
 			double *pp(p[ijk]+ps*q);
@@ -155,6 +162,9 @@ class v_loop_base {
 class v_loop_all : public v_loop_base {
 	public:
 		template<class c_class>
+		/** The constructor copies several necessary constants from the
+		 * base container class.
+		 * \param[in] con the container class to use. */
 		v_loop_all(c_class &con) : v_loop_base(con) {}
 		/** Sets the class to consider the first particle.
 		 * \return True if there is any particle to consider, false
@@ -195,13 +205,18 @@ class v_loop_all : public v_loop_base {
 /** \brief Class for looping over a subset of particles in a container.
  *
  * This class can loop over a subset of particles in a certain geometrical
- * region within the container. The class can be set up to */ 
+ * region within the container. The class can be set up to loop over a
+ * rectangular box or sphere. It can also rectangular group of internal
+ * computational blocks. */ 
 class v_loop_subset : public v_loop_base {
 	public:
 		/** The current mode of operation, determining whether tests
 		 * should be applied to particles to ensure they are within a
 		 * certain geometrical object. */
 		v_loop_subset_mode mode;
+		/** The constructor copies several necessary constants from the
+		 * base container class.
+		 * \param[in] con the container class to use. */
 		template<class c_class>
 		v_loop_subset(c_class &con) : v_loop_base(con), ax(con.ax), ay(con.ay), az(con.az),
 			sx(con.bx-ax), sy(con.by-ay), sz(con.bz-az), xsp(con.xsp), ysp(con.ysp), zsp(con.zsp),
@@ -245,11 +260,23 @@ class v_loop_subset : public v_loop_base {
  * container. */
 class v_loop_order : public v_loop_base {
 	public:
+		/** A reference to the ordering class to use. */
 		voropp_order &vo;
-		int *cp,*op;
+		/** A pointer to the current position in the ordering class. */
+		int *cp;
+		/** A pointer to the end position in the ordering class. */
+		int *op;
+		/** The constructor copies several necessary constants from the
+		 * base class, and sets up a reference to the ordering class to
+		 * use.
+		 * \param[in] con the container class to use.
+		 * \param[in] vo_ the ordering class to use. */
 		template<class c_class>
 		v_loop_order(c_class &con,voropp_order &vo_)
 		: v_loop_base(con), vo(vo_), nx(con.nx), nxy(con.nxy) {}
+		/** Sets the class to consider the first particle.
+		 * \return True if there is any particle to consider, false
+		 * otherwise. */
 		inline bool start() {
 			cp=vo.o;op=vo.op;
 			if(cp!=op) {
@@ -268,8 +295,12 @@ class v_loop_order : public v_loop_base {
 			return true;
 		}
 	private:
+		/** The number of computational blocks in the x direction. */
 		const int nx;
+		/** The number of computational blocks in a z-slice. */
 		const int nxy;
+		/** Takes the current block index and computes indices in the
+		 * x, y, and z directions. */
 		inline void decode() {
 			k=ijk/nxy;
 			int ijkt=ijk-nxy*k;
@@ -286,9 +317,15 @@ class v_loop_order : public v_loop_base {
  * be used with them. */
 class v_loop_all_periodic : public v_loop_base {
 	public:
+		/** The constructor copies several necessary constants from the
+		 * base periodic container class.
+		 * \param[in] con the periodic container class to use. */
 		template<class c_class>
 		v_loop_all_periodic(c_class &con) : v_loop_base(con), ey(con.ey), ez(con.ez), wy(con.wy), wz(con.wz),
 			ijk0(nx*(ey+con.oy*ez)), inc2(2*nx*con.ey+1) {}
+		/** Sets the class to consider the first particle.
+		 * \return True if there is any particle to consider, false
+		 * otherwise. */
 		inline bool start() {
 			i=0;
 			j=ey;

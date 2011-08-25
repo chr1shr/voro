@@ -13,6 +13,14 @@ using namespace std;
 #include "unitcell.hh"
 #include "cell.hh"
 
+/** Initializes the unit cell class for a particular non-orthogonal periodic
+ * geometry, corresponding to a parallelepiped with sides given by three
+ * vectors. The class constructs the unit Voronoi cell corresponding to this
+ * geometry.
+ * \param[in] (bx_) The x coordinate of the first unit vector. 
+ * \param[in] (bxy_,by_) The x and y coordinates of the second unit vector.
+ * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
+ *                            vector. */
 unitcell::unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_)
 	: bx(bx_), bxy(bxy_), by(by_), bxz(bxz_), byz(byz_), bz(bz_) {
 	int i,j,l=1;
