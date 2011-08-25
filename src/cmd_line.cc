@@ -53,6 +53,7 @@ void help_message() {
 	     "              with radius x4\n"
 	     " -wp [4]    : Add a plane wall object, with normal (x1,x2,x3),\n"
 	     "              and displacement x4\n"
+	     " --version  : Print version information\n"
 	     " -y         : Save POV-Ray particles to <filename_p.pov> and POV-Ray Voronoi\n"
 	     "              cells to <filename_v.pov>\n"
 	     " -yp        : Save only POV-Ray particles to <filename_p.pov>\n"
@@ -266,6 +267,10 @@ int main(int argc,char **argv) {
 			double w6=atof(argv[i]);
 			wl.add_wall(new wall_cone(w0,w1,w2,w3,w4,w5,w6,j));
 			j--;
+		} else if(strcmp(argv[i],"--version")==0) {
+			puts("Voro++ version 0.4 (August 28th, 2011)");
+			wl.deallocate();
+			return 0;
 		} else if(strcmp(argv[i],"-y")==0) {
 			povp_output=povv_output=true;
 		} else if(strcmp(argv[i],"-yp")==0) {
