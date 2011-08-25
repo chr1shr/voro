@@ -18,7 +18,8 @@ using namespace std;
 
 #include "config.hh"
 
-/** A type associated with a v_loop_subset class. */
+/** A type associated with a v_loop_subset class, determining what type of
+ * geometrical region to loop over. */
 enum v_loop_subset_mode {
 	sphere,
 	box,
@@ -155,6 +156,9 @@ class v_loop_all : public v_loop_base {
 	public:
 		template<class c_class>
 		v_loop_all(c_class &con) : v_loop_base(con) {}
+		/** Sets the class to consider the first particle.
+		 * \return True if there is any particle to consider, false
+		 * otherwise. */
 		inline bool start() {
 			i=j=k=ijk=q=0;
 			while(co[ijk]==0) if(!next_block()) return false;
@@ -190,7 +194,8 @@ class v_loop_all : public v_loop_base {
 
 /** \brief Class for looping over a subset of particles in a container.
  *
- * This class can loop over a subset of particles.*/ 
+ * This class can loop over a subset of particles in a certain geometrical
+ * region within the container. The class can be set up to */ 
 class v_loop_subset : public v_loop_base {
 	public:
 		/** The current mode of operation, determining whether tests
@@ -234,7 +239,10 @@ class v_loop_subset : public v_loop_base {
  * pre-assembled voropp_order class.
  *
  * The voropp_order class can be used to create a specific order of particles
- * within the container. This loop class will loop over all of this. */
+ * within the container. This class can then loop over these particles in this
+ * order. The class is particularly useful in cases where the ordering of the
+ * output must match the ordering of particles as they were inserted into the
+ * container. */
 class v_loop_order : public v_loop_base {
 	public:
 		voropp_order &vo;
@@ -278,22 +286,6 @@ class v_loop_order : public v_loop_base {
  * be used with them. */
 class v_loop_all_periodic : public v_loop_base {
 	public:
-		/** The lower y index (inclusive) of the primary domain within
-		 * the block structure. */
-		int ey;
-		/** The lower y index (inclusive) of the primary domain within
-		 * the block structure. */
-		int ez;
-		/** The upper y index (exclusive) of the primary domain within
-		 * the block structure. */
-		int wy;
-		/** The upper z index (exclusive) of the primary domain within
-		 * the block structure. */
-		int wz;
-		/** The index of the (0,0,0) block within the block structure.
-		 */
-		int ijk0;
-		int inc2;
 		template<class c_class>
 		v_loop_all_periodic(c_class &con) : v_loop_base(con), ey(con.ey), ez(con.ez), wy(con.wy), wz(con.wz),
 			ijk0(nx*(ey+con.oy*ez)), inc2(2*nx*con.ey+1) {}
@@ -320,6 +312,24 @@ class v_loop_all_periodic : public v_loop_base {
 			return true;
 		}
 	private:
+		/** The lower y index (inclusive) of the primary domain within
+		 * the block structure. */
+		int ey;
+		/** The lower y index (inclusive) of the primary domain within
+		 * the block structure. */
+		int ez;
+		/** The upper y index (exclusive) of the primary domain within
+		 * the block structure. */
+		int wy;
+		/** The upper z index (exclusive) of the primary domain within
+		 * the block structure. */
+		int wz;
+		/** The index of the (0,0,0) block within the block structure.
+		 */
+		int ijk0;
+		/** A value to increase ijk by when the z index is increased.
+		 */
+		int inc2;		
 		inline bool next_block() {
 			i++;
 			if(i==nx) {
