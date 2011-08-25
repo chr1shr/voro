@@ -110,6 +110,7 @@ class container_2d {
 		int **bndpts;
 		/** Contains information about which boundary points are problem points **/
 		bool *probpts;
+		bool *extpts;
 		container_2d(double xa,double xb,double ya,double yb,int xn,int yn,bool xper,bool yper,bool convex_,int memi);
 		~container_2d();
 		void setup();
@@ -126,6 +127,7 @@ class container_2d {
 			import(fp);
 			fclose(fp);
 		}
+		void Perp_vector(double x1, double y1, double &x1, double &y1, int dcp);
 		void tag_walls(double x1, double y1, double x2, double y2, int wid);
 		inline void tag(int wallid, int box){
 			int length=wid[box][0], *a;
@@ -218,7 +220,7 @@ class container_2d {
 		bool initialize_voronoicell_nonconvex(voronoicell_2d &c,double x, double y, int bid);
 		bool initialize_voronoicell_boundary(voronoicell_2d &c, double x, double y, int bid);
 		bool OKCuttingParticle(double gx, double gy, int gbox, int gindex, double cx, double cy,
-					int cbox, int cindex);
+					int cbox, int cindex, bool boundary, int bid);
 		void put(int n,double x,double y, int bndloc);
 		void clear();
 	private:

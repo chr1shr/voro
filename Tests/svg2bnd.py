@@ -41,7 +41,7 @@ for key, elem in obj.walk():
                     y = c[1]
                 elif d == u'v': # Relative position vertical motion
                     y += c[1]
-                if redo == 0 or (sqrt((x-xs[-1])**2+(y-ys[-1])**2) > 1e-5):
+                if (redo == 0 or (sqrt((x-xs[-1])**2+(y-ys[-1])**2) > 1e-5)):
                     xs.append(x)
                     ys.append(y)
                     count = count + 1
@@ -64,7 +64,7 @@ for key, elem in obj.walk():
             ys = []
             for p in pointses:
                 x,y = p.split(u',')
-                if redo ==0 or (sqrt((x-xs[-1])**2+(y-ys[-1])**2) > 1e-5):
+                if (redo ==0 or (sqrt((x-xs[-1])**2+(y-ys[-1])**2) > 1e-5)):
                     xs.append(x)
                     ys.append(y)
                     count = count + 1

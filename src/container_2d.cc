@@ -138,6 +138,7 @@ inline bool container_2d::put_remap(int &ij,double &x,double &y) {
  * This algorithm keeps the importing seperate from the set-up */
 void container_2d::setup(){
 	probpts=new bool[noofbnds];
+	extpts=new bool[noofbnds];
 	double lx, ly, cx, cy, nx, ny;//last (x,y), current (x,y), next (x,y)
 	int widl=1, maxwid=1, fwid=1, nwid, lwid;
 	bool first=true;
@@ -146,6 +147,7 @@ void container_2d::setup(){
 	tmpe=tmp+3*init_temp_label_size;
 	
 	while(widl!=noofbnds){
+		extpts[widl]=first;
 		cx=bnds[2*widl]; cy=bnds[2*widl+1];
 		nwid=edb[2*widl]; lwid=edb[2*widl+1];
 		lx=bnds[lwid*2]; ly=bnds[lwid*2+1];
@@ -388,8 +390,9 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 		for(int j=0;j<co[box];j++){
 			cpx=p[box][2*j];
 			cpy=p[box][2*j+1];
-			if((dist_squared(midx,midy,cpx,cpy)<=rs)&&
-			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)){
+			if(((dist_squared(midx,midy,cpx,cpy)<=rs)&&
+			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)) && 
+			!((cpx==x1 && cpy==y1) || (cpx==x2 && cpy==y2))){
 				if(tmpp==tmpe) add_temporary_label_memory();
 				*(tmpp++)=box;
 				*(tmpp++)=j;
@@ -482,13 +485,59 @@ void container_2d::add_boundary_memory() {
 	for(i=0;i<noofbnds;i++) nedb[i]=edb[i];
 	delete [] edb;edb=nedb;
 }
-
 /** given two particles, a generator and a potential cutting particle, this returns true iff the cutting
 particle and the generator are on the same side of all relevant walls. **/
 
-bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex, double cx, double cy, int cbox, int cindex){
+bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex, double cx, double cy, int cbox, int cindex, bool boundary, int bid){
 	int cwid, nwid;
 	double widx1, widy1, widx2, widy2;
+
+	if(boundary){
+		int nwid=edb[2*bid]; 
+		int lwid=edb[2*bid+1];
+		double nx=bnds[2*nwid]-gx; double ny=bnds[2*nwid+1]-gy;
+		double lx=bnds[2*lwid]-gx; double ly=bnds[2*lwid+1]-gy;
+		double nxp, nyp, lxp, lyp;
+		
+		cout << "bid=" << bid << "\n (gx,gy)=(" << gx << "," << gy << ") \n cpz(lx,ly,nx,ny)=" << crossproductz(lx,ly,nx,ny) << "\n (nx,ny)=(" << nx << "," << ny << ") \n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << ") \n" <<
+"(nxp,nyp)=(" << nxp << "," << nyp << ") \n (lxp,lyp)=(" << lxp << "," << lyp << ")" << endl;
+		
+		if(extpts[bid]){
+			nxp=-ny; nyp=nx;  lxp=ly; lyp=-lx;
+			if(crossproductz(lx,ly,nx,ny)==1){
+				if((((lxp*(cx-gx))+(lyp*(cy-gy)))>tolerance) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>tolerance)){
+					cout << "\n No!" << endl;
+
+					return false;
+					cout << "\n No!" << endl;
+				}
+			}else{
+				if((((lxp*(cx-gx))+(lyp*(cy-gy)))<tolerance) || (((nxp*(cx-gx))+(nyp*(cy-gy)))<tolerance)){
+					cout << "\n NO!" << endl;
+
+					return false;
+					cout << "\n NO!" << endl;
+				}
+			}
+		}else{	
+			lxp=-ly; lyp=lx;  nxp=ny; nyp=-nx;
+
+			if(crossproductz(lx,ly,nx,ny)==1){
+				if(!((((lxp*(cx-gx))+(lyp*(cy-gy)))>-tolerance) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>-tolerance))){
+					return false;
+				}
+			}else{
+				if((((lxp*(cx-gx))+(lyp*(cy-gy)))>tolerance) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>tolerance)){
+					return false;
+				}
+			}
+		}
+	}
+	
+
+			
+				
+
 	for(int i=0;i<(signed int)nlab[cbox][cindex];i++){
 		cwid=plab[cbox][cindex][i];
 		widx1=bnds[2*cwid];
@@ -497,7 +546,8 @@ bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex,
 		widx2=bnds[2*nwid];
 		widy2=bnds[2*nwid+1];
 		if((cx==widx1 && cy==widy1) || (cx==widx2 && cy==widy2)) continue;
-		if(crossproductz(gx-widx1,gy-widy1,widx2-widx1,widy2-widy1)!=crossproductz(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return false;
+		if(crossproductz(gx-widx1,gy-widy1,widx2-widx1,widy2-widy1)!=
+			crossproductz(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return false;
 	}
 	return true;
 }
@@ -809,7 +859,7 @@ void container_2d::container_projection(double x, double y, double &ccx, double 
 
 bool container_2d::initialize_voronoicell_boundary(voronoicell_2d &c, double x, double y, int bid){
 	double* bnds_loc=new double[14];
-	double ccx, ccy, cx, cy, ccs, cs, slope, distx, disty, nx, ny, dum1, dum2;
+	double ccx, ccy, cx, cy, nx, ny, dum1, dum2;
 	int noofbndsloc, ccwid, cwid;
 	ccwid=edb[2*bid];
 	cwid=edb[2*bid+1];
@@ -987,7 +1037,7 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	// This length scale determines how large the spherical shells should
 	// be, and it should be set to approximately the particle diameter
 	const double length_scale=0.5*sqrt((bx-ax)*(by-ay)/(nx*ny));
-	bool problem_point=false;
+	bool problem_point=false, boundary=false;
 	double x1,y1,qx,qy,lr=0,lrs=0,ur,urs,rs,wx1,wy1,wx2,wy2;
 	int q,t,bid, widc, widc2;
 	voropp_loop_2d l(*this);
@@ -996,11 +1046,13 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	bid=bndpts[ij][s];
 	if(bid!=-1 && probpts[bid]){
 		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
-		problem_point=true;	
+		problem_point=true;
+		boundary=true;	
 		initial_cut(c,x,y,bid);
 	}else if(bid!=-1){
 		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
 		initial_cut(c,x,y,bid);
+		boundary=true;
 
 	}else{	
 		if(!initialize_voronoicell(c,x,y)) return false;
@@ -1028,7 +1080,7 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 				//HERE CHECK IF THE CUTTING PARTICLE IS ON THE WRONG SIDE OF ANY WALL USING SOI				
 				x1=p[t][2*q]+qx;y1=p[t][2*q+1]+qy;//qx,qy??
 
-				if(!(x1==x && y1==y) && (OKCuttingParticle(x,y,ij,s,x1,y1,t,q))){
+				if(!(x1==x && y1==y) && OKCuttingParticle(x,y,ij,s,x1,y1,t,q, boundary, bid)){
 					x1=x1-x; y1=y1-y;
 					rs=x1*x1+y1*y1;
 					if(lrs-tolerance<rs&&rs<urs&&(q!=s||ij!=t)) {

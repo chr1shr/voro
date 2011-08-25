@@ -29,6 +29,10 @@ void voronoicell_2d::init(double xmin,double xmax,double ymin,double ymax) {
 	pts[6]=xmin;pts[7]=ymax;
 	int *q=ed;
 	*q=1;q[1]=3;q[2]=2;q[3]=0;q[4]=3;q[5]=1;q[6]=0;q[7]=2;
+	for(int i=0;i<4;i++){
+		reg1[i]=0;
+		reg2[i]=0;
+	}
 }
 /** Initialize a Voronoi cell as exactly fitting the non-convex domain specified in bnds
 	* \param[in] bnds, a pointer to the beginning of the array specifing the intial vertices.
@@ -427,7 +431,7 @@ bool voronoicell_2d::wallcut(double wx1,double wy1,double wx2,double wy2){
 	}else{
 		pcx*=2; pcy*=2;
 		rs=pcx*pcx+pcy*pcy;
-		this->plane(pcx,pcy,rs);
+		this->plane_nonconvex(pcx,pcy,rs);
 	 }	
 		
 	
