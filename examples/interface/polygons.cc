@@ -28,9 +28,9 @@ int main() {
 	pcon.setup(con);
 
 	// Open the output files
-	FILE *fp4(voropp_safe_fopen("poly4_v.pov","w")),
-	     *fp5(voropp_safe_fopen("poly5_v.pov","w")),
-	     *fp6(voropp_safe_fopen("poly6_v.pov","w"));
+	FILE *fp4(voropp_safe_fopen("polygons4_v.pov","w")),
+	     *fp5(voropp_safe_fopen("polygons5_v.pov","w")),
+	     *fp6(voropp_safe_fopen("polygons6_v.pov","w"));
 
 	// Loop over all particles in the container and compute each Voronoi
 	// cell

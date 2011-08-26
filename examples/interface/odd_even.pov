@@ -9,16 +9,17 @@ global_settings {
 }
 
 camera {
-	location <15,10,-30>
-	right 0.033*x*image_width/image_height
+	location <15,-30,10>
+	sky z
+	right -0.033*x*image_width/image_height
 	up 0.033*y
 	look_at <0,0,0>
 }
 
 background{rgb 1}
 
-light_source{<-4,35,-20> color rgb <0.72,0.7,0.7>}
-light_source{<20,5,-10> color rgb <0.4,0.42,0.42>}
+light_source{<-4,-20,35> color rgb <0.72,0.7,0.7>}
+light_source{<20,-10,5> color rgb <0.4,0.42,0.42>}
 
 #declare r=0.01;
 

@@ -8,16 +8,17 @@ global_settings {
 }
 
 camera {
-	location <30,25,-50>
-	right 0.15*x*image_width/image_height
-	up 0.15*y
-	look_at <0,2.8,0>
+	location <30,-50,25>
+	sky z
+	up 0.15*z
+	right -0.15*x*image_width/image_height
+	look_at <0,0,2.8>
 }
 
 background{rgb 1}
 
-light_source{<-8,30,-20> color rgb <0.77,0.75,0.75>}
-light_source{<25,12,-12> color rgb <0.43,0.45,0.45>}
+light_source{<-8,-20,30> color rgb <0.77,0.75,0.75>}
+light_source{<25,-12,12> color rgb <0.43,0.45,0.45>}
 
 #declare r=0.06;
 #declare rr=0.08;
@@ -26,13 +27,12 @@ light_source{<25,12,-12> color rgb <0.43,0.45,0.45>}
 
 #declare t1=texture{pigment{rgbft <0.3,0.7,0.9,0,0.4>} finish{f1}}
 #declare t2=texture{pigment{rgb <0.3,0.4,0.9>} finish{f1}}
+
 union{
-#include "poly6_v.pov"
-	rotate <270,0,0>
+#include "polygons5_v.pov"
 }
 
 union{
 #include "polygons_d.pov"
-	rotate <270,0,0>
 	texture{T_Silver_4B}
 }

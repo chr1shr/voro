@@ -39,8 +39,8 @@ int main() {
 
 	// Compute Voronoi cells for the first torus. Here, the points
 	// previously stored in the ordering class are looped over.
-	FILE *f1(voropp_safe_fopen("loop1_m.pov","w"));
-	FILE *f2(voropp_safe_fopen("loop1_v.pov","w"));
+	FILE *f1(voropp_safe_fopen("loops1_m.pov","w"));
+	FILE *f2(voropp_safe_fopen("loops1_v.pov","w"));
 	v_loop_order vlo(con,vo);
 	if(vlo.start()) do if(con.compute_cell(c,vlo)) {
 		vlo.pos(x,y,z);
@@ -56,8 +56,8 @@ int main() {
 	// Compute Voronoi cells for the second torus. Here, the subset loop is
 	// used to search over the blocks overlapping the torus, and then each
 	// particle is individually tested.
-	f1=voropp_safe_fopen("loop2_m.pov","w");
-	f2=voropp_safe_fopen("loop2_v.pov","w");
+	f1=voropp_safe_fopen("loops2_m.pov","w");
+	f2=voropp_safe_fopen("loops2_v.pov","w");
 	v_loop_subset vls(con);
 	vls.setup_box(-dis-trad,-dis+trad,-mirad,mirad,-trad,trad,false);
 	if(vls.start()) do {
