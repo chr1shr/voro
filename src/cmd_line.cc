@@ -60,8 +60,8 @@ void help_message() {
 	     " -yv        : Save only POV-Ray Voronoi cells to <filename_v.pov>");
 }
 
-// This message gets displayed if the user requests information about doing custom
-// output
+// This message gets displayed if the user requests information about doing
+// custom output
 void custom_output_message() {
 	puts("The \"-c\" option allows a string to be specified that will customize the output\n"
 	     "file to contain a variety of statistics about each computed Voronoi cell. The\n"
@@ -102,6 +102,11 @@ void custom_output_message() {
 	     "  %v The volume of the Voronoi cell\n"
 	     "  %c The centroid of the Voronoi cell, relative to the particle center\n"
 	     "  %C The centroid of the Voronoi cell, in the global coordinate system");
+}
+
+// Ths message is displayed if the user requests version information
+void version_message() {
+	puts("Voro++ version 0.4 (August 28th, 2011)");
 }
 
 // Prints an error message. This is called when the program is unable to make
@@ -165,6 +170,8 @@ int main(int argc,char **argv) {
 			help_message();return 0;
 		} else if(strcmp(argv[1],"-hc")==0) {
 			custom_output_message();return 0;
+		} else if(strcmp(argv[1],"--version")==0) {
+			version_message();return 0;
 		} else {
 			error_message();
 			return VOROPP_CMD_LINE_ERROR;
@@ -193,9 +200,9 @@ int main(int argc,char **argv) {
 		} else if(strcmp(argv[i],"-g")==0) {
 			gnuplot_output=true;
 		} else if(strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0) {
-			help_message();return 0;
+			help_message();wl.deallocate();return 0;
 		} else if(strcmp(argv[i],"-hc")==0) {
-			custom_output_message();return 0;
+			custom_output_message();wl.deallocate();return 0;
 		} else if(strcmp(argv[i],"-l")==0) {
 			if(bm!=none) {
 				fputs("voro++: Conflicting options about grid setup (-l/-n)\n",stderr);
@@ -268,7 +275,7 @@ int main(int argc,char **argv) {
 			wl.add_wall(new wall_cone(w0,w1,w2,w3,w4,w5,w6,j));
 			j--;
 		} else if(strcmp(argv[i],"--version")==0) {
-			puts("Voro++ version 0.4 (August 28th, 2011)");
+			version_message();
 			wl.deallocate();
 			return 0;
 		} else if(strcmp(argv[i],"-y")==0) {
@@ -278,6 +285,7 @@ int main(int argc,char **argv) {
 		} else if(strcmp(argv[i],"-yv")==0) {
 			povv_output=true;
 		} else {
+			wl.deallocate();
 			error_message();
 			return VOROPP_CMD_LINE_ERROR;
 		}
