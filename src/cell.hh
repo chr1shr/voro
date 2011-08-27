@@ -102,7 +102,7 @@ class voronoicell_base {
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_pov(double x,double y,double z,const char *filename) {
 			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
+			if(fp==NULL) voro_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
 			draw_pov(x,y,z,fp);
 			fclose(fp);
 		};
@@ -114,7 +114,7 @@ class voronoicell_base {
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_pov_mesh(double x,double y,double z,const char *filename) {
 			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
+			if(fp==NULL) voro_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
 			draw_pov_mesh(x,y,z,fp);
 			fclose(fp);
 		}
@@ -125,7 +125,7 @@ class voronoicell_base {
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_gnuplot(double x,double y,double z,const char *filename) {
 			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voropp_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
+			if(fp==NULL) voro_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
 			draw_gnuplot(x,y,z,fp);
 			fclose(fp);
 		}
@@ -147,40 +147,40 @@ class voronoicell_base {
 		 * \param[in] fp the file handle to write to. */
 		inline void output_face_areas(FILE *fp=stdout) {
 			vector<double> v;face_areas(v);
-			voropp_print_vector(v,fp);
+			voro_print_vector(v,fp);
 		}
 		void face_orders(vector<int> &v);
 		/** Outputs a list of the number of sides of each face.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_face_orders(FILE *fp=stdout) {
 			vector<int> v;face_orders(v);
-			voropp_print_vector(v,fp);
+			voro_print_vector(v,fp);
 		}
 		void face_freq_table(vector<int> &v);
 		/** Outputs a */
 		inline void output_face_freq_table(FILE *fp=stdout) {
 			vector<int> v;face_freq_table(v);
-			voropp_print_vector(v,fp);
+			voro_print_vector(v,fp);
 		}
 		void face_vertices(vector<int> &v);
 		/** Outputs the */
 		inline void output_face_vertices(FILE *fp=stdout) {
 			vector<int> v;face_vertices(v);
-			voropp_print_face_vertices(v,fp);
+			voro_print_face_vertices(v,fp);
 		}
 		void face_perimeters(vector<double> &v);
 		/** Outputs a list of the perimeters of each face.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_face_perimeters(FILE *fp=stdout) {
 			vector<double> v;face_perimeters(v);
-			voropp_print_vector(v,fp);
+			voro_print_vector(v,fp);
 		}
 		void normals(vector<double> &v);
 		/** Outputs a list of the perimeters of each face.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_normals(FILE *fp=stdout) {
 			vector<double> v;normals(v);
-			voropp_print_positions(v,fp);
+			voro_print_positions(v,fp);
 		}
 		/** Outputs a custom string of information about the Voronoi
 		 * cell to a file. It assumes the cell is at (0,0,0) and has a
@@ -466,7 +466,7 @@ class voronoicell_neighbor : public voronoicell_base {
 		virtual void print_edges_neighbors(int i);
 		virtual void output_neighbors(FILE *fp=stdout) {
 			vector<int> v;neighbors(v);
-			voropp_print_vector(v,fp);
+			voro_print_vector(v,fp);
 		}
 	private:
 		int *paux1;

@@ -35,13 +35,13 @@ class wall_initial_shape : public wall {
 		};
 		bool point_inside(double x,double y,double z) {return true;}
 		bool cut_cell(voronoicell &c,double x,double y,double z) {
-			
+
 			// Set the cell to be equal to the dodecahedron
 			c=v;
 			return true;
 		}
 		bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) {
-			
+
 			// Set the cell to be equal to the dodecahedron
 			c=v;
 			return true;
@@ -64,7 +64,7 @@ int main() {
 	// Import the irregular particle packing
 	con.import("pack_irregular");
 
-	// Save the particles and Voronoi cells in POV-Ray format 
+	// Save the particles and Voronoi cells in POV-Ray format
 	con.draw_particles_pov("boundaries_p.pov");
 	con.draw_cells_pov("boundaries_v.pov");
 }

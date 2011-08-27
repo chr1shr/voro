@@ -38,7 +38,7 @@ print W <<EOF;
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr\@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \\file worklist.hh
  * \\brief Header file for setting constants used in the block worklists that are
@@ -78,7 +78,7 @@ print W <<EOF;
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr\@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \\file worklist.cc
  * \\brief The table of block worklists that are used during the cell
@@ -89,7 +89,7 @@ print W <<EOF;
 
 namespace voro {
 EOF
-printf W "const unsigned int voropp_base::wl[%d]={\n",($ls+1)*$hr*$hr*$hr;
+printf W "const unsigned int voro_base::wl[%d]={\n",($ls+1)*$hr*$hr*$hr;
 
 # Now create a worklist for each subregion
 for($kk=0;$kk<$hr;$kk++) {

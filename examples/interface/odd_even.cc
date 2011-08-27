@@ -41,7 +41,7 @@ int main() {
 	// Output POV-Ray planes with textures based on whether a face is
 	// composed of an odd or even number of edges
 	const char* parity[2]={"even","odd"};
-	FILE *fp(voropp_safe_fopen("odd_even_pl.pov","w"));
+	FILE *fp(safe_fopen("odd_even_pl.pov","w"));
 	for(i=0;i<f_vert.size();i++)
 		fprintf(fp,"plane{<%g,%g,%g>,0.5 texture{t_%s}}\n"
 			,nor[3*i],nor[3*i+1],nor[3*i+2]

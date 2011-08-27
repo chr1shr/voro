@@ -15,5 +15,5 @@
 #include "container_prd.cc"
 #include "pre_container.cc"
 #include "v_compute.cc"
-#include "v_loops.cc"
+#include "c_loops.cc"
 #include "wall.cc"

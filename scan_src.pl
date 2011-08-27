@@ -5,11 +5,10 @@ open B,">temp";
 $c=0;$vr=0;
 while(<A>) {
 	$c++ if s/[ \t]+$//;
-	if(/^\/\/ Date/) {
-		print B "// Date     : August 28th 2011\n";
-		next;
-	}
-	$vr=1 if /^namespace voro/;
+	s/voropp_order/particle_order/g;
+	s/voropp_/voro_/g;
+	s/voro_safe_fopen/safe_fopen/g;
+	s/v_loop/c_loop/g;
 	print B;
 }
 close A;

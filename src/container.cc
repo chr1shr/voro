@@ -29,7 +29,7 @@ namespace voro {
  *                particle. */
 container_base::container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 		int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem,int ps_)
-	: voropp_base(nx_,ny_,nz_,(bx_-ax_)/nx_,(by_-ay_)/ny_,(bz_-az_)/nz_),
+	: voro_base(nx_,ny_,nz_,(bx_-ax_)/nx_,(by_-ay_)/ny_,(bz_-az_)/nz_),
 	ax(ax_), bx(bx_), ay(ay_), by(by_), az(az_), bz(bz_),
 	xperiodic(xperiodic_), yperiodic(yperiodic_), zperiodic(zperiodic_),
 	id(new int*[nxyz]), p(new double*[nxyz]), co(new int[nxyz]), mem(new int[nxyz]), ps(ps_) {
@@ -112,7 +112,7 @@ void container_poly::put(int n,double x,double y,double z,double r) {
  * \param[in] vo the ordering class in which to record the region.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
-void container::put(voropp_order &vo,int n,double x,double y,double z) {
+void container::put(particle_order &vo,int n,double x,double y,double z) {
 	int ijk;
 	if(put_locate_block(ijk,x,y,z)) {
 		id[ijk][co[ijk]]=n;
@@ -128,7 +128,7 @@ void container::put(voropp_order &vo,int n,double x,double y,double z) {
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */
-void container_poly::put(voropp_order &vo,int n,double x,double y,double z,double r) {
+void container_poly::put(particle_order &vo,int n,double x,double y,double z,double r) {
 	int ijk;
 	if(put_locate_block(ijk,x,y,z)) {
 		id[ijk][co[ijk]]=n;
@@ -305,7 +305,7 @@ void container_base::add_particle_memory(int i) {
 	// Carry out a check on the memory allocation size, and print a status
 	// message if requested
 	if(nmem>max_particle_memory)
-		voropp_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
+		voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
 	fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
 #endif
@@ -331,7 +331,7 @@ void container::import(FILE *fp) {
 	int i,j;
 	double x,y,z;
 	while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z))==4) put(i,x,y,z);
-	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
 /** Import a list of particles from an open file stream, also storing the order
@@ -340,11 +340,11 @@ void container::import(FILE *fp) {
  * successfully read, then the routine causes a fatal error.
  * \param[in,out] vo a reference to an ordering class to use.
  * \param[in] fp the file handle to read from. */
-void container::import(voropp_order &vo,FILE *fp) {
+void container::import(particle_order &vo,FILE *fp) {
 	int i,j;
 	double x,y,z;
 	while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z))==4) put(vo,i,x,y,z);
-	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
 /** Import a list of particles from an open file stream into the container.
@@ -356,7 +356,7 @@ void container_poly::import(FILE *fp) {
 	int i,j;
 	double x,y,z,r;
 	while((j=fscanf(fp,"%d %lg %lg %lg %lg",&i,&x,&y,&z,&r))==5) put(i,x,y,z,r);
-	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
 /** Import a list of particles from an open file stream, also storing the order
@@ -365,11 +365,11 @@ void container_poly::import(FILE *fp) {
  * cannot be successfully read, then the routine causes a fatal error.
  * \param[in,out] vo a reference to an ordering class to use.
  * \param[in] fp the file handle to read from. */
-void container_poly::import(voropp_order &vo,FILE *fp) {
+void container_poly::import(particle_order &vo,FILE *fp) {
 	int i,j;
 	double x,y,z,r;
 	while((j=fscanf(fp,"%d %lg %lg %lg %lg",&i,&x,&y,&z,&r))==5) put(vo,i,x,y,z,r);
-	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
 /** Outputs the a list of all the container regions along with the number of
@@ -396,7 +396,7 @@ void container_poly::clear() {
  * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
 void container::print_custom(const char *format,FILE *fp) {
-	v_loop_all vl(*this);
+	c_loop_all vl(*this);
 	print_custom(vl,format,fp);
 }
 
@@ -405,7 +405,7 @@ void container::print_custom(const char *format,FILE *fp) {
  * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
 void container_poly::print_custom(const char *format,FILE *fp) {
-	v_loop_all vl(*this);
+	c_loop_all vl(*this);
 	print_custom(vl,format,fp);
 }
 
@@ -413,7 +413,7 @@ void container_poly::print_custom(const char *format,FILE *fp) {
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
 void container::print_custom(const char *format,const char *filename) {
-	FILE *fp(voropp_safe_fopen(filename,"w"));
+	FILE *fp(safe_fopen(filename,"w"));
 	print_custom(format,fp);
 	fclose(fp);
 }
@@ -423,7 +423,7 @@ void container::print_custom(const char *format,const char *filename) {
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
 void container_poly::print_custom(const char *format,const char *filename) {
-	FILE *fp(voropp_safe_fopen(filename,"w"));
+	FILE *fp(safe_fopen(filename,"w"));
 	print_custom(format,fp);
 	fclose(fp);
 }
@@ -434,7 +434,7 @@ void container_poly::print_custom(const char *format,const char *filename) {
  * volume evaluation or cell output. */
 void container::compute_all_cells() {
 	voronoicell c;
-	v_loop_all vl(*this);
+	c_loop_all vl(*this);
 	if(vl.start()) do compute_cell(c,vl);
 	while(vl.inc());
 }
@@ -445,7 +445,7 @@ void container::compute_all_cells() {
  * volume evaluation or cell output. */
 void container_poly::compute_all_cells() {
 	voronoicell c;
-	v_loop_all vl(*this);
+	c_loop_all vl(*this);
 	if(vl.start()) do compute_cell(c,vl);while(vl.inc());
 }
 
@@ -456,7 +456,7 @@ void container_poly::compute_all_cells() {
 double container::sum_cell_volumes() {
 	voronoicell c;
 	double vol=0;
-	v_loop_all vl(*this);
+	c_loop_all vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
 	return vol;
 }
@@ -468,7 +468,7 @@ double container::sum_cell_volumes() {
 double container_poly::sum_cell_volumes() {
 	voronoicell c;
 	double vol=0;
-	v_loop_all vl(*this);
+	c_loop_all vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
 	return vol;
 }
@@ -539,7 +539,7 @@ void wall_list::deallocate() {
 void wall_list::increase_wall_memory() {
 	current_wall_size<<=1;
 	if(current_wall_size>max_wall_size)
-		voropp_fatal_error("Wall memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+		voro_fatal_error("Wall memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 	wall **nwalls(new wall*[current_wall_size]),**nwp(nwalls),**wp(walls);
 	while(wp<wep) *(nwp++)=*(wp++);
 	delete [] walls;

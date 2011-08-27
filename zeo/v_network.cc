@@ -21,7 +21,7 @@ voronoi_network::voronoi_network(c_class &c,double net_tol_) :
 		ptsc[l]=0;ptsmem[l]=init_network_vertex_memory;
 	}
 
-	// Allocate memory for network edges and related statistics 
+	// Allocate memory for network edges and related statistics
 	edc=0;edmem=init_network_vertex_memory*nxyz;
 	ed=new int*[edmem];
 	ne=new int*[edmem];
@@ -81,12 +81,12 @@ voronoi_network::~voronoi_network() {
 /** Increase network memory for a particular region. */
 void voronoi_network::add_network_memory(int l) {
 	ptsmem[l]<<=1;
-	
+
 	// Check to see that an absolute maximum in memory allocation
 	// has not been reached, to prevent runaway allocation
 	if(ptsmem[l]>max_network_vertex_memory)
-		voropp_fatal_error("Container vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
-	
+		voro_fatal_error("Container vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
+
 	// Allocate new arrays
 	double *npts(new double[4*ptsmem[l]]);
 	int *nidmem(new int[ptsmem[l]]);
@@ -116,7 +116,7 @@ void voronoi_network::add_edge_network_memory() {
 	int *nreg(new int[edmem]);
 	int *nregp(new int[edmem]);
 
-	// Copy the contents of the old arrays into the new ones 
+	// Copy the contents of the old arrays into the new ones
 	for(i=0;i<edc;i++) {
 		ned[i]=ed[i];
 		nne[i]=ne[i];
@@ -157,22 +157,22 @@ void voronoi_network::add_particular_vertex_memory(int l) {
 	// Check that the vertex allocation does not exceed a maximum safe
 	// limit
 	if(numem[l]>max_vertex_order)
-		voropp_fatal_error("Particular vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
-	
+		voro_fatal_error("Particular vertex maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
+
 	// Allocate new arrays
 	int *ned(new int[2*numem[l]]);
 	int *nne(ned+numem[l]);
 	block *nraded(new block[numem[l]]);
 	unsigned int *npered(new unsigned int[numem[l]]);
 
-	// Copy the contents of the old arrays into the new ones 
+	// Copy the contents of the old arrays into the new ones
 	for(int i=0;i<nu[l];i++) {
 		ned[i]=ed[l][i];
 		nraded[i]=raded[l][i];
 		npered[i]=pered[l][i];
 	}
 	for(int i=0;i<nec[l];i++) nne[i]=ne[l][i];
-	
+
 	// Delete old arrays and update pointers to the new ones
 	delete [] ed[l];ed[l]=ned;ne[l]=nne;
 	delete [] raded[l];raded[l]=nraded;
@@ -233,11 +233,11 @@ void voronoi_network::print_network(FILE *fp,bool reverse_remove) {
 		for(ll=0;ll<nec[l];ll++) fprintf(fp," %d",ne[l][ll]);
 		fputs("\n",fp);
 	}
-	
+
 	// Print out the edge table, loop over vertices
 	fputs("\nEdge table:\n",fp);
 	for(l=0;l<edc;l++) {
-		
+
 		// Store the position of this vertex
 		ptsp=pts[reg[l]];j=4*regp[l];
 		x=ptsp[j];y=ptsp[j+1];z=ptsp[j+2];
@@ -250,11 +250,11 @@ void voronoi_network::print_network(FILE *fp,bool reverse_remove) {
 			// If this option is enabled, then the code will not
 			// print edges from i to j for j<i.
 			if(reverse_remove) if(ed[l][q]<l&&ai==0&&aj==0&&ak==0) continue;
-			
+
 			fprintf(fp,"%d -> %d",l,ed[l][q]);
 			raded[l][q].print(fp);
-			
-			// Compute and print the length of the edge 
+
+			// Compute and print the length of the edge
 			ptsp=pts[reg[ed[l][q]]];j=4*regp[ed[l][q]];
 			x2=ptsp[j]+ai*bx+aj*bxy+ak*bxz-x;
 			y2=ptsp[j+1]+aj*by+ak*byz-y;
@@ -297,7 +297,7 @@ template<class v_cell>
 void voronoi_network::add_to_network_internal(v_cell &c,int idn,double x,double y,double z,double rad,int *cmap) {
 	int i,j,k,ijk,l,q,ai,aj,ak,*vmp(cmap);
 	double gx,gy,vx,vy,vz,crad,*cp(c.pts);
-	
+
 	// Loop over the vertices of the Voronoi cell
 	for(l=0;l<c.p;l++,vmp+=4) {
 
@@ -309,15 +309,15 @@ void voronoi_network::add_to_network_internal(v_cell &c,int idn,double x,double 
 
 		// Compute the adjusted radius, which will be needed either way
 		crad=0.5*sqrt(cp[3*l]*cp[3*l]+cp[3*l+1]*cp[3*l+1]+cp[3*l+2]*cp[3*l+2])-rad;
-	
+
 		// Check to see if a vertex very close to this one already
-		// exists in the network 
+		// exists in the network
 		if(search_previous(gx,gy,vx,vy,vz,ijk,q,vmp[1],vmp[2],vmp[3])) {
 
 			// If it does, then just map the Voronoi cell
 			// vertex to it
 			*vmp=idmem[ijk][q];
-			
+
 			// Store this radius if it smaller than the current
 			// value
 			if(pts[ijk][4*q+3]>crad) pts[ijk][4*q+3]=crad;
@@ -405,7 +405,7 @@ template<class v_cell>
 void voronoi_network::add_to_network_rectangular_internal(v_cell &c,int idn,double x,double y,double z,double rad,int *cmap) {
 	int i,j,k,ijk,l,q,ai,aj,ak,*vmp(cmap);
 	double vx,vy,vz,crad,*cp(c.pts);
-	
+
 	for(l=0;l<c.p;l++,vmp+=4) {
 		vx=x+cp[3*l]*0.5;vy=y+cp[3*l+1]*0.5;vz=z+cp[3*l+2]*0.5;
 		crad=0.5*sqrt(cp[3*l]*cp[3*l]+cp[3*l+1]*cp[3*l+1]+cp[3*l+2]*cp[3*l+2])-rad;
@@ -414,7 +414,7 @@ void voronoi_network::add_to_network_rectangular_internal(v_cell &c,int idn,doub
 
 			// Store this radius if it smaller than the current
 			// value
-			if(pts[ijk][4*q+3]>crad) pts[ijk][4*q+3]=crad;			
+			if(pts[ijk][4*q+3]>crad) pts[ijk][4*q+3]=crad;
 		} else {
 			k=step_int(vz*zsp);
 			if(k<0||k>=nz) {
@@ -491,7 +491,7 @@ bool voronoi_network::safe_search_previous_rect(double x,double y,double z,int &
 	return search_previous_rect(x-tol,y-tol,z-tol,ijk,q,ci,cj,ck);
 }
 
-bool voronoi_network::search_previous_rect(double x,double y,double z,int &ijk,int &q,int &ci,int &cj,int &ck) {	
+bool voronoi_network::search_previous_rect(double x,double y,double z,int &ijk,int &q,int &ci,int &cj,int &ck) {
 	int k=step_int(z*zsp);
 	if(k<0||k>=nz) {
 		ck=step_div(k,nz);

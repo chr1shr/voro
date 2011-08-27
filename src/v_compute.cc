@@ -18,7 +18,7 @@ namespace voro {
  * \param[in] con_ a reference to the container class to use.
  * \param[in] (hx_,hy_,hz_) the size of the mask to use. */
 template<class c_class>
-voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
+voro_compute<c_class>::voro_compute(c_class &con_,int hx_,int hy_,int hz_) :
 	con(con_), boxx(con_.boxx), boxy(con_.boxy), boxz(con_.boxz),
 	xsp(con_.xsp), ysp(con_.ysp), zsp(con_.zsp),
 	hx(hx_), hy(hy_), hz(hz_), hxy(hx_*hy_), hxyz(hxy*hz_), ps(con_.ps),
@@ -43,7 +43,7 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
  * \param[in,out] mrs the current minimum distance, that may be updated if a
  * 		      closer particle is found. */
 template<class c_class>
-inline void voropp_compute<c_class>::scan_all(int ijk,double x,double y,double z,int di,int dj,int dk,particle_record &w,double &mrs) {
+inline void voro_compute<c_class>::scan_all(int ijk,double x,double y,double z,int di,int dj,int dk,particle_record &w,double &mrs) {
 	double x1,y1,z1,rs;bool in_block(false);
 	for(int l=0;l<co[ijk];l++) {
 		x1=p[ijk][ps*l]-x;
@@ -67,7 +67,7 @@ inline void voropp_compute<c_class>::scan_all(int ijk,double x,double y,double z
  * 		 about the particle whose Voronoi cell the vector is within.
  * \param[out] mrs the minimum computed distance. */
 template<class c_class>
-void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record &w,double &mrs) {
+void voro_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record &w,double &mrs) {
 	double qx=0,qy=0,qz=0,rs;
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,disp;
 	double fx,fy,fz,mxs,mys,mzs,*radp;
@@ -232,7 +232,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
  * \param[in] (ei,ej,ek) the block to consider.
  * \param[in,out] qu_e a pointer to the end of the queue. */
 template<class c_class>
-inline void voropp_compute<c_class>::add_to_mask(int ei,int ej,int ek,int *&qu_e) {
+inline void voro_compute<c_class>::add_to_mask(int ei,int ej,int ek,int *&qu_e) {
 	unsigned int *mijk(mask+ei+hx*(ej+hy*ek));
 	if(ek>0) if(*(mijk-hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
 	if(ej>0) if(*(mijk-hx)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
@@ -246,7 +246,7 @@ inline void voropp_compute<c_class>::add_to_mask(int ei,int ej,int ek,int *&qu_e
  * \param[in] (ei,ej,ek) the block to consider.
  * \param[in,out] qu_e a pointer to the end of the queue. */
 template<class c_class>
-inline void voropp_compute<c_class>::scan_bits_mask_add(unsigned int q,unsigned int *mijk,int ei,int ej,int ek,int *&qu_e) {
+inline void voro_compute<c_class>::scan_bits_mask_add(unsigned int q,unsigned int *mijk,int ei,int ej,int ek,int *&qu_e) {
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
 	if((q&b2)==b2) {
 		if(ei>0) {*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
@@ -287,7 +287,7 @@ inline void voropp_compute<c_class>::scan_bits_mask_add(unsigned int q,unsigned 
  *         computation and has zero volume, true otherwise. */
 template<class c_class>
 template<class v_cell>
-bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck) {
+bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck) {
 	static const int count_list[8]={7,11,15,19,26,35,45,59}, *count_e(count_list+8);
 	double x,y,z,x1,y1,z1,qx=0,qy=0,qz=0;
 	double xlo,ylo,zlo,xhi,yhi,zhi,x2,y2,z2,rs;
@@ -585,7 +585,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 			} else {
 				if(ek>k) {if(face_z_test(c,xlo,ylo,zlo,xhi,yhi)) continue;}
 				else if(ek<k) {if(face_z_test(c,xlo,ylo,zhi,xhi,yhi)) continue;}
-				else voropp_fatal_error("Compute cell routine revisiting central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
+				else voro_fatal_error("Compute cell routine revisiting central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
 			}
 		}
 
@@ -630,7 +630,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
 template<class v_cell>
-bool voropp_compute<c_class>::corner_test(v_cell &c,double xl,double yl,double zl,double xh,double yh,double zh) {
+bool voro_compute<c_class>::corner_test(v_cell &c,double xl,double yl,double zl,double xh,double yh,double zh) {
 	if(c.plane_intersects_guess(xh,yl,zl,con.r_cutoff(xl*xh+yl*yl+zl*zl))) return false;
 	if(c.plane_intersects(xh,yh,zl,con.r_cutoff(xl*xh+yl*yh+zl*zl))) return false;
 	if(c.plane_intersects(xl,yh,zl,con.r_cutoff(xl*xl+yl*yh+zl*zl))) return false;
@@ -654,7 +654,7 @@ bool voropp_compute<c_class>::corner_test(v_cell &c,double xl,double yl,double z
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
 template<class v_cell>
-inline bool voropp_compute<c_class>::edge_x_test(v_cell &c,double x0,double yl,double zl,double x1,double yh,double zh) {
+inline bool voro_compute<c_class>::edge_x_test(v_cell &c,double x0,double yl,double zl,double x1,double yh,double zh) {
 	if(c.plane_intersects_guess(x0,yl,zh,con.r_cutoff(yl*yl+zl*zh))) return false;
 	if(c.plane_intersects(x1,yl,zh,con.r_cutoff(yl*yl+zl*zh))) return false;
 	if(c.plane_intersects(x1,yl,zl,con.r_cutoff(yl*yl+zl*zl))) return false;
@@ -678,7 +678,7 @@ inline bool voropp_compute<c_class>::edge_x_test(v_cell &c,double x0,double yl,d
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
 template<class v_cell>
-inline bool voropp_compute<c_class>::edge_y_test(v_cell &c,double xl,double y0,double zl,double xh,double y1,double zh) {
+inline bool voro_compute<c_class>::edge_y_test(v_cell &c,double xl,double y0,double zl,double xh,double y1,double zh) {
 	if(c.plane_intersects_guess(xl,y0,zh,con.r_cutoff(xl*xl+zl*zh))) return false;
 	if(c.plane_intersects(xl,y1,zh,con.r_cutoff(xl*xl+zl*zh))) return false;
 	if(c.plane_intersects(xl,y1,zl,con.r_cutoff(xl*xl+zl*zl))) return false;
@@ -701,7 +701,7 @@ inline bool voropp_compute<c_class>::edge_y_test(v_cell &c,double xl,double y0,d
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
 template<class v_cell>
-inline bool voropp_compute<c_class>::edge_z_test(v_cell &c,double xl,double yl,double z0,double xh,double yh,double z1) {
+inline bool voro_compute<c_class>::edge_z_test(v_cell &c,double xl,double yl,double z0,double xh,double yh,double z1) {
 	if(c.plane_intersects_guess(xl,yh,z0,con.r_cutoff(xl*xl+yl*yh))) return false;
 	if(c.plane_intersects(xl,yh,z1,con.r_cutoff(xl*xl+yl*yh))) return false;
 	if(c.plane_intersects(xl,yl,z1,con.r_cutoff(xl*xl+yl*yl))) return false;
@@ -723,7 +723,7 @@ inline bool voropp_compute<c_class>::edge_z_test(v_cell &c,double xl,double yl,d
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
 template<class v_cell>
-inline bool voropp_compute<c_class>::face_x_test(v_cell &c,double xl,double y0,double z0,double y1,double z1) {
+inline bool voro_compute<c_class>::face_x_test(v_cell &c,double xl,double y0,double z0,double y1,double z1) {
 	if(c.plane_intersects_guess(xl,y0,z0,con.r_cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y0,z1,con.r_cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y1,z1,con.r_cutoff(xl*xl))) return false;
@@ -743,7 +743,7 @@ inline bool voropp_compute<c_class>::face_x_test(v_cell &c,double xl,double y0,d
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
 template<class v_cell>
-inline bool voropp_compute<c_class>::face_y_test(v_cell &c,double x0,double yl,double z0,double x1,double z1) {
+inline bool voro_compute<c_class>::face_y_test(v_cell &c,double x0,double yl,double z0,double x1,double z1) {
 	if(c.plane_intersects_guess(x0,yl,z0,con.r_cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x0,yl,z1,con.r_cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x1,yl,z1,con.r_cutoff(yl*yl))) return false;
@@ -763,7 +763,7 @@ inline bool voropp_compute<c_class>::face_y_test(v_cell &c,double x0,double yl,d
  * \return False if the block may intersect, true if does not. */
 template<class c_class>
 template<class v_cell>
-inline bool voropp_compute<c_class>::face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1) {
+inline bool voro_compute<c_class>::face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1) {
 	if(c.plane_intersects_guess(x0,y0,zl,con.r_cutoff(zl*zl))) return false;
 	if(c.plane_intersects(x0,y1,zl,con.r_cutoff(zl*zl))) return false;
 	if(c.plane_intersects(x1,y1,zl,con.r_cutoff(zl*zl))) return false;
@@ -787,7 +787,7 @@ inline bool voropp_compute<c_class>::face_z_test(v_cell &c,double x0,double y0,d
  * \return False if the region is further away than mrs, true if the region in
  *         within mrs.*/
 template<class c_class>
-bool voropp_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gxs,double gys,double gzs,double &crs,double mrs) {
+bool voro_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gxs,double gys,double gzs,double &crs,double mrs) {
 	double xlo,ylo,zlo;
 	if(di>0) {
 		xlo=di*boxx-fx;
@@ -927,7 +927,7 @@ bool voropp_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
 				crs=0;
-				voropp_fatal_error("Min/max radius function called for central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
+				voro_fatal_error("Min/max radius function called for central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
 			}
 			crs+=gys;
 		}
@@ -937,7 +937,7 @@ bool voropp_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double
 }
 
 template<class c_class>
-bool voropp_compute<c_class>::compute_min_radius(int di,int dj,int dk,double fx,double fy,double fz,double mrs) {
+bool voro_compute<c_class>::compute_min_radius(int di,int dj,int dk,double fx,double fy,double fz,double mrs) {
 	double t,crs;
 
 	if(di>0) {t=di*boxx-fx;crs=t*t;}
@@ -957,7 +957,7 @@ bool voropp_compute<c_class>::compute_min_radius(int di,int dj,int dk,double fx,
  * \param[in,out] qu_s a reference to the queue start pointer.
  * \param[in,out] qu_e a reference to the queue end pointer. */
 template<class c_class>
-inline void voropp_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
+inline void voro_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
 	qu_size<<=1;
 	int *qu_n(new int[qu_size]),*qu_c(qu_n);
 #if VOROPP_VERBOSE >=2
@@ -976,23 +976,23 @@ inline void voropp_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
 }
 
 // Explicit template instantiation
-template voropp_compute<container>::voropp_compute(container&,int,int,int);
-template voropp_compute<container_poly>::voropp_compute(container_poly&,int,int,int);
-template bool voropp_compute<container>::compute_cell(voronoicell&,int,int,int,int,int);
-template bool voropp_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voropp_compute<container>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
-template bool voropp_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int);
-template bool voropp_compute<container_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voropp_compute<container_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
+template voro_compute<container>::voro_compute(container&,int,int,int);
+template voro_compute<container_poly>::voro_compute(container_poly&,int,int,int);
+template bool voro_compute<container>::compute_cell(voronoicell&,int,int,int,int,int);
+template bool voro_compute<container>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template void voro_compute<container>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
+template bool voro_compute<container_poly>::compute_cell(voronoicell&,int,int,int,int,int);
+template bool voro_compute<container_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template void voro_compute<container_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
 
 // Explicit template instantiation
-template voropp_compute<container_periodic>::voropp_compute(container_periodic&,int,int,int);
-template voropp_compute<container_periodic_poly>::voropp_compute(container_periodic_poly&,int,int,int);
-template bool voropp_compute<container_periodic>::compute_cell(voronoicell&,int,int,int,int,int);
-template bool voropp_compute<container_periodic>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voropp_compute<container_periodic>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
-template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell&,int,int,int,int,int);
-template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voropp_compute<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
+template voro_compute<container_periodic>::voro_compute(container_periodic&,int,int,int);
+template voro_compute<container_periodic_poly>::voro_compute(container_periodic_poly&,int,int,int);
+template bool voro_compute<container_periodic>::compute_cell(voronoicell&,int,int,int,int,int);
+template bool voro_compute<container_periodic>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template void voro_compute<container_periodic>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
+template bool voro_compute<container_periodic_poly>::compute_cell(voronoicell&,int,int,int,int,int);
+template bool voro_compute<container_periodic_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template void voro_compute<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
 
 }

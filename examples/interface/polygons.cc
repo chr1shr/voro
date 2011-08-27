@@ -29,13 +29,13 @@ int main() {
 	pcon.setup(con);
 
 	// Open the output files
-	FILE *fp4(voropp_safe_fopen("polygons4_v.pov","w")),
-	     *fp5(voropp_safe_fopen("polygons5_v.pov","w")),
-	     *fp6(voropp_safe_fopen("polygons6_v.pov","w"));
+	FILE *fp4(safe_fopen("polygons4_v.pov","w")),
+	     *fp5(safe_fopen("polygons5_v.pov","w")),
+	     *fp6(safe_fopen("polygons6_v.pov","w"));
 
 	// Loop over all particles in the container and compute each Voronoi
 	// cell
-	v_loop_all vl(con);
+	c_loop_all vl(con);
 	if(vl.start()) do if(con.compute_cell(c,vl)) {
 		vl.pos(x,y,z);id=vl.pid();
 

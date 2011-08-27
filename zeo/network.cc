@@ -28,7 +28,7 @@ void compute(c_class &con,char *buffer,int bp,double vol);
 
 // Commonly used error message
 void file_import_error() {
-	voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
 int main(int argc,char **argv) {
@@ -59,20 +59,20 @@ int main(int argc,char **argv) {
 
 	// Try opening the file
 	FILE *fp(fopen(farg,"r"));
-	if(fp==NULL) voropp_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
+	if(fp==NULL) voro_fatal_error("Unable to open file for import",VOROPP_FILE_ERROR);
 
 	// Read header line
 	if(fgets(buffer,bsize,fp)!=buffer) file_import_error();
 	if(strcmp(buffer,"Unit cell vectors:\n")!=0)
-		voropp_fatal_error("Invalid header line",VOROPP_FILE_ERROR);
-	
+		voro_fatal_error("Invalid header line",VOROPP_FILE_ERROR);
+
 	// Read in the box dimensions and the number of particles
 	if(fscanf(fp,"%s %lg %lg %lg",buffer,&bx,&x,&x)!=4) file_import_error();
-	if(strcmp(buffer,"va=")!=0) voropp_fatal_error("Invalid first vector",VOROPP_FILE_ERROR);
+	if(strcmp(buffer,"va=")!=0) voro_fatal_error("Invalid first vector",VOROPP_FILE_ERROR);
 	if(fscanf(fp,"%s %lg %lg %lg",buffer,&bxy,&by,&x)!=4) file_import_error();
-	if(strcmp(buffer,"vb=")!=0) voropp_fatal_error("Invalid second vector",VOROPP_FILE_ERROR);
+	if(strcmp(buffer,"vb=")!=0) voro_fatal_error("Invalid second vector",VOROPP_FILE_ERROR);
 	if(fscanf(fp,"%s %lg %lg %lg",buffer,&bxz,&byz,&bz)!=4) file_import_error();
-	if(strcmp(buffer,"vc=")!=0) voropp_fatal_error("Invalid third vector",VOROPP_FILE_ERROR);
+	if(strcmp(buffer,"vc=")!=0) voro_fatal_error("Invalid third vector",VOROPP_FILE_ERROR);
 	if(fscanf(fp,"%d",&n)!=1) file_import_error();
 
 	// Print the box dimensions
@@ -82,9 +82,9 @@ int main(int argc,char **argv) {
 	       "  vc=(%f %f %f)\n\n",bx,bxy,by,bxz,byz,bz);
 
 	// Check that the input parameters make sense
-	if(n<1) voropp_fatal_error("Invalid number of particles",VOROPP_FILE_ERROR);
+	if(n<1) voro_fatal_error("Invalid number of particles",VOROPP_FILE_ERROR);
 	if(bx<tolerance||by<tolerance||bz<tolerance)
-		voropp_fatal_error("Invalid box dimensions",VOROPP_FILE_ERROR);
+		voro_fatal_error("Invalid box dimensions",VOROPP_FILE_ERROR);
 
 	// Compute the internal grid size, aiming to make
 	// the grid blocks square with around 6 particles
@@ -127,14 +127,14 @@ int main(int argc,char **argv) {
 		for(i=0;i<bp-2;i++) buffer[i]=farg[i];
 		compute(con,buffer,bp,vol);
 	} else {
-		
+
 		// Create a container with the geometry given above
 		container_periodic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
 
 		// Read in the particles from the file
 		for(i=0;i<n;i++) {
 			if(fscanf(fp,"%s %lg %lg %lg",buffer,&x,&y,&z)!=4)
-				voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+				voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 			con.put(i,x,y,z);
 		}
 		fclose(fp);
@@ -147,7 +147,7 @@ int main(int argc,char **argv) {
 
 inline void extension(const char *ext,char *bu) {
 	char *ep((char*) ext);
-	while(*ep!=0) *(bu++)=*(ep++);*bu=*ep;	
+	while(*ep!=0) *(bu++)=*(ep++);*bu=*ep;
 }
 
 template<class c_class>
@@ -157,9 +157,9 @@ void compute(c_class &con,char *buffer,int bp,double vol) {
 	double vvol(0),x,y,z,r;
 	voronoicell c;
 	voronoi_network vn(con,1e-5),vn2(con,1e-5);
-	
-	// Compute Voronoi cells and 
-	v_loop_all_periodic vl(con);
+
+	// Compute Voronoi cells and
+	c_loop_all_periodic vl(con);
 	if(vl.start()) do if(con.compute_cell(c,vl)) {
 		vvol+=c.volume();
 		vl.pos(id,x,y,z,r);
@@ -184,7 +184,7 @@ void compute(c_class &con,char *buffer,int bp,double vol) {
 
 	// Output the Voronoi cells in gnuplot format
 	extension("out",bu);con.draw_cells_gnuplot(buffer);
-	
+
 	// Output the unit cell in gnuplot format
 	extension("dom",bu);con.draw_domain_gnuplot(buffer);
 }

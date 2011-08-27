@@ -10,7 +10,7 @@
 #ifndef VOROPP_PRE_CONTAINER_HH
 #define VOROPP_PRE_CONTAINER_HH
 
-#include "v_loops.hh"
+#include "c_loops.hh"
 #include "container.hh"
 
 namespace voro {
@@ -113,12 +113,12 @@ class pre_container : public pre_container_base {
 		/** Imports particles from a file.
 		 * \param[in] filename the name of the file to read from. */
 		inline void import(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"r"));
+			FILE *fp(safe_fopen(filename,"r"));
 			import(fp);
 			fclose(fp);
 		}
 		void setup(container &con);
-		void setup(voropp_order &vo,container &con);
+		void setup(particle_order &vo,container &con);
 };
 
 /** \brief A class for storing an arbitrary number of particles with radius
@@ -147,12 +147,12 @@ class pre_container_poly : public pre_container_base {
 		/** Imports particles from a file.
 		 * \param[in] filename the name of the file to read from. */
 		inline void import(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"r"));
+			FILE *fp(safe_fopen(filename,"r"));
 			import(fp);
 			fclose(fp);
 		}
 		void setup(container_poly &con);
-		void setup(voropp_order &vo,container_poly &con);
+		void setup(particle_order &vo,container_poly &con);
 };
 
 }

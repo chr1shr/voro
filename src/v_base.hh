@@ -12,7 +12,7 @@
 
 namespace voro {
 
-class voropp_base {
+class voro_base {
 	public:
 		/** The number of blocks in the x direction. */
 		const int nx;
@@ -44,8 +44,8 @@ class voropp_base {
 		 * construction, by the initialize_radii() routine. */
 		double *mrad;
 		bool contains_neighbor(const char* format);
-		voropp_base(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_);
-		~voropp_base() {delete [] mrad;}
+		voro_base(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_);
+		~voro_base() {delete [] mrad;}
 #include "worklist.hh"
 	protected:
 		/** A custom int function that returns consistent stepping

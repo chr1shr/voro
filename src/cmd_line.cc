@@ -117,8 +117,8 @@ void error_message() {
 }
 
 // Carries out the Voronoi computation
-template<class v_loop,class c_class>
-void cmd_line_output(v_loop &vl,c_class &con,const char* format,FILE* outfile,FILE* gnu_file,FILE* povp_file,FILE* povv_file) {
+template<class c_loop,class c_class>
+void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FILE* gnu_file,FILE* povp_file,FILE* povv_file) {
 	int pid,ps(con.ps);double x,y,z,r;
 	if(con.contains_neighbor(format)) {
 		voronoicell_neighbor c;
@@ -384,18 +384,18 @@ int main(int argc,char **argv) {
 	// Open files for output
 	char *buffer(new char[flen+7]);
 	sprintf(buffer,"%s.vol",argv[i+6]);
-	FILE *outfile(voropp_safe_fopen(buffer,"w")),*gnu_file,*povp_file,*povv_file;
+	FILE *outfile(safe_fopen(buffer,"w")),*gnu_file,*povp_file,*povv_file;
 	if(gnuplot_output) {
 		sprintf(buffer,"%s.gnu",argv[i+6]);
-		gnu_file=voropp_safe_fopen(buffer,"w");
+		gnu_file=safe_fopen(buffer,"w");
 	} else gnu_file=NULL;
 	if(povp_output) {
 		sprintf(buffer,"%s_p.pov",argv[i+6]);
-		povp_file=voropp_safe_fopen(buffer,"w");
+		povp_file=safe_fopen(buffer,"w");
 	} else povp_file=NULL;
 	if(povv_output) {
 		sprintf(buffer,"%s_v.pov",argv[i+6]);
-		povv_file=voropp_safe_fopen(buffer,"w");
+		povv_file=safe_fopen(buffer,"w");
 	} else povv_file=NULL;
 	delete [] buffer;
 
@@ -405,14 +405,14 @@ int main(int argc,char **argv) {
 	// whether output ordering is requested
 	if(polydisperse) {
 		if(ordered) {
-			voropp_order vo;
+			particle_order vo;
 			container_poly con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
 			con.add_wall(wl);
 			if(bm==none) {
 				pconp->setup(vo,con);delete pconp;
 			} else con.import(vo,argv[i+6]);
 
-			v_loop_order vlo(con,vo);
+			c_loop_order vlo(con,vo);
 			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file);
 		} else {
 			container_poly con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
@@ -422,19 +422,19 @@ int main(int argc,char **argv) {
 				pconp->setup(con);delete pconp;
 			} else con.import(argv[i+6]);
 
-			v_loop_all vla(con);
+			c_loop_all vla(con);
 			cmd_line_output(vla,con,c_str,outfile,gnu_file,povp_file,povv_file);
 		}
 	} else {
 		if(ordered) {
-			voropp_order vo;
+			particle_order vo;
 			container con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
 			con.add_wall(wl);
 			if(bm==none) {
 				pcon->setup(vo,con);delete pcon;
 			} else con.import(vo,argv[i+6]);
 
-			v_loop_order vlo(con,vo);
+			c_loop_order vlo(con,vo);
 			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file);
 		} else {
 			container con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
@@ -442,7 +442,7 @@ int main(int argc,char **argv) {
 			if(bm==none) {
 				pcon->setup(con);delete pcon;
 			} else con.import(argv[i+6]);
-			v_loop_all vla(con);
+			c_loop_all vla(con);
 			cmd_line_output(vla,con,c_str,outfile,gnu_file,povp_file,povv_file);
 		}
 	}

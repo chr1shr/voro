@@ -4,7 +4,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 28th 2011
 
-/** \file v_loops.hh
+/** \file c_loops.hh
  * \brief Header file for the loop classes. */
 
 #ifndef VOROPP_V_LOOPS_HH
@@ -20,9 +20,9 @@ using namespace std;
 
 namespace voro {
 
-/** A type associated with a v_loop_subset class, determining what type of
+/** A type associated with a c_loop_subset class, determining what type of
  * geometrical region to loop over. */
-enum v_loop_subset_mode {
+enum c_loop_subset_mode {
 	sphere,
 	box,
 	no_check
@@ -33,7 +33,7 @@ enum v_loop_subset_mode {
  *
  * By default, when particles are added to a container class, they are sorted
  * into an.  */
-class voropp_order {
+class particle_order {
 	public:
 		/** A pointer to the array holding the ordering. */
 		int *o;
@@ -43,15 +43,15 @@ class voropp_order {
 		/** The current memory allocation for the class, set to the
 		 * number of entries which can be stored. */
 		int size;
-		/** The voropp_order constructor allocates memory to store the
+		/** The particle_order constructor allocates memory to store the
 		 * ordering information.
 		 * \param[in] init_size the initial amount of memory to
 		 *                      allocate. */
-		voropp_order(int init_size=init_ordering_size)
+		particle_order(int init_size=init_ordering_size)
 			: o(new int[init_size<<1]),op(o),size(init_size) {}
-		/** The voropp_order destructor frees the dynamically allocated
+		/** The particle_order destructor frees the dynamically allocated
 		 * memory used to store the ordering information. */
-		~voropp_order() {
+		~particle_order() {
 			delete [] o;
 		}
 		/** Adds a record to the order, corresponding to the memory
@@ -74,7 +74,7 @@ class voropp_order {
  * about the corresponding container geometry. It also contains a number of
  * routines for interrogating which particle currently being considered by the
  * loop, which are common between all of the derived classes. */
-class v_loop_base {
+class c_loop_base {
 	public:
 		/** The number of blocks in the x direction. */
 		const int nx;
@@ -120,7 +120,7 @@ class v_loop_base {
 		 * base container class.
 		 * \param[in] con the container class to use. */
 		template<class c_class>
-		v_loop_base(c_class &con) : nx(con.nx), ny(con.ny), nz(con.nz),
+		c_loop_base(c_class &con) : nx(con.nx), ny(con.ny), nz(con.nz),
 					    nxy(con.nxy), nxyz(con.nxyz), ps(con.ps),
 					    p(con.p), id(con.id), co(con.co) {}
 		/** Returns the position vector of the particle currently being
@@ -161,13 +161,13 @@ class v_loop_base {
  *
  * This is one of the simplest loop classes, that scans the computational
  * blocks in order, and scans all the particles within each block in order. */
-class v_loop_all : public v_loop_base {
+class c_loop_all : public c_loop_base {
 	public:
 		template<class c_class>
 		/** The constructor copies several necessary constants from the
 		 * base container class.
 		 * \param[in] con the container class to use. */
-		v_loop_all(c_class &con) : v_loop_base(con) {}
+		c_loop_all(c_class &con) : c_loop_base(con) {}
 		/** Sets the class to consider the first particle.
 		 * \return True if there is any particle to consider, false
 		 * otherwise. */
@@ -210,17 +210,17 @@ class v_loop_all : public v_loop_base {
  * region within the container. The class can be set up to loop over a
  * rectangular box or sphere. It can also rectangular group of internal
  * computational blocks. */
-class v_loop_subset : public v_loop_base {
+class c_loop_subset : public c_loop_base {
 	public:
 		/** The current mode of operation, determining whether tests
 		 * should be applied to particles to ensure they are within a
 		 * certain geometrical object. */
-		v_loop_subset_mode mode;
+		c_loop_subset_mode mode;
 		/** The constructor copies several necessary constants from the
 		 * base container class.
 		 * \param[in] con the container class to use. */
 		template<class c_class>
-		v_loop_subset(c_class &con) : v_loop_base(con), ax(con.ax), ay(con.ay), az(con.az),
+		c_loop_subset(c_class &con) : c_loop_base(con), ax(con.ax), ay(con.ay), az(con.az),
 			sx(con.bx-ax), sy(con.by-ay), sz(con.bz-az), xsp(con.xsp), ysp(con.ysp), zsp(con.zsp),
 			xperiodic(con.xperiodic), yperiodic(con.yperiodic), zperiodic(con.zperiodic) {}
 		void setup_sphere(double vx,double vy,double vz,double r,bool bounds_test=true);
@@ -253,17 +253,17 @@ class v_loop_subset : public v_loop_base {
 };
 
 /** \brief Class for looping over all of the particles specified in a
- * pre-assembled voropp_order class.
+ * pre-assembled particle_order class.
  *
- * The voropp_order class can be used to create a specific order of particles
+ * The particle_order class can be used to create a specific order of particles
  * within the container. This class can then loop over these particles in this
  * order. The class is particularly useful in cases where the ordering of the
  * output must match the ordering of particles as they were inserted into the
  * container. */
-class v_loop_order : public v_loop_base {
+class c_loop_order : public c_loop_base {
 	public:
 		/** A reference to the ordering class to use. */
-		voropp_order &vo;
+		particle_order &vo;
 		/** A pointer to the current position in the ordering class. */
 		int *cp;
 		/** A pointer to the end position in the ordering class. */
@@ -274,8 +274,8 @@ class v_loop_order : public v_loop_base {
 		 * \param[in] con the container class to use.
 		 * \param[in] vo_ the ordering class to use. */
 		template<class c_class>
-		v_loop_order(c_class &con,voropp_order &vo_)
-		: v_loop_base(con), vo(vo_), nx(con.nx), nxy(con.nxy) {}
+		c_loop_order(c_class &con,particle_order &vo_)
+		: c_loop_base(con), vo(vo_), nx(con.nx), nxy(con.nxy) {}
 		/** Sets the class to consider the first particle.
 		 * \return True if there is any particle to consider, false
 		 * otherwise. */
@@ -317,13 +317,13 @@ class v_loop_order : public v_loop_base {
  * Since the container_periodic and container_periodic_poly classes have a
  * fundamentally different memory organization, the regular loop classes cannot
  * be used with them. */
-class v_loop_all_periodic : public v_loop_base {
+class c_loop_all_periodic : public c_loop_base {
 	public:
 		/** The constructor copies several necessary constants from the
 		 * base periodic container class.
 		 * \param[in] con the periodic container class to use. */
 		template<class c_class>
-		v_loop_all_periodic(c_class &con) : v_loop_base(con), ey(con.ey), ez(con.ez), wy(con.wy), wz(con.wz),
+		c_loop_all_periodic(c_class &con) : c_loop_base(con), ey(con.ey), ez(con.ez), wy(con.wy), wz(con.wz),
 			ijk0(nx*(ey+con.oy*ez)), inc2(2*nx*con.ey+1) {}
 		/** Sets the class to consider the first particle.
 		 * \return True if there is any particle to consider, false

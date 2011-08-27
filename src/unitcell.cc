@@ -80,7 +80,7 @@ unitcell::unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,dou
 	// completely bounded by the plane cuts. Give the memory error code,
 	// because this is mainly a case of hitting a safe limit, than any
 	// inherent problem.
-	voropp_fatal_error("Periodic cell computation failed",VOROPP_MEMORY_ERROR);
+	voro_fatal_error("Periodic cell computation failed",VOROPP_MEMORY_ERROR);
 }
 
 /** Applies a pair of opposing plane cuts from a periodic image point

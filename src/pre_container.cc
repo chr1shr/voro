@@ -142,7 +142,7 @@ void pre_container_poly::setup(container_poly &con) {
  * recording the order in which particles were stored.
  * \param[in] vo the ordering class to use.
  * \param[in] con the container class to transfer to. */
-void pre_container::setup(voropp_order &vo,container &con) {
+void pre_container::setup(particle_order &vo,container &con) {
 	int **c_id(pre_id),*idp,*ide,n;
 	double **c_p(pre_p),*pp,x,y,z;
 	while(c_id<end_id) {
@@ -165,7 +165,7 @@ void pre_container::setup(voropp_order &vo,container &con) {
  * also recording the order in which particles were stored.
  * \param[in] vo the ordering class to use.
  * \param[in] con the container_poly class to transfer to. */
-void pre_container_poly::setup(voropp_order &vo,container_poly &con) {
+void pre_container_poly::setup(particle_order &vo,container_poly &con) {
 	int **c_id(pre_id),*idp,*ide,n;
 	double **c_p(pre_p),*pp,x,y,z,r;
 	while(c_id<end_id) {
@@ -193,7 +193,7 @@ void pre_container::import(FILE *fp) {
 	int i,j;
 	double x,y,z;
 	while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z))==4) put(i,x,y,z);
-	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
 /** Import a list of particles from an open file stream, also storing the order
@@ -205,7 +205,7 @@ void pre_container_poly::import(FILE *fp) {
 	int i,j;
 	double x,y,z,r;
 	while((j=fscanf(fp,"%d %lg %lg %lg %lg",&i,&x,&y,&z,&r))==5) put(i,x,y,z,r);
-	if(j!=EOF) voropp_fatal_error("File import error",VOROPP_FILE_ERROR);
+	if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
 /** Allocates a new chunk of memory for storing particles. */
@@ -221,7 +221,7 @@ void pre_container_base::new_chunk() {
 void pre_container_base::extend_chunk_index() {
 	index_sz<<=1;
 	if(index_sz>max_chunk_size)
-		voropp_fatal_error("Absolute memory limit on chunk index reached",VOROPP_MEMORY_ERROR);
+		voro_fatal_error("Absolute memory limit on chunk index reached",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Pre-container chunk index scaled up to %d\n",index_sz);
 #endif

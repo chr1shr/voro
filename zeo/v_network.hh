@@ -56,13 +56,13 @@ class voronoi_network {
 		~voronoi_network();
 		void print_network(FILE *fp=stdout,bool reverse_remove=false);
 		inline void print_network(const char* filename,bool reverse_remove=false) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
+			FILE *fp(safe_fopen(filename,"w"));
 			print_network(fp);
 			fclose(fp);
 		}
 		void draw_network(FILE *fp=stdout);
 		inline void draw_network(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
+			FILE *fp(safe_fopen(filename,"w"));
 			draw_network(fp);
 			fclose(fp);
 		}

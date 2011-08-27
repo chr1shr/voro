@@ -24,7 +24,7 @@ namespace voro {
 /** \brief Structure for holding information about a particle.
  *
  * This small structure holds information about a single particle, and is used
- * by several of the routines in the voropp_compute template for passing
+ * by several of the routines in the voro_compute template for passing
  * information by reference between functions. */
 struct particle_record {
 	/** The index of the block that the particle is within. */
@@ -41,7 +41,7 @@ struct particle_record {
 
 /** \brief Template for carrying out Voronoi cell computations. */
 template <class c_class>
-class voropp_compute {
+class voro_compute {
 	public:
 		/** A reference to the container class on which to carry out*/
 		c_class &con;
@@ -89,10 +89,10 @@ class voropp_compute {
 		/** An array holding the number of particles within each
 		 * computational box of the container. */
 		int *co;
-		voropp_compute(c_class &con_,int hx_,int hy_,int hz_);
+		voro_compute(c_class &con_,int hx_,int hy_,int hz_);
 		/** The class destructor frees the dynamically allocated memory
 		 * for the mask and queue. */
-		~voropp_compute() {
+		~voro_compute() {
 			delete [] qu;
 			delete [] mask;
 		}

@@ -4,14 +4,14 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 28th 2011
 
-/** \file v_loops.cc
+/** \file c_loops.cc
  * \brief Function implementations for the loop classes. */
 
-#include "v_loops.hh"
+#include "c_loops.hh"
 
 namespace voro {
 
-/** Initializes a v_loop_subset object to scan over all particles within a
+/** Initializes a c_loop_subset object to scan over all particles within a
  * given sphere.
  * \param[in] (vx,vy,vz) the position vector of the center of the sphere.
  * \param[in] r the radius of the sphere.
@@ -21,7 +21,7 @@ namespace voro {
  *                        the particle will only loop over the particles which
  *                        actually lie within the sphere.
  * \return True if there is any valid point to loop over, false otherwise. */
-void v_loop_subset::setup_sphere(double vx,double vy,double vz,double r,bool bounds_test) {
+void c_loop_subset::setup_sphere(double vx,double vy,double vz,double r,bool bounds_test) {
 	if(bounds_test) {mode=sphere;v0=vx;v1=vy;v2=vz;v3=r*r;} else mode=no_check;
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
@@ -41,7 +41,7 @@ void v_loop_subset::setup_sphere(double vx,double vy,double vz,double r,bool bou
  * \param[in] (ak_,bk_) the subgrid range in the z-direction, inclusive of both
  *                      ends.
  * \return True if there is any valid point to loop over, false otherwise. */
-void v_loop_subset::setup_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_) {
+void c_loop_subset::setup_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_) {
 	ai=ai_;bi=bi_;aj=aj_;bj=bj_;ak=ak_;bk=bk_;
 	mode=no_check;
 	setup_common();
@@ -49,7 +49,7 @@ void v_loop_subset::setup_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_
 
 /** Sets up all of the common constants used for the loop.
  * \return True if there is any valid point to loop over, false otherwise. */
-void v_loop_subset::setup_common() {
+void c_loop_subset::setup_common() {
 	if(!xperiodic) {
 		if(ai<0) {ai=0;if(bi<0) bi=0;}
 		if(bi>=nx) {bi=nx-1;if(ai>=nx) ai=nx-1;}
@@ -76,7 +76,7 @@ void v_loop_subset::setup_common() {
 /** Starts the loop by finding the first particle within the container to
  * consider.
  * \return True if there is any particle to consider, false otherwise. */
-bool v_loop_subset::start() {
+bool c_loop_subset::start() {
 	while(co[ijk]==0) {if(!next_block()) return false;}
 	while(mode!=no_check&&out_of_bounds()) {
 		q++;
@@ -95,7 +95,7 @@ bool v_loop_subset::start() {
  *                        particle will only loop over the particles which
  *                        actually lie within the box.
  * \return True if there is any valid point to loop over, false otherwise. */
-void v_loop_subset::setup_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test) {
+void c_loop_subset::setup_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test) {
 	if(bounds_test) {mode=box;v0=xmin;v1=xmax;v2=ymin;v3=ymax;v4=zmin;v5=zmax;} else mode=no_check;
 	ai=step_int((xmin-ax)*xsp);
 	bi=step_int((xmax-ax)*xsp);
@@ -109,7 +109,7 @@ void v_loop_subset::setup_box(double xmin,double xmax,double ymin,double ymax,do
 /** Computes whether the current point is out of bounds, relative to the
  * current loop setup.
  * \return True if the point is out of bounds, false otherwise. */
-bool v_loop_subset::out_of_bounds() {
+bool c_loop_subset::out_of_bounds() {
 	double *pp(p[ijk]+ps*q);
 	if(mode==sphere) {
 		double fx(*pp+px-v0),fy(pp[1]+py-v1),fz(pp[2]+pz-v2);
@@ -123,7 +123,7 @@ bool v_loop_subset::out_of_bounds() {
 
 /** Returns the next block to be tested in a loop, and updates the periodicity
  * vector if necessary. */
-bool v_loop_subset::next_block() {
+bool c_loop_subset::next_block() {
 	if(i<bi) {
 		i++;
 		if(ci<nx-1) {ci++;ijk++;} else {ci=0;ijk+=1-nx;px+=sx;}
@@ -140,7 +140,7 @@ bool v_loop_subset::next_block() {
 }
 
 /** Extends the memory available for storing the ordering. */
-void voropp_order::add_ordering_memory() {
+void particle_order::add_ordering_memory() {
 	int *no(new int[size<<2]),*nop(no),*opp(o);
 	while(opp<op) *(nop++)=*(opp++);
 	delete [] o;

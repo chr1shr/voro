@@ -47,7 +47,7 @@ class unitcell {
 		/** Draws an outline of the domain in Gnuplot format.
 		 * \param[in] filename the filename to write to. */
 		inline void draw_domain_gnuplot(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
+			FILE *fp(safe_fopen(filename,"w"));
 			draw_domain_gnuplot(fp);
 			fclose(fp);
 		}
@@ -55,7 +55,7 @@ class unitcell {
 		/** Draws an outline of the domain in Gnuplot format.
 		 * \param[in] filename the filename to write to. */
 		inline void draw_domain_pov(const char* filename) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
+			FILE *fp(safe_fopen(filename,"w"));
 			draw_domain_pov(fp);
 			fclose(fp);
 		}

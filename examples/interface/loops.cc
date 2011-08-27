@@ -23,7 +23,7 @@ int main() {
 
 	// Create a container as a non-periodic 10 by 10 by 10 box
 	container con(-5,5,-5,5,-5,5,26,26,26,false,false,false,8);
-	voropp_order vo;
+	particle_order vo;
 
 	// Randomly add particles into the container
 	for(i=0;i<particles;i++) {
@@ -40,9 +40,9 @@ int main() {
 
 	// Compute Voronoi cells for the first torus. Here, the points
 	// previously stored in the ordering class are looped over.
-	FILE *f1(voropp_safe_fopen("loops1_m.pov","w"));
-	FILE *f2(voropp_safe_fopen("loops1_v.pov","w"));
-	v_loop_order vlo(con,vo);
+	FILE *f1(safe_fopen("loops1_m.pov","w"));
+	FILE *f2(safe_fopen("loops1_v.pov","w"));
+	c_loop_order vlo(con,vo);
 	if(vlo.start()) do if(con.compute_cell(c,vlo)) {
 		vlo.pos(x,y,z);
 
@@ -57,9 +57,9 @@ int main() {
 	// Compute Voronoi cells for the second torus. Here, the subset loop is
 	// used to search over the blocks overlapping the torus, and then each
 	// particle is individually tested.
-	f1=voropp_safe_fopen("loops2_m.pov","w");
-	f2=voropp_safe_fopen("loops2_v.pov","w");
-	v_loop_subset vls(con);
+	f1=safe_fopen("loops2_m.pov","w");
+	f2=safe_fopen("loops2_v.pov","w");
+	c_loop_subset vls(con);
 	vls.setup_box(-dis-trad,-dis+trad,-mirad,mirad,-trad,trad,false);
 	if(vls.start()) do {
 		vls.pos(x,y,z);
