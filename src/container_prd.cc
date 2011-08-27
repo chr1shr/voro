@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file container_prd.cc
  * \brief Function implementations for the container_periodic_base and
@@ -10,12 +10,14 @@
 
 #include "container_prd.hh"
 
+namespace voro {
+
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
  * direction is periodic or not. It divides the container into a rectangular
  * grid of blocks, and allocates memory for each of these for storing particle
  * positions and IDs.
- * \param[in] (bx_) The x coordinate of the first unit vector. 
+ * \param[in] (bx_) The x coordinate of the first unit vector.
  * \param[in] (bxy_,by_) The x and y coordinates of the second unit vector.
  * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
  *                            vector.
@@ -58,7 +60,7 @@ container_periodic_base::~container_periodic_base() {
 }
 
 /** The class constructor sets up the geometry of container.
- * \param[in] (bx_) The x coordinate of the first unit vector. 
+ * \param[in] (bx_) The x coordinate of the first unit vector.
  * \param[in] (bxy_,by_) The x and y coordinates of the second unit vector.
  * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
  *                            vector.
@@ -71,7 +73,7 @@ container_periodic::container_periodic(double bx_,double bxy_,double by_,double 
 	vc(*this,2*nx_+1,2*ey+1,2*ez+1) {}
 
 /** The class constructor sets up the geometry of container.
- * \param[in] (bx_) The x coordinate of the first unit vector. 
+ * \param[in] (bx_) The x coordinate of the first unit vector.
  * \param[in] (bxy_,by_) The x and y coordinates of the second unit vector.
  * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
  *                            vector.
@@ -301,7 +303,7 @@ bool container_periodic::find_voronoi_cell(double x,double y,double z,double &rx
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
 	if(w.ijk!=-1) {
-		
+
 		// Assemble the position vector of the particle to be returned,
 		// applying a periodic remapping if necessary
 		ci+=w.di;if(ci<0||ci>=nx) ai+=step_div(ci,nx);
@@ -328,7 +330,7 @@ bool container_periodic_poly::find_voronoi_cell(double x,double y,double z,doubl
 	int ai,aj,ak,ci,cj,ck,ijk;
 	particle_record w;
 	double mrs;
-	
+
 	// Remap the vector into the primary domain and then search for the
 	// Voronoi cell that it is within
 	remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk);
@@ -369,14 +371,14 @@ void container_periodic_base::add_particle_memory(int i) {
 #if VOROPP_VERBOSE >=3
 	fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
 #endif
-	
+
 	// Allocate new memory and copy in the contents of the old arrays
 	int *idp(new int[nmem]);
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
 	double *pp(new double[ps*nmem]);
 	for(l=0;l<ps*co[i];l++) pp[l]=p[i][l];
 
-	// Update pointers and delete old arrays 
+	// Update pointers and delete old arrays
 	mem[i]=nmem;
 	delete [] id[i];id[i]=idp;
 	delete [] p[i];p[i]=pp;
@@ -547,7 +549,7 @@ void container_periodic_base::check_compartmentalized() {
 	int c,l,i,j,k;
 	double mix,miy,miz,max,may,maz,*pp;
 	for(k=l=0;k<oz;k++) for(j=0;j<oy;j++) for(i=0;i<nx;i++,l++) if(mem[l]>0) {
-		
+
 		// Compute the block's bounds, adding in a small tolerance
 		mix=i*boxx-tolerance;max=mix+boxx+tolerance;
 		miy=(j-ey)*boxy-tolerance;may=miy+boxy+tolerance;
@@ -573,7 +575,7 @@ void container_periodic_base::create_side_image(int di,int dj,int dk) {
 	int qua=di+step_int(-ima*bxy*xsp),quadiv=step_div(qua,nx);
 	int fi=qua-quadiv*nx,fijk=fi+nx*(dj-ima*ny+oy*dk);
 	double dis=ima*bxy+quadiv*bx,switchx=di*boxx-ima*bxy-quadiv*bx,adis;
-	
+
 	// Left image computation
 	if((img[dijk]&1)==0) {
 		if(di>0) {
@@ -739,7 +741,7 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
 			}
 		}
 	}
-	
+
 	// All contributions to the block now added, so set all four bits of
 	// the image information
 	img[dijk]=15;
@@ -759,4 +761,6 @@ void container_periodic_base::put_image(int reg,int fijk,int l,double dx,double 
 	*p1=*p2+dz;
 	if(ps==4) *(++p1)=*(++p2);
 	id[reg][co[reg]++]=id[fijk][l];
+}
+
 }

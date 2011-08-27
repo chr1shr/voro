@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file container_prd.hh
  * \brief Header file for the container_periodic_base and related classes. */
@@ -23,6 +23,8 @@ using namespace std;
 #include "v_loops.hh"
 #include "v_compute.hh"
 #include "unitcell.hh"
+
+namespace voro {
 
 class container_periodic_base : public unitcell, public voropp_base {
 	public:
@@ -45,7 +47,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * the z direction. */
 		int oz;
 		/** The total number of blocks. */
-		int oxyz;		
+		int oxyz;
 		/** This array holds the numerical IDs of each particle in each
 		 * computational box. */
 		int **id;
@@ -63,7 +65,7 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 */
 		int *mem;
 		/** An array holding information about periodic image
-		 * construction at a given location. */ 
+		 * construction at a given location. */
 		char *img;
 		/** The initial amount of memory to allocate for particles
 		 * for each block. */
@@ -119,13 +121,13 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * \param[in] ijk the index of the test block
 		 * \param[out] (i,j,k) the coordinates of the test block
 		 * 		       relative to the voropp_compute
-		 * 		       coordinate system. 
+		 * 		       coordinate system.
 		 * \param[out] disp a block displacement used internally by the
 		 *		    find_voronoi_cell routine (but not needed
 		 *		    in this instance.) */
 		inline void initialize_search(int ci,int cj,int ck,int ijk,int &i,int &j,int &k,int &disp) {
 			i=nx;j=ey;k=ez;
-		}		
+		}
 		/** Returns the position of a particle currently being computed
 		 * relative to the computational block that it is within. It is
 		 * used to select the optimal worklist entry to use.
@@ -175,15 +177,15 @@ class container_periodic_base : public unitcell, public voropp_base {
 		 * \param[in] (di,dj,dk) the coordinates of the image block to
 		 *                       create. */
 		inline void create_periodic_image(int di,int dj,int dk) {
-			if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz) 
+			if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz)
 				voropp_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
 			if(dk>=ez&&dk<wz) {
-				if(dj<ey||dj>=wy) create_side_image(di,dj,dk); 
+				if(dj<ey||dj>=wy) create_side_image(di,dj,dk);
 			} else create_vertical_image(di,dj,dk);
 		}
 		void create_side_image(int di,int dj,int dk);
 		void create_vertical_image(int di,int dj,int dk);
-		void put_image(int reg,int fijk,int l,double dx,double dy,double dz);		
+		void put_image(int reg,int fijk,int l,double dx,double dy,double dz);
 		inline void remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
 };
 
@@ -361,7 +363,7 @@ class container_periodic : public container_periodic_base {
 		 * \param[in] vl the loop class to use.
 		 * \return True if the cell was computed. If the cell cannot be
 		 * computed because it was removed entirely for some reason,
-		 * then the routine returns false. */		
+		 * then the routine returns false. */
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
@@ -373,12 +375,12 @@ class container_periodic : public container_periodic_base {
 		 * \param[in] q the index of the particle within the block.
 		 * \return True if the cell was computed. If the cell cannot be
 		 * computed because it was removed entirely for some reason,
-		 * then the routine returns false. */	
+		 * then the routine returns false. */
 		template<class v_cell>
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
 			int k(ijk/(nx*oy)),ijkt(ijk-(nx*oy)*k),j(ijkt/nx),i(ijkt-j*nx);
 			return vc.compute_cell(c,ijk,q,i,j,k);
-		}		
+		}
 	private:
 		voropp_compute<container_periodic> vc;
 		inline void r_init(int ijk,int s) {};
@@ -566,7 +568,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * \param[in] vl the loop class to use.
 		 * \return True if the cell was computed. If the cell cannot be
 		 * computed because it was removed entirely for some reason,
-		 * then the routine returns false. */		
+		 * then the routine returns false. */
 		template<class v_cell,class v_loop>
 		inline bool compute_cell(v_cell &c,v_loop &vl) {
 			return vc.compute_cell(c,vl.ijk,vl.q,vl.i,vl.j,vl.k);
@@ -578,12 +580,12 @@ class container_periodic_poly : public container_periodic_base {
 		 * \param[in] q the index of the particle within the block.
 		 * \return True if the cell was computed. If the cell cannot be
 		 * computed because it was removed entirely for some reason,
-		 * then the routine returns false. */	
+		 * then the routine returns false. */
 		template<class v_cell>
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
 			int k(ijk/(nx*oy)),ijkt(ijk-(nx*oy)*k),j(ijkt/nx),i(ijkt-j*nx);
 			return vc.compute_cell(c,ijk,q,i,j,k);
-		}		
+		}
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
 		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
@@ -605,5 +607,7 @@ class container_periodic_poly : public container_periodic_base {
 		}
 		friend class voropp_compute<container_periodic_poly>;
 };
+
+}
 
 #endif

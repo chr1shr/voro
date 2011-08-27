@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file v_compute.hh
  * \brief Header file for the container_base template and related classes. */
@@ -19,8 +19,10 @@ using namespace std;
 #include "config.hh"
 #include "cell.hh"
 
+namespace voro {
+
 /** \brief Structure for holding information about a particle.
- * 
+ *
  * This small structure holds information about a single particle, and is used
  * by several of the routines in the voropp_compute template for passing
  * information by reference between functions. */
@@ -107,7 +109,7 @@ class voropp_compute {
 		unsigned int mv;
 		/** The current size of the search list. */
 		int qu_size;
-		/** An pointer to the array of worklists. */		
+		/** A pointer to the array of worklists. */
 		const unsigned int *wl;
 		/** An pointer to the array holding the minimum distances
 		 * associated with the worklists. */
@@ -147,5 +149,7 @@ class voropp_compute {
 			for(unsigned int *mp(mask);mp<mask+hxyz;mp++) *mp=0;
 		}
 };
+
+}
 
 #endif

@@ -2,12 +2,14 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file common.cc
  * \brief Implementations of the small helper functions. */
 
 #include "common.hh"
+
+namespace voro {
 
 /** \brief Prints a vector of integers.
  *
@@ -83,4 +85,6 @@ void voropp_print_face_vertices(vector<int> &v,FILE *fp) {
 			}
 		}
 	}
+}
+
 }

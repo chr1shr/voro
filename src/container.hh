@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file container.hh
  * \brief Header file for the container_base template and related classes. */
@@ -22,6 +22,8 @@ using namespace std;
 #include "cell.hh"
 #include "v_loops.hh"
 #include "v_compute.hh"
+
+namespace voro {
 
 /** \brief Pure virtual class from which wall objects are derived.
  *
@@ -185,7 +187,7 @@ class container_base : public voropp_base, public wall_list {
 		 * \param[in] ijk the index of the test block
 		 * \param[out] (i,j,k) the coordinates of the test block
 		 * 		       relative to the voropp_compute
-		 * 		       coordinate system. 
+		 * 		       coordinate system.
 		 * \param[out] disp a block displacement used internally by the
 		 *		    find_voronoi_cell routine. */
 		inline void initialize_search(int ci,int cj,int ck,int ijk,int &i,int &j,int &k,int &disp) {
@@ -439,7 +441,7 @@ class container : public container_base {
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
 			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
 			return vc.compute_cell(c,ijk,q,i,j,k);
-		}		
+		}
 	private:
 		voropp_compute<container> vc;
 		inline void r_init(int ijk,int s) {};
@@ -643,7 +645,7 @@ class container_poly : public container_base {
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
 			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
 			return vc.compute_cell(c,ijk,q,i,j,k);
-		}		
+		}
 		void print_custom(const char *format,FILE *fp=stdout);
 		void print_custom(const char *format,const char *filename);
 		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
@@ -665,5 +667,7 @@ class container_poly : public container_base {
 		}
 		friend class voropp_compute<container_poly>;
 };
+
+}
 
 #endif

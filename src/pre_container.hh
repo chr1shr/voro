@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file pre_container.hh
  * \brief Header file for the pre_container and related classes. */
@@ -12,6 +12,8 @@
 
 #include "v_loops.hh"
 #include "container.hh"
+
+namespace voro {
 
 /** \brief A class for storing an arbitrary number of particles, prior to setting
  * up a container geometry.
@@ -152,5 +154,7 @@ class pre_container_poly : public pre_container_base {
 		void setup(container_poly &con);
 		void setup(voropp_order &vo,container_poly &con);
 };
+
+}
 
 #endif

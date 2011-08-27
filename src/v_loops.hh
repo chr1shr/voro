@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file v_loops.hh
  * \brief Header file for the loop classes. */
@@ -17,6 +17,8 @@
 using namespace std;
 
 #include "config.hh"
+
+namespace voro {
 
 /** A type associated with a v_loop_subset class, determining what type of
  * geometrical region to loop over. */
@@ -156,7 +158,7 @@ class v_loop_base {
 };
 
 /** \brief Class for looping over all of the particles in a container.
- * 
+ *
  * This is one of the simplest loop classes, that scans the computational
  * blocks in order, and scans all the particles within each block in order. */
 class v_loop_all : public v_loop_base {
@@ -176,7 +178,7 @@ class v_loop_all : public v_loop_base {
 		}
 		/** Finds the next particle to test.
 		 * \return True if there is another particle, false if no more
-		 * particles are available. */		
+		 * particles are available. */
 		inline bool inc() {
 			q++;
 			if(q>=co[ijk]) {
@@ -207,7 +209,7 @@ class v_loop_all : public v_loop_base {
  * This class can loop over a subset of particles in a certain geometrical
  * region within the container. The class can be set up to loop over a
  * rectangular box or sphere. It can also rectangular group of internal
- * computational blocks. */ 
+ * computational blocks. */
 class v_loop_subset : public v_loop_base {
 	public:
 		/** The current mode of operation, determining whether tests
@@ -337,7 +339,7 @@ class v_loop_all_periodic : public v_loop_base {
 		}
 		/** Finds the next particle to test.
 		 * \return True if there is another particle, false if no more
-		 * particles are available. */		
+		 * particles are available. */
 		inline bool inc() {
 			q++;
 			if(q>=co[ijk]) {
@@ -366,7 +368,7 @@ class v_loop_all_periodic : public v_loop_base {
 		int ijk0;
 		/** A value to increase ijk by when the z index is increased.
 		 */
-		int inc2;		
+		int inc2;
 		inline bool next_block() {
 			i++;
 			if(i==nx) {
@@ -380,5 +382,7 @@ class v_loop_all_periodic : public v_loop_base {
 			return true;
 		}
 };
+
+}
 
 #endif

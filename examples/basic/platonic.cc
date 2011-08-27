@@ -2,9 +2,10 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 #include "voro++.hh"
+using namespace voro;
 
 // Golden ratio constants
 const double Phi=0.5*(1+sqrt(5.0));

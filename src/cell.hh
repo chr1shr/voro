@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file cell.hh
  * \brief Header file for the voronoicell and related classes. */
@@ -18,6 +18,8 @@ using namespace std;
 
 #include "config.hh"
 #include "common.hh"
+
+namespace voro {
 
 /** \brief A class encapsulating all the routines for storing and calculating
  * a single Voronoi cell.
@@ -175,7 +177,7 @@ class voronoicell_base {
 		}
 		void normals(vector<double> &v);
 		/** Outputs a list of the perimeters of each face.
-		 * \param[in] fp the file handle to write to. */		
+		 * \param[in] fp the file handle to write to. */
 		inline void output_normals(FILE *fp=stdout) {
 			vector<double> v;normals(v);
 			voropp_print_positions(v,fp);
@@ -312,7 +314,7 @@ class voronoicell : public voronoicell_base {
 		 * \param[in] (x,y,z) the position of the particle.
 		 * \param[in] rsq the modulus squared of the vector.
 		 * \param[in] p_id the plane ID, ignored for this case where no
-		 *                 neighbor tracking is enabled. 
+		 *                 neighbor tracking is enabled.
 		 * \return False if the plane cut deleted the cell entirely,
 		 *         true otherwise. */
 		inline bool nplane(double x,double y,double z,double rsq,int p_id) {
@@ -322,9 +324,9 @@ class voronoicell : public voronoicell_base {
 		 * perpendicular bisector of a particle.
 		 * \param[in] (x,y,z) the position of the particle.
 		 * \param[in] p_id the plane ID, ignored for this case where no
-		 *                 neighbor tracking is enabled. 
+		 *                 neighbor tracking is enabled.
 		 * \return False if the plane cut deleted the cell entirely,
-		 *         true otherwise. */ 
+		 *         true otherwise. */
 		inline bool nplane(double x,double y,double z,int p_id) {
 			double rsq=x*x+y*y+z*z;
 			return nplane(*this,x,y,z,rsq,0);
@@ -334,13 +336,13 @@ class voronoicell : public voronoicell_base {
 		 * \param[in] (x,y,z) the position of the particle.
 		 * \param[in] rsq the modulus squared of the vector.
 		 * \return False if the plane cut deleted the cell entirely,
-		 *         true otherwise. */ 
+		 *         true otherwise. */
 		inline bool plane(double x,double y,double z,double rsq) {
 			return nplane(*this,x,y,z,rsq,0);
 		}
 		/** Cuts a Voronoi cell using by the plane corresponding to the
 		 * perpendicular bisector of a particle.
-		 * \param[in] (x,y,z) the position of the particle.		
+		 * \param[in] (x,y,z) the position of the particle.
 		 * \return False if the plane cut deleted the cell entirely,
 		 *         true otherwise. */
 		inline bool plane(double x,double y,double z) {
@@ -419,7 +421,7 @@ class voronoicell_neighbor : public voronoicell_base {
 		 * \param[in] rsq the distance along this vector of the plane.
 		 * \param[in] p_id the plane ID (for neighbor tracking only).
 		 * \return False if the plane cut deleted the cell entirely,
-		 * true otherwise. */		
+		 * true otherwise. */
 		inline bool nplane(double x,double y,double z,double rsq,int p_id) {
 			return nplane(*this,x,y,z,rsq,p_id);
 		}
@@ -501,5 +503,7 @@ class voronoicell_neighbor : public voronoicell_base {
 		inline void n_set_to_aux1_offset(int k,int m) {ne[k]=paux1+m;}
 		friend class voronoicell_base;
 };
+
+}
 
 #endif

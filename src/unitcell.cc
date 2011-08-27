@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file unitcell.cc
  * \brief Function implementations for the unitcell class. */
@@ -13,11 +13,13 @@ using namespace std;
 #include "unitcell.hh"
 #include "cell.hh"
 
+namespace voro {
+
 /** Initializes the unit cell class for a particular non-orthogonal periodic
  * geometry, corresponding to a parallelepiped with sides given by three
  * vectors. The class constructs the unit Voronoi cell corresponding to this
  * geometry.
- * \param[in] (bx_) The x coordinate of the first unit vector. 
+ * \param[in] (bx_) The x coordinate of the first unit vector.
  * \param[in] (bxy_,by_) The x and y coordinates of the second unit vector.
  * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
  *                            vector. */
@@ -69,7 +71,7 @@ unitcell::unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,dou
 			}
 			max_uv_z*=0.5;
 			max_uv_y*=0.5;
-			return;	
+			return;
 		}
 		l++;
 	}
@@ -131,7 +133,7 @@ void unitcell::images(vector<int> &vi,vector<double> &vd) {
 	// Set up the queue and add (0,0,0) image to it
 	queue<int> q;
 	q.push(0);q.push(0);q.push(0);
-	
+
 	while(!q.empty()) {
 
 		// Read the next entry on the queue
@@ -166,7 +168,7 @@ void unitcell::images(vector<int> &vi,vector<double> &vd) {
 
 /** Tests to see if a shell of periodic images could possibly cut the periodic
  * unit cell.
- * \param[in] l the index of the shell to consider. 
+ * \param[in] l the index of the shell to consider.
  * \return True if a point in the shell cuts the cell, false otherwise. */
 bool unitcell::unit_voro_intersect(int l) {
 	int i,j;
@@ -224,4 +226,6 @@ void unitcell::draw_domain_pov(FILE *fp) {
 		   "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",bx,bxy,by,bx+bxy,by);
 	fprintf(fp,"sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
 		   "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",bxz,byz,bz,bx+bxz,byz,bz,bxy+bxz,by+byz,bz,bx+bxy+bxz,by+byz,bz);
+}
+
 }

@@ -2,12 +2,14 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file container.cc
  * \brief Function implementations for the container and related classes. */
 
 #include "container.hh"
+
+namespace voro {
 
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction, and setting whether each
@@ -212,8 +214,8 @@ inline bool container_base::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &c
 	if(ck<0||ck>=nz) {
 		if(zperiodic) {ak=step_div(ck,nz);z-=ak*(bz-az);ck-=ak*nz;}
 		else return false;
-	} else ak=0;	
-	
+	} else ak=0;
+
 	ijk=ci+nx*cj+nxy*ck;
 	return true;
 }
@@ -235,7 +237,7 @@ bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &
 	double mrs;
 
 	// If the given vector lies outside the domain, but the container
-	// is periodic, then remap it back into the domain	
+	// is periodic, then remap it back into the domain
 	if(!remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk)) return false;
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
@@ -271,9 +273,9 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 	int ai,aj,ak,ci,cj,ck,ijk;
 	particle_record w;
 	double mrs;
-	
+
 	// If the given vector lies outside the domain, but the container
-	// is periodic, then remap it back into the domain	
+	// is periodic, then remap it back into the domain
 	if(!remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk)) return false;
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
@@ -290,7 +292,7 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 		pid=id[w.ijk][w.l];
 		return true;
 	}
-	
+
 	// If no particle if found then just return false
 	return false;
 }
@@ -301,7 +303,7 @@ void container_base::add_particle_memory(int i) {
 	int l,nmem(mem[i]<<1);
 
 	// Carry out a check on the memory allocation size, and print a status
-	// message if requested 
+	// message if requested
 	if(nmem>max_particle_memory)
 		voropp_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
@@ -542,4 +544,6 @@ void wall_list::increase_wall_memory() {
 	while(wp<wep) *(nwp++)=*(wp++);
 	delete [] walls;
 	walls=nwalls;wel=walls+current_wall_size;wep=nwp;
+}
+
 }

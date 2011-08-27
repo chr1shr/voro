@@ -2,9 +2,10 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 #include "voro++.hh"
+using namespace voro;
 
 // Constants determining the configuration of the tori
 const double dis=1.25,mjrad=2.5,mirad=0.95,trad=mjrad+mirad;
@@ -23,7 +24,7 @@ int main() {
 	// Create a container as a non-periodic 10 by 10 by 10 box
 	container con(-5,5,-5,5,-5,5,26,26,26,false,false,false,8);
 	voropp_order vo;
-	
+
 	// Randomly add particles into the container
 	for(i=0;i<particles;i++) {
 		x=10*rnd()-5;
@@ -44,7 +45,7 @@ int main() {
 	v_loop_order vlo(con,vo);
 	if(vlo.start()) do if(con.compute_cell(c,vlo)) {
 		vlo.pos(x,y,z);
-		
+
 		// Save a POV-Ray mesh to one file and a cylinder/sphere
 		// representation to the other file
 		c.draw_pov_mesh(x,y,z,f1);

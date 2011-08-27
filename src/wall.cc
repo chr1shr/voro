@@ -2,12 +2,14 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file wall.cc
  * \brief Function implementations for the derived wall classes. */
 
 #include "wall.hh"
+
+namespace voro {
 
 /** Tests to see whether a point is inside the sphere wall object.
  * \param[in,out] (x,y,z) the vector to test.
@@ -120,4 +122,6 @@ bool wall_cone::cut_cell_base(v_cell &c,double x,double y,double z) {
 		return c.nplane(xf,yf,zf,pa,w_id);
 	}
 	return true;
+}
+
 }

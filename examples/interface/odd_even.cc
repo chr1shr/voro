@@ -1,10 +1,11 @@
-// Odd/even face coloring code 
+// Odd/even face coloring code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 #include "voro++.hh"
+using namespace voro;
 
 // This function returns a random floating point number between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -36,17 +37,17 @@ int main() {
 	vector<double> nor;
 	v.face_orders(f_vert);
 	v.normals(nor);
-	
+
 	// Output POV-Ray planes with textures based on whether a face is
 	// composed of an odd or even number of edges
 	const char* parity[2]={"even","odd"};
 	FILE *fp(voropp_safe_fopen("odd_even_pl.pov","w"));
-	for(i=0;i<f_vert.size();i++) 
+	for(i=0;i<f_vert.size();i++)
 		fprintf(fp,"plane{<%g,%g,%g>,0.5 texture{t_%s}}\n"
 			,nor[3*i],nor[3*i+1],nor[3*i+2]
 			,parity[f_vert[i]&1]);
 	fclose(fp);
-	
+
 	// Save the Voronoi cell as a spheres and cylinders
 	v.draw_pov(0,0,0,"odd_even_v.pov");
 }

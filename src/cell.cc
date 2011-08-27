@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file cell.cc
  * \brief Function implementations for the voronoicell and related classes. */
@@ -13,6 +13,8 @@ using namespace std;
 #include "config.hh"
 #include "common.hh"
 #include "cell.hh"
+
+namespace voro {
 
 /** Constructs a Voronoi cell and sets up the initial memory. */
 voronoicell_base::voronoicell_base() :
@@ -588,7 +590,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		// the plane. If the vertex has neighbors that are also on the
 		// plane, we should check those too.
 		if(!search_for_outside_edge(vc,up)) return false;
-		
+
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
 		// the same location.
@@ -2244,3 +2246,5 @@ template bool voronoicell_base::nplane(voronoicell&,double,double,double,double,
 template bool voronoicell_base::nplane(voronoicell_neighbor&,double,double,double,double,int);
 template void voronoicell_base::check_memory_for_copy(voronoicell&,voronoicell_base*);
 template void voronoicell_base::check_memory_for_copy(voronoicell_neighbor&,voronoicell_base*);
+
+}

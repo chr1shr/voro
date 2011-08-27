@@ -2,9 +2,10 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 #include "voro++.hh"
+using namespace voro;
 
 void draw_polygon(FILE *fp,vector<int> &f_vert,vector<double> &v,int j);
 
@@ -21,7 +22,7 @@ int main() {
 	pre_container pcon(-3,3,-3,3,0,6,false,false,false);
 	pcon.import("pack_six_cube");
 	pcon.guess_optimal(nx,ny,nz);
-	
+
 	// Set up the container class an import the particles from the
 	// pre-container
 	container con(-3,3,-3,3,0,6,nx,ny,nz,false,false,false,8);
@@ -42,8 +43,8 @@ int main() {
 		c.neighbors(neigh);
 		c.face_vertices(f_vert);
 		c.vertices(x,y,z,v);
-	
-		// Loop over all faces of the Voronoi cell	
+
+		// Loop over all faces of the Voronoi cell
 		for(i=0,j=0;i<neigh.size();i++) {
 
 			// Draw all triangles, quadrilaterals, pentagons, and
@@ -59,7 +60,7 @@ int main() {
 					case 6: draw_polygon(fp6,f_vert,v,j);
 				}
 			}
-			
+
 			// Skip to the next entry in the face vertex list
 			j+=f_vert[j]+1;
 		}
@@ -83,8 +84,8 @@ void draw_polygon(FILE *fp,vector<int> &f_vert,vector<double> &v,int j) {
 		l=3*f_vert[j+k+1];
 		sprintf(s[k],"<%g,%g,%g>",v[l],v[l+1],v[l+2]);
 	}
-	
-	// Draw the interior of the pentagon 
+
+	// Draw the interior of the pentagon
 	fputs("union{\n",fp);
 	for(k=2;k<n;k++) fprintf(fp,"\ttriangle{%s,%s,%s}\n",s[0],s[k-1],s[k]);
 	fputs("\ttexture{t1}\n}\n",fp);

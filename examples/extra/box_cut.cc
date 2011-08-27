@@ -2,9 +2,10 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
-#include "cell.hh"
+#include "voro++.hh"
+using namespace voro;
 
 // Parameters controlling the center of the test box
 const double cx=1.5,cy=1.5,cz=1.5;

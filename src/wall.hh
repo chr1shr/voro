@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file wall.hh
  * \brief Header file for the derived wall classes. */
@@ -12,6 +12,8 @@
 
 #include "cell.hh"
 #include "container.hh"
+
+namespace voro {
 
 /** \brief A class representing a spherical wall object.
  *
@@ -111,5 +113,7 @@ struct wall_cone : public wall {
 		const int w_id;
 		const double xc,yc,zc,xa,ya,za,asi,gra,sang,cang;
 };
+
+}
 
 #endif

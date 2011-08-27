@@ -2,12 +2,14 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file v_loops.cc
  * \brief Function implementations for the loop classes. */
 
 #include "v_loops.hh"
+
+namespace voro {
 
 /** Initializes a v_loop_subset object to scan over all particles within a
  * given sphere.
@@ -143,4 +145,6 @@ void voropp_order::add_ordering_memory() {
 	while(opp<op) *(nop++)=*(opp++);
 	delete [] o;
 	size<<=1;o=no;op=nop;
+}
+
 }

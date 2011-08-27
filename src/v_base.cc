@@ -2,13 +2,15 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file v_base.cc
  * \brief Function implementations for the base Voronoi container class. */
 
 #include "v_base.hh"
 #include "config.hh"
+
+namespace voro {
 
 /** This function is called during container construction. The routine scans
  * all of the worklists in the wl[] array. For a given worklist of blocks
@@ -109,6 +111,8 @@ bool voropp_base::contains_neighbor(const char *format) {
 	}
 
 	return false;
+}
+
 }
 
 #include "worklist.cc"

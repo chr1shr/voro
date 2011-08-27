@@ -2,13 +2,14 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file cmd_line.cc
  * \brief Source code for the command-line utility. */
 
 #include <cstring>
 #include "voro++.hh"
+using namespace voro;
 
 enum blocks_mode {
 	none,
@@ -372,7 +373,7 @@ int main(int argc,char **argv) {
 		}
 	}
 
-	// Check that the output filename is a sensible length 
+	// Check that the output filename is a sensible length
 	int flen(strlen(argv[i+6]));
 	if(flen>4096) {
 		fputs("voro++: Filename too long\n",stderr);
@@ -410,7 +411,7 @@ int main(int argc,char **argv) {
 			if(bm==none) {
 				pconp->setup(vo,con);delete pconp;
 			} else con.import(vo,argv[i+6]);
-			
+
 			v_loop_order vlo(con,vo);
 			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file);
 		} else {

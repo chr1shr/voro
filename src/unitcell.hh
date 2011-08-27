@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file unitcell.hh
  * \brief Header file for the unitcell class. */
@@ -15,6 +15,8 @@ using namespace std;
 
 #include "config.hh"
 #include "cell.hh"
+
+namespace voro {
 
 /** \brief Class for computation of the unit Voronoi cell associated with
  * a 3D non-rectangular periodic domain. */
@@ -72,5 +74,7 @@ class unitcell {
 		bool unit_voro_intersect(int l);
 		inline bool unit_voro_test(int i,int j,int k);
 };
+
+}
 
 #endif

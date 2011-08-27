@@ -2,10 +2,10 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
-#include "common.hh"
-#include "cell.hh"
+#include "voro++.hh"
+using namespace voro;
 
 const double pi=3.1415926535897932384626433832795;
 

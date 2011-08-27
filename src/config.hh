@@ -2,13 +2,15 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file config.hh
  * \brief Master configuration file for setting various compile-time options. */
 
 #ifndef VOROPP_CONFIG_HH
 #define VOROPP_CONFIG_HH
+
+namespace voro {
 
 // These constants set the initial memory allocation for the Voronoi cell
 /** The initial memory allocation for the number of vertices. */
@@ -119,5 +121,7 @@ const double optimal_particles=5.6;
 /** Voro++ returns this status code if it could not interpret the command line
  * arguments passed to the command line utility. */
 #define VOROPP_CMD_LINE_ERROR 4
+
+}
 
 #endif

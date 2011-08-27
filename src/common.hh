@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file common.hh
  * \brief Header file for the small helper functions. */
@@ -16,6 +16,8 @@
 using namespace std;
 
 #include "config.hh"
+
+namespace voro {
 
 /** \brief Function for printing fatal error messages and exiting.
  *
@@ -60,5 +62,7 @@ inline FILE* voropp_safe_fopen(const char *filename,const char *mode) {
 void voropp_print_vector(vector<int> &v,FILE *fp=stdout);
 void voropp_print_vector(vector<double> &v,FILE *fp=stdout);
 void voropp_print_face_vertices(vector<int> &v,FILE *fp=stdout);
+
+}
 
 #endif

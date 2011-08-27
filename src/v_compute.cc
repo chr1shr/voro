@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file v_compute.cc
  * \brief Function implementantions for the v_compute class. */
@@ -10,6 +10,8 @@
 #include "v_compute.hh"
 #include "container.hh"
 #include "container_prd.hh"
+
+namespace voro {
 
 /** The class constructor initializes constants from the container class, and
  * sets up the mask and queue used for Voronoi computations.
@@ -37,7 +39,7 @@ voropp_compute<c_class>::voropp_compute(c_class &con_,int hx_,int hy_,int hz_) :
  * \param[in] (di,dj,dk)
  * \param[in,out] w a reference to a particle record in which to store
  *		    information about the particle whose Voronoi cell the
- *		    vector is within. 
+ *		    vector is within.
  * \param[in,out] mrs the current minimum distance, that may be updated if a
  * 		      closer particle is found. */
 template<class c_class>
@@ -63,7 +65,7 @@ inline void voropp_compute<c_class>::scan_all(int ijk,double x,double y,double z
  * \param[in] ijk the index of the block that the test particle is in.
  * \param[out] w a reference to a particle record in which to store information
  * 		 about the particle whose Voronoi cell the vector is within.
- * \param[out] mrs the minimum computed distance. */ 
+ * \param[out] mrs the minimum computed distance. */
 template<class c_class>
 void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record &w,double &mrs) {
 	double qx=0,qy=0,qz=0,rs;
@@ -75,7 +77,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	w.ijk=-1;mrs=large_number;
 
 	con.initialize_search(ci,cj,ck,ijk,i,j,k,disp);
-	
+
 	// Test all particles in the particle's local region first
 	scan_all(ijk,x,y,z,0,0,0,w,mrs);
 
@@ -116,7 +118,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	ijk=di+hgrid*(dj+hgrid*dk);
 	radp=mrad+ijk*seq_length;
 	e=(const_cast<unsigned int*> (wl))+ijk*seq_length;
-	
+
 	// Read in how many items in the worklist can be tested without having to
 	// worry about writing to the mask
 	f=e[0];g=0;
@@ -150,7 +152,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
-		
+
 		// If mrs is bigger than the maximum distance to the block,
 		// then we have to test all particles in the block for
 		// intersections. Otherwise, we do additional checks and skip
@@ -162,7 +164,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 	mv++;
 	if(mv==0) {reset_mask();mv=1;}
 	int *qu_s(qu),*qu_e(qu);
-	
+
 	while(g<seq_length-1) {
 
 		// If mrs is less than the minimum distance to any untested
@@ -195,7 +197,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		// displacement for the periodic cases
 		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
 		scan_all(ijk,x-qx,y-qy,z-qz,di,dj,dk,w,mrs);
-		
+
 		if(qu_e>qu_l-18) add_list_memory(qu_s,qu_e);
 		scan_bits_mask_add(q,mijk,ei,ej,ek,qu_e);
 	}
@@ -213,7 +215,7 @@ void voropp_compute<c_class>::find_voronoi_cell(double x,double y,double z,int c
 		ei=*(qu_s++);ej=*(qu_s++);ek=*(qu_s++);
 		di=ei-i;dj=ej-j;dk=ek-k;
 		if(compute_min_radius(di,dj,dk,fx,fy,fz,mrs)) continue;
-		
+
 		ijk=con.region_index(ci,cj,ck,ei,ej,ek,qx,qy,qz,disp);
 		scan_all(ijk,x-qx,y-qy,z-qz,di,dj,dk,w,mrs);
 
@@ -240,7 +242,7 @@ inline void voropp_compute<c_class>::add_to_mask(int ei,int ej,int ek,int *&qu_e
 	if(ek<hz-1) if(*(mijk+hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk+hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek+1;}
 }
 
-/** Scans a worklist entry and adds any blocks to the queue 
+/** Scans a worklist entry and adds any blocks to the queue
  * \param[in] (ei,ej,ek) the block to consider.
  * \param[in,out] qu_e a pointer to the end of the queue. */
 template<class c_class>
@@ -292,7 +294,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,l,disp;
 	double fx,fy,fz,gxs,gys,gzs,*radp;
 	unsigned int q,*e,*mijk;
-	
+
 	if(!con.initialize_voronoicell(c,ijk,s,ci,cj,ck,i,j,k,x,y,z,disp)) return false;
 	con.r_init(ijk,s);
 
@@ -330,7 +332,7 @@ bool voropp_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj
 	unsigned int m1,m2;
 	con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
 	di=int(fx*xsp*fgrid);dj=int(fy*ysp*fgrid);dk=int(fz*zsp*fgrid);
-	
+
 	// The indices (di,dj,dk) tell us which worklist to use, to test the
 	// blocks in the optimal order. But we only store worklists for the
 	// eighth of the region where di, dj, and dk are all less than half the
@@ -992,3 +994,5 @@ template void voropp_compute<container_periodic>::find_voronoi_cell(double,doubl
 template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell&,int,int,int,int,int);
 template bool voropp_compute<container_periodic_poly>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
 template void voropp_compute<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record&,double&);
+
+}

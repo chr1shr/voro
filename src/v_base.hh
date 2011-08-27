@@ -2,13 +2,15 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file v_base.hh
  * \brief Header file for the base Voronoi container class. */
 
 #ifndef VOROPP_V_BASE_HH
 #define VOROPP_V_BASE_HH
+
+namespace voro {
 
 class voropp_base {
 	public:
@@ -25,11 +27,11 @@ class voropp_base {
 		/** A constant, set to the value of nx*ny*nz, which is used in
 		 * the routines that step through blocks in sequence. */
 		const int nxyz;
-		/** The size of a computational block in the x direction. */ 
+		/** The size of a computational block in the x direction. */
 		const double boxx;
-		/** The size of a computational block in the y direction. */ 
+		/** The size of a computational block in the y direction. */
 		const double boxy;
-		/** The size of a computational block in the z direction. */ 
+		/** The size of a computational block in the z direction. */
 		const double boxz;
 		/** The inverse box length in the x direction. */
 		const double xsp;
@@ -69,5 +71,7 @@ class voropp_base {
 	private:
 		void compute_minimum(double &minr,double &xlo,double &xhi,double &ylo,double &yhi,double &zlo,double &zhi,int ti,int tj,int tk);
 };
+
+}
 
 #endif

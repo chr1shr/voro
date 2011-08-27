@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : May 18th 2011
+// Date     : August 28th 2011
 
 /** \file pre_container.cc
  * \brief Function implementations for the pre_container and related classes.
@@ -14,6 +14,8 @@ using namespace std;
 
 #include "config.hh"
 #include "pre_container.hh"
+
+namespace voro {
 
 /** The class constructor sets up the geometry of container, initializing the
  * minimum and maximum coordinates in each direction. It allocates an initial
@@ -37,7 +39,7 @@ pre_container_base::pre_container_base(double ax_,double bx_,double ay_,double b
 		ch_p=*end_p=new double[ps*pre_container_chunk_size];
 }
 
-/** The destructor frees the dynamically allocated memory. */ 
+/** The destructor frees the dynamically allocated memory. */
 pre_container_base::~pre_container_base() {
 	delete [] *end_p;
 	delete [] *end_id;
@@ -91,7 +93,7 @@ void pre_container_poly::put(int n,double x,double y,double z,double r) {
 	}
 #if VOROPP_REPORT_OUT_OF_BOUNDS ==1
 	else fprintf(stderr,"Out of bounds: (x,y,z)=(%g,%g,%g)\n",x,y,z);
-#endif	
+#endif
 }
 
 /** Transfers the particles stored within the class to a container class.
@@ -137,7 +139,7 @@ void pre_container_poly::setup(container_poly &con) {
 }
 
 /** Transfers the particles stored within the class to a container class, also
- * recording the order in which particles were stored. 
+ * recording the order in which particles were stored.
  * \param[in] vo the ordering class to use.
  * \param[in] con the container class to transfer to. */
 void pre_container::setup(voropp_order &vo,container &con) {
@@ -231,4 +233,6 @@ void pre_container_base::extend_chunk_index() {
 	}
 	delete [] pre_id;pre_id=n_id;end_id=p_id;l_id=pre_id+index_sz;
 	delete [] pre_p;pre_p=n_p;end_p=p_p;
+}
+
 }
