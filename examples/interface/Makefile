@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=loops polygons odd_even
+EXECUTABLES=loops polygons odd_even find_voro_cell
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -21,6 +21,9 @@ polygons: polygons.cc
 
 odd_even: odd_even.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o odd_even odd_even.cc -lvoro++
+
+find_voro_cell: find_voro_cell.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o find_voro_cell find_voro_cell.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

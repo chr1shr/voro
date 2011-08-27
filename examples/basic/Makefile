@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=single_cell platonic random_points import find_voro_test
+EXECUTABLES=single_cell platonic random_points import
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -24,9 +24,6 @@ random_points: random_points.cc
 
 import: import.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o import import.cc -lvoro++
-
-find_voro_test: find_voro_test.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o find_voro_test find_voro_test.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

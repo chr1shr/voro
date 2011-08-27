@@ -1,4 +1,4 @@
-// Voronoi calculation example code
+// Example code demonstrating the loop classes
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
@@ -23,7 +23,7 @@ int main() {
 
 	// Create a container as a non-periodic 10 by 10 by 10 box
 	container con(-5,5,-5,5,-5,5,26,26,26,false,false,false,8);
-	particle_order vo;
+	particle_order po;
 
 	// Randomly add particles into the container
 	for(i=0;i<particles;i++) {
@@ -34,7 +34,7 @@ int main() {
 		// If the particle lies within the first torus, store it in the
 		// ordering class when adding to the container
 		r=sqrt((x-dis)*(x-dis)+y*y);
-		if((r-mjrad)*(r-mjrad)+z*z<mirad) con.put(vo,i,x,y,z);
+		if((r-mjrad)*(r-mjrad)+z*z<mirad) con.put(po,i,x,y,z);
 		else con.put(i,x,y,z);
 	}
 
@@ -42,15 +42,17 @@ int main() {
 	// previously stored in the ordering class are looped over.
 	FILE *f1(safe_fopen("loops1_m.pov","w"));
 	FILE *f2(safe_fopen("loops1_v.pov","w"));
-	c_loop_order vlo(con,vo);
-	if(vlo.start()) do if(con.compute_cell(c,vlo)) {
-		vlo.pos(x,y,z);
+	c_loop_order clo(con,po);
+	if(clo.start()) do if(con.compute_cell(c,clo)) {
+
+		// Get the position of the current particle under consideration
+		clo.pos(x,y,z);
 
 		// Save a POV-Ray mesh to one file and a cylinder/sphere
 		// representation to the other file
 		c.draw_pov_mesh(x,y,z,f1);
 		c.draw_pov(x,y,z,f2);
-	} while (vlo.inc());
+	} while (clo.inc());
 	fclose(f1);
 	fclose(f2);
 
@@ -59,19 +61,21 @@ int main() {
 	// particle is individually tested.
 	f1=safe_fopen("loops2_m.pov","w");
 	f2=safe_fopen("loops2_v.pov","w");
-	c_loop_subset vls(con);
-	vls.setup_box(-dis-trad,-dis+trad,-mirad,mirad,-trad,trad,false);
-	if(vls.start()) do {
-		vls.pos(x,y,z);
+	c_loop_subset cls(con);
+	cls.setup_box(-dis-trad,-dis+trad,-mirad,mirad,-trad,trad,false);
+	if(cls.start()) do {
+
+		// Get the position of the current particle under consideration
+		cls.pos(x,y,z);
 
 		// Test whether this point is within the torus, and if so,
 		// compute and save the Voronoi cell
 		r=sqrt((x+dis)*(x+dis)+z*z);
-		if((r-mjrad)*(r-mjrad)+y*y<mirad&&con.compute_cell(c,vls)) {
+		if((r-mjrad)*(r-mjrad)+y*y<mirad&&con.compute_cell(c,cls)) {
 			c.draw_pov_mesh(x,y,z,f1);
 			c.draw_pov(x,y,z,f2);
 		}
-	} while (vls.inc());
+	} while (cls.inc());
 	fclose(f1);
 	fclose(f2);
 }
