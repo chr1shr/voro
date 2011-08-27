@@ -2,7 +2,7 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : July 1st 2008
+# Date   : August 28th 2011
 
 # Load the common configuration file
 include ../../config.mk
@@ -11,7 +11,7 @@ include ../../config.mk
 EXECUTABLES=single_cell platonic random_points import find_voro_test
 
 # Makefile rules
-all: $(EXECUTABLES) 
+all: $(EXECUTABLES)
 
 single_cell: single_cell.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o single_cell single_cell.cc -lvoro++

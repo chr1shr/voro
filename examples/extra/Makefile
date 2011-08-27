@@ -2,13 +2,13 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : May 18th 2011
+# Date   : August 28th 2011
 
 # Load the common configuration file
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=box_cut cut_region superellipsoid
+EXECUTABLES=box_cut cut_region superellipsoid boundaries
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -21,6 +21,9 @@ cut_region: cut_region.cc
 
 superellipsoid: superellipsoid.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o superellipsoid superellipsoid.cc -lvoro++
+
+boundaries: boundaries.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o boundaries boundaries.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

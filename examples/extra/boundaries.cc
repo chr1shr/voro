@@ -23,24 +23,27 @@ const int n_x=5,n_y=5,n_z=5;
 class wall_initial_shape : public wall {
 	public:
 		wall_initial_shape() {
+
 			// Create an dodecahedron
 			v.init(-2,2,-2,2,-2,2);
-		/*	v.plane(0,Phi,1);
-			v.plane(0,-Phi,1);
-			v.plane(0,Phi,-1);
-			v.plane(0,-Phi,-1);
-			v.plane(1,0,Phi);
-			v.plane(-1,0,Phi);
-			v.plane(1,0,-Phi);
-			v.plane(-1,0,-Phi);
-			v.plane(Phi,1,0);
-			v.plane(-Phi,1,0);
-			v.plane(Phi,-1,0);
-			v.plane(-Phi,-1,0);*/
+			v.plane(0,Phi,1);v.plane(0,-Phi,1);v.plane(0,Phi,-1);
+			v.plane(0,-Phi,-1);v.plane(1,0,Phi);v.plane(-1,0,Phi);
+			v.plane(1,0,-Phi);v.plane(-1,0,-Phi);v.plane(Phi,1,0);
+			v.plane(-Phi,1,0);v.plane(Phi,-1,0);v.plane(-Phi,-1,0);
 		};
 		bool point_inside(double x,double y,double z) {return true;}
-		bool cut_cell(voronoicell &c,double x,double y,double z) {c=v;return true;}
-		bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) {c=v;return true;}
+		bool cut_cell(voronoicell &c,double x,double y,double z) {
+			
+			// Set the cell to be equal to the dodecahedron
+			c=v;
+			return true;
+		}
+		bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) {
+			
+			// Set the cell to be equal to the dodecahedron
+			c=v;
+			return true;
+		}
 	private:
 		voronoicell v;
 };
@@ -51,12 +54,15 @@ int main() {
 	// than the particle packing itself.
 	container con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
 			false,false,false,8);
+
+	// Create the "initial shape" wall class and add it to the container
 	wall_initial_shape(wis);
 	con.add_wall(wis);
-	con.import("pack_six_cube");
 
+	// Import the irregular particle packing
+	con.import("pack_irregular");
+
+	// 
 	con.draw_particles_pov("boundaries_p.pov");
 	con.draw_cells_pov("boundaries_v.pov");
-
-	con.print_custom("%i %q %v %c","boundaries_custom");
 }

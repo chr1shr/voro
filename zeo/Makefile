@@ -2,7 +2,7 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : July 1st 2008
+# Date   : August 28th 2011
 
 # Load the common configuration file
 include ../config.mk
@@ -11,7 +11,7 @@ include ../config.mk
 EXECUTABLES=network images
 
 # Makefile rules
-all: $(EXECUTABLES) 
+all: $(EXECUTABLES)
 
 # List of the common source files
 objs=v_network.o

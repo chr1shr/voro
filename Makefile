@@ -2,7 +2,7 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : July 1st 2008
+# Date   : August 28th 2011
 
 # Tell make that these are phony targets
 .PHONY: all help clean

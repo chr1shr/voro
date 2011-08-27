@@ -2,7 +2,7 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : July 1st 2008
+# Date   : August 28th 2011
 
 # This a common configuration file that includes definitions used by all
 # the Makefiles.

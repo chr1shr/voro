@@ -2,7 +2,7 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : May 18th 2011 
+# Date   : August 28th 2011
 
 # Makefile rules
 all: ex_basic ex_walls ex_custom ex_extra ex_degenerate ex_interface

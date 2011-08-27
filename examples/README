@@ -15,8 +15,11 @@ to contain a variety of different statistics about the computed Voronoi cells.
 The radical tessellation for a polydisperse packing of particles is also
 demonstrated.
 
+interface - these programs demonstrate features of the library's C++ interface.
+
 extra - this contains miscellaneous additional applications of the library for
-non-standard usage.
+non-standard usage. It also includes an example of using a wall object to
+approximately deal with a case of an irregular boundary.
 
 degenerate - these codes demonstrate cases when "degenerate" vertices of order
 bigger than 3 are created, when the cutting planes are aligned to existing
