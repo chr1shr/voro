@@ -25,8 +25,8 @@ light_source{<25,-12,12> color rgb <0.43,0.45,0.45>}
 
 #declare f1=finish{reflection 0.15 specular 0.3 ambient 0.42}
 
-#declare t1=texture{pigment{rgbft <0.9,0.5,0.3,0,0.4>} finish{f1}}
-#declare t2=texture{pigment{rgb <0.9,0.35,0.25>} finish{f1}}
+#declare t1=texture{pigment{rgbft <0.3,0.7,0.9,0,0.4>} finish{f1}}
+#declare t2=texture{pigment{rgb <0.3,0.4,0.9>} finish{f1}}
 
 union{
 #include "polygons6_v.pov"
