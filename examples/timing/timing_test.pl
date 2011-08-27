@@ -8,11 +8,8 @@
 # will be outputted, along with the standard deviation.
 $tries=3;
 
-# The flags to pass for code optimization. The second line is appropriate for
-# Mac OS X, forcing more function inlining, and enabling the Apple-only "-fast"
-# flag for maximum code optimization.
+# The flags to pass for code optimization 
 $opt="-O3";
-#$opt="-fast --param large-function-growth=1000 --param max-inline-insns-single=2000";
 
 foreach $r (@range) {
 

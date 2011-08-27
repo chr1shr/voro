@@ -4,6 +4,7 @@
 using namespace std;
 
 #include "unitcell.hh"
+using namespace voro;
 
 int main(int argc,char **argv) {
 	unsigned int i,j;

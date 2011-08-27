@@ -7,6 +7,8 @@
 #include <cstring>
 
 #include "voro++.hh"
+using namespace voro;
+
 #include "v_network.hh"
 #include "r_table.cc"
 

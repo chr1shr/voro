@@ -4,10 +4,11 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 28th 2011
 
-#include "voro++.hh"
-using namespace voro;
 #include <ctime>
 using namespace std;
+
+#include "voro++.hh"
+using namespace voro;
 
 // Set up constants for the container geometry
 const double x_min=-1,x_max=1;

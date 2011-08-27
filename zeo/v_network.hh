@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "voro++.hh"
+using namespace voro;
 
 const int init_network_edge_memory=4;
 const int init_network_vertex_memory=64;
