@@ -1,4 +1,4 @@
-// Radical Voronoi tessellation example code
+// Irregular packing example code
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
@@ -20,6 +20,8 @@ const double phi=0.5*(1-sqrt(5.0));
 // into.
 const int n_x=5,n_y=5,n_z=5;
 
+// Create a wall class that, whenever called, will replace the Voronoi cell
+// with a prescribed shape, in this case a dodecahedron
 class wall_initial_shape : public wall {
 	public:
 		wall_initial_shape() {
@@ -62,7 +64,7 @@ int main() {
 	// Import the irregular particle packing
 	con.import("pack_irregular");
 
-	// 
+	// Save the particles and Voronoi cells in POV-Ray format 
 	con.draw_particles_pov("boundaries_p.pov");
 	con.draw_cells_pov("boundaries_v.pov");
 }

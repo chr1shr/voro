@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=box_cut cut_region superellipsoid boundaries
+EXECUTABLES=box_cut cut_region superellipsoid irregular
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -22,8 +22,8 @@ cut_region: cut_region.cc
 superellipsoid: superellipsoid.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o superellipsoid superellipsoid.cc -lvoro++
 
-boundaries: boundaries.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o boundaries boundaries.cc -lvoro++
+irregular: irregular.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o irregular irregular.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

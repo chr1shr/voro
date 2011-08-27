@@ -20,7 +20,7 @@ light_source{<25,-16,8> color rgb <0.43,0.45,0.45>}
 #declare s=0.5;
 
 #declare particles=union {
-#include "boundaries_p.pov"
+#include "irregular_p.pov"
 	pigment{rgb <1,1,1>} finish{reflection 0.24 specular 0.2 ambient 0.15 metallic}
 }
 
@@ -28,7 +28,7 @@ union{particles translate <-4,0,0>}
 union{particles translate <4,0,0>}
 
 union{
-#include "boundaries_v.pov"
+#include "irregular_v.pov"
 	translate <4,0,0>
 	pigment{rgb <0.7,0.3,0.9>} finish{specular 0.5 ambient 0.42}
 }
