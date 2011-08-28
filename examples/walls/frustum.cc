@@ -25,7 +25,7 @@ int main() {
 
 	// Place particles in a regular grid within the frustum, for points
 	// which are within the wall boundaries
-	for(z=0.1;z<1;z+=0.2) for(y=-0.95;y<1;y+=0.2) for(x=-0.95;x<1;x+=0.2) {
+	for(z=0.1;z<1;z+=0.2) for(y=-0.85;y<1;y+=0.2) for(x=-0.95;x<1;x+=0.2) {
 		if (con.point_inside(x,y,z)) {
 			con.put(i,x,y,z);i++;
 		}

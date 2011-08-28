@@ -28,9 +28,9 @@ int main() {
 
 	// Save the Voronoi network of all the particles to text files
 	// in gnuplot and POV-Ray formats
-	con.draw_cells_gnuplot("cells_ten_cube.gnu");
-	con.draw_cells_pov("cells_ten_cube.pov");
+	con.draw_cells_gnuplot("pack_ten_cube.gnu");
+	con.draw_cells_pov("pack_ten_cube_v.pov");
 
 	// Output the particles in POV-Ray format
-	con.draw_particles_pov("pack_ten_cube.pov");
+	con.draw_particles_pov("pack_ten_cube_p.pov");
 }
