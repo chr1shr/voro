@@ -23,7 +23,7 @@ int main() {
 	pcon.import("pack_six_cube");
 	pcon.guess_optimal(nx,ny,nz);
 
-	// Set up the container class an import the particles from the
+	// Set up the container class and import the particles from the
 	// pre-container
 	container con(-3,3,-3,3,0,6,nx,ny,nz,false,false,false,8);
 	pcon.setup(con);
@@ -35,9 +35,9 @@ int main() {
 
 	// Loop over all particles in the container and compute each Voronoi
 	// cell
-	c_loop_all vl(con);
-	if(vl.start()) do if(con.compute_cell(c,vl)) {
-		vl.pos(x,y,z);id=vl.pid();
+	c_loop_all cl(con);
+	if(cl.start()) do if(con.compute_cell(c,cl)) {
+		cl.pos(x,y,z);id=cl.pid();
 
 		// Gather information about the computed Voronoi cell
 		c.neighbors(neigh);
@@ -47,10 +47,9 @@ int main() {
 		// Loop over all faces of the Voronoi cell
 		for(i=0,j=0;i<neigh.size();i++) {
 
-			// Draw all triangles, quadrilaterals, pentagons, and
-			// hexagons. Skip if the neighbor information is
-			// smaller than this particle's ID, to avoid double
-			// counting.
+			// Draw all quadrilaterals, pentagons, and hexagons.
+			// Skip if the neighbor information is smaller than
+			// this particle's ID, to avoid double counting.
 			if(neigh[i]>id) {
 				switch(f_vert[j]) {
 					case 4: draw_polygon(fp4,f_vert,v,j);
@@ -64,7 +63,7 @@ int main() {
 			// Skip to the next entry in the face vertex list
 			j+=f_vert[j]+1;
 		}
-	} while (vl.inc());
+	} while (cl.inc());
 
 	// Close the output files
 	fclose(fp4);
@@ -79,18 +78,18 @@ void draw_polygon(FILE *fp,vector<int> &f_vert,vector<double> &v,int j) {
 	static char s[6][128];
 	int k,l,n(f_vert[j]);
 
-	// Create POV-Ray vector strings for each of the five vertices
+	// Create POV-Ray vector strings for each of the vertices
 	for(k=0;k<n;k++) {
 		l=3*f_vert[j+k+1];
 		sprintf(s[k],"<%g,%g,%g>",v[l],v[l+1],v[l+2]);
 	}
 
-	// Draw the interior of the pentagon
+	// Draw the interior of the polygon
 	fputs("union{\n",fp);
 	for(k=2;k<n;k++) fprintf(fp,"\ttriangle{%s,%s,%s}\n",s[0],s[k-1],s[k]);
 	fputs("\ttexture{t1}\n}\n",fp);
 
-	// Draw the outline of the pentagon
+	// Draw the outline of the polygon
 	fputs("union{\n",fp);
 	for(k=0;k<n;k++) {
 		l=(k+1)%n;

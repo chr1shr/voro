@@ -65,6 +65,6 @@ int main() {
 	con.import("pack_irregular");
 
 	// Save the particles and Voronoi cells in POV-Ray format
-	con.draw_particles_pov("boundaries_p.pov");
-	con.draw_cells_pov("boundaries_v.pov");
+	con.draw_particles_pov("irregular_p.pov");
+	con.draw_cells_pov("irregular_v.pov");
 }
