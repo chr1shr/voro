@@ -26,7 +26,7 @@ class wall_initial_shape : public wall {
 	public:
 		wall_initial_shape() {
 
-			// Create an dodecahedron
+			// Create a dodecahedron
 			v.init(-2,2,-2,2,-2,2);
 			v.plane(0,Phi,1);v.plane(0,-Phi,1);v.plane(0,Phi,-1);
 			v.plane(0,-Phi,-1);v.plane(1,0,Phi);v.plane(-1,0,Phi);
