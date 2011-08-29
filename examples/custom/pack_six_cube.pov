@@ -14,7 +14,7 @@ background{rgb 1}
 
 // Two lights with slightly different colors
 light_source{<-8,-20,30> color rgb <0.77,0.75,0.75>}
-light_source{<25,-12> color rgb <0.43,0.45,0.45>}
+light_source{<25,-12,12> color rgb <0.43,0.45,0.45>}
 
 // The radius of the cylinders to be used when drawing the Voronoi cells
 #declare r=0.08;

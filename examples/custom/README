@@ -1,5 +1,5 @@
 Customized output examples
-=====================================
+==========================
 The output of Voro++ can be customized to contain a variety of statistics about
 the Voronoi cells. Voro++ can also calculated the radical Voronoi tessellation
 for polydisperse packings where the cutting plane positions are displaced

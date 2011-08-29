@@ -35,7 +35,7 @@ The code imports the particles into the container, and then saves the particles
 and Voronoi cells in gnuplot and POV-Ray formats. To visualize the particles in
 gnuplot, use the command:
 
-splot 'pack_ten_cube' with points, 'cells_ten_cube.gnu' with lines
+splot 'pack_ten_cube' with points, 'pack_ten_cube.gnu' with lines
 
 To create a POV-Ray rendering of the particles, the scene header file
 import.pov must be used, which includes the output from the program. To render

@@ -2,7 +2,7 @@ Extra examples
 ==============
 This directory contains miscellaneous extra examples of the code.
 
-box_test.cc - this creates a large Voronoi cell, and then cuts the cell by a
+box_cut.cc - this creates a large Voronoi cell, and then cuts the cell by a
 group of points within a small box, to demonstrate space that particles within
 a block can possibly affect. Different topologies are visible depending on
 whether a face, edge, or corner of the box is aligned with the cell.
@@ -18,3 +18,10 @@ splot 'cell.gnu' with lines, 'cell_cut_region.gnu' with dots
 superellipsoid.cc - this creates a cell in the shape of a superellipsoid
 (satisfying the equation x^4+y^4+z^4=1) and outputs the results in gnuplot
 format to "superellipsoid.gnu".
+
+irregular.cc - this code makes use of a wall class as a method of handling a
+Voronoi tessellation for an irregular group of particles. Each Voronoi cell is
+initialized to be a dodecahedron surronding the particle, which is then cut.
+This stops Voronoi cells from extending a long way out to the computational
+boundaries. The output can be visualized using the POV-Ray header file
+irregular.pov.

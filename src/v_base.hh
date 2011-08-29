@@ -12,6 +12,14 @@
 
 namespace voro {
 
+/** \brief Class containing data structures common across all particle container classes.
+ *
+ * This class contains constants and data structures that are common across all
+ * particle container classes. It contains constants setting the size of the
+ * underlying subgrid of blocks that forms the basis of the Voronoi cell
+ * computations. It also constructs bound tables that are used in the Voronoi
+ * cell computation, and contains a number of routines that are common across
+ * all container classes. */
 class voro_base {
 	public:
 		/** The number of blocks in the x direction. */
