@@ -218,10 +218,10 @@ class container_base : public voro_base, public wall_list {
 		 * \param[in,out] (qx,qy,qz) the periodic displacement that
 		 * 			     must be added to the particles
 		 * 			     within the computed block.
-		 * \param[out] disp a block displacement used internally by the
+		 * \param[in] disp a block displacement used internally by the
 		 * 		    find_voronoi_cell and compute_cell routines.
 		 * \return The block index. */
-		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int disp) {
+		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int &disp) {
 			if(xperiodic) {if(ci+ei<nx) {ei+=nx;qx=-(bx-ax);} else if(ci+ei>=(nx<<1)) {ei-=nx;qx=bx-ax;} else qx=0;}
 			if(yperiodic) {if(cj+ej<ny) {ej+=ny;qy=-(by-ay);} else if(cj+ej>=(ny<<1)) {ej-=ny;qy=by-ay;} else qy=0;}
 			if(zperiodic) {if(ck+ek<nz) {ek+=nz;qz=-(bz-az);} else if(ck+ek>=(nz<<1)) {ek-=nz;qz=bz-az;} else qz=0;}

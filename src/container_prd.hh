@@ -150,11 +150,11 @@ class container_periodic_base : public unitcell, public voro_base {
 		 * \param[in,out] (qx,qy,qz) the periodic displacement that
 		 * 			     must be added to the particles
 		 * 			     within the computed block.
-		 * \param[out] disp a block displacement used internally by the
+		 * \param[in] disp a block displacement used internally by the
 		 * 		    find_voronoi_cell and compute_cell routines
 		 * 		    (but not needed in this instance.)
 		 * \return The block index. */
-		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int disp) {
+		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int &disp) {
 			int qi=ci+(ei-nx),qj=cj+(ej-ey),qk=ck+(ek-ez);
 			int iv(step_div(qi,nx));if(iv!=0) {qx=iv*bx;qi-=nx*iv;} else qx=0;
 			create_periodic_image(qi,qj,qk);
