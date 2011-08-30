@@ -30,14 +30,14 @@ namespace voro {
  * non-orthogonal periodic domain.
  *
  * This class represents a particle system in a three-dimensional
- * non-orthogonal periodic domain. The domain is defined by three vectors
- * (bx,0,0), (bxy,by,0), and (bxz,byz,bz) that define a parallelipiped.
- * Internally, the class stores particles in the box 0<x<bx, 0<y<by, 0<z<bz,
- * and constructs periodic images of particles that displaced by the three
- * periodicity vectors when they are necessary for the computation. The
- * internal memory structure for this class is significantly different from the
- * container_base class in order to handle the dynamic construction of these
- * periodic images.
+ * non-orthogonal periodic domain. The domain is defined by three periodicity
+ * vectors (bx,0,0), (bxy,by,0), and (bxz,byz,bz) that represent a
+ * parallelepiped. Internally, the class stores particles in the box 0<x<bx,
+ * 0<y<by, 0<z<bz, and constructs periodic images of particles that displaced
+ * by the three periodicity vectors when they are necessary for the
+ * computation. The internal memory structure for this class is significantly
+ * different from the container_base class in order to handle the dynamic
+ * construction of these periodic images.
  *
  * The class is derived from the unitcell class, which encapsulates information
  * about the domain geometry, and the voro_base class, which encapsulates
