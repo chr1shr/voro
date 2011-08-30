@@ -14,16 +14,16 @@ EXECUTABLES=loops polygons odd_even find_voro_cell
 all: $(EXECUTABLES)
 
 loops: loops.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o loops loops.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o loops loops.cc -lvoro++
 
 polygons: polygons.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o polygons polygons.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o polygons polygons.cc -lvoro++
 
 odd_even: odd_even.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o odd_even odd_even.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o odd_even odd_even.cc -lvoro++
 
 find_voro_cell: find_voro_cell.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o find_voro_cell find_voro_cell.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o find_voro_cell find_voro_cell.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

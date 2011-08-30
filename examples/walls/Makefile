@@ -14,16 +14,16 @@ EXECUTABLES=cylinder tetrahedron frustum torus
 all: $(EXECUTABLES)
 
 cylinder: cylinder.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o cylinder cylinder.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o cylinder cylinder.cc -lvoro++
 
 tetrahedron: tetrahedron.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o tetrahedron tetrahedron.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o tetrahedron tetrahedron.cc -lvoro++
 
 frustum: frustum.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o frustum frustum.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o frustum frustum.cc -lvoro++
 
 torus: torus.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o torus torus.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o torus torus.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

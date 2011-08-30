@@ -14,7 +14,7 @@ const double z_min=-2,z_max=2;
 
 // Set up the number of blocks that the container is divided
 // into
-const int n_x=7,n_y=7,n_z=14;
+const int n_x=7,n_y=7,n_z=7;
 
 // Set the number of particles that are going to be randomly
 // introduced

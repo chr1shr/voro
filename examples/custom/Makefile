@@ -14,13 +14,13 @@ EXECUTABLES=cell_statistics custom_output radical
 all: $(EXECUTABLES)
 
 cell_statistics: cell_statistics.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o cell_statistics cell_statistics.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o cell_statistics cell_statistics.cc -lvoro++
 
 custom_output: custom_output.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o custom_output custom_output.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o custom_output custom_output.cc -lvoro++
 
 radical: radical.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o radical radical.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o radical radical.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

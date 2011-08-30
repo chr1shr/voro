@@ -14,16 +14,16 @@ EXECUTABLES=single_cell platonic random_points import
 all: $(EXECUTABLES)
 
 single_cell: single_cell.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o single_cell single_cell.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o single_cell single_cell.cc -lvoro++
 
 platonic: platonic.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o platonic platonic.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o platonic platonic.cc -lvoro++
 
 random_points: random_points.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o random_points random_points.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o random_points random_points.cc -lvoro++
 
 import: import.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o import import.cc -lvoro++
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o import import.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)
