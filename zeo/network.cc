@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : July 1st 2008
+// Date     : August 30th 2011
 
 #include <cstring>
 
