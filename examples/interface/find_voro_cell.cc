@@ -1,4 +1,4 @@
-// Voronoi calculation example code
+// Example code demonstrating find_voronoi_cell function
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
