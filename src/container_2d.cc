@@ -160,7 +160,7 @@ void container_2d::setup(){
 	
 		//make sure that the cos(angle)>1 and the angle points inward	
 		if(((((lx-cx)*(nx-cx))+((ly-cy)*(ny-cy)))>tolerance) && 
-		((first && (crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)) || (!first && (crossproductz(nx-cx,ny-cy,lx-cx,ly-cy))==1))){
+		(crossproductz(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
 			 probpts[widl]=true;
 		}else{
 			probpts[widl]=false;
@@ -345,13 +345,14 @@ int container_2d::crossproductz(double x1, double y1, double x2, double y2){
  *                    is the first point reached in the counter-clockwise
  *                    direction. 
  * \param[in] (x2,y2) the end points of the wall segment. */
-void container_2d::semi_circle_labelling(double x1, double y1, double x2, double y2, int wid){
+void container_2d::semi_circle_labelling(double x1, double y1, double x2, double y2, int bid){
 	voropp_loop_2d l(*this);
 	double xmin,xmax,ymin,ymax,rs=(dist_squared(x1,y1,x2,y2)/2),radius=pow(rs,1/2),dummy1,dummy2,midx=(x1+x2)/2,
 	midy=(y1+y2)/2;
 	double cpx,cpy; //these stand for "current particle x" and "current particle y"
 	int box; //this holds the current computational box that we're in.
-	
+
+
 	// First we will initialize the voropp_loop_2d object to a rectangle
 	// containing all the points we are interested in plus some extraneous
 	// points. The larger the slope between (x1,y1) and (x2,y2) is, the
@@ -396,7 +397,7 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 				if(tmpp==tmpe) add_temporary_label_memory();
 				*(tmpp++)=box;
 				*(tmpp++)=j;
-				*(tmpp++)=wid;
+				*(tmpp++)=bid;
 			}
 		}
 	} while((box=l.inc(dummy1,dummy2))!=-1);
@@ -502,37 +503,35 @@ bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex,
 		cout << "bid=" << bid << "\n (gx,gy)=(" << gx << "," << gy << ") \n cpz(lx,ly,nx,ny)=" << crossproductz(lx,ly,nx,ny) << "\n (nx,ny)=(" << nx << "," << ny << ") \n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << ") \n" <<
 "(nxp,nyp)=(" << nxp << "," << nyp << ") \n (lxp,lyp)=(" << lxp << "," << lyp << ")" << endl;
 		
-		if(extpts[bid]){
+	//	if(extpts[bid]){
 			nxp=-ny; nyp=nx;  lxp=ly; lyp=-lx;
 			if(crossproductz(lx,ly,nx,ny)==1){
-				if((((lxp*(cx-gx))+(lyp*(cy-gy)))>tolerance) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>tolerance)){
-					cout << "\n No!" << endl;
-
+				nxp*=-1; nyp*=-1; lxp*=-1; lyp*=-1;
+				if((((lxp*(cx-gx))+(lyp*(cy-gy)))>0) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>0)){
 					return false;
-					cout << "\n No!" << endl;
 				}
 			}else{
-				if((((lxp*(cx-gx))+(lyp*(cy-gy)))<tolerance) || (((nxp*(cx-gx))+(nyp*(cy-gy)))<tolerance)){
-					cout << "\n NO!" << endl;
+				if((((lxp*(cx-gx))+(lyp*(cy-gy)))<0) || (((nxp*(cx-gx))+(nyp*(cy-gy)))<0)){
 
 					return false;
-					cout << "\n NO!" << endl;
 				}
 			}
-		}else{	
-			lxp=-ly; lyp=lx;  nxp=ny; nyp=-nx;
-
+/*		}else{	
+			nxp=-ny; nyp=nx; lxp=ly; lyp=-lx;
 			if(crossproductz(lx,ly,nx,ny)==1){
-				if(!((((lxp*(cx-gx))+(lyp*(cy-gy)))>-tolerance) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>-tolerance))){
+			
+				if((((lxp*(cx-gx))+(lyp*(cy-gy)))<tolerance) || (((nxp*(cx-gx))+(nyp*(cy-gy)))<tolerance)){
 					return false;
 				}
 			}else{
+				nxp*=-1; nyp*=-1; lxp*=-1; lyp*=-1;
+
 				if((((lxp*(cx-gx))+(lyp*(cy-gy)))>tolerance) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>tolerance)){
 					return false;
 				}
 			}
 		}
-	}
+*/	}
 	
 
 			
@@ -545,7 +544,7 @@ bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex,
 		nwid=edb[2*cwid];
 		widx2=bnds[2*nwid];
 		widy2=bnds[2*nwid+1];
-		if((cx==widx1 && cy==widy1) || (cx==widx2 && cy==widy2)) continue;
+		if(((cx==widx1 && cy==widy1) || (cx==widx2 && cy==widy2)) || (boundary && ((gx==widx1 && gy==widy1) || (gx==widx2 && gy==widy2)))) continue;
 		if(crossproductz(gx-widx1,gy-widy1,widx2-widx1,widy2-widy1)!=
 			crossproductz(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return false;
 	}
@@ -1009,6 +1008,18 @@ void container_2d::debug_output(){
 	}
 }
 
+void container_2d::initial_cut_nonconvex(voronoicell_2d &c,double x, double y, int bid){
+	int wid1, wid2;
+	double widx1, widy1, widx2, widy2, rs;
+	wid1=edb[2*bid]; wid2=edb[2*bid+1];
+	widx1=bnds[2*wid1]-x; widy1=bnds[2*wid1+1]-y;
+	widx2=bnds[2*wid2]-x; widy2=bnds[2*wid2+1]-y;
+	c.initialize_regions(widx1, widy1, widx2, widy2, extpts[bid]);
+	rs=widx1*widx1+widy1*widy1;
+	c.halfplane(widx1,widy1,rs, -widy2, widx2);
+	rs=widx2*widx2+widy2*widy2;
+	c.halfplane(widx2,widy2,rs, widy1, -widx1);
+}
 void container_2d::initial_cut(voronoicell_2d &c,double x, double y, int bid){
 	int wid1, wid2;
 	double widx1, widy1, widx2, widy2, rs;
@@ -1020,6 +1031,7 @@ void container_2d::initial_cut(voronoicell_2d &c,double x, double y, int bid){
 	rs=widx2*widx2+widy2*widy2;
 	c.plane(widx2,widy2,rs);
 }
+
 /** This routine computes the Voronoi cell for a give particle, by successively
  * testing over particles within larger and larger concentric circles. This
  * routine is simple and fast, although it may not work well for anisotropic
@@ -1047,8 +1059,9 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 	if(bid!=-1 && probpts[bid]){
 		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
 		problem_point=true;
-		boundary=true;	
-		initial_cut(c,x,y,bid);
+		boundary=true;		
+		initial_cut_nonconvex(c,x,y,bid);
+		
 	}else if(bid!=-1){
 		if(!initialize_voronoicell_boundary(c,x,y,bid)) return false;
 		initial_cut(c,x,y,bid);
@@ -1095,6 +1108,11 @@ bool container_2d::compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int 
 			}
 		} while((t=l.inc(qx,qy))!=-1);//loops through boxes in the shell
 		lr=ur;lrs=urs;
+	}
+	if(problem_point){
+		initial_cut_nonconvex(c,x,y,bid);
+	}else if(boundary){
+		initial_cut(c,x,y,bid);
 	}
 	return true;
 }

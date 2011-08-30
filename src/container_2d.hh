@@ -118,6 +118,7 @@ class container_2d {
 		void semi_circle_labelling(double x1, double y1, double x2, double y2, int wid);
 		void add_edb_memory(int i);
 		void initial_cut(voronoicell_2d &c, double x, double y, int bid);
+		void initial_cut_nonconvex(voronoicell_2d &c, double x, double y, int bid);
 		void import(FILE *fp=stdin);
 		void container_projection(double x, double y, double &ccy, double &ccy, double &nx, double &ny);
 		/** Imports a list of particles from a file.

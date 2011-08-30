@@ -43,6 +43,7 @@ class voronoicell_2d {
 		~voronoicell_2d();
 		void init(double xmin,double xmax,double ymin,double ymax);
 		void init_nonconvex(double bnds_loc[], int noofbnds);
+		void initialize_regions(double x1, double y1, double x2, double y2, bool ext);
 		void draw_gnuplot(double x,double y,FILE *fp=stdout);
 		/** Outputs the edges of the Voronoi cell in gnuplot format to
 		 * an output stream.

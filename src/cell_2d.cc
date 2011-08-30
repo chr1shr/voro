@@ -63,35 +63,8 @@ void voronoicell_2d::init_nonconvex(double bnds_loc[], int noofbnds){
 
 	x1=bnds_loc[2]; y1=bnds_loc[3]; x2=bnds_loc[(2*noofbnds)-2]; y2=bnds_loc[(2*noofbnds)-1];
 	reg1[0]=x1; reg1[1]=y1; reg2[0]=x2; reg2[1]=y2;
-	if(y1>0){
-		reg1[2]=5;
-		reg1[3]=-((5*x1)/y1);
-	}if(y1<0){
-		reg1[2]=-5;
-		reg1[3]=((5*x1)/y1);
-	}if(y1==0){
-		if(x1<0){
-			reg1[2]=0;
-			reg1[3]=5;
-		}else{
-			reg1[2]=0;
-			reg1[3]=-5;
-		}
-	}if(y2>0){
-		reg2[2]=-5;
-		reg2[3]=((5*x2)/y2);
-	}if(y2<0){
-		reg2[2]=5;
-		reg2[3]=-((5*x2)/y2);
-	}if(y2==0){
-		if(x2<0){
-			reg2[2]=0;
-			reg2[3]=-5;
-		}else{
-			reg2[2]=0;
-			reg2[3]=5;
-		}
-	}
+	reg1[2]=y1; reg1[3]=-x1; reg2[2]=-y2; reg2[3]=x2;
+
 }
 
 /** Outputs the edges of the Voronoi cell in gnuplot format to an output
@@ -255,15 +228,21 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 	}
 	return true;
 }
-
+void voronoicell_2d::initialize_regions(double x1, double y1, double x2, double y2, bool ext){
+	reg1[0]=x1; reg1[1]=y1; reg2[0]=x2; reg2[1]=y2;
+		reg1[2]=y1; reg1[3]=-x1;
+		reg2[2]=-y2; reg2[3]=x2;
+}
 /** The same as Plane excepts it handles nonconvex cells, for which the handling of the vertices is more complex. */
 
 bool voronoicell_2d::plane_nonconvex(double x,double y,double rsq) {
 
 //first determine which region we are in.
-	if(!(reg1[0]==x && reg1[1]==y) && ((x*reg1[0]+y*reg1[1])>0) &&((x*reg1[2]+y*reg1[3])>0)){
+	if((!(reg1[0]==x && reg1[1]==y) && ((x*reg1[0]+y*reg1[1])>0) &&((x*reg1[2]+y*reg1[3])>0)) || 
+		(reg2[0]==x && reg2[1]==y) ){
 		return halfplane(x, y, rsq, reg1[2], reg1[3]);
-	}if(!(reg2[0]==x && reg2[1]==y) && ((x*reg2[0]+y*reg2[1])>0)&&((x*reg2[2]+y*reg2[3])>0)){
+	}if((!(reg2[0]==x && reg2[1]==y) && ((x*reg2[0]+y*reg2[1])>0)&&((x*reg2[2]+y*reg2[3])>0)) ||
+		(reg1[0]==x && reg1[1]==y) ){
 		return halfplane(x, y, rsq, reg2[2], reg2[3]);
 	
 	}else{
