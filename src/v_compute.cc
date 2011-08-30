@@ -44,7 +44,7 @@ voro_compute<c_class>::voro_compute(c_class &con_,int hx_,int hy_,int hz_) :
  * 		      closer particle is found. */
 template<class c_class>
 inline void voro_compute<c_class>::scan_all(int ijk,double x,double y,double z,int di,int dj,int dk,particle_record &w,double &mrs) {
-	double x1,y1,z1,rs;bool in_block(false);
+	double x1,y1,z1,rs;bool in_block=false;
 	for(int l=0;l<co[ijk];l++) {
 		x1=p[ijk][ps*l]-x;
 		y1=p[ijk][ps*l+1]-y;
@@ -163,7 +163,7 @@ void voro_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,
 	// Update mask value and initialize queue
 	mv++;
 	if(mv==0) {reset_mask();mv=1;}
-	int *qu_s(qu),*qu_e(qu);
+	int *qu_s=qu,*qu_e=qu;
 
 	while(g<seq_length-1) {
 
@@ -233,7 +233,7 @@ void voro_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,
  * \param[in,out] qu_e a pointer to the end of the queue. */
 template<class c_class>
 inline void voro_compute<c_class>::add_to_mask(int ei,int ej,int ek,int *&qu_e) {
-	unsigned int *mijk(mask+ei+hx*(ej+hy*ek));
+	unsigned int *mijk=mask+ei+hx*(ej+hy*ek);
 	if(ek>0) if(*(mijk-hxy)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hxy)=mv;*(qu_e++)=ei;*(qu_e++)=ej;*(qu_e++)=ek-1;}
 	if(ej>0) if(*(mijk-hx)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-hx)=mv;*(qu_e++)=ei;*(qu_e++)=ej-1;*(qu_e++)=ek;}
 	if(ei>0) if(*(mijk-1)!=mv) {if(qu_e==qu_l) qu_e=qu;*(mijk-1)=mv;*(qu_e++)=ei-1;*(qu_e++)=ej;*(qu_e++)=ek;}
@@ -288,7 +288,7 @@ inline void voro_compute<c_class>::scan_bits_mask_add(unsigned int q,unsigned in
 template<class c_class>
 template<class v_cell>
 bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck) {
-	static const int count_list[8]={7,11,15,19,26,35,45,59}, *count_e(count_list+8);
+	static const int count_list[8]={7,11,15,19,26,35,45,59},*count_e=count_list+8;
 	double x,y,z,x1,y1,z1,qx=0,qy=0,qz=0;
 	double xlo,ylo,zlo,xhi,yhi,zhi,x2,y2,z2,rs;
 	int i,j,k,di,dj,dk,ei,ej,ek,f,g,l,disp;
@@ -301,7 +301,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 	// Initialize the Voronoi cell to fill the entire container
 	double crs,mrs;
 
-	int next_count=3,*count_p(const_cast<int*> (count_list));
+	int next_count=3,*count_p=(const_cast<int*> (count_list));
 
 	// Test all particles in the particle's local region first
 	for(l=0;l<s;l++) {
@@ -443,7 +443,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 	if(mv==0) {reset_mask();mv=1;}
 
 	// Set the queue pointers
-	int *qu_s(qu),*qu_e(qu);
+	int *qu_s=qu,*qu_e=qu;
 
 	while(g<seq_length-1) {
 
@@ -959,7 +959,7 @@ bool voro_compute<c_class>::compute_min_radius(int di,int dj,int dk,double fx,do
 template<class c_class>
 inline void voro_compute<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
 	qu_size<<=1;
-	int *qu_n(new int[qu_size]),*qu_c(qu_n);
+	int *qu_n=new int[qu_size],*qu_c=qu_n;
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"List memory scaled up to %d\n",qu_size);
 #endif

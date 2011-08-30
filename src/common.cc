@@ -17,7 +17,7 @@ namespace voro {
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
 void voro_print_vector(vector<int> &v,FILE *fp) {
-	int k(0),s(v.size());
+	int k=0,s=v.size();
 	while(k+4<s) {
 		fprintf(fp,"%d %d %d %d ",v[k],v[k+1],v[k+2],v[k+3]);
 		k+=4;
@@ -37,7 +37,7 @@ void voro_print_vector(vector<int> &v,FILE *fp) {
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
 void voro_print_vector(vector<double> &v,FILE *fp) {
-	int k(0),s(v.size());
+	int k=0,s=v.size();
 	while(k+4<s) {
 		fprintf(fp,"%g %g %g %g ",v[k],v[k+1],v[k+2],v[k+3]);
 		k+=4;

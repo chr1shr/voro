@@ -63,7 +63,7 @@ unitcell::unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,dou
 			// than the one based on computing the maximum radius
 			// of a Voronoi cell vertex.
 			max_uv_y=max_uv_z=0;
-			double y,z,q,*pts(unit_voro.pts),*pp(pts);
+			double y,z,q,*pts=unit_voro.pts,*pp=pts;
 			while(pp<pts+3*unit_voro.p) {
 				q=*(pp++);y=*(pp++);z=*(pp++);q=sqrt(q*q+y*y+z*z);
 				if(y+q>max_uv_y) max_uv_y=y+q;
@@ -120,8 +120,8 @@ bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
  * \param[out] vd a vector containing the fraction of the Voronoi cell volume
  *                within each corresponding image listed in vi. */
 void unitcell::images(vector<int> &vi,vector<double> &vd) {
-	const int ms2(max_unit_voro_shells*2+1),mss(ms2*ms2*ms2);
-	bool *a(new bool[mss]),*ac(a+max_unit_voro_shells*(1+ms2*(1+ms2))),*ap(a);
+	const int ms2=max_unit_voro_shells*2+1,mss=ms2*ms2*ms2;
+	bool *a=new bool[mss],*ac=a+max_unit_voro_shells*(1+ms2*(1+ms2)),*ap(a);
 	int i,j,k;
 	double vol;
 

@@ -116,10 +116,11 @@ void error_message() {
 	fputs("voro++: Unrecognized command-line options; type \"voro++ -h\" for more\ninformation.\n",stderr);
 }
 
-// Carries out the Voronoi computation
+// Carries out the Voronoi computation and outputs the results to the requested
+// files
 template<class c_loop,class c_class>
 void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FILE* gnu_file,FILE* povp_file,FILE* povv_file) {
-	int pid,ps(con.ps);double x,y,z,r;
+	int pid,ps=con.ps;double x,y,z,r;
 	if(con.contains_neighbor(format)) {
 		voronoicell_neighbor c;
 		if(vl.start()) do if(con.compute_cell(c,vl)) {
@@ -158,10 +159,10 @@ void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FI
 int main(int argc,char **argv) {
 	int i=1,j=-7,custom_output=0,nx,ny,nz,init_mem(8);
 	double ls=0;
-	blocks_mode bm(none);
+	blocks_mode bm=none;
 	bool gnuplot_output=false,povp_output=false,povv_output=false,polydisperse=false;
 	bool xperiodic=false,yperiodic=false,zperiodic=false,ordered=false;
-	pre_container *pcon(NULL);pre_container_poly *pconp(NULL);
+	pre_container *pcon=NULL;pre_container_poly *pconp=NULL;
 	wall_list wl;
 
 	// If there's one argument, check to see if it's requesting help.
@@ -374,7 +375,7 @@ int main(int argc,char **argv) {
 	}
 
 	// Check that the output filename is a sensible length
-	int flen(strlen(argv[i+6]));
+	int flen=strlen(argv[i+6]);
 	if(flen>4096) {
 		fputs("voro++: Filename too long\n",stderr);
 		wl.deallocate();
@@ -382,9 +383,9 @@ int main(int argc,char **argv) {
 	}
 
 	// Open files for output
-	char *buffer(new char[flen+7]);
+	char *buffer=new char[flen+7];
 	sprintf(buffer,"%s.vol",argv[i+6]);
-	FILE *outfile(safe_fopen(buffer,"w")),*gnu_file,*povp_file,*povv_file;
+	FILE *outfile=safe_fopen(buffer,"w"),*gnu_file,*povp_file,*povv_file;
 	if(gnuplot_output) {
 		sprintf(buffer,"%s.gnu",argv[i+6]);
 		gnu_file=safe_fopen(buffer,"w");
@@ -399,7 +400,7 @@ int main(int argc,char **argv) {
 	} else povv_file=NULL;
 	delete [] buffer;
 
-	const char *c_str(custom_output==0?(polydisperse?"%i %q %v %r":"%i %q %v"):argv[i]);
+	const char *c_str=(custom_output==0?(polydisperse?"%i %q %v %r":"%i %q %v"):argv[i]);
 
 	// Now switch depending on whether polydispersity was enabled, and
 	// whether output ordering is requested

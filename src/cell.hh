@@ -299,6 +299,7 @@ class voronoicell_base {
 		friend class voronoicell_neighbor;
 };
 
+/** \brief A class representing a single Voronoi cell (without neighbor information) */
 class voronoicell : public voronoicell_base {
 	public:
 		using voronoicell_base::nplane;

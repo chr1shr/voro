@@ -169,8 +169,7 @@ class container_base : public voro_base, public wall_list {
 		template<class v_cell>
 		inline bool initialize_voronoicell(v_cell &c,int ijk,int q,int ci,int cj,int ck,
 				int &i,int &j,int &k,double &x,double &y,double &z,int &disp) {
-			double x1,x2,y1,y2,z1,z2;
-			double *pp(p[ijk]+ps*q);
+			double x1,x2,y1,y2,z1,z2,*pp=p[ijk]+ps*q;
 			x=*(pp++);y=*(pp++);z=*pp;
 			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
 			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
@@ -232,7 +231,7 @@ class container_base : public voro_base, public wall_list {
 		/** Draws an outline of the domain in Gnuplot format.
 		 * \param[in] filename the filename to write to. */
 		inline void draw_domain_gnuplot(const char* filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_domain_gnuplot(fp);
 			fclose(fp);
 		}
@@ -240,7 +239,7 @@ class container_base : public voro_base, public wall_list {
 		/** Draws an outline of the domain in Gnuplot format.
 		 * \param[in] filename the filename to write to. */
 		inline void draw_domain_pov(const char* filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_domain_pov(fp);
 			fclose(fp);
 		}
@@ -268,7 +267,7 @@ class container : public container_base {
 		 * \param[in] filename the name of the file to open and read
 		 *                     from. */
 		inline void import(const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(fp);
 			fclose(fp);
 		}
@@ -282,7 +281,7 @@ class container : public container_base {
 		 * \param[in] filename the name of the file to open and read
 		 *                     from. */
 		inline void import(particle_order &vo,const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(vo,fp);
 			fclose(fp);
 		}
@@ -308,7 +307,7 @@ class container : public container_base {
 		/** Dumps all of the particle IDs and positions to a file.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_particles(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_particles(fp);
 			fclose(fp);
 		}
@@ -333,7 +332,7 @@ class container : public container_base {
 		/** Dumps all particle positions in POV-Ray format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_particles_pov(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_particles_pov(fp);
 			fclose(fp);
 		}
@@ -360,7 +359,7 @@ class container : public container_base {
 		 * format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_cells_gnuplot(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_cells_gnuplot(fp);
 			fclose(fp);
 		}
@@ -388,7 +387,7 @@ class container : public container_base {
 		 * format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_cells_pov(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_cells_pov(fp);
 			fclose(fp);
 		}
@@ -439,7 +438,7 @@ class container : public container_base {
 		 * condition, then the routine returns false. */
 		template<class v_cell>
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
-			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
+			int k=ijk/nxy,ijkt=ijk-nxy*k,j=ijkt/nx,i=ijkt-j*nx;
 			return vc.compute_cell(c,ijk,q,i,j,k);
 		}
 	private:
@@ -473,7 +472,7 @@ class container_poly : public container_base {
 		 * \param[in] filename the name of the file to open and read
 		 *                     from. */
 		inline void import(const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(fp);
 			fclose(fp);
 		}
@@ -487,7 +486,7 @@ class container_poly : public container_base {
 		 * \param[in] filename the name of the file to open and read
 		 *                     from. */
 		inline void import(particle_order &vo,const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(vo,fp);
 			fclose(fp);
 		}
@@ -515,7 +514,7 @@ class container_poly : public container_base {
 		 * file.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_particles(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_particles(fp);
 			fclose(fp);
 		}
@@ -540,7 +539,7 @@ class container_poly : public container_base {
 		/** Dumps all the particle positions in POV-Ray format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_particles_pov(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_particles_pov(fp);
 			fclose(fp);
 		}
@@ -567,7 +566,7 @@ class container_poly : public container_base {
 		 * format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_cells_gnuplot(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_cells_gnuplot(fp);
 			fclose(fp);
 		}
@@ -595,7 +594,7 @@ class container_poly : public container_base {
 		 * format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_cells_pov(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_cells_pov(fp);
 			fclose(fp);
 		}
@@ -643,7 +642,7 @@ class container_poly : public container_base {
 		 * condition, then the routine returns false. */
 		template<class v_cell>
 		inline bool compute_cell(v_cell &c,int ijk,int q) {
-			int k(ijk/nxy),ijkt(ijk-nxy*k),j(ijkt/nx),i(ijkt-j*nx);
+			int k=ijk/nxy,ijkt=ijk-nxy*k,j=ijkt/nx,i=ijkt-j*nx;
 			return vc.compute_cell(c,ijk,q,i,j,k);
 		}
 		void print_custom(const char *format,FILE *fp=stdout);

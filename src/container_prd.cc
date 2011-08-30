@@ -35,9 +35,9 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 	int i,j,k,l;
 
 	// Clear the global arrays
-	int *pp(co);while(pp<co+oxyz) *(pp++)=0;
+	int *pp=co;while(pp<co+oxyz) *(pp++)=0;
 	pp=mem;while(pp<mem+oxyz) *(pp++)=0;
-	char *cp(img);while(cp<img+oxyz) *(cp++)=0;
+	char *cp=img;while(cp<img+oxyz) *(cp++)=0;
 
 	// Set up memory for the blocks in the primary domain
 	for(k=ez;k<wz;k++) for(j=ey;j<wy;j++) for(i=0;i<nx;i++) {
@@ -92,7 +92,7 @@ void container_periodic::put(int n,double x,double y,double z) {
 	int ijk;
 	put_locate_block(ijk,x,y,z);
 	id[ijk][co[ijk]]=n;
-	double *pp(p[ijk]+3*co[ijk]++);
+	double *pp=p[ijk]+3*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*pp=z;
 }
 
@@ -104,7 +104,7 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r) {
 	int ijk;
 	put_locate_block(ijk,x,y,z);
 	id[ijk][co[ijk]]=n;
-	double *pp(p[ijk]+4*co[ijk]++);
+	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
 	if(max_radius<r) max_radius=r;
 }
@@ -119,7 +119,7 @@ void container_periodic::put(int n,double x,double y,double z,int &ai,int &aj,in
 	int ijk;
 	put_locate_block(ijk,x,y,z,ai,aj,ak);
 	id[ijk][co[ijk]]=n;
-	double *pp(p[ijk]+3*co[ijk]++);
+	double *pp=p[ijk]+3*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*pp=z;
 }
 
@@ -134,7 +134,7 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r,int 
 	int ijk;
 	put_locate_block(ijk,x,y,z,ai,aj,ak);
 	id[ijk][co[ijk]]=n;
-	double *pp(p[ijk]+4*co[ijk]++);
+	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
 	if(max_radius<r) max_radius=r;
 }
@@ -149,7 +149,7 @@ void container_periodic::put(particle_order &vo,int n,double x,double y,double z
 	put_locate_block(ijk,x,y,z);
 	id[ijk][co[ijk]]=n;
 	vo.add(ijk,co[ijk]);
-	double *pp(p[ijk]+3*co[ijk]++);
+	double *pp=p[ijk]+3*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*pp=z;
 }
 
@@ -164,7 +164,7 @@ void container_periodic_poly::put(particle_order &vo,int n,double x,double y,dou
 	put_locate_block(ijk,x,y,z);
 	id[ijk][co[ijk]]=n;
 	vo.add(ijk,co[ijk]);
-	double *pp(p[ijk]+4*co[ijk]++);
+	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
 	if(max_radius<r) max_radius=r;
 }
@@ -373,9 +373,9 @@ void container_periodic_base::add_particle_memory(int i) {
 #endif
 
 	// Allocate new memory and copy in the contents of the old arrays
-	int *idp(new int[nmem]);
+	int *idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
-	double *pp(new double[ps*nmem]);
+	double *pp=new double[ps*nmem];
 	for(l=0;l<ps*co[i];l++) pp[l]=p[i][l];
 
 	// Update pointers and delete old arrays
@@ -437,7 +437,7 @@ void container_periodic_poly::import(particle_order &vo,FILE *fp) {
 /** Outputs the a list of all the container regions along with the number of
  * particles stored within each. */
 void container_periodic_base::region_count() {
-	int i,j,k,*cop(co);
+	int i,j,k,*cop=co;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
 		printf("Region (%d,%d,%d): %d particles\n",i,j,k,*(cop++));
 }
@@ -475,7 +475,7 @@ void container_periodic_poly::print_custom(const char *format,FILE *fp) {
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
 void container_periodic::print_custom(const char *format,const char *filename) {
-	FILE *fp(safe_fopen(filename,"w"));
+	FILE *fp=safe_fopen(filename,"w");
 	print_custom(format,fp);
 	fclose(fp);
 }
@@ -485,7 +485,7 @@ void container_periodic::print_custom(const char *format,const char *filename) {
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
 void container_periodic_poly::print_custom(const char *format,const char *filename) {
-	FILE *fp(safe_fopen(filename,"w"));
+	FILE *fp=safe_fopen(filename,"w");
 	print_custom(format,fp);
 	fclose(fp);
 }
@@ -755,7 +755,7 @@ void container_periodic_base::create_vertical_image(int di,int dj,int dk) {
  * \param[in] (dx,dy,dz) the displacement vector to add to the particle. */
 void container_periodic_base::put_image(int reg,int fijk,int l,double dx,double dy,double dz) {
 	if(co[reg]==mem[reg]) add_particle_memory(reg);
-	double *p1(p[reg]+ps*co[reg]),*p2(p[fijk]+ps*l);
+	double *p1=p[reg]+ps*co[reg],*p2=p[fijk]+ps*l;
 	*(p1++)=*(p2++)+dx;
 	*(p1++)=*(p2++)+dy;
 	*p1=*p2+dz;

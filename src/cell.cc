@@ -78,7 +78,7 @@ void voronoicell_base::copy(voronoicell_base* vb) {
  * class, extending memory allocation if necessary.
  * \param[in] c the class to copy. */
 void voronoicell_neighbor::operator=(voronoicell &c) {
-	voronoicell_base* vb((voronoicell_base*) &c);
+	voronoicell_base *vb=((voronoicell_base*) &c);
 	check_memory_for_copy(*this,vb);copy(vb);
 	int i,j;
 	for(i=0;i<c.current_vertex_order;i++) {
@@ -91,7 +91,7 @@ void voronoicell_neighbor::operator=(voronoicell &c) {
  * class, extending memory allocation if necessary.
  * \param[in] c the class to copy. */
 void voronoicell_neighbor::operator=(voronoicell_neighbor &c) {
-	voronoicell_base* vb((voronoicell_base*) &c);
+	voronoicell_base *vb=((voronoicell_base*) &c);
 	check_memory_for_copy(*this,vb);copy(vb);
 	int i,j;
 	for(i=0;i<c.current_vertex_order;i++) {
@@ -104,7 +104,7 @@ void voronoicell_neighbor::operator=(voronoicell_neighbor &c) {
  * \param[in] (x,y,z) the coordinates of the vector. */
 void voronoicell_base::translate(double x,double y,double z) {
 	x*=2;y*=2;z*=2;
-	double *ptsp(pts);
+	double *ptsp=pts;
 	while(ptsp<pts+3*p) {
 		*(ptsp++)=x;*(ptsp++)=y;*(ptsp++)=z;
 	}
@@ -229,7 +229,7 @@ void voronoicell_base::add_memory_ds(int *&stackp) {
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Delete stack 1 memory scaled up to %d\n",current_delete_size);
 #endif
-	int *dsn(new int[current_delete_size]),*dsnp(dsn),*dsp(ds);
+	int *dsn=new int[current_delete_size],*dsnp=dsn,*dsp=ds;
 	while(dsp<stackp) *(dsnp++)=*(dsp++);
 	delete [] ds;ds=dsn;stackp=dsnp;
 	stacke=ds+current_delete_size;
@@ -244,7 +244,7 @@ void voronoicell_base::add_memory_ds2(int *&stackp2) {
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Delete stack 2 memory scaled up to %d\n",current_delete2_size);
 #endif
-	int *dsn(new int[current_delete2_size]),*dsnp(dsn),*dsp(ds2);
+	int *dsn=new int[current_delete2_size],*dsnp=dsn,*dsp=ds2;
 	while(dsp<stackp2) *(dsnp++)=*(dsp++);
 	delete [] ds2;ds2=dsn;stackp2=dsnp;
 	stacke2=ds2+current_delete2_size;
@@ -1450,7 +1450,7 @@ void voronoicell_base::centroid(double &cx,double &cy,double &cz) {
  * all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
 double voronoicell_base::max_radius_squared() {
-	double r,s,*ptsp(pts+3),*ptse(pts+3*p);
+	double r,s,*ptsp=pts+3,*ptse=pts+3*p;
 	r=*pts*(*pts)+pts[1]*pts[1]+pts[2]*pts[2];
 	while(ptsp<ptse) {
 		s=*ptsp*(*ptsp);ptsp++;
@@ -1483,7 +1483,7 @@ double voronoicell_base::total_edge_distance() {
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  * \param[in] fp a file handle to write to. */
 void voronoicell_base::draw_pov(double x,double y,double z,FILE* fp) {
-	int i,j,k;double *ptsp(pts),*pt2;
+	int i,j,k;double *ptsp=pts,*pt2;
 	char posbuf1[128],posbuf2[128];
 	for(i=0;i<p;i++,ptsp+=3) {
 		sprintf(posbuf1,"%g,%g,%g",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
@@ -1539,7 +1539,7 @@ inline bool voronoicell_base::search_edge(int l,int &m,int &k) {
  * \param[in] fp a file handle to write to. */
 void voronoicell_base::draw_pov_mesh(double x,double y,double z,FILE *fp) {
 	int i,j,k,l,m,n;
-	double *ptsp(pts);
+	double *ptsp=pts;
 	fprintf(fp,"mesh2 {\nvertex_vectors {\n%d\n",p);
 	for(i=0;i<p;i++,ptsp+=3) fprintf(fp,",<%g,%g,%g>\n",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
 	fprintf(fp,"}\nface_indices {\n%d\n",(p-2)<<1);
@@ -1586,7 +1586,7 @@ inline void voronoicell_base::reset_edges() {
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  *         plane, or 0 if the point is within the plane. */
 inline int voronoicell_base::m_test(int n,double &ans) {
-	double *pp(pts+n+(n<<1));
+	double *pp=pts+n+(n<<1);
 	ans=*(pp++)*px;
 	ans+=*(pp++)*py;
 	ans+=*pp*pz-prsq;
@@ -1757,7 +1757,7 @@ void voronoicell_base::output_vertex_orders(FILE *fp) {
  * \param[out] v the vector to store the results in. */
 void voronoicell_base::vertices(vector<double> &v) {
 	v.resize(3*p);
-	double *ptsp(pts);
+	double *ptsp=pts;
 	for(int i=0;i<3*p;i+=3) {
 		v[i]=*(ptsp++)*0.5;
 		v[i+1]=*(ptsp++)*0.5;
@@ -1781,7 +1781,7 @@ void voronoicell_base::output_vertices(FILE *fp) {
  *                    coordinate system. */
 void voronoicell_base::vertices(double x,double y,double z,vector<double> &v) {
 	v.resize(3*p);
-	double *ptsp(pts);
+	double *ptsp=pts;
 	for(int i=0;i<3*p;i+=3) {
 		v[i]=x+*(ptsp++)*0.5;
 		v[i+1]=y+*(ptsp++)*0.5;
@@ -1796,7 +1796,7 @@ void voronoicell_base::vertices(double x,double y,double z,vector<double> &v) {
 void voronoicell_base::output_vertices(double x,double y,double z,FILE *fp) {
 	if(p>0) {
 		fprintf(fp,"(%g,%g,%g)",x+*pts*0.5,y+pts[1]*0.5,z+pts[2]*0.5);
-		for(double *ptsp(pts+3);ptsp<pts+3*p;ptsp+=3) fprintf(fp," (%g,%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
+		for(double *ptsp=pts+3;ptsp<pts+3*p;ptsp+=3) fprintf(fp," (%g,%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
 	}
 }
 
@@ -2003,7 +2003,7 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 /** Counts the number of edges of the Voronoi cell.
  * \return the number of edges. */
 int voronoicell_base::number_of_edges() {
-	int edges=0,*nup(nu);
+	int edges=0,*nup=nu;
 	while(nup<nu+p) edges+=*(nup++);
 	return edges>>1;
 }
@@ -2019,7 +2019,7 @@ int voronoicell_base::number_of_edges() {
  * \param[in] r a radius associated with the particle.
  * \param[in] fp the file handle to write to. */
 void voronoicell_base::output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp) {
-	char *fmp(const_cast<char*>(format));
+	char *fmp=(const_cast<char*>(format));
 	vector<int> vi;
 	vector<double> vd;
 	while(*fmp!=0) {
@@ -2102,7 +2102,7 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
  * \param[in] (zmin,zmax) the minimum and maximum z coordinates. */
 void voronoicell_neighbor::init(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
 	init_base(xmin,xmax,ymin,ymax,zmin,zmax);
-	int *q(mne[3]);
+	int *q=mne[3];
 	*q=-5;q[1]=-3;q[2]=-1;
 	q[3]=-5;q[4]=-2;q[5]=-3;
 	q[6]=-5;q[7]=-1;q[8]=-4;
@@ -2124,7 +2124,7 @@ void voronoicell_neighbor::init(double xmin,double xmax,double ymin,double ymax,
  *              (0,l,0), (0,0,-l), and (0,0,l). */
 void voronoicell_neighbor::init_octahedron(double l) {
 	init_octahedron_base(l);
-	int *q(mne[4]);
+	int *q=mne[4];
 	*q=-5;q[1]=-6;q[2]=-7;q[3]=-8;
 	q[4]=-1;q[5]=-2;q[6]=-3;q[7]=-4;
 	q[8]=-6;q[9]=-5;q[10]=-2;q[11]=-1;
@@ -2144,7 +2144,7 @@ void voronoicell_neighbor::init_octahedron(double l) {
  * \param (x3,y3,z3) a position vector for the fourth vertex. */
 void voronoicell_neighbor::init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
 	init_tetrahedron_base(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3);
-	int *q(mne[3]);
+	int *q=mne[3];
 	*q=-4;q[1]=-3;q[2]=-2;
 	q[3]=-3;q[4]=-4;q[5]=-1;
 	q[6]=-4;q[7]=-2;q[8]=-1;
@@ -2217,7 +2217,7 @@ void voronoicell_neighbor::neighbors(vector<int> &v) {
  * any memory errors are visible. */
 void voronoicell_base::print_edges() {
 	int j;
-	double *ptsp(pts);
+	double *ptsp=pts;
 	for(int i=0;i<p;i++,ptsp+=3) {
 		printf("%d %d  ",i,nu[i]);
 		for(j=0;j<nu[i];j++) printf(" %d",ed[i][j]);
@@ -2234,7 +2234,7 @@ void voronoicell_base::print_edges() {
 /** This prints out the neighbor information for vertex i. */
 void voronoicell_neighbor::print_edges_neighbors(int i) {
 	if(nu[i]>0) {
-		int j(0);
+		int j=0;
 		printf("     (");
 		while(j<nu[i]-1) printf("%d,",ne[i][j++]);
 		printf("%d)",ne[i][j]);

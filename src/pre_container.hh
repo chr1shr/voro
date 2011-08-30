@@ -113,7 +113,7 @@ class pre_container : public pre_container_base {
 		/** Imports particles from a file.
 		 * \param[in] filename the name of the file to read from. */
 		inline void import(const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(fp);
 			fclose(fp);
 		}
@@ -147,7 +147,7 @@ class pre_container_poly : public pre_container_base {
 		/** Imports particles from a file.
 		 * \param[in] filename the name of the file to read from. */
 		inline void import(const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(fp);
 			fclose(fp);
 		}

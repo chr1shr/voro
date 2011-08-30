@@ -88,7 +88,7 @@ void container::put(int n,double x,double y,double z) {
 	int ijk;
 	if(put_locate_block(ijk,x,y,z)) {
 		id[ijk][co[ijk]]=n;
-		double *pp(p[ijk]+3*co[ijk]++);
+		double *pp=p[ijk]+3*co[ijk]++;
 		*(pp++)=x;*(pp++)=y;*pp=z;
 	}
 }
@@ -101,7 +101,7 @@ void container_poly::put(int n,double x,double y,double z,double r) {
 	int ijk;
 	if(put_locate_block(ijk,x,y,z)) {
 		id[ijk][co[ijk]]=n;
-		double *pp(p[ijk]+4*co[ijk]++);
+		double *pp=p[ijk]+4*co[ijk]++;
 		*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
 		if(max_radius<r) max_radius=r;
 	}
@@ -117,7 +117,7 @@ void container::put(particle_order &vo,int n,double x,double y,double z) {
 	if(put_locate_block(ijk,x,y,z)) {
 		id[ijk][co[ijk]]=n;
 		vo.add(ijk,co[ijk]);
-		double *pp(p[ijk]+3*co[ijk]++);
+		double *pp=p[ijk]+3*co[ijk]++;
 		*(pp++)=x;*(pp++)=y;*pp=z;
 	}
 }
@@ -133,7 +133,7 @@ void container_poly::put(particle_order &vo,int n,double x,double y,double z,dou
 	if(put_locate_block(ijk,x,y,z)) {
 		id[ijk][co[ijk]]=n;
 		vo.add(ijk,co[ijk]);
-		double *pp(p[ijk]+4*co[ijk]++);
+		double *pp=p[ijk]+4*co[ijk]++;
 		*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
 		if(max_radius<r) max_radius=r;
 	}
@@ -175,11 +175,11 @@ inline bool container_base::put_remap(int &ijk,double &x,double &y,double &z) {
 	if(xperiodic) {l=step_mod(ijk,nx);x+=boxx*(l-ijk);ijk=l;}
 	else if(ijk<0||ijk>=nx) return false;
 
-	int j(step_int((y-ay)*ysp));
+	int j=step_int((y-ay)*ysp);
 	if(yperiodic) {l=step_mod(j,ny);y+=boxy*(l-j);j=l;}
 	else if(j<0||j>=ny) return false;
 
-	int k(step_int((z-az)*zsp));
+	int k=step_int((z-az)*zsp);
 	if(xperiodic) {l=step_mod(k,nz);z+=boxz*(l-k);k=l;}
 	else if(k<0||k>=nz) return false;
 
@@ -214,8 +214,8 @@ inline bool container_base::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &c
 	if(ck<0||ck>=nz) {
 		if(zperiodic) {ak=step_div(ck,nz);z-=ak*(bz-az);ck-=ak*nz;}
 		else return false;
-	} else ak=0;
-
+	} else ak=0;	
+	
 	ijk=ci+nx*cj+nxy*ck;
 	return true;
 }
@@ -237,7 +237,7 @@ bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &
 	double mrs;
 
 	// If the given vector lies outside the domain, but the container
-	// is periodic, then remap it back into the domain
+	// is periodic, then remap it back into the domain	
 	if(!remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk)) return false;
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
@@ -273,9 +273,9 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 	int ai,aj,ak,ci,cj,ck,ijk;
 	particle_record w;
 	double mrs;
-
+	
 	// If the given vector lies outside the domain, but the container
-	// is periodic, then remap it back into the domain
+	// is periodic, then remap it back into the domain	
 	if(!remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk)) return false;
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
@@ -292,7 +292,7 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 		pid=id[w.ijk][w.l];
 		return true;
 	}
-
+	
 	// If no particle if found then just return false
 	return false;
 }
@@ -300,10 +300,10 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 void container_base::add_particle_memory(int i) {
-	int l,nmem(mem[i]<<1);
+	int l,nmem=mem[i]<<1;
 
-	// Carry out a check on the memory allocation size, and print a status
-	// message if requested
+	// Carry out a check on the memory allocation size, and
+	// print a status message if requested
 	if(nmem>max_particle_memory)
 		voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
@@ -311,9 +311,9 @@ void container_base::add_particle_memory(int i) {
 #endif
 
 	// Allocate new memory and copy in the contents of the old arrays
-	int *idp(new int[nmem]);
+	int *idp=new int[nmem];
 	for(l=0;l<co[i];l++) idp[l]=id[i][l];
-	double *pp(new double[ps*nmem]);
+	double *pp=new double[ps*nmem];
 	for(l=0;l<ps*co[i];l++) pp[l]=p[i][l];
 
 	// Update pointers and delete old arrays
@@ -375,7 +375,7 @@ void container_poly::import(particle_order &vo,FILE *fp) {
 /** Outputs the a list of all the container regions along with the number of
  * particles stored within each. */
 void container_base::region_count() {
-	int i,j,k,*cop(co);
+	int i,j,k,*cop=co;
 	for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
 		printf("Region (%d,%d,%d): %d particles\n",i,j,k,*(cop++));
 }
@@ -413,7 +413,7 @@ void container_poly::print_custom(const char *format,FILE *fp) {
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
 void container::print_custom(const char *format,const char *filename) {
-	FILE *fp(safe_fopen(filename,"w"));
+	FILE *fp=safe_fopen(filename,"w");
 	print_custom(format,fp);
 	fclose(fp);
 }
@@ -423,7 +423,7 @@ void container::print_custom(const char *format,const char *filename) {
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
 void container_poly::print_custom(const char *format,const char *filename) {
-	FILE *fp(safe_fopen(filename,"w"));
+	FILE *fp=safe_fopen(filename,"w");
 	print_custom(format,fp);
 	fclose(fp);
 }
@@ -540,7 +540,7 @@ void wall_list::increase_wall_memory() {
 	current_wall_size<<=1;
 	if(current_wall_size>max_wall_size)
 		voro_fatal_error("Wall memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
-	wall **nwalls(new wall*[current_wall_size]),**nwp(nwalls),**wp(walls);
+	wall **nwalls=new wall*[current_wall_size],**nwp=nwalls,**wp=walls;
 	while(wp<wep) *(nwp++)=*(wp++);
 	delete [] walls;
 	walls=nwalls;wel=walls+current_wall_size;wep=nwp;

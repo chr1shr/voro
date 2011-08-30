@@ -98,7 +98,7 @@ void voro_base::compute_minimum(double &minr,double &xlo,double &xhi,double &ylo
  * \param[in] format the format string to check.
  * \return True if a "%n" is found, false otherwise. */
 bool voro_base::contains_neighbor(const char *format) {
-	char *fmp(const_cast<char*>(format));
+	char *fmp=(const_cast<char*>(format));
 
 	// Check to see if "%n" appears in the format sequence
 	while(*fmp!=0) {

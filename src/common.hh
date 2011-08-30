@@ -51,7 +51,7 @@ inline void voro_print_positions(vector<double> &v,FILE *fp=stdout) {
  * \param[in] mode the cstdio fopen mode to use.
  * \return The file handle. */
 inline FILE* safe_fopen(const char *filename,const char *mode) {
-	FILE *fp(fopen(filename,mode));
+	FILE *fp=fopen(filename,mode);
 	if(fp==NULL) {
 		fprintf(stderr,"voro++: Unable to open file '%s'\n",filename);
 		exit(VOROPP_FILE_ERROR);

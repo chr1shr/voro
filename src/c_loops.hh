@@ -127,7 +127,7 @@ class c_loop_base {
 		 * considered by the loop.
 		 * \param[out] (x,y,z) the position vector of the particle. */
 		inline void pos(double &x,double &y,double &z) {
-			double *pp(p[ijk]+ps*q);
+			double *pp=p[ijk]+ps*q;
 			x=*(pp++);y=*(pp++);z=*pp;
 		}
 		/** Returns the ID, position vector, and radius of the particle
@@ -139,7 +139,7 @@ class c_loop_base {
 		 * 		 value is returned. */
 		inline void pos(int &pid,double &x,double &y,double &z,double &r) {
 			pid=id[ijk][q];
-			double *pp(p[ijk]+ps*q);
+			double *pp=p[ijk]+ps*q;
 			x=*(pp++);y=*(pp++);z=*pp;
 			r=ps==3?default_radius:*(++pp);
 		}

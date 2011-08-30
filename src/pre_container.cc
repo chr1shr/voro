@@ -99,8 +99,8 @@ void pre_container_poly::put(int n,double x,double y,double z,double r) {
 /** Transfers the particles stored within the class to a container class.
  * \param[in] con the container class to transfer to. */
 void pre_container::setup(container &con) {
-	int **c_id(pre_id),*idp,*ide,n;
-	double **c_p(pre_p),*pp,x,y,z;
+	int **c_id=pre_id,*idp,*ide,n;
+	double **c_p=pre_p,*pp,x,y,z;
 	while(c_id<end_id) {
 		idp=*(c_id++);ide=idp+pre_container_chunk_size;
 		pp=*(c_p++);
@@ -120,8 +120,8 @@ void pre_container::setup(container &con) {
 /** Transfers the particles stored within the class to a container_poly class.
  * \param[in] con the container_poly class to transfer to. */
 void pre_container_poly::setup(container_poly &con) {
-	int **c_id(pre_id),*idp,*ide,n;
-	double **c_p(pre_p),*pp,x,y,z,r;
+	int **c_id=pre_id,*idp,*ide,n;
+	double **c_p=pre_p,*pp,x,y,z,r;
 	while(c_id<end_id) {
 		idp=*(c_id++);ide=idp+pre_container_chunk_size;
 		pp=*(c_p++);
@@ -143,8 +143,8 @@ void pre_container_poly::setup(container_poly &con) {
  * \param[in] vo the ordering class to use.
  * \param[in] con the container class to transfer to. */
 void pre_container::setup(particle_order &vo,container &con) {
-	int **c_id(pre_id),*idp,*ide,n;
-	double **c_p(pre_p),*pp,x,y,z;
+	int **c_id=pre_id,*idp,*ide,n;
+	double **c_p=pre_p,*pp,x,y,z;
 	while(c_id<end_id) {
 		idp=*(c_id++);ide=idp+pre_container_chunk_size;
 		pp=*(c_p++);
@@ -166,8 +166,8 @@ void pre_container::setup(particle_order &vo,container &con) {
  * \param[in] vo the ordering class to use.
  * \param[in] con the container_poly class to transfer to. */
 void pre_container_poly::setup(particle_order &vo,container_poly &con) {
-	int **c_id(pre_id),*idp,*ide,n;
-	double **c_p(pre_p),*pp,x,y,z,r;
+	int **c_id=pre_id,*idp,*ide,n;
+	double **c_p=pre_p,*pp,x,y,z,r;
 	while(c_id<end_id) {
 		idp=*(c_id++);ide=idp+pre_container_chunk_size;
 		pp=*(c_p++);
@@ -225,8 +225,8 @@ void pre_container_base::extend_chunk_index() {
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Pre-container chunk index scaled up to %d\n",index_sz);
 #endif
-	int **n_id(new int*[index_sz]),**p_id(n_id),**c_id(pre_id);
-	double **n_p(new double*[index_sz]),**p_p(n_p),**c_p(pre_p);
+	int **n_id=new int*[index_sz],**p_id=n_id,**c_id=pre_id;
+	double **n_p=new double*[index_sz],**p_p=n_p,**c_p=pre_p;
 	while(c_id<end_id) {
 		*(p_id++)=*(c_id++);
 		*(p_p++)=*(c_p++);
