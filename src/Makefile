@@ -13,7 +13,7 @@ objs=cell.o common.o container.o unitcell.o v_compute.o c_loops.o \
 src=$(patsubst %.o,%.cc,$(objs))
 
 # Makefile rules
-all: libvoro++.a ../bin/voro++
+all: libvoro++.a voro++
 
 depend:
 	$(CXX) -MM $(src) >Makefile.dep
@@ -27,7 +27,7 @@ libvoro++.a: $(objs)
 	ar rs libvoro++.a $^
 
 ../bin/voro++: libvoro++.a cmd_line.cc
-	$(CXX) $(CFLAGS) -L. -o ../bin/voro++ cmd_line.cc -lvoro++
+	$(CXX) $(CFLAGS) -L. -o voro++ cmd_line.cc -lvoro++
 
 %.o: %.cc
 	$(CXX) $(CFLAGS) -c $<
