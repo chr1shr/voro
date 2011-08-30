@@ -18,15 +18,13 @@ all: libvoro++.a voro++
 depend:
 	$(CXX) -MM $(src) >Makefile.dep
 
-execs: $(execs)
-
 include Makefile.dep
 
 libvoro++.a: $(objs)
 	rm -f libvoro++.a
 	ar rs libvoro++.a $^
 
-../bin/voro++: libvoro++.a cmd_line.cc
+voro++: libvoro++.a cmd_line.cc
 	$(CXX) $(CFLAGS) -L. -o voro++ cmd_line.cc -lvoro++
 
 %.o: %.cc
@@ -36,6 +34,6 @@ help: Doxyfile $(SOURCE)
 	doxygen Doxyfile
 
 clean:
-	rm -f $(objs) libvoro++.a
+	rm -f $(objs) voro++ libvoro++.a
 
 .PHONY: all help execs depend
