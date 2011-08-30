@@ -40,8 +40,8 @@ int main() {
 
 	// Compute Voronoi cells for the first torus. Here, the points
 	// previously stored in the ordering class are looped over.
-	FILE *f1(safe_fopen("loops1_m.pov","w"));
-	FILE *f2(safe_fopen("loops1_v.pov","w"));
+	FILE *f1=safe_fopen("loops1_m.pov","w");
+	FILE *f2=safe_fopen("loops1_v.pov","w");
 	c_loop_order clo(con,po);
 	if(clo.start()) do if(con.compute_cell(c,clo)) {
 

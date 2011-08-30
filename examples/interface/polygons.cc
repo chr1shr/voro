@@ -29,9 +29,9 @@ int main() {
 	pcon.setup(con);
 
 	// Open the output files
-	FILE *fp4(safe_fopen("polygons4_v.pov","w")),
-	     *fp5(safe_fopen("polygons5_v.pov","w")),
-	     *fp6(safe_fopen("polygons6_v.pov","w"));
+	FILE *fp4=safe_fopen("polygons4_v.pov","w"),
+	     *fp5=safe_fopen("polygons5_v.pov","w"),
+	     *fp6=safe_fopen("polygons6_v.pov","w");
 
 	// Loop over all particles in the container and compute each Voronoi
 	// cell
@@ -76,7 +76,7 @@ int main() {
 
 void draw_polygon(FILE *fp,vector<int> &f_vert,vector<double> &v,int j) {
 	static char s[6][128];
-	int k,l,n(f_vert[j]);
+	int k,l,n=f_vert[j];
 
 	// Create POV-Ray vector strings for each of the vertices
 	for(k=0;k<n;k++) {

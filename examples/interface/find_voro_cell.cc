@@ -42,7 +42,7 @@ int main() {
 
 	// Scan a 2D slice in the container, and for each point in the slice,
 	// find the Voronoi cell that the point is in. Store a vector
-	FILE *f1(safe_fopen("find_voro_cell.vec","w"));
+	FILE *f1=safe_fopen("find_voro_cell.vec","w");
 	for(x=0.5*h;x<1;x+=h) for(y=0.5*h;y<1;y+=h) {
 		if(con.find_voronoi_cell(x,y,0.5,rx,ry,rz,i))
 			fprintf(f1,"%g %g %g %g %g %g %g\n",x,y,0.5,rx-x,ry-y,rz-0.5,
@@ -66,7 +66,7 @@ int main() {
 	// Output the Voronoi cells in gnuplot format and a file with the
 	// comparisons between the Voronoi cell volumes and the sampled volumes
 	f1=safe_fopen("find_voro_cell.vol","w");
-	FILE *f2(safe_fopen("find_voro_cell_v.gnu","w"));
+	FILE *f2=safe_fopen("find_voro_cell_v.gnu","w");
 	c_loop_all cla(con);
 	voronoicell c;
 	if(cla.start()) do if (con.compute_cell(c,cla)) {
