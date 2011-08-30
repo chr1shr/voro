@@ -154,9 +154,11 @@ void container_2d::setup(){
 		nx=bnds[2*nwid]; ny=bnds[2*nwid+1];
 		
 		tag_walls(cx,cy,nx,ny,widl);
-
-		semi_circle_labelling(cx,cy,nx,ny,widl);
-	
+		if(first){
+			semi_circle_labelling(cx,cy,nx,ny,widl);
+		}else{
+			semi_circle_labelling(nx,ny,cx,cy,widl);
+		}
 	
 		//make sure that the cos(angle)>1 and the angle points inward	
 		if(((((lx-cx)*(nx-cx))+((ly-cy)*(ny-cy)))>tolerance) && 
