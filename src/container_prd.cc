@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \file container_prd.cc
  * \brief Function implementations for the container_periodic_base and

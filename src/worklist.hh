@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \file worklist.hh
  * \brief Header file for setting constants used in the block worklists that are

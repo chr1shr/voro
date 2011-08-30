@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \file cell.hh
  * \brief Header file for the voronoicell and related classes. */
@@ -21,7 +21,7 @@ using namespace std;
 
 namespace voro {
 
-/** \brief A class representing a single Voronoi cell. 
+/** \brief A class representing a single Voronoi cell.
  *
  * This class represents a single Voronoi cell, as a collection of vertices
  * that are connected by edges. The class contains routines for initializing

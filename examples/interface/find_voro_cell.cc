@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 #include "voro++.hh"
 using namespace voro;
@@ -82,7 +82,7 @@ int main() {
 		fprintf(f1,"%d %g %g %g %g %g\n",i,x,y,z,c.volume(),samp_v[i]*hcube);
 
 		// Draw the Voronoi cell
-		c.draw_gnuplot(x,y,z,f2);		
+		c.draw_gnuplot(x,y,z,f2);
 	} while (cla.inc());
 	fclose(f1);
 	fclose(f2);

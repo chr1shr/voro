@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \file container.hh
  * \brief Header file for the container_base template and related classes. */
@@ -110,7 +110,7 @@ class wall_list {
  * regular and radical Voronoi tessellations respectively. It contains routines
  * that are commonly between these two classes, such as those for drawing the
  * domain, and placing particles within the internal data structure.
- * 
+ *
  * The class is derived from the wall_list class, which encapsulates routines
  * for associating walls with the container, and the voro_base class, which
  * encapsulates routines about the underlying computational grid. */

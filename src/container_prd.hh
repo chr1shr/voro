@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \file container_prd.hh
  * \brief Header file for the container_periodic_base and related classes. */
@@ -41,7 +41,7 @@ namespace voro {
  *
  * The class is derived from the unitcell class, which encapsulates information
  * about the domain geometry, and the voro_base class, which encapsulates
- * information about the underlying computational grid. */ 
+ * information about the underlying computational grid. */
 class container_periodic_base : public unitcell, public voro_base {
 	public:
 		/** The lower y index (inclusive) of the primary domain within

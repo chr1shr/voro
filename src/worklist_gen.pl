@@ -3,7 +3,7 @@
 #
 # Author   : Chris H. Rycroft (LBL / UC Berkeley)
 # Email    : chr@alum.mit.edu
-# Date     : May 18th 2011
+# Date     : August 30th 2011
 #
 # worklist_gen.pl - this perl script is used to automatically generate the
 # worklists of blocks that are stored in worklist.cc, that are used by the
@@ -38,7 +38,7 @@ print W <<EOF;
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr\@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \\file worklist.hh
  * \\brief Header file for setting constants used in the block worklists that are
@@ -84,7 +84,7 @@ print W <<EOF;
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr\@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \\file v_base_wl.cc
  * \\brief The table of block worklists that are used during the cell
@@ -194,7 +194,7 @@ sub worklist {
 	}
 	print W "," unless $ind==$hr*$hr*$hr-1;
 	print W "\n";
-	
+
 	# Remove list memory
 	undef @a;
 	undef @b;

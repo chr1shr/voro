@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \file container.cc
  * \brief Function implementations for the container and related classes. */
@@ -214,8 +214,8 @@ inline bool container_base::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &c
 	if(ck<0||ck>=nz) {
 		if(zperiodic) {ak=step_div(ck,nz);z-=ak*(bz-az);ck-=ak*nz;}
 		else return false;
-	} else ak=0;	
-	
+	} else ak=0;
+
 	ijk=ci+nx*cj+nxy*ck;
 	return true;
 }
@@ -237,7 +237,7 @@ bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &
 	double mrs;
 
 	// If the given vector lies outside the domain, but the container
-	// is periodic, then remap it back into the domain	
+	// is periodic, then remap it back into the domain
 	if(!remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk)) return false;
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
@@ -273,9 +273,9 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 	int ai,aj,ak,ci,cj,ck,ijk;
 	particle_record w;
 	double mrs;
-	
+
 	// If the given vector lies outside the domain, but the container
-	// is periodic, then remap it back into the domain	
+	// is periodic, then remap it back into the domain
 	if(!remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk)) return false;
 	vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
@@ -292,7 +292,7 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 		pid=id[w.ijk][w.l];
 		return true;
 	}
-	
+
 	// If no particle if found then just return false
 	return false;
 }

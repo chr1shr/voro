@@ -6,11 +6,10 @@ $c=0;
 while(<A>) {
 	$c++ if s/[ \t]+$//;
 	if(/^\/\/ Date/) {
-		print B "// Date     : August 28th 2011\n";
+		print B "// Date     : August 30th 2011\n";
 		next;
 	}
 	print B;
-	print B "using namespace voro;\n" if /^#include "voro\+\+\.hh"$/;
 }
 close A;
 close B;

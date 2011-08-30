@@ -1,4 +1,4 @@
-Version 0.4 (August 28th 2011)
+Version 0.4 (August 30th 2011)
 ==============================
 * New classes called container_periodic and container_periodic_poly have been
   added in container class. These classes can carry out Voronoi computations in

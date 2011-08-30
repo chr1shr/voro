@@ -2,7 +2,7 @@
 //
 // Author   : Chris H. Rycroft (LBL / UC Berkeley)
 // Email    : chr@alum.mit.edu
-// Date     : August 28th 2011
+// Date     : August 30th 2011
 
 /** \file voro++.hh
  * \brief A file that loads all of the Voro++ header files. */
@@ -34,7 +34,7 @@
  * voronoicell_neighbor classes, which add specialized routines depending on
  * whether neighboring particle ID information for each face must be tracked or
  * not. Collectively, these classes are referred to as "voronoicell classes"
- * within the documentation. 
+ * within the documentation.
  *
  * There is a hierarchy of classes that represent three-dimensional particle
  * systems. All of these are derived from the voro_base class, which contains
@@ -261,7 +261,7 @@
  * modified to handle non-convex cells as this would fundamentally alter the
  * algorithms that it uses, and cases could arise where a single plane cut
  * could create several new faces as opposed to just one.
- * 
+ *
  * \section loops Loop classes
  * The container classes have a number of simple routines for calculating
  * Voronoi cells for all particles within them. However, in some situations it
@@ -289,7 +289,7 @@
  * c_loop_all_periodic class, that is specifically for use with the
  * container_periodic and container_periodic_poly classes. Since the data
  * structures of these containers differ considerably, it requires a different
- * loop class that is not interoperable with the others. 
+ * loop class that is not interoperable with the others.
  *
  * \section pre_container The pre_container classes
  * Voro++ makes use of internal computational grid of blocks that are used to
