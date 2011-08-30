@@ -1,21 +1,21 @@
 Version 0.4 (August 30th 2011)
 ==============================
-* New classes called container_periodic and container_periodic_poly have been
-  added in container class. These classes can carry out Voronoi computations in
-  3D periodic parallelepiped unit cells. This adds significant complexity to
-  the computation, and the memory organization of these classes is different,
-  requiring allocation for ghost regions. Currently these classes cannot be
-  accessed by the command-line utility, but will be integrated further in future
-  releases. These classes are currently mainly exploited by a sister software
-  project Zeo++ for chemical informatics (Maciej Haranczyk, Chris Rycroft,
-  Thomas Willems, Richard Martin) to be released in late 2011.
+* New classes called container_periodic and container_periodic_poly that carry
+  out Voronoi computations in 3D periodic parallelepiped unit cells have been
+  added. This adds significant complexity to the computation, and the memory
+  organization of these classes is different, requiring allocation for ghost
+  regions. Currently these classes cannot be accessed by the command-line
+  utility, but will be integrated further in future releases. These classes are
+  currently mainly exploited by a sister software project Zeo++ for chemical
+  informatics (Maciej Haranczyk, Chris Rycroft, Thomas Willems, Richard Martin)
+  to be released in late 2011.
 * As part of the new container_periodic classes, a new class called unitcell
   has been added, which will compute the Voronoi cell for a single particle in
   a 3D periodic parallelepiped class. The Voronoi cell is formed by the
   influences of the periodic images of itself only. This turns out to be an
   important component of the calculations done by the container_periodic
   classes but can also be used independently.
-* The container classes now have a routine called find_voronoi_cell which will
+* The container classes now have a routine called find_voronoi_cell that will
   take a given position vector and return the Voronoi cell which is contained
   within. For the regular Voronoi tessellation, this is just the Voronoi cell
   corresponding to the closest particle (by definition). For the radical
@@ -26,31 +26,31 @@ Version 0.4 (August 30th 2011)
   conflicts when using multiple libraries, particularly since many of the
   classes iin the library have fairly generic names (eg. "container"). Thanks to
   Allan Johns (Dr. D Studios) for suggesting this.
-* Voro++ can now be built as a shared library that can be installed and linked
-  to. As part of this, the .cc and .hh have been revised with some small inline
-  functions and template code being written into the header files.
+* Voro++ can now be built as a static library that can be installed and linked
+  to. As part of this, the .cc and .hh files have been significantly revised
+  with some small inline functions and template code being written into the
+  header files.
 * Previously, all of the voronoicell output routines sent data to an output
   stream. However, input and output are now carried out using the STL vector
   class, allowing for programs to directly link to and use Voro++ output. The
   STL vector class has been chosen since it the simplest and most standard
-  mechanism for returning a variable amount of data. Two new examples are
-  provided to demonstrate this functionality, at the cell and container levels.
+  mechanism for returning a variable amount of data. Several new examples are
+  provided to demonstrate this functionality, for both the voronoicell class
+  and the container class.
 * A common issue has been that the order of particles in the output file does
   not match the input file, since Voro++ internally sorts particles according
-  to their position. A new class called voropp_order has been provided, which
-  can link to particles as they are stored, allowing for the Voronoi computation
-  to be carried out in the same order as the input file. The core computation
+  to their position. A new class called voro_order has been provided, which can
+  link to particles as they are stored, allowing for the Voronoi computation to
+  be carried out in the same order as the input file. The core computation
   routines can be run with a variety of different loops, and a new example
-  "loops.cc" is provided to demonstrate this. The voropp_order class can also
-  be re-sorted according to particle ID, allowing for sorted output even in the
-  case of unsorted input.
+  "loops.cc" is provided to demonstrate this. 
 * The order of parameters to certain functions have been changed to take
   advantage of the C++ default parameter mechanism wherever possible
 * The container and container_poly classes are now derived from a base class,
   rather than being different instances of a template. This simplifies the code
   and stops common routines from being duplicated. The core Voronoi computation
-  routine is now held within a voropp_compute class, which can be instantiated
-  on any container with the correct access functions.
+  routine is now held within a voro_compute class, which can be instantiated on
+  any container with the correct access functions.
 * The voronoicell and voronoicell_neighbor classes are now derived from a
   common base class, rather than being different instances of a template. This
   simplifies the code and stops common routines from being duplicated. The core
@@ -67,7 +67,7 @@ Version 0.4 (August 30th 2011)
   seemed desirable.
 * The Gnuplot output routines now merge individual lines into contiguous paths
   wherever possible, resulting in a ~15% reduction in their file size and a
-  noticeable improvement in Gnuplot rendering speed
+  noticeable improvement in rendering speed
 * Previously, the POV-Ray output routines could create cylinders where the start
   and end points matched. This was a benign problem, due to the fact the vertex
   positions within Voro++ were held to higher precision than the POV-Ray output
@@ -78,7 +78,7 @@ Version 0.4 (August 30th 2011)
 * Pointer arithmetic is now used within a number of critical cell computation
   routines, and gives a speedup of 10%-20% in many cases. On some typical
   problems on typical machines, Voro++ currently computes around 50,000
-  cells/second.
+  cells/second. New machines can achieve upwards of 70,000 cells/second.
 * A new pre-container mechanism is provided, which can read in a file of
   unknown length, and then make a guess at the correct computational grid size
   to use. This removes the need for specifying a length scale with the
@@ -86,7 +86,8 @@ Version 0.4 (August 30th 2011)
   be manually specified.
 * Removed the option to compile in single-precision. This was a highly
   specialized feature, and it appears better to allow users who wish to do this
-  to make their own modifications.
+  to make their own modifications. This option also conflicted with building
+  Voro++ as a standard static library.
 * Fixed a benign bug in the block computation list that would cause it to get
   extended prematurely
 * Numerous small improvements to memory allocation routines
@@ -95,8 +96,8 @@ Version 0.4 (August 30th 2011)
   command-line utility code.
 * Labels in the worklist that are used in the transition from the radius search
   to the block search have been optimized
-* The command-line utility can produce POV-Ray output. Also, the main loop in
-  the utility has been combined so that the Voronoi tessellation is only
+* The command-line utility can now produce POV-Ray output. Also, the main loop
+  in the utility has been combined so that the Voronoi tessellation is only
   carried out once, even if POV-Ray and Gnuplot output is also required.
 * The command-line utility does range checking on the filename to prevent
   buffer overruns
@@ -104,7 +105,7 @@ Version 0.4 (August 30th 2011)
   periodic cases, remapping them into the primary domain if necessary
 * A number of the POV-Ray header files have been altered to directly make use
   of a right-handed coordinate system in which the z axis points upwards. This
-  matches the gnuplot style, and the style used in many scientific simulations.
+  matches the Gnuplot style, and the style used in many scientific simulations.
   It avoids the need for a rotation or matrix transformation when rendering
   many of the particle packings. Some of the test particle packings have been
   transformed to ensure consistency with previous renderings.
@@ -113,7 +114,7 @@ Version 0.4 (August 30th 2011)
   to David Waroquiers (Université Catholique de Louvain, Belgium) for pointing
   this out.
 * Fixed a bug that caused the neighbor list not to be outputted in the same
-  order as the other plane diagnostic routines.  Thanks to Olufemi Olorode
+  order as the other plane diagnostic routines. Thanks to Olufemi Olorode
   (Texas A&M University) for pointing this out.
 * Removed the add_vertex() and init_test() routines, which were mainly used for
   debugging
