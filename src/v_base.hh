@@ -10,6 +10,8 @@
 #ifndef VOROPP_V_BASE_HH
 #define VOROPP_V_BASE_HH
 
+#include "worklist.hh"
+
 namespace voro {
 
 /** \brief Class containing data structures common across all particle container classes.
@@ -51,10 +53,11 @@ class voro_base {
 		 * worklists. This array is initialized during container
 		 * construction, by the initialize_radii() routine. */
 		double *mrad;
+		/** The pre-computed block worklists. */
+		static const unsigned int wl[wl_seq_length*wl_hgridcu];
 		bool contains_neighbor(const char* format);
 		voro_base(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_);
 		~voro_base() {delete [] mrad;}
-#include "worklist.hh"
 	protected:
 		/** A custom int function that returns consistent stepping
 		 * for negative numbers, so that (-1.5, -0.5, 0.5, 1.5) maps

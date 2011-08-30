@@ -17,6 +17,7 @@
 using namespace std;
 
 #include "config.hh"
+#include "worklist.hh"
 #include "cell.hh"
 
 namespace voro {
@@ -100,7 +101,6 @@ class voro_compute {
 		bool compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck);
 		void find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record &w,double &mrs);
 	private:
-		const int hgrid,fgrid,hgridcu,seq_length;
 		/** A constant set to boxx*boxx+boxy*boxy+boxz*boxz, which is
 		 * frequently used in the computation. */
 		const double bxsq;

@@ -7,6 +7,7 @@
 /** \file v_compute.cc
  * \brief Function implementantions for the v_compute class. */
 
+#include "worklist.hh"
 #include "v_compute.hh"
 #include "container.hh"
 #include "container_prd.hh"
@@ -22,9 +23,7 @@ voro_compute<c_class>::voro_compute(c_class &con_,int hx_,int hy_,int hz_) :
 	con(con_), boxx(con_.boxx), boxy(con_.boxy), boxz(con_.boxz),
 	xsp(con_.xsp), ysp(con_.ysp), zsp(con_.zsp),
 	hx(hx_), hy(hy_), hz(hz_), hxy(hx_*hy_), hxyz(hxy*hz_), ps(con_.ps),
-	id(con_.id), p(con_.p), co(con_.co), hgrid(con.hgrid),
-	fgrid(con.fgrid), hgridcu(con.hgridcu), seq_length(con.seq_length),
-	bxsq(boxx*boxx+boxy*boxy+boxz*boxz),
+	id(con_.id), p(con_.p), co(con_.co), bxsq(boxx*boxx+boxy*boxy+boxz*boxz),
 	mv(0), qu_size(3*(3+hxy+hz*(hx+hy))), wl(con_.wl), mrad(con_.mrad),
 	mask(new unsigned int[hxyz]), qu(new int[qu_size]), qu_l(qu+qu_size) {
 	reset_mask();
@@ -86,7 +85,7 @@ void voro_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,
 	// (di,dj,dk) of which subregion the particle is within.
 	unsigned int m1,m2;
 	con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
-	di=int(fx*xsp*fgrid);dj=int(fy*ysp*fgrid);dk=int(fz*zsp*fgrid);
+	di=int(fx*xsp*wl_fgrid);dj=int(fy*ysp*wl_fgrid);dk=int(fz*zsp*wl_fgrid);
 
 	// The indices (di,dj,dk) tell us which worklist to use, to test the
 	// blocks in the optimal order. But we only store worklists for the
@@ -95,17 +94,17 @@ void voro_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,
 	// section, we detect for these cases, by reflecting high values of di,
 	// dj, and dk. For these cases, a mask is constructed in m1 and m2
 	// which is used to flip the worklist information when it is loaded.
-	if(di>=hgrid) {
+	if(di>=wl_hgrid) {
 		mxs=boxx-fx;
-		m1=127+(3<<21);m2=1+(1<<21);di=fgrid-1-di;if(di<0) di=0;
+		m1=127+(3<<21);m2=1+(1<<21);di=wl_fgrid-1-di;if(di<0) di=0;
 	} else {m1=m2=0;mxs=fx;}
-	if(dj>=hgrid) {
+	if(dj>=wl_hgrid) {
 		mys=boxy-fy;
-		m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=fgrid-1-dj;if(dj<0) dj=0;
+		m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=wl_fgrid-1-dj;if(dj<0) dj=0;
 	} else mys=fy;
-	if(dk>=hgrid) {
+	if(dk>=wl_hgrid) {
 		mzs=boxz-fz;
-		m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=fgrid-1-dk;if(dk<0) dk=0;
+		m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=wl_fgrid-1-dk;if(dk<0) dk=0;
 	} else mzs=fz;
 
 	// Do a quick test to account for the case when the minimum radius is
@@ -115,9 +114,9 @@ void voro_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,
 
 	// Now compute which worklist we are going to use, and set radp and e to
 	// point at the right offsets
-	ijk=di+hgrid*(dj+hgrid*dk);
-	radp=mrad+ijk*seq_length;
-	e=(const_cast<unsigned int*> (wl))+ijk*seq_length;
+	ijk=di+wl_hgrid*(dj+wl_hgrid*dk);
+	radp=mrad+ijk*wl_seq_length;
+	e=(const_cast<unsigned int*> (wl))+ijk*wl_seq_length;
 
 	// Read in how many items in the worklist can be tested without having to
 	// worry about writing to the mask
@@ -165,7 +164,7 @@ void voro_compute<c_class>::find_voronoi_cell(double x,double y,double z,int ci,
 	if(mv==0) {reset_mask();mv=1;}
 	int *qu_s=qu,*qu_e=qu;
 
-	while(g<seq_length-1) {
+	while(g<wl_seq_length-1) {
 
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done
@@ -331,7 +330,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 	// (di,dj,dk) of which subregion the particle is within.
 	unsigned int m1,m2;
 	con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
-	di=int(fx*xsp*fgrid);dj=int(fy*ysp*fgrid);dk=int(fz*zsp*fgrid);
+	di=int(fx*xsp*wl_fgrid);dj=int(fy*ysp*wl_fgrid);dk=int(fz*zsp*wl_fgrid);
 
 	// The indices (di,dj,dk) tell us which worklist to use, to test the
 	// blocks in the optimal order. But we only store worklists for the
@@ -340,25 +339,25 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 	// section, we detect for these cases, by reflecting high values of di,
 	// dj, and dk. For these cases, a mask is constructed in m1 and m2
 	// which is used to flip the worklist information when it is loaded.
-	if(di>=hgrid) {
+	if(di>=wl_hgrid) {
 		gxs=fx;
-		m1=127+(3<<21);m2=1+(1<<21);di=fgrid-1-di;if(di<0) di=0;
+		m1=127+(3<<21);m2=1+(1<<21);di=wl_fgrid-1-di;if(di<0) di=0;
 	} else {m1=m2=0;gxs=boxx-fx;}
-	if(dj>=hgrid) {
+	if(dj>=wl_hgrid) {
 		gys=fy;
-		m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=fgrid-1-dj;if(dj<0) dj=0;
+		m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=wl_fgrid-1-dj;if(dj<0) dj=0;
 	} else gys=boxy-fy;
-	if(dk>=hgrid) {
+	if(dk>=wl_hgrid) {
 		gzs=fz;
-		m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=fgrid-1-dk;if(dk<0) dk=0;
+		m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=wl_fgrid-1-dk;if(dk<0) dk=0;
 	} else gzs=boxz-fz;
 	gxs*=gxs;gys*=gys;gzs*=gzs;
 
 	// Now compute which worklist we are going to use, and set radp and e to
 	// point at the right offsets
-	ijk=di+hgrid*(dj+hgrid*dk);
-	radp=mrad+ijk*seq_length;
-	e=(const_cast<unsigned int*> (wl))+ijk*seq_length;
+	ijk=di+wl_hgrid*(dj+wl_hgrid*dk);
+	radp=mrad+ijk*wl_seq_length;
+	e=(const_cast<unsigned int*> (wl))+ijk*wl_seq_length;
 
 	// Read in how many items in the worklist can be tested without having to
 	// worry about writing to the mask
@@ -445,7 +444,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 	// Set the queue pointers
 	int *qu_s=qu,*qu_e=qu;
 
-	while(g<seq_length-1) {
+	while(g<wl_seq_length-1) {
 
 		// At the intervals specified by count_list, we recompute the
 		// maximum radius squared
