@@ -44,7 +44,13 @@ class wall {
 		virtual bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) = 0;
 };
 
-/** \brief A class for storing a list of pointers to walls. */
+/** \brief A class for storing a list of pointers to walls.
+ *
+ * This class stores a list of pointers to wall classes. It contains several
+ * simple routines that make use of the wall classes (such as telling whether a
+ * given position is inside all of the walls or not). It can be used by itself,
+ * but also forms part of container_base, for associating walls with this
+ * class. */
 class wall_list {
 	public:
 		/** An array holding pointers to wall objects. */
@@ -93,6 +99,9 @@ class wall_list {
 		int current_wall_size;
 };
 
+/** \brief Class for storing a particle system in three-dimensional domain as a rectangular box with periodic and non-periodic boundary conditions.
+ *
+ * This class */
 class container_base : public voro_base, public wall_list {
 	public:
 		/** The minimum x coordinate of the container. */
@@ -249,6 +258,7 @@ class container_base : public voro_base, public wall_list {
 		inline bool put_remap(int &ijk,double &x,double &y,double &z);
 		inline bool remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
 };
+
 
 class container : public container_base {
 	public:

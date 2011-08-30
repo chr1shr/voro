@@ -108,7 +108,7 @@ Version 0.4 (August 28th 2011)
   It avoids the need for a rotation or matrix transformation when rendering
   many of the particle packings. Some of the test particle packings have been
   transformed to ensure consistency with previous renderings.
-* POV-Ray files have been cleaned up and there are additional comments
+* Some POV-Ray files have been cleaned up and there are additional comments
 * Fixed a bug in the print_all_custom() routine, affecting "%P" output. Thanks
   to David Waroquiers (Université Catholique de Louvain, Belgium) for pointing
   this out.
