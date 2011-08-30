@@ -26,12 +26,28 @@ using namespace std;
 
 namespace voro {
 
+/** \brief Class for representing a particle system in a 3D periodic
+ * non-orthogonal periodic domain.
+ *
+ * This class represents a particle system in a three-dimensional
+ * non-orthogonal periodic domain. The domain is defined by three vectors
+ * (bx,0,0), (bxy,by,0), and (bxz,byz,bz) that define a parallelipiped.
+ * Internally, the class stores particles in the box 0<x<bx, 0<y<by, 0<z<bz,
+ * and constructs periodic images of particles that displaced by the three
+ * periodicity vectors when they are necessary for the computation. The
+ * internal memory structure for this class is significantly different from the
+ * container_base class in order to handle the dynamic construction of these
+ * periodic images.
+ *
+ * The class is derived from the unitcell class, which encapsulates information
+ * about the domain geometry, and the voro_base class, which encapsulates
+ * information about the underlying computational grid. */ 
 class container_periodic_base : public unitcell, public voro_base {
 	public:
 		/** The lower y index (inclusive) of the primary domain within
 		 * the block structure. */
 		int ey;
-		/** The lower y index (inclusive) of the primary domain within
+		/** The lower z index (inclusive) of the primary domain within
 		 * the block structure. */
 		int ez;
 		/** The upper y index (exclusive) of the primary domain within
@@ -189,6 +205,12 @@ class container_periodic_base : public unitcell, public voro_base {
 		inline void remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
 };
 
+/** \brief Extension of the container_periodic_base class for computing regular
+ * Voronoi tessellations.
+ *
+ * This class is an extension of the container_periodic_base that has routines
+ * specifically for computing the regular Voronoi tessellation with no
+ * dependence on particle radii. */
 class container_periodic : public container_periodic_base {
 	public:
 		container_periodic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
@@ -391,6 +413,12 @@ class container_periodic : public container_periodic_base {
 		friend class voro_compute<container_periodic>;
 };
 
+/** \brief Extension of the container_periodic_base class for computing radical
+ * Voronoi tessellations.
+ *
+ * This class is an extension of container_periodic_base that has routines
+ * specifically for computing the radical Voronoi tessellation that depends
+ * on the particle radii. */
 class container_periodic_poly : public container_periodic_base {
 	public:
 		/** The current maximum radius of any particle, used to

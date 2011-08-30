@@ -21,20 +21,19 @@ using namespace std;
 
 namespace voro {
 
-/** \brief A class encapsulating all the routines for storing and calculating
- * a single Voronoi cell.
+/** \brief A class representing a single Voronoi cell. 
  *
- * This class encapsulates all the routines for storing and calculating a
- * single Voronoi cell. The cell can first be initialized by the init() function
- * to be a rectangular box. The box can then be successively cut by planes
- * using the plane function. Other routines exist for outputting the cell,
- * computing its volume, or finding the largest distance of a vertex from the
- * cell center.  The cell is described by two arrays. pts[] is a floating point
- * array which holds the vertex positions. ed[] holds the table of edges, and
- * also a relation table that determines how two vertices are connected to one
- * another. The relation table is redundant, but helps speed up the
- * computation. The function check_relations() checks that the relational table
- * is valid. */
+ * This class represents a single Voronoi cell, as a collection of vertices
+ * that are connected by edges. The class contains routines for initializing
+ * the Voronoi cell to be simple shapes such as a box, tetrahedron, or octahedron.
+ * It the contains routines for recomputing the cell based on cutting it
+ * by a plane, which forms the key routine for the Voronoi cell computation.
+ * It contains numerous routine for computing statistics about the Voronoi cell,
+ * and it can output the cell in several formats.
+ *
+ * This class is not intended for direct use, but forms the base of the
+ * voronoicell and voronoicell_neighbor classes, which extend it based on
+ * whether neighboring particle ID information needs to be tracked. */
 class voronoicell_base {
 	public:
 		/** This holds the current size of the arrays ed and nu, which
@@ -78,8 +77,8 @@ class voronoicell_base {
 		 * m elements hold a table of relations which is redundant but
 		 * helps speed up the computation. It satisfies the relation
 		 * ed[ed[i][j]][ed[i][m+j]]=i. The final entry holds a back
-		 * pointer, so that ed[i+2*m]=i. These are used when
-		 * rearranging the memory. */
+		 * pointer, so that ed[i+2*m]=i. The back pointers are used
+		 * when rearranging the memory. */
 		int **ed;
 		/** This array holds the order of the vertices in the Voronoi
 		 * cell. This array is dynamically allocated, with its current
@@ -299,7 +298,12 @@ class voronoicell_base {
 		friend class voronoicell_neighbor;
 };
 
-/** \brief A class representing a single Voronoi cell (without neighbor information) */
+/** \brief Extension of the voronoicell_base class to represent a Voronoi
+ * cell without neighbor information.
+ *
+ * This class is an extension of the voronoicell_base class, in cases when
+ * is not necessary to track the IDs of neighboring particles associated
+ * with each face of the Voronoi cell. */
 class voronoicell : public voronoicell_base {
 	public:
 		using voronoicell_base::nplane;
@@ -396,6 +400,13 @@ class voronoicell : public voronoicell_base {
 		friend class voronoicell_base;
 };
 
+/** \brief Extension of the voronoicell_base class to represent a Voronoi cell
+ * with neighbor information.
+ *
+ * This class is an extension of the voronoicell_base class, in cases when the
+ * IDs of neighboring particles associated with each face of the Voronoi cell.
+ * It contains additional data structures mne and ne for storing this
+ * information. */
 class voronoicell_neighbor : public voronoicell_base {
 	public:
 		using voronoicell_base::nplane;

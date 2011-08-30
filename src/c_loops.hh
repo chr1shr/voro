@@ -31,8 +31,15 @@ enum c_loop_subset_mode {
 /** \brief A class for storing ordering information when particles are added to
  * a container.
  *
- * By default, when particles are added to a container class, they are sorted
- * into an.  */
+ * When particles are added to a container class, they are sorted into an
+ * internal computational grid of blocks. The particle_order class provides a
+ * mechanism for remembering which block particles were sorted into. The import
+ * and put routines in the container class have variants that also take a
+ * particle_order class. Each time they are called, they will store the block
+ * that the particle was sorted into, plus the position of the particle within
+ * the block. The particle_order class can used by the c_loop_order class to
+ * specifically loop over the particles that have their information stored
+ * within it. */
 class particle_order {
 	public:
 		/** A pointer to the array holding the ordering. */
@@ -190,6 +197,10 @@ class c_loop_all : public c_loop_base {
 			return true;
 		}
 	private:
+		/** Updates the internal variables to find the next
+		 * computational block with any particles.
+		 * \return True if another block is found, false if there are
+		 * no more blocks. */
 		inline bool next_block() {
 			ijk++;
 			i++;
@@ -369,6 +380,10 @@ class c_loop_all_periodic : public c_loop_base {
 		/** A value to increase ijk by when the z index is increased.
 		 */
 		int inc2;
+		/** Updates the internal variables to find the next
+		 * computational block with any particles.
+		 * \return True if another block is found, false if there are
+		 * no more blocks. */
 		inline bool next_block() {
 			i++;
 			if(i==nx) {

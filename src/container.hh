@@ -99,9 +99,21 @@ class wall_list {
 		int current_wall_size;
 };
 
-/** \brief Class for storing a particle system in three-dimensional domain as a rectangular box with periodic and non-periodic boundary conditions.
+/** \brief Class for representing a particle system in a three-dimensional
+ * rectangular box.
  *
- * This class */
+ * This class represents a system of particles in a three-dimensional
+ * rectangular box. Any combination of non-periodic and periodic coordinates
+ * can be used in the three coordinate directions. The class is not intended
+ * for direct use, but instead forms the base of the container and
+ * container_poly classes that add specialized routines for computing the
+ * regular and radical Voronoi tessellations respectively. It contains routines
+ * that are commonly between these two classes, such as those for drawing the
+ * domain, and placing particles within the internal data structure.
+ * 
+ * The class is derived from the wall_list class, which encapsulates routines
+ * for associating walls with the container, and the voro_base class, which
+ * encapsulates routines about the underlying computational grid. */
 class container_base : public voro_base, public wall_list {
 	public:
 		/** The minimum x coordinate of the container. */
@@ -259,7 +271,12 @@ class container_base : public voro_base, public wall_list {
 		inline bool remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
 };
 
-
+/** \brief Extension of the container_base class for computing regular Voronoi
+ * tessellations.
+ *
+ * This class is an extension of the container_base class that has routines
+ * specifically for computing the regular Voronoi tessellation with no
+ * dependence on particle radii. */
 class container : public container_base {
 	public:
 		container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
@@ -461,6 +478,12 @@ class container : public container_base {
 		friend class voro_compute<container>;
 };
 
+/** \brief Extension of the container_base class for computing radical Voronoi
+ * tessellations.
+ *
+ * This class is an extension of container_base class that has routines
+ * specifically for computing the radical Voronoi tessellation that depends on
+ * the particle radii. */
 class container_poly : public container_base {
 	public:
 		/** The current maximum radius of any particle, used to

@@ -21,7 +21,11 @@ namespace voro {
  * The pre_container_base class can dynamically import and store an arbitrary
  * number of particles. Once the particles have been read in, an appropriate
  * container class can be set up with the optimal grid size, and the particles
- * can be transferred. */
+ * can be transferred.
+ *
+ * The pre_container_base class is not intended for direct use, but forms the
+ * base of the pre_container and pre_container_poly classes, that add routines
+ * depending on whether particle radii need to be tracked or not. */
 class pre_container_base {
 	public:
 		/** The minimum x coordinate of the container. */
@@ -90,10 +94,8 @@ class pre_container_base {
 /** \brief A class for storing an arbitrary number of particles without radius
  * information, prior to setting up a container geometry.
  *
- * The pre_container_base class can dynamically import and store an arbitrary
- * number of particles for the case when no radius information is used. Once
- * the particles have been read in, a container class can be set up with the
- * optimal grid size, and the particles can be transferred. */
+ * The pre_container class is an extension of the pre_container_base class for
+ * cases when no particle radius information is available. */
 class pre_container : public pre_container_base {
 	public:
 		/** The class constructor sets up the geometry of container,
@@ -124,10 +126,8 @@ class pre_container : public pre_container_base {
 /** \brief A class for storing an arbitrary number of particles with radius
  * information, prior to setting up a container geometry.
  *
- * The pre_container_base class can dynamically import and store an arbitrary
- * number of particles for the case when radius information is used. Once the
- * particles have been read in, a container_poly class can be set up with the
- * optimal grid size, and the particles can be transferred. */
+ * The pre_container_poly class is an extension of the pre_container_base class
+ * for cases when particle radius information is available. */
 class pre_container_poly : public pre_container_base {
 	public:
 		/** The class constructor sets up the geometry of container,
