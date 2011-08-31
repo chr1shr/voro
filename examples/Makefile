@@ -8,29 +8,29 @@
 all: ex_basic ex_walls ex_custom ex_extra ex_degenerate ex_interface
 
 ex_basic:
-	cd basic && $(MAKE)
+	$(MAKE) -C basic
 
 ex_walls:
-	cd walls && $(MAKE)
+	$(MAKE) -C walls
 
 ex_custom:
-	cd custom && $(MAKE)
+	$(MAKE) -C custom
 
 ex_extra:
-	cd extra && $(MAKE)
+	$(MAKE) -C extra
 
 ex_degenerate:
-	cd degenerate && $(MAKE)
+	$(MAKE) -C degenerate
 
 ex_interface:
-	cd interface && $(MAKE)
+	$(MAKE) -C interface
 
 clean:
-	cd basic && $(MAKE) clean
-	cd walls && $(MAKE) clean
-	cd custom && $(MAKE) clean
-	cd extra && $(MAKE) clean
-	cd degenerate && $(MAKE) clean
-	cd interface && $(MAKE) clean
+	$(MAKE) -C basic clean
+	$(MAKE) -C walls clean
+	$(MAKE) -C custom clean
+	$(MAKE) -C extra clean
+	$(MAKE) -C degenerate clean
+	$(MAKE) -C interface clean
 
 .PHONY: all ex_basic ex_walls ex_custom ex_extra ex_degenerate clean

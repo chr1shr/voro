@@ -11,21 +11,21 @@ include config.mk
 
 # Build all of the executable files
 all:
-	cd src && $(MAKE)
-	cd examples && $(MAKE)
+	$(MAKE) -C src
+	$(MAKE) -C examples
 
 # Build the help files (with Doxygen)
 help:
-	cd src && $(MAKE) help
+	$(MAKE) -C src help
 
 # Clean up the executable files
 clean:
-	cd src && $(MAKE) clean
-	cd examples && $(MAKE) clean
+	$(MAKE) -C src clean
+	$(MAKE) -C examples clean
 
 # Install the executable, man page, and shared library
 install:
-	cd src && $(MAKE)
+	$(MAKE) -C src
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/bin
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/lib
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/man/man1
