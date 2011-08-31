@@ -46,7 +46,7 @@ int main() {
 	for(x=0.5*h;x<1;x+=h) for(y=0.5*h;y<1;y+=h) {
 		if(con.find_voronoi_cell(x,y,0.5,rx,ry,rz,i))
 			fprintf(f1,"%g %g %g %g %g %g %g\n",x,y,0.5,rx-x,ry-y,rz-0.5,
-				sqrt((x-rx)*(x-rx)+(y-ry)*(y-ry)+(rz-0.5)*(rz-0.5)));
+				sqrt((rx-x)*(rx-x)+(ry-y)*(ry-y)+(rz-0.5)*(rz-0.5)));
 		else fprintf(stderr,"# find_voronoi_cell error for %g %g 0.5\n",x,y);
 	}
 	fclose(f1);

@@ -28,7 +28,9 @@ install:
 	$(MAKE) -C src
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/bin
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/lib
+	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/man
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/man/man1
+	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/include
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/include/voro++
 	$(INSTALL) $(IFLAGS_EXEC) src/voro++ $(PREFIX)/bin
 	$(INSTALL) $(IFLAGS) man/voro++.1 $(PREFIX)/man/man1
