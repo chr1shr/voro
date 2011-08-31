@@ -49,7 +49,10 @@ int main() {
 
 			// Draw all quadrilaterals, pentagons, and hexagons.
 			// Skip if the neighbor information is smaller than
-			// this particle's ID, to avoid double counting.
+			// this particle's ID, to avoid double counting. This
+			// also removes faces that touch the walls, since the
+			// neighbor information is set to negative numbers for
+			// these cases.
 			if(neigh[i]>id) {
 				switch(f_vert[j]) {
 					case 4: draw_polygon(fp4,f_vert,v,j);

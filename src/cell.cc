@@ -1637,7 +1637,7 @@ int voronoicell_base::check_marginal(int n,double &ans) {
 void voronoicell_base::normals(vector<double> &v) {
 	int i,j,k;
 	v.clear();
-	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) normals_search(v,i,j,k);
 	}
@@ -1718,7 +1718,7 @@ inline void voronoicell_base::normals_search(vector<double> &v,int i,int j,int k
  * \return The number of faces. */
 int voronoicell_base::number_of_faces() {
 	int i,j,k,l,m,s=0;
-	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) {
 			s++;
@@ -1806,7 +1806,7 @@ void voronoicell_base::face_perimeters(vector<double> &v) {
 	v.clear();
 	int i,j,k,l,m;
 	double dx,dy,dz,perim;
-	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) {
 			dx=pts[3*k]-pts[3*i];
@@ -1837,7 +1837,7 @@ void voronoicell_base::face_perimeters(vector<double> &v) {
 void voronoicell_base::face_vertices(vector<int> &v) {
 	int i,j,k,l,m,vp(0),vn;
 	v.clear();
-	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) {
 			v.push_back(0);
@@ -1864,7 +1864,7 @@ void voronoicell_base::face_vertices(vector<int> &v) {
 void voronoicell_base::face_orders(vector<int> &v) {
 	int i,j,k,l,m,q;
 	v.clear();
-	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) {
 			q=1;
@@ -1889,7 +1889,7 @@ void voronoicell_base::face_orders(vector<int> &v) {
 void voronoicell_base::face_freq_table(vector<int> &v) {
 	int i,j,k,l,m,q;
 	v.clear();
-	for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) {
 			q=1;

@@ -39,4 +39,4 @@ foreach $r (@range) {
 }
 
 # Delete the temporary timing file
-system "rm time_temp";
+unlink "time_temp";
