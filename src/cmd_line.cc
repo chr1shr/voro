@@ -110,7 +110,7 @@ void custom_output_message() {
 
 // Ths message is displayed if the user requests version information
 void version_message() {
-	puts("Voro++ version 0.4 (August 28th, 2011)");
+	puts("Voro++ version 0.4 (August 30th, 2011)");
 }
 
 // Prints an error message. This is called when the program is unable to make
