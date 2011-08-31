@@ -46,6 +46,10 @@ void help_message() {
 	     " -py        : Make container periodic in the y direction\n"
 	     " -pz        : Make container periodic in the z direction\n"
 	     " -r         : Assume the input file has an extra coordinate for radii\n"
+	     " -v         : Verbose output\n"
+	     " --version  : Print version information\n"
+	     " -wb [6]    : Add six plane wall objects to make rectangular box containing\n"
+	     "              the space x1<x<x2, x3<y<x4, x5<z<x6\n"
 	     " -wc [7]    : Add a cylinder wall object, centered on (x1,x2,x3),\n"
 	     "              pointing in (x4,x5,x6), radius x7\n"
 	     " -wo [7]    : Add a conical wall object, apex at (x1,x2,x3), axis\n"
@@ -54,7 +58,6 @@ void help_message() {
 	     "              with radius x4\n"
 	     " -wp [4]    : Add a plane wall object, with normal (x1,x2,x3),\n"
 	     "              and displacement x4\n"
-	     " --version  : Print version information\n"
 	     " -y         : Save POV-Ray particles to <filename_p.pov> and POV-Ray Voronoi\n"
 	     "              cells to <filename_v.pov>\n"
 	     " -yp        : Save only POV-Ray particles to <filename_p.pov>\n"
@@ -119,7 +122,7 @@ void error_message() {
 // Carries out the Voronoi computation and outputs the results to the requested
 // files
 template<class c_loop,class c_class>
-void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FILE* gnu_file,FILE* povp_file,FILE* povv_file) {
+void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FILE* gnu_file,FILE* povp_file,FILE* povv_file,bool verbose,double &vol,int &vcc,int &tp) {
 	int pid,ps=con.ps;double x,y,z,r;
 	if(con.contains_neighbor(format)) {
 		voronoicell_neighbor c;
@@ -136,6 +139,7 @@ void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FI
 				fprintf(povv_file,"// cell %d\n",pid);
 				c.draw_pov(x,y,z,povv_file);
 			}
+			if(verbose) {vol+=c.volume();vcc++;}
 		} while(vl.inc());
 	} else {
 		voronoicell c;
@@ -152,8 +156,10 @@ void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FI
 				fprintf(povv_file,"// cell %d\n",pid);
 				c.draw_pov(x,y,z,povv_file);
 			}
+			if(verbose) {vol+=c.volume();vcc++;}
 		} while(vl.inc());
 	}
+	if(verbose) tp=con.total_particles();
 }
 
 int main(int argc,char **argv) {
@@ -161,7 +167,7 @@ int main(int argc,char **argv) {
 	double ls=0;
 	blocks_mode bm=none;
 	bool gnuplot_output=false,povp_output=false,povv_output=false,polydisperse=false;
-	bool xperiodic=false,yperiodic=false,zperiodic=false,ordered=false;
+	bool xperiodic=false,yperiodic=false,zperiodic=false,ordered=false,verbose=false;
 	pre_container *pcon=NULL;pre_container_poly *pconp=NULL;
 	wall_list wl;
 
@@ -191,7 +197,7 @@ int main(int argc,char **argv) {
 	// options.
 	while(i<argc-7) {
 		if(strcmp(argv[i],"-c")==0) {
-			if(i>=argc-9) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
+			if(i>=argc-8) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			if(custom_output==0) {
 				custom_output=++i;
 			} else {
@@ -206,6 +212,7 @@ int main(int argc,char **argv) {
 		} else if(strcmp(argv[i],"-hc")==0) {
 			custom_output_message();wl.deallocate();return 0;
 		} else if(strcmp(argv[i],"-l")==0) {
+			if(i>=argc-8) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			if(bm!=none) {
 				fputs("voro++: Conflicting options about grid setup (-l/-n)\n",stderr);
 				wl.deallocate();
@@ -216,6 +223,7 @@ int main(int argc,char **argv) {
 		} else if(strcmp(argv[i],"-m")==0) {
 			i++;init_mem=atoi(argv[i]);
 		} else if(strcmp(argv[i],"-n")==0) {
+			if(i>=argc-10) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			if(bm!=none) {
 				fputs("voro++: Conflicting options about grid setup (-l/-n)\n",stderr);
 				wl.deallocate();
@@ -244,22 +252,40 @@ int main(int argc,char **argv) {
 			zperiodic=true;
 		} else if(strcmp(argv[i],"-r")==0) {
 			polydisperse=true;
+		} else if(strcmp(argv[i],"-v")==0) {
+			verbose=true;
+		} else if(strcmp(argv[i],"--version")==0) {
+			version_message();
+			wl.deallocate();
+			return 0;
+		} else if(strcmp(argv[i],"-wb")==0) {
+			if(i>=argc-13) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
+			i++;
+			double w0=atof(argv[i++]),w1=atof(argv[i++]);
+			double w2=atof(argv[i++]),w3=atof(argv[i++]);
+			double w4=atof(argv[i++]),w5=atof(argv[i]);
+			wl.add_wall(new wall_plane(-1,0,0,-w0,j));j--;			
+			wl.add_wall(new wall_plane(1,0,0,w1,j));j--;			
+			wl.add_wall(new wall_plane(0,-1,0,-w2,j));j--;			
+			wl.add_wall(new wall_plane(0,1,0,w3,j));j--;			
+			wl.add_wall(new wall_plane(0,0,-1,-w4,j));j--;			
+			wl.add_wall(new wall_plane(0,0,1,w5,j));j--;			
 		} else if(strcmp(argv[i],"-ws")==0) {
-			if(i>=argc-12) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
+			if(i>=argc-11) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			i++;
 			double w0=atof(argv[i++]),w1=atof(argv[i++]);
 			double w2=atof(argv[i++]),w3=atof(argv[i]);
 			wl.add_wall(new wall_sphere(w0,w1,w2,w3,j));
 			j--;
 		} else if(strcmp(argv[i],"-wp")==0) {
-			if(i>=argc-12) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
+			if(i>=argc-11) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			i++;
 			double w0=atof(argv[i++]),w1=atof(argv[i++]);
 			double w2=atof(argv[i++]),w3=atof(argv[i]);
 			wl.add_wall(new wall_plane(w0,w1,w2,w3,j));
 			j--;
 		} else if(strcmp(argv[i],"-wc")==0) {
-			if(i>=argc-15) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
+			if(i>=argc-14) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			i++;
 			double w0=atof(argv[i++]),w1=atof(argv[i++]);
 			double w2=atof(argv[i++]),w3=atof(argv[i++]);
@@ -268,7 +294,7 @@ int main(int argc,char **argv) {
 			wl.add_wall(new wall_cylinder(w0,w1,w2,w3,w4,w5,w6,j));
 			j--;
 		} else if(strcmp(argv[i],"-wo")==0) {
-			if(i>=argc-15) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
+			if(i>=argc-14) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			i++;
 			double w0=atof(argv[i++]),w1=atof(argv[i++]);
 			double w2=atof(argv[i++]),w3=atof(argv[i++]);
@@ -276,10 +302,6 @@ int main(int argc,char **argv) {
 			double w6=atof(argv[i]);
 			wl.add_wall(new wall_cone(w0,w1,w2,w3,w4,w5,w6,j));
 			j--;
-		} else if(strcmp(argv[i],"--version")==0) {
-			version_message();
-			wl.deallocate();
-			return 0;
 		} else if(strcmp(argv[i],"-y")==0) {
 			povp_output=povv_output=true;
 		} else if(strcmp(argv[i],"-yp")==0) {
@@ -404,6 +426,7 @@ int main(int argc,char **argv) {
 
 	// Now switch depending on whether polydispersity was enabled, and
 	// whether output ordering is requested
+	double vol=0;int tp=0,vcc=0;
 	if(polydisperse) {
 		if(ordered) {
 			particle_order vo;
@@ -414,7 +437,7 @@ int main(int argc,char **argv) {
 			} else con.import(vo,argv[i+6]);
 
 			c_loop_order vlo(con,vo);
-			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file);
+			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
 		} else {
 			container_poly con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
 			con.add_wall(wl);
@@ -424,7 +447,7 @@ int main(int argc,char **argv) {
 			} else con.import(argv[i+6]);
 
 			c_loop_all vla(con);
-			cmd_line_output(vla,con,c_str,outfile,gnu_file,povp_file,povv_file);
+			cmd_line_output(vla,con,c_str,outfile,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
 		}
 	} else {
 		if(ordered) {
@@ -436,7 +459,7 @@ int main(int argc,char **argv) {
 			} else con.import(vo,argv[i+6]);
 
 			c_loop_order vlo(con,vo);
-			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file);
+			cmd_line_output(vlo,con,c_str,outfile,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
 		} else {
 			container con(ax,bx,ay,by,az,bz,nx,ny,nz,xperiodic,yperiodic,zperiodic,init_mem);
 			con.add_wall(wl);
@@ -444,10 +467,26 @@ int main(int argc,char **argv) {
 				pcon->setup(con);delete pcon;
 			} else con.import(argv[i+6]);
 			c_loop_all vla(con);
-			cmd_line_output(vla,con,c_str,outfile,gnu_file,povp_file,povv_file);
+			cmd_line_output(vla,con,c_str,outfile,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
 		}
 	}
 
+	// Print information if verbose output requested
+	if(verbose) {
+		printf("Container geometry        : [%g:%g] [%g:%g] [%g:%g]\n"
+		       "Computational grid size   : %d by %d by %d (%s)\n"
+		       "Filename                  : %s\n"
+		       "Output string             : %s%s\n",ax,bx,ay,by,az,bz,nx,ny,nz,
+		       bm==none?"estimated from file":(bm==length_scale?
+		       "estimated using length scale":"directly specified"),
+		       argv[i+6],c_str,custom_output==0?" (default)":"");
+		printf("Total imported particles  : %d (%.2g per grid block)\n"
+		       "Total V. cells computed   : %d\n"
+		       "Total container volume    : %g\n"
+		       "Total V. cell volume      : %g\n",tp,((double) tp)/(nx*ny*nz),
+		       vcc,(bx-ax)*(by-ay)*(bz-az),vol);
+	}
+			   
 	// Close output files
 	fclose(outfile);
 	if(gnu_file!=NULL) fclose(gnu_file);

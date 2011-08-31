@@ -152,6 +152,12 @@ the radical Voronoi tessellation. For this case, an extra column is required in
 the input file, that contains the particle radii. The radii are also included
 in the output file.
 .B
+.IP \-v
+Verbose output. After the computation is completed, some statistics are printed
+about the container geometry, the internal computational grid, the number of
+particles imported, the number Voronoi cells computed, and the volume of the
+computed Voronoi cells.
+.B
 .IP \-\-version
 Print version information.
 .B
@@ -172,6 +178,13 @@ In addition, a number of options can be used to specify wall objects. Walls
 are implemented by applying extra plane cuts during the cell construction
 process. At present, four wall types are supported:
 
+.B
+.IP \-wb <x1> <x2> <x3> <x4> <x5> <x6>
+Add six plane wall objects to make a box containing the space x1<x<x2, x3<y<x4,
+and x5<z<z6. This can be useful for embedding a smaller box within a larger
+container, in cases when the influence of particles outside the smaller box
+still need to be considered. This option is shorthand to avoid using the \-wp
+option six times.
 .B
 .IP \-wc <x1> <x2> <x3> <x4> <x5> <x6> <x7>
 Add a cylindrical wall object, where (x1,x2,x3) is a point on the cylinder

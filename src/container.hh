@@ -264,6 +264,13 @@ class container_base : public voro_base, public wall_list {
 			draw_domain_pov(fp);
 			fclose(fp);
 		}
+		/** Sums up the total number of stored particles.
+		 * \return The number of particles. */
+		inline int total_particles() {
+			int tp=*co;
+			for(int *cop=co+1;cop<co+nxyz;cop++) tp+=*cop;
+			return tp;
+		}
 	protected:
 		void add_particle_memory(int i);
 		inline bool put_locate_block(int &ijk,double &x,double &y,double &z);
