@@ -66,7 +66,22 @@ void voronoicell_2d::init_nonconvex(double bnds_loc[], int noofbnds){
 	reg1[2]=y1; reg1[3]=-x1; reg2[2]=-y2; reg2[3]=x2;
 
 }
-
+/** Outputs the cell-area
+	*/
+double voronoicell_2d::cell_area(){
+	double area, cx, cy, nx, ny;
+	int cid=0, nid, fid=0;
+	nid=ed[0];
+	do{
+		cx=pts[2*cid]; cy=pts[2*cid+1]; nx=pts[2*nid]; ny=pts[2*nid+1];
+		area+=((cx*ny)-(nx*cy));
+		cid=nid;
+		nid=ed[2*cid];
+	}while(cid!=fid);
+	area=area/2;
+	if(area<0) area*=-1;
+	return area;
+}
 /** Outputs the edges of the Voronoi cell in gnuplot format to an output
  * stream.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.

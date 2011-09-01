@@ -235,8 +235,8 @@ class container_2d {
 		inline bool put_remap(int &ij,double &x,double &y);
 		inline double max(double a, double b) {return b<a?a:b;}
 		inline double min(double a, double b) {return (b<a)?b:a;}
-		inline double dist_squared(double x1,double y1,double x2,double y2) {
-			return (((y2-y1)*(y2-y1))+((x2-x1)*(x2-x1)));
+		inline double dist(double x1,double y1,double x2,double y2) {
+			return pow((((y2-y1)*(y2-y1))+((x2-x1)*(x2-x1))),.5);
 		}
 		void create_label_table();
 		void add_temporary_label_memory();

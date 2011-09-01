@@ -348,8 +348,10 @@ int container_2d::crossproductz(double x1, double y1, double x2, double y2){
  *                    direction. 
  * \param[in] (x2,y2) the end points of the wall segment. */
 void container_2d::semi_circle_labelling(double x1, double y1, double x2, double y2, int bid){
+	cout << " \n semi-circle-labelling\n  bid=" << bid << "\n (x1,y1)(x2,y2)=(" << x1 << "," << y1
+	<< ")(" << x2 << "," << y2 << ") \n" << endl;
 	voropp_loop_2d l(*this);
-	double xmin,xmax,ymin,ymax,rs=(dist_squared(x1,y1,x2,y2)/2),radius=pow(rs,1/2),dummy1,dummy2,midx=(x1+x2)/2,
+	double xmin,xmax,ymin,ymax, radius=(dist(x1,y1,x2,y2)/2),dummy1,dummy2,midx=(x1+x2)/2,
 	midy=(y1+y2)/2;
 	double cpx,cpy; //these stand for "current particle x" and "current particle y"
 	int box; //this holds the current computational box that we're in.
@@ -388,18 +390,20 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 	// Now loop through all the particles in the boxes we found. Tagging
 	// the ones that are within radius of (midx,midy) and are on the
 	// appropriate side of the wall.
-	box=l.init(xmin,xmax,ymin,ymax,dummy1,dummy2);
+	box=l.init(midx,midy,radius, dummy1,dummy2);
 	do {
 		for(int j=0;j<co[box];j++){
 			cpx=p[box][2*j];
 			cpy=p[box][2*j+1];
-			if(((dist_squared(midx,midy,cpx,cpy)<=rs)&&
+			cout << "\n now checking (x,y)=(" << cpx <<"," <<cpy<<")\n"<<endl;
+			if(((dist(midx,midy,cpx,cpy)<=radius)&&
 			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)) && 
 			!((cpx==x1 && cpy==y1) || (cpx==x2 && cpy==y2))){
 				if(tmpp==tmpe) add_temporary_label_memory();
 				*(tmpp++)=box;
 				*(tmpp++)=j;
 				*(tmpp++)=bid;
+				cout << "WE ADDED ONE!" << endl;
 			}
 		}
 	} while((box=l.inc(dummy1,dummy2))!=-1);
@@ -500,21 +504,18 @@ bool container_2d::OKCuttingParticle(double gx, double gy, int gbox, int gindex,
 		int lwid=edb[2*bid+1];
 		double nx=bnds[2*nwid]-gx; double ny=bnds[2*nwid+1]-gy;
 		double lx=bnds[2*lwid]-gx; double ly=bnds[2*lwid+1]-gy;
-		double nxp, nyp, lxp, lyp;
+		double nxp=-ny, nyp=nx, lxp=ly, lyp=-lx;
 		
-		cout << "bid=" << bid << "\n (gx,gy)=(" << gx << "," << gy << ") \n cpz(lx,ly,nx,ny)=" << crossproductz(lx,ly,nx,ny) << "\n (nx,ny)=(" << nx << "," << ny << ") \n (lx,ly)=(" << lx << "," << ly << ") \n (cx,cy)=(" << cx << "," << cy << ") \n" <<
-"(nxp,nyp)=(" << nxp << "," << nyp << ") \n (lxp,lyp)=(" << lxp << "," << lyp << ")" << endl;
-		
+			
 	//	if(extpts[bid]){
-			nxp=-ny; nyp=nx;  lxp=ly; lyp=-lx;
 			if(crossproductz(lx,ly,nx,ny)==1){
 				nxp*=-1; nyp*=-1; lxp*=-1; lyp*=-1;
 				if((((lxp*(cx-gx))+(lyp*(cy-gy)))>0) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>0)){
+					
 					return false;
 				}
 			}else{
 				if((((lxp*(cx-gx))+(lyp*(cy-gy)))<0) || (((nxp*(cx-gx))+(nyp*(cy-gy)))<0)){
-
 					return false;
 				}
 			}
@@ -953,7 +954,7 @@ double container_2d::sum_cell_areas() {
 	voronoicell_2d c;
 	for(j=0;j<ny;j++) for(i=0;i<nx;i++,ij++) for(q=0;q<co[ij];q++) {
 		x=p[ij][2*q];y=p[ij][2*q+1];
-		if(compute_cell_sphere(c,i,j,ij,q,x,y)) sum+=c.area();
+		if(compute_cell_sphere(c,i,j,ij,q,x,y)) sum+=c.cell_area();
 	}
 	return sum;
 }
@@ -990,9 +991,9 @@ void container_2d::debug_output(){
 	cout << "semi_circle_labelling  \n";
 	for(int i=0; i<nxy; i++){
 		for(int j=0; j<co[i]; j++){
-			cout << " \t computational box= " << i << "\n \t \t  paricle_no=   " << id[i][j] << "\n \t \t \t wall_ids=";
+			cout << " \t computational box= " << i << "\n \t \t  paricle_no=   " << id[i][j] << "(x,y)=(" << p[i][2*j] << "," << p[i][2*j+1] << ")" << "\n \t \t \t wall_ids=" << endl;
 			for(int q=0;q<(signed int)nlab[i][j];q++){	
-				cout << "\n \t \t \t \t  " << plab[i][j][q] << "   ";
+				cout << "\n \t \t \t \t  " << plab[i][j][q] << "   " << endl;
 			}
 		}
 	}

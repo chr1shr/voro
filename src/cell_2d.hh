@@ -86,6 +86,7 @@ class voronoicell_2d {
 			output_custom(format,i,x,y,r,fp);
 			fclose(fp);
 		}
+		double cell_area();
 		bool plane(double x,double y,double rs);
 		bool plane_nonconvex(double x, double y, double rs);
 		bool halfplane(double x1, double y1, double rs, double x2, double y2); 
