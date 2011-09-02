@@ -304,6 +304,20 @@ maximum y, minimum z, and maximum z walls respectively. For periodic boundary
 conditions, negative numbers correspond to the cases when a face of the Voronoi
 cell is created by the periodic image of the current particle.
 
+In general, the neighbor information will be symmetric, so that if particle A
+reports particle B as a neighbor, then particle B will report particle A as a
+neighbor. However, due to the fact that Voro++ computes each Voronoi cell
+individually, it does not provide an explicit guarantee that the neighbor
+information will always be symmetric. Suppose there is a very small Voronoi
+face connecting A to B - it may be the case that due to roundoff error, the
+Voronoi cell computed for particle A has a face connecting it to B, but the
+cell computed for particle B does not have a face connecting it to A. If the
+user requires perfectly symmetric neighbor information, this can be achieved by
+scanning the output for any one-sided connections, and either deleting them or
+adding in the reverse connections. The face areas command can also be used to
+remove connections between particles that only have a very small face between
+them.
+
 .PP
 Volume-related entries:
 .B
