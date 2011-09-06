@@ -8,7 +8,7 @@
 include ../config.mk
 
 # List of executables
-EXECUTABLES= test_ctr test_import test_lloyd test_bdry setup_test simple_nonconvex
+EXECUTABLES= test_ctr test_import test_lloyd test_bdry simple_nonconvex
 
 # Makefile rules
 all: $(EXECUTABLES) 
@@ -26,9 +26,6 @@ test_import: test_import.cc
 
 test_lloyd: test_lloyd.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_lloyd test_lloyd.cc -lvoro++_2d
-
-setup_test: setup_test.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o setup_test setup_test.cc -lvoro++_2d
 
 simple_nonconvex: simple_nonconvex.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o simple_nonconvex simple_nonconvex.cc -lvoro++_2d

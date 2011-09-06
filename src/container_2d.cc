@@ -355,7 +355,7 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 	midy=(y1+y2)/2;
 	double cpx,cpy; //these stand for "current particle x" and "current particle y"
 	int box; //this holds the current computational box that we're in.
-
+printf("SCC %g %g %g %g\n",x1,y1,x2,y2);
 
 	// First we will initialize the voropp_loop_2d object to a rectangle
 	// containing all the points we are interested in plus some extraneous
@@ -396,13 +396,14 @@ void container_2d::semi_circle_labelling(double x1, double y1, double x2, double
 			cpx=p[box][2*j];
 			cpy=p[box][2*j+1];
 			cout << "\n now checking (x,y)=(" << cpx <<"," <<cpy<<")\n"<<endl;
-			if(((dist(midx,midy,cpx,cpy)<=radius)&&
-			(crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0)) && 
-			!((cpx==x1 && cpy==y1) || (cpx==x2 && cpy==y2))){
+			if(dist(midx,midy,cpx,cpy)<=radius&&
+			crossproductz((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0&& 
+			(cpx!=x1||cpy==y1)&&(cpx!=x2||cpy!=y2)) {
 				if(tmpp==tmpe) add_temporary_label_memory();
 				*(tmpp++)=box;
 				*(tmpp++)=j;
 				*(tmpp++)=bid;
+				printf("JKL %g %g\n",cpx,cpy);
 				cout << "WE ADDED ONE!" << endl;
 			}
 		}

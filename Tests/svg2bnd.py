@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """svg2bnd.py -- Converts a path in an SVG file to a boundary for Voro++."""
 
 import sys,re

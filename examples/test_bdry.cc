@@ -8,7 +8,7 @@ int main(int argc,char **argv) {
 		return 1;
 	}
 
-	container_2d con(0,800,0,800,8,8,false,false,false,16);
+	container_2d con(0,500,600,1100,8,8,false,false,false,16);
 	con.import(argv[1]);
 	con.setup();
 	con.debug_output();

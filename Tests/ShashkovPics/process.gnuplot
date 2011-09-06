@@ -12,5 +12,5 @@ set key top left
 plot [0:475] [650:920] 'out3.gnu' w l t 'Voronoi cells', 'out3.bd' u 2:3 w l lt 3 lw 3 t 'Boundary', 'out3.pts' u 2:3 w p pt 7 lt 4 t 'Generators'
 set output 'out5.pdf'
 set key bottom right
-plot [0:425] [600:1050] 'out5.pts.gnu' w l t 'Voronoi cells', 'out5.bd' u 2:3 w l lt 3 lw 3 t 'Boundary', 'out5.pts' u 2:3 w p pt 7 lt 4 t 'Generators'
+plot [0:425] [600:1050] 'out5.gnu' w l t 'Voronoi cells', 'out5.bd' u 2:3 w l lt 3 lw 3 t 'Boundary', 'out5.pts' u 2:3 w p pt 7 lt 4 t 'Generators'
 set output
