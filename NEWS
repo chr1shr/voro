@@ -1,3 +1,10 @@
+Version 0.4.1 (September 7th 2011)
+==================================
+* Fixed bug in command-line utility that would give incorrect results when
+  using the "-c" option for custom output. Thanks to Prof. Aldo Romero
+  (CINVESTAV-Unidad Queretaro) for pointing this out.
+* Added some additional documentation about neighbor information
+
 Version 0.4 (August 30th 2011)
 ==============================
 * New classes called container_periodic and container_periodic_poly that carry
