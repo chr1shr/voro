@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <vector>
 using namespace std;
 
 #include "common.hh"
@@ -45,13 +46,13 @@ class voronoicell_2d {
 			draw_gnuplot(x,y,fp);
 			fclose(fp);
 		}
-		void draw_pov(double x,double y,double z,FILE *fp=stdout);
+		void draw_pov(double x,double y,FILE *fp=stdout);
 		/** Outputs the edges of the Voronoi cell in POV-Ray format to
 		 * an open file stream, displacing the cell by given vector.
 		 * \param[in] (x,y,z) a displacement vector to be added to the
 		 *                    cell's position.
 		 * \param[in] filename the file to write to. */
-		inline void draw_pov(double x,double y,double z,const char *filename) {
+		inline void draw_pov(double x,double y,const char *filename) {
 			FILE *fp(voropp_safe_fopen(filename,"w"));
 			draw_pov(x,y,z,fp);
 			fclose(fp);

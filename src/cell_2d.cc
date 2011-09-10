@@ -46,17 +46,17 @@ void voronoicell_2d::draw_gnuplot(double x,double y,FILE *fp) {
 
 /** Outputs the edges of the Voronoi cell in POV-Ray format to an open file
  * stream, displacing the cell by given vector.
- * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
+ * \param[in] (x,y) a displacement vector to be added to the cell's position.
  * \param[in] fp the file handle to write to. */
-void voronoicell_2d::draw_pov(double x,double y,double z,FILE *fp) {
+void voronoicell_2d::draw_pov(double x,double y,FILE *fp) {
 	if(p==0) return;
 	int k=0;
 	do {
-		fprintf(fp,"sphere{<%g,%g,%g>,r}\ncylinder{<%g,%g,%g>,<"
+		fprintf(fp,"sphere{<%g,%g,0>,r}\ncylinder{<%g,%g,0>,<"
 			,x+0.5*pts[2*k],y+0.5*pts[2*k+1],z
 			,x+0.5*pts[2*k],y+0.5*pts[2*k+1],z);
 		k=ed[2*k];
-		fprintf(fp,"%g,%g,%g>,r}\n",x+0.5*pts[2*k],y+0.5*pts[2*k+1],z);
+		fprintf(fp,"%g,%g,0>,r}\n",x+0.5*pts[2*k],y+0.5*pts[2*k+1],z);
 	} while (k!=0);
 }
 
@@ -256,6 +256,8 @@ void voronoicell_2d::centroid(double &cx,double &cy) {
  * \param[in] fp the file handle to write to. */
 void voronoicell_2d::output_custom(const char *format,int i,double x,double y,double r,FILE *fp) {
 	char *fmp(const_cast<char*>(format));
+	vector<int> vi;
+	vector<double> vd;
 	while(*fmp!=0) {
 		if(*fmp=='%') {
 			fmp++;
@@ -270,10 +272,20 @@ void voronoicell_2d::output_custom(const char *format,int i,double x,double y,do
 
 				// Vertex-related output
 				case 'w': fprintf(fp,"%d",p);break;
+				case 'p': output_vertices(fp);break;
+				case 'P': output_vertices(x,y,z,fp);break;
 				case 'm': fprintf(fp,"%g",0.25*max_radius_squared());break;
 
 				// Edge-related output
+				case 'g': fprintf(fp,"%d",p);break;
 				case 'p': fprintf(fp,"%g",perimeter());break;
+				case 'e': edge_length(vd);voro_print_vector(vd,fp);break;
+				case 'l': normals(vd);
+					  voro_print_positions_2d(vd,fp);
+					  break;
+				case 'n': neighbors(vi);
+					  voro_print_vector(vi,fp);
+					  break;
 
 				// Area-related output
 				case 'a': fprintf(fp,"%g",area());break;
