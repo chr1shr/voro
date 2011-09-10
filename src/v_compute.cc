@@ -35,7 +35,8 @@ voro_compute<c_class>::voro_compute(c_class &con_,int hx_,int hy_,int hz_) :
  * \param[in] ijk the index of the block.
  * \param[in] (x,y,z) the test vector to consider (which may have already had a
  *                    periodic displacement applied to it).
- * \param[in] (di,dj,dk)
+ * \param[in] (di,dj,dk) the coordinates of the current block, to store if the
+ *			 particle record is updated.
  * \param[in,out] w a reference to a particle record in which to store
  *		    information about the particle whose Voronoi cell the
  *		    vector is within.

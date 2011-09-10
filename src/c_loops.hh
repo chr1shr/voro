@@ -7,8 +7,8 @@
 /** \file c_loops.hh
  * \brief Header file for the loop classes. */
 
-#ifndef VOROPP_V_LOOPS_HH
-#define VOROPP_V_LOOPS_HH
+#ifndef VOROPP_C_LOOPS_HH
+#define VOROPP_C_LOOPS_HH
 
 #include <cstdio>
 #include <cstdlib>
@@ -170,10 +170,10 @@ class c_loop_base {
  * blocks in order, and scans all the particles within each block in order. */
 class c_loop_all : public c_loop_base {
 	public:
-		template<class c_class>
 		/** The constructor copies several necessary constants from the
 		 * base container class.
 		 * \param[in] con the container class to use. */
+		template<class c_class>
 		c_loop_all(c_class &con) : c_loop_base(con) {}
 		/** Sets the class to consider the first particle.
 		 * \return True if there is any particle to consider, false

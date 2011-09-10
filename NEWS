@@ -1,3 +1,11 @@
+Version 0.4.2 (...)
+===================
+* Fixed a bug in the put_remap routine where a z periodic boolean was
+  switched to an x periodic boolean. This would only be noticed when using
+  mixed periodic boundary conditions and import particles that need to be
+  remapped.
+* Code comment cleanups, particularly in wall.hh
+
 Version 0.4.1 (September 7th 2011)
 ==================================
 * Fixed bug in command-line utility that would give incorrect results when

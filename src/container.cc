@@ -20,10 +20,10 @@ namespace voro {
  * \param[in] (ay_,by_) the minimum and maximum y coordinates.
  * \param[in] (az_,bz_) the minimum and maximum z coordinates.
  * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
- *                       coordinate directions.
- * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
- *                                                container is periodic in each
- *                                                coordinate direction.
+ *			    coordinate directions.
+ * \param[in] (xperiodic_,yperiodic_,zperiodic_) flags setting whether the
+ *                                               container is periodic in each
+ *                                               coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block.
  * \param[in] ps_ the number of floating point entries to store for each
  *                particle. */
@@ -57,9 +57,9 @@ container_base::~container_base() {
  * \param[in] (az_,bz_) the minimum and maximum z coordinates.
  * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
  *                       coordinate directions.
- * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
- *                                                container is periodic in each
- *                                                coordinate direction.
+ * \param[in] (xperiodic_,yperiodic_,zperiodic_) flags setting whether the
+ *                                               container is periodic in each
+ *                                               coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block. */
 container::container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
@@ -72,9 +72,9 @@ container::container(double ax_,double bx_,double ay_,double by_,double az_,doub
  * \param[in] (az_,bz_) the minimum and maximum z coordinates.
  * \param[in] (nx_,ny_,nz_) the number of grid blocks in each of the three
  *                       coordinate directions.
- * \param[in] (xperiodic_,yperiodic_,zperiodic_ ) flags setting whether the
- *                                                container is periodic in each
- *                                                coordinate direction.
+ * \param[in] (xperiodic_,yperiodic_,zperiodic_) flags setting whether the
+ *                                               container is periodic in each
+ *                                               coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block. */
 container_poly::container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
@@ -180,7 +180,7 @@ inline bool container_base::put_remap(int &ijk,double &x,double &y,double &z) {
 	else if(j<0||j>=ny) return false;
 
 	int k=step_int((z-az)*zsp);
-	if(xperiodic) {l=step_mod(k,nz);z+=boxz*(l-k);k=l;}
+	if(zperiodic) {l=step_mod(k,nz);z+=boxz*(l-k);k=l;}
 	else if(k<0||k>=nz) return false;
 
 	ijk+=nx*j+nxy*k;
