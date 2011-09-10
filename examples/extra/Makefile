@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=box_cut cut_region superellipsoid irregular
+EXECUTABLES=box_cut cut_region superellipsoid irregular finite_sys
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -24,6 +24,9 @@ superellipsoid: superellipsoid.cc
 
 irregular: irregular.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o irregular irregular.cc -lvoro++
+
+finite_sys: finite_sys.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o finite_sys finite_sys.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)
