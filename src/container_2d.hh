@@ -144,7 +144,7 @@ class container_2d {
 		 * during the computation and has zero volume, true otherwise.
 		 */
 		inline bool compute_cell_sphere(voronoicell_2d &c,int i,int j,int ij,int s) {
-			double x=p[s][2*ij],y=p[s][2*ij+1];
+			double x=p[ij][2*s],y=p[ij][2*s+1];
 			return compute_cell_sphere(c,i,j,ij,s,x,y);
 		}
 		bool compute_cell_sphere(voronoicell_2d	&c,int i,int j,int ij,int s,double x,double y);

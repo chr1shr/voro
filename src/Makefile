@@ -22,6 +22,7 @@ execs: $(execs)
 include Makefile.dep
 
 libvoro++_2d.a: $(objs)
+	rm -f libvoro++_2d.a
 	ar rs libvoro++_2d.a $^
 
 %.o: %.cc
