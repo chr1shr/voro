@@ -5,7 +5,7 @@
 // Date     : August 30th 2011
 
 /** \file container.hh
- * \brief Header file for the container_base template and related classes. */
+ * \brief Header file for the container_base and related classes. */
 
 #ifndef VOROPP_CONTAINER_HH
 #define VOROPP_CONTAINER_HH

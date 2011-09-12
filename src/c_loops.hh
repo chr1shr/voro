@@ -161,7 +161,7 @@ class c_loop_base {
 		inline double z() {return p[ijk][ps*q+2];}
 		/** Returns the ID of the particle currently being considered
 		 * by the loop. */
-		inline double pid() {return id[ijk][q];}
+		inline int pid() {return id[ijk][q];}
 };
 
 /** \brief Class for looping over all of the particles in a container.

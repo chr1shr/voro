@@ -4,6 +4,9 @@ Version 0.4.2 (...)
   switched to an x periodic boolean. This would only be noticed when using
   mixed periodic boundary conditions and import particles that need to be
   remapped.
+* The pid function in the c_loop_base class was mistakenly labeled as double
+  instead of int - this is now fixed. Thanks to William-Fernando Oquendo
+  (National University of Colombia) for pointing this out.
 * Code comment cleanups, particularly in wall.hh
 
 Version 0.4.1 (September 7th 2011)

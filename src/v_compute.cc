@@ -5,7 +5,7 @@
 // Date     : August 30th 2011
 
 /** \file v_compute.cc
- * \brief Function implementantions for the v_compute class. */
+ * \brief Function implementantions for the voro_compute template. */
 
 #include "worklist.hh"
 #include "v_compute.hh"

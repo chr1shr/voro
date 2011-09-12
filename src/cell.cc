@@ -1770,7 +1770,7 @@ void voronoicell_base::vertices(vector<double> &v) {
 void voronoicell_base::output_vertices(FILE *fp) {
 	if(p>0) {
 		fprintf(fp,"(%g,%g,%g)",*pts*0.5,pts[1]*0.5,pts[2]*0.5);
-		for(double *ptsp(pts+3);ptsp<pts+3*p;ptsp+=3) fprintf(fp," (%g,%g,%g)",*ptsp*0.5,ptsp[1]*0.5,ptsp[2]*0.5);
+		for(double *ptsp=pts+3;ptsp<pts+3*p;ptsp+=3) fprintf(fp," (%g,%g,%g)",*ptsp*0.5,ptsp[1]*0.5,ptsp[2]*0.5);
 	}
 }
 
