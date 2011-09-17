@@ -7,6 +7,10 @@ Version 0.4.2 (...)
 * The pid function in the c_loop_base class was mistakenly labeled as double
   instead of int - this is now fixed. Thanks to William-Fernando Oquendo
   (National University of Colombia) for pointing this out.
+* Fixed an extremely subtle bounds checking issue that would only materialize
+  for the radical Voronoi tessellation with large particle radii. Thanks to
+  Richard Martin and Maciej Haranczyk (Lawrence Berkeley Laboratory) for
+  pointing out the original problem.
 * Code comment cleanups, particularly in wall.hh
 
 Version 0.4.1 (September 7th 2011)

@@ -407,7 +407,8 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 		// those particles which can't possibly intersect the block.
 		if(co[ijk]>0) {
 			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
-			if(mrs>con.r_cutoff(crs)) {
+	//		if(mrs>con.r_cutoff(crs)) {
+				if(true) {
 				do {
 					x1=p[ijk][ps*l]-x2;
 					y1=p[ijk][ps*l+1]-y2;
@@ -421,8 +422,8 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 					x1=p[ijk][ps*l]-x2;
 					y1=p[ijk][ps*l+1]-y2;
 					z1=p[ijk][ps*l+2]-z2;
-					rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
-					if(rs<mrs&&!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+					rs=x1*x1+y1*y1+z1*z1;
+					if(con.r_scale_check(rs,mrs,ijk,l)&&!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
 					l++;
 				} while (l<co[ijk]);
 			}
@@ -493,7 +494,8 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 		// those particles which can't possibly intersect the block.
 		if(co[ijk]>0) {
 			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
-			if(mrs>con.r_cutoff(crs)) {
+//			if(mrs>con.r_cutoff(crs)) {
+			if(true) {
 				do {
 					x1=p[ijk][ps*l]-x2;
 					y1=p[ijk][ps*l+1]-y2;
@@ -507,8 +509,8 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 					x1=p[ijk][ps*l]-x2;
 					y1=p[ijk][ps*l+1]-y2;
 					z1=p[ijk][ps*l+2]-z2;
-					rs=con.r_scale(x1*x1+y1*y1+z1*z1,ijk,l);
-					if(rs<mrs&&!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
+					rs=x1*x1+y1*y1+z1*z1;
+					if(con.r_scale_check(rs,mrs,ijk,l)&&!c.nplane(x1,y1,z1,rs,id[ijk][l])) return false;
 					l++;
 				} while (l<co[ijk]);
 			}

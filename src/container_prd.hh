@@ -410,6 +410,7 @@ class container_periodic : public container_periodic_base {
 		inline double r_max_add(double rs) {return rs;}
 		inline double r_current_sub(double rs,int ijk,int q) {return rs;}
 		inline double r_scale(double rs,int ijk,int q) {return rs;}
+		inline bool r_scale_check(double &rs,double mrs,int ijk,int q) {return rs<mrs;}
 		friend class voro_compute<container_periodic>;
 };
 
@@ -632,6 +633,11 @@ class container_periodic_poly : public container_periodic_base {
 		}
 		inline double r_scale(double rs,int ijk,int q) {
 			return rs+r_rad-p[ijk][4*q+3]*p[ijk][4*q+3];
+		}
+		inline bool r_scale_check(double &rs,double mrs,int ijk,int q) {
+			double trs=rs;
+			rs+=r_rad-p[ijk][4*q+3]*p[ijk][4*q+3];
+			return rs*rs<mrs*trs;
 		}
 		friend class voro_compute<container_periodic_poly>;
 };
