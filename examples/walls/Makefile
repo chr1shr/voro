@@ -8,16 +8,13 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=cylinder tetrahedron frustum torus cylinder_inv
+EXECUTABLES=cylinder tetrahedron frustum torus
 
 # Makefile rules
 all: $(EXECUTABLES)
 
 cylinder: cylinder.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o cylinder cylinder.cc -lvoro++
-
-cylinder_inv: cylinder_inv.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o cylinder_inv cylinder_inv.cc -lvoro++
 
 tetrahedron: tetrahedron.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o tetrahedron tetrahedron.cc -lvoro++
