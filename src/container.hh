@@ -695,8 +695,8 @@ class container_poly : public container_base {
 		voro_compute<container_poly> vc;
 		double r_rad,r_mul,r_val;
 		inline void r_init(int ijk,int s) {
-			r_rad=p[ijk][4*s+3];r_rad*=r_rad;
-			r_mul=r_rad*r_rad-max_radius*max_radius;
+			r_rad=p[ijk][4*s+3]*p[ijk][4*s+3];
+			r_mul=r_rad-max_radius*max_radius;
 		}
 		inline void r_prime(double rv) {r_val=1+r_mul/rv;}
 		inline bool r_ctest(double crs,double mrs) {double tmp=crs+r_mul;return tmp>0&&crs*tmp>mrs;}
@@ -712,7 +712,7 @@ class container_poly : public container_base {
 			double trs=rs;
 			rs+=r_rad-p[ijk][4*q+3]*p[ijk][4*q+3];
 			return rs<sqrt(mrs*trs);
-		}		
+		}
 		friend class voro_compute<container_poly>;
 };
 

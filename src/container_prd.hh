@@ -624,15 +624,12 @@ class container_periodic_poly : public container_periodic_base {
 		voro_compute<container_periodic_poly> vc;
 		double r_rad,r_mul,r_val;
 		inline void r_init(int ijk,int s) {
-			r_rad=p[ijk][4*s+3];
-			r_mul=r_rad*r_rad-max_radius*max_radius;
-			r_rad*=r_rad;
+			r_rad=p[ijk][4*s+3]*p[ijk][4*s+3];
+			r_mul=r_rad-max_radius*max_radius;
 		}
-		inline void r_prime(double rv) {
-			r_val=1+r_mul/rv;
-		}
+		inline void r_prime(double rv) {r_val=1+r_mul/rv;}
 		inline bool r_ctest(double crs,double mrs) {double tmp=crs+r_mul;return tmp>0&&crs*tmp>mrs;}
-		inline double r_cutoff(double x) {return x+r_mul*sqrt(x);}
+		inline double r_cutoff(double x) {return x*r_val;}
 		inline double r_max_add(double rs) {return rs+max_radius*max_radius;}
 		inline double r_current_sub(double rs,int ijk,int q) {
 			return rs-p[ijk][4*q+3]*p[ijk][4*q+3];

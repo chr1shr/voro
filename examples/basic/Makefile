@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=single_cell platonic random_points import rad_test
+EXECUTABLES=single_cell platonic random_points import
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -21,9 +21,6 @@ platonic: platonic.cc
 
 random_points: random_points.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o random_points random_points.cc -lvoro++
-
-rad_test: rad_test.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o rad_test rad_test.cc -lvoro++
 
 import: import.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o import import.cc -lvoro++

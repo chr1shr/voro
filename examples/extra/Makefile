@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=box_cut cut_region superellipsoid irregular finite_sys
+EXECUTABLES=box_cut cut_region superellipsoid irregular
 
 # Makefile rules
 all: $(EXECUTABLES)
