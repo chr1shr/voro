@@ -708,7 +708,7 @@ class container_poly : public container_base {
 		inline bool r_scale_check(double &rs,double mrs,int ijk,int q) {
 			double trs=rs;
 			rs+=r_rad-p[ijk][4*q+3]*p[ijk][4*q+3];
-			return rs*rs<mrs*trs;
+			return rs<sqrt(mrs*trs);
 		}		
 		friend class voro_compute<container_poly>;
 };
