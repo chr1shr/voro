@@ -11,6 +11,10 @@ Version 0.4.2 (...)
   for the radical Voronoi tessellation with large particle radii. Thanks to
   Richard Martin and Maciej Haranczyk (Lawrence Berkeley Laboratory) for
   pointing out the original problem.
+* Fixed other problems with the radical tessellation. Originally, the
+  algorithms were concieved for with hard spheres in mind, where the particles
+  would not overlap, and an assumption was used in the cutoff procedure that
+  made use of this, but would not be true in general.
 * Code comment cleanups, particularly in wall.hh
 
 Version 0.4.1 (September 7th 2011)

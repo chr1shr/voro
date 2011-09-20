@@ -374,7 +374,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done
-		if(mrs<con.r_cutoff(radp[g])) return true;
+		if(con.r_ctest(radp[g],mrs)) return true;
 		g++;
 
 		// Load in a block off the worklist, permute it with the
@@ -407,7 +407,8 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 		// those particles which can't possibly intersect the block.
 		if(co[ijk]>0) {
 			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
-			if(mrs>con.r_cutoff(crs)) {
+//			if(mrs>con.r_cutoff(crs)) {
+				if(true) {
 				do {
 					x1=p[ijk][ps*l]-x2;
 					y1=p[ijk][ps*l+1]-y2;
@@ -456,7 +457,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done
-		if(mrs<con.r_cutoff(radp[g])) return true;
+		if(con.r_ctest(radp[g],mrs)) return true;
 		g++;
 
 		// Load in a block off the worklist, permute it with the
@@ -493,7 +494,8 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 		// those particles which can't possibly intersect the block.
 		if(co[ijk]>0) {
 			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
-			if(mrs>con.r_cutoff(crs)) {
+//			if(mrs>con.r_cutoff(crs)) {
+if(true) {
 				do {
 					x1=p[ijk][ps*l]-x2;
 					y1=p[ijk][ps*l+1]-y2;
@@ -525,7 +527,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 	}
 
 	// Do a check to see if we've reached the radius cutoff
-	if(mrs<con.r_cutoff(radp[g])) return true;
+	if(con.r_ctest(radp[g],mrs)) return true;
 
 	// We were unable to completely compute the cell based on the blocks in
 	// the worklist, so now we have to go block by block, reading in items
@@ -631,6 +633,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 template<class c_class>
 template<class v_cell>
 bool voro_compute<c_class>::corner_test(v_cell &c,double xl,double yl,double zl,double xh,double yh,double zh) {
+	con.r_prime(xl*xl+yl*yl+zl*zl);
 	if(c.plane_intersects_guess(xh,yl,zl,con.r_cutoff(xl*xh+yl*yl+zl*zl))) return false;
 	if(c.plane_intersects(xh,yh,zl,con.r_cutoff(xl*xh+yl*yh+zl*zl))) return false;
 	if(c.plane_intersects(xl,yh,zl,con.r_cutoff(xl*xl+yl*yh+zl*zl))) return false;
@@ -655,6 +658,7 @@ bool voro_compute<c_class>::corner_test(v_cell &c,double xl,double yl,double zl,
 template<class c_class>
 template<class v_cell>
 inline bool voro_compute<c_class>::edge_x_test(v_cell &c,double x0,double yl,double zl,double x1,double yh,double zh) {
+	con.r_prime(yl*yl+zl*zl);
 	if(c.plane_intersects_guess(x0,yl,zh,con.r_cutoff(yl*yl+zl*zh))) return false;
 	if(c.plane_intersects(x1,yl,zh,con.r_cutoff(yl*yl+zl*zh))) return false;
 	if(c.plane_intersects(x1,yl,zl,con.r_cutoff(yl*yl+zl*zl))) return false;
@@ -679,6 +683,7 @@ inline bool voro_compute<c_class>::edge_x_test(v_cell &c,double x0,double yl,dou
 template<class c_class>
 template<class v_cell>
 inline bool voro_compute<c_class>::edge_y_test(v_cell &c,double xl,double y0,double zl,double xh,double y1,double zh) {
+	con.r_prime(xl*xl+zl*zl);
 	if(c.plane_intersects_guess(xl,y0,zh,con.r_cutoff(xl*xl+zl*zh))) return false;
 	if(c.plane_intersects(xl,y1,zh,con.r_cutoff(xl*xl+zl*zh))) return false;
 	if(c.plane_intersects(xl,y1,zl,con.r_cutoff(xl*xl+zl*zl))) return false;
@@ -702,6 +707,7 @@ inline bool voro_compute<c_class>::edge_y_test(v_cell &c,double xl,double y0,dou
 template<class c_class>
 template<class v_cell>
 inline bool voro_compute<c_class>::edge_z_test(v_cell &c,double xl,double yl,double z0,double xh,double yh,double z1) {
+	con.r_prime(xl*xl+yl*yl);
 	if(c.plane_intersects_guess(xl,yh,z0,con.r_cutoff(xl*xl+yl*yh))) return false;
 	if(c.plane_intersects(xl,yh,z1,con.r_cutoff(xl*xl+yl*yh))) return false;
 	if(c.plane_intersects(xl,yl,z1,con.r_cutoff(xl*xl+yl*yl))) return false;
@@ -724,6 +730,7 @@ inline bool voro_compute<c_class>::edge_z_test(v_cell &c,double xl,double yl,dou
 template<class c_class>
 template<class v_cell>
 inline bool voro_compute<c_class>::face_x_test(v_cell &c,double xl,double y0,double z0,double y1,double z1) {
+	con.r_prime(xl*xl);
 	if(c.plane_intersects_guess(xl,y0,z0,con.r_cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y0,z1,con.r_cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y1,z1,con.r_cutoff(xl*xl))) return false;
@@ -744,6 +751,7 @@ inline bool voro_compute<c_class>::face_x_test(v_cell &c,double xl,double y0,dou
 template<class c_class>
 template<class v_cell>
 inline bool voro_compute<c_class>::face_y_test(v_cell &c,double x0,double yl,double z0,double x1,double z1) {
+	con.r_prime(yl*yl);
 	if(c.plane_intersects_guess(x0,yl,z0,con.r_cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x0,yl,z1,con.r_cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x1,yl,z1,con.r_cutoff(yl*yl))) return false;
@@ -764,6 +772,7 @@ inline bool voro_compute<c_class>::face_y_test(v_cell &c,double x0,double yl,dou
 template<class c_class>
 template<class v_cell>
 inline bool voro_compute<c_class>::face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1) {
+	con.r_prime(zl*zl);
 	if(c.plane_intersects_guess(x0,y0,zl,con.r_cutoff(zl*zl))) return false;
 	if(c.plane_intersects(x0,y1,zl,con.r_cutoff(zl*zl))) return false;
 	if(c.plane_intersects(x1,y1,zl,con.r_cutoff(zl*zl))) return false;
@@ -782,10 +791,10 @@ inline bool voro_compute<c_class>::face_z_test(v_cell &c,double x0,double y0,dou
  * \param[in] (gxs,gys,gzs) the maximum squared distances from the point to the
  *                          sides of its region.
  * \param[out] crs a reference in which to return the maximum distance to the
- *                 region (only computed if the routine returns positive).
+ *                 region (only computed if the routine returns false).
  * \param[in] mrs the distance to be tested.
- * \return False if the region is further away than mrs, true if the region in
- *         within mrs.*/
+ * \return True if the region is further away than mrs, false if the region in
+ *         within mrs. */
 template<class c_class>
 bool voro_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gxs,double gys,double gzs,double &crs,double mrs) {
 	double xlo,ylo,zlo;
@@ -797,14 +806,14 @@ bool voro_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double f
 			crs+=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=bxsq+2*(boxx*xlo+boxy*ylo+boxz*zlo);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=bxsq+2*(boxx*xlo+boxy*ylo-boxz*zlo);
 			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
+				if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxx*(2*xlo+boxx)+boxy*(2*ylo+boxy)+gzs;
 			}
 		} else if(dj<0) {
@@ -812,27 +821,27 @@ bool voro_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double f
 			crs+=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=bxsq+2*(boxx*xlo-boxy*ylo+boxz*zlo);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=bxsq+2*(boxx*xlo-boxy*ylo-boxz*zlo);
 			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
+				if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxx*(2*xlo+boxx)+boxy*(-2*ylo+boxy)+gzs;
 			}
 		} else {
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
+				if(con.r_ctest(crs,mrs)) return true;
 				crs+=gzs;
 			}
 			crs+=gys+boxx*(2*xlo+boxx);
@@ -845,14 +854,14 @@ bool voro_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double f
 			crs+=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=bxsq+2*(-boxx*xlo+boxy*ylo+boxz*zlo);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=bxsq+2*(-boxx*xlo+boxy*ylo-boxz*zlo);
 			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
+				if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxx*(-2*xlo+boxx)+boxy*(2*ylo+boxy)+gzs;
 			}
 		} else if(dj<0) {
@@ -860,27 +869,27 @@ bool voro_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double f
 			crs+=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=bxsq+2*(-boxx*xlo-boxy*ylo+boxz*zlo);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=bxsq+2*(-boxx*xlo-boxy*ylo-boxz*zlo);
 			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
+				if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxx*(-2*xlo+boxx)+boxy*(-2*ylo+boxy)+gzs;
 			}
 		} else {
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
+				if(con.r_ctest(crs,mrs)) return true;
 				crs+=gzs;
 			}
 			crs+=gys+boxx*(-2*xlo+boxx);
@@ -891,14 +900,14 @@ bool voro_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double f
 			crs=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
+				if(con.r_ctest(crs,mrs)) return true;
 				crs+=gzs;
 			}
 			crs+=boxy*(2*ylo+boxy);
@@ -907,23 +916,23 @@ bool voro_compute<c_class>::compute_min_max_radius(int di,int dj,int dk,double f
 			crs=ylo*ylo;
 			if(dk>0) {
 				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
 				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				crs+=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
+				if(con.r_ctest(crs,mrs)) return true;
 				crs+=gzs;
 			}
 			crs+=boxy*(-2*ylo+boxy);
 		} else {
 			if(dk>0) {
-				zlo=dk*boxz-fz;crs=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				zlo=dk*boxz-fz;crs=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(2*zlo+boxz);
 			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;crs=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
+				zlo=(dk+1)*boxz-fz;crs=zlo*zlo;if(con.r_ctest(crs,mrs)) return true;
 				crs+=boxz*(-2*zlo+boxz);
 			} else {
 				crs=0;
