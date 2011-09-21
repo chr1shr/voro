@@ -15,6 +15,9 @@ Version 0.4.2 (...)
   algorithms were concieved for with hard spheres in mind, where the particles
   would not overlap, and an assumption was used in the cutoff procedure that
   made use of this, but would not be true in general.
+* Removed more bracket initializations like "double a(3);" for better
+  consistency, and more compatibility with older versions of MS Visual C++.
+  Thanks to Martin Brehm for help with this.
 * Factored out the regular/radical inline routines into separate classes, so
   that they don't have to be duplicated in the container_periodic classes.
 * Code comment cleanups, particularly in wall.hh
