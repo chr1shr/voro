@@ -100,8 +100,7 @@ class voronoicell_base {
 		 *                    position.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_pov(double x,double y,double z,const char *filename) {
-			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voro_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
+			FILE *fp=safe_fopen(filename,"w");
 			draw_pov(x,y,z,fp);
 			fclose(fp);
 		};
@@ -112,8 +111,7 @@ class voronoicell_base {
 		 *                    position.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_pov_mesh(double x,double y,double z,const char *filename) {
-			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voro_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
+			FILE *fp=safe_fopen(filename,"w");
 			draw_pov_mesh(x,y,z,fp);
 			fclose(fp);
 		}
@@ -123,8 +121,7 @@ class voronoicell_base {
 		 *                    position.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_gnuplot(double x,double y,double z,const char *filename) {
-			FILE *fp(fopen(filename,"w"));
-			if(fp==NULL) voro_fatal_error("Unable to open file",VOROPP_FILE_ERROR);
+			FILE *fp=safe_fopen(filename,"w");
 			draw_gnuplot(x,y,z,fp);
 			fclose(fp);
 		}

@@ -121,7 +121,7 @@ bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
  *                within each corresponding image listed in vi. */
 void unitcell::images(vector<int> &vi,vector<double> &vd) {
 	const int ms2=max_unit_voro_shells*2+1,mss=ms2*ms2*ms2;
-	bool *a=new bool[mss],*ac=a+max_unit_voro_shells*(1+ms2*(1+ms2)),*ap(a);
+	bool *a=new bool[mss],*ac=a+max_unit_voro_shells*(1+ms2*(1+ms2)),*ap=a;
 	int i,j,k;
 	double vol;
 

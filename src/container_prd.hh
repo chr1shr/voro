@@ -125,7 +125,7 @@ class container_periodic_base : public unitcell, public voro_base {
 		template<class v_cell>
 		inline bool initialize_voronoicell(v_cell &c,int ijk,int q,int ci,int cj,int ck,int &i,int &j,int &k,double &x,double &y,double &z,int &disp) {
 			c=unit_voro;
-			double *pp(p[ijk]+ps*q);
+			double *pp=p[ijk]+ps*q;
 			x=*(pp++);y=*(pp++);z=*pp;
 			i=nx;j=ey;k=ez;
 			return true;
@@ -229,7 +229,7 @@ class container_periodic : public container_periodic_base {
 		 * \param[in] filename the name of the file to open and read
 		 *                     from. */
 		inline void import(const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(fp);
 			fclose(fp);
 		}
@@ -243,7 +243,7 @@ class container_periodic : public container_periodic_base {
 		 * \param[in] filename the name of the file to open and read
 		 *                     from. */
 		inline void import(particle_order &vo,const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(vo,fp);
 			fclose(fp);
 		}
@@ -269,7 +269,7 @@ class container_periodic : public container_periodic_base {
 		/** Dumps all of the particle IDs and positions to a file.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_particles(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_particles(fp);
 			fclose(fp);
 		}
@@ -294,7 +294,7 @@ class container_periodic : public container_periodic_base {
 		/** Dumps all particle positions in POV-Ray format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_particles_pov(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_particles_pov(fp);
 			fclose(fp);
 		}
@@ -321,7 +321,7 @@ class container_periodic : public container_periodic_base {
 		 * format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_cells_gnuplot(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_cells_gnuplot(fp);
 			fclose(fp);
 		}
@@ -349,7 +349,7 @@ class container_periodic : public container_periodic_base {
 		 * format.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_cells_pov(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_cells_pov(fp);
 			fclose(fp);
 		}
@@ -444,7 +444,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * \param[in] filename the name of the file to open and read
 		 *                     from. */
 		inline void import(const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(fp);
 			fclose(fp);
 		}
@@ -458,7 +458,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * \param[in] filename the name of the file to open and read
 		 *                     from. */
 		inline void import(particle_order &vo,const char* filename) {
-			FILE *fp(safe_fopen(filename,"r"));
+			FILE *fp=safe_fopen(filename,"r");
 			import(vo,fp);
 			fclose(fp);
 		}
@@ -486,7 +486,7 @@ class container_periodic_poly : public container_periodic_base {
 		 * file.
 		 * \param[in] filename the name of the file to write to. */
 		inline void draw_particles(const char *filename) {
-			FILE *fp(safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_particles(fp);
 			fclose(fp);
 		}

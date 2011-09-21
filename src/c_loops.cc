@@ -110,7 +110,7 @@ void c_loop_subset::setup_box(double xmin,double xmax,double ymin,double ymax,do
  * current loop setup.
  * \return True if the point is out of bounds, false otherwise. */
 bool c_loop_subset::out_of_bounds() {
-	double *pp(p[ijk]+ps*q);
+	double *pp=p[ijk]+ps*q;
 	if(mode==sphere) {
 		double fx(*pp+px-v0),fy(pp[1]+py-v1),fz(pp[2]+pz-v2);
 		return fx*fx+fy*fy+fz*fz>v3;
@@ -141,7 +141,7 @@ bool c_loop_subset::next_block() {
 
 /** Extends the memory available for storing the ordering. */
 void particle_order::add_ordering_memory() {
-	int *no(new int[size<<2]),*nop(no),*opp(o);
+	int *no=new int[size<<2],*nop=no,*opp=o;
 	while(opp<op) *(nop++)=*(opp++);
 	delete [] o;
 	size<<=1;o=no;op=nop;
