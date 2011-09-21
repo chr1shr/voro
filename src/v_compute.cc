@@ -407,8 +407,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 		// those particles which can't possibly intersect the block.
 		if(co[ijk]>0) {
 			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
-//			if(mrs>con.r_cutoff(crs)) {
-				if(true) {
+			if(!con.r_ctest(crs,mrs)) {
 				do {
 					x1=p[ijk][ps*l]-x2;
 					y1=p[ijk][ps*l+1]-y2;
@@ -494,8 +493,7 @@ bool voro_compute<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int cj,i
 		// those particles which can't possibly intersect the block.
 		if(co[ijk]>0) {
 			l=0;x2=x-qx;y2=y-qy;z2=z-qz;
-//			if(mrs>con.r_cutoff(crs)) {
-if(true) {
+			if(!con.r_ctest(crs,mrs)) {
 				do {
 					x1=p[ijk][ps*l]-x2;
 					y1=p[ijk][ps*l+1]-y2;

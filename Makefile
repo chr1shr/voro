@@ -42,6 +42,7 @@ install:
 	$(INSTALL) $(IFLAGS) src/config.hh $(PREFIX)/include/voro++
 	$(INSTALL) $(IFLAGS) src/container.hh $(PREFIX)/include/voro++
 	$(INSTALL) $(IFLAGS) src/container_prd.hh $(PREFIX)/include/voro++
+	$(INSTALL) $(IFLAGS) src/rad_option.hh $(PREFIX)/include/voro++
 	$(INSTALL) $(IFLAGS) src/pre_container.hh $(PREFIX)/include/voro++
 	$(INSTALL) $(IFLAGS) src/unitcell.hh $(PREFIX)/include/voro++
 	$(INSTALL) $(IFLAGS) src/v_base.hh $(PREFIX)/include/voro++
@@ -62,6 +63,7 @@ uninstall:
 	rm -f $(PREFIX)/include/voro++/container.hh
 	rm -f $(PREFIX)/include/voro++/container_prd.hh
 	rm -f $(PREFIX)/include/voro++/pre_container.hh
+	rm -f $(PREFIX)/include/voro++/rad_option.hh
 	rm -f $(PREFIX)/include/voro++/unitcell.hh
 	rm -f $(PREFIX)/include/voro++/v_base.hh
 	rm -f $(PREFIX)/include/voro++/v_compute.hh

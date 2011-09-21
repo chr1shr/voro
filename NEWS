@@ -15,6 +15,8 @@ Version 0.4.2 (...)
   algorithms were concieved for with hard spheres in mind, where the particles
   would not overlap, and an assumption was used in the cutoff procedure that
   made use of this, but would not be true in general.
+* Factored out the regular/radical inline routines into separate classes, so
+  that they don't have to be duplicated in the container_periodic classes.
 * Code comment cleanups, particularly in wall.hh
 
 Version 0.4.1 (September 7th 2011)

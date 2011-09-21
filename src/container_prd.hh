@@ -23,6 +23,7 @@ using namespace std;
 #include "c_loops.hh"
 #include "v_compute.hh"
 #include "unitcell.hh"
+#include "rad_option.hh"
 
 namespace voro {
 
@@ -211,7 +212,7 @@ class container_periodic_base : public unitcell, public voro_base {
  * This class is an extension of the container_periodic_base that has routines
  * specifically for computing the regular Voronoi tessellation with no
  * dependence on particle radii. */
-class container_periodic : public container_periodic_base {
+class container_periodic : public container_periodic_base, public radius_mono {
 	public:
 		container_periodic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
 				int nx_,int ny_,int nz_,int init_mem_);
@@ -405,14 +406,6 @@ class container_periodic : public container_periodic_base {
 		}
 	private:
 		voro_compute<container_periodic> vc;
-		inline void r_init(int ijk,int s) {}
-		inline void r_prime(double rv) {};
-		inline bool r_ctest(double crs,double mrs) {return crs>mrs;}
-		inline double r_cutoff(double lrs) {return lrs;}
-		inline double r_max_add(double rs) {return rs;}
-		inline double r_current_sub(double rs,int ijk,int q) {return rs;}
-		inline double r_scale(double rs,int ijk,int q) {return rs;}
-		inline bool r_scale_check(double &rs,double mrs,int ijk,int q) {return rs<mrs;}
 		friend class voro_compute<container_periodic>;
 };
 
@@ -422,12 +415,8 @@ class container_periodic : public container_periodic_base {
  * This class is an extension of container_periodic_base that has routines
  * specifically for computing the radical Voronoi tessellation that depends
  * on the particle radii. */
-class container_periodic_poly : public container_periodic_base {
+class container_periodic_poly : public container_periodic_base, public radius_poly {
 	public:
-		/** The current maximum radius of any particle, used to
-		 * determine when to cut off the radical Voronoi computation.
-		 * */
-		double max_radius;
 		container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
 				int nx_,int ny_,int nz_,int init_mem_);
 		void clear();
@@ -622,26 +611,6 @@ class container_periodic_poly : public container_periodic_base {
 		bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
 	private:
 		voro_compute<container_periodic_poly> vc;
-		double r_rad,r_mul,r_val;
-		inline void r_init(int ijk,int s) {
-			r_rad=p[ijk][4*s+3]*p[ijk][4*s+3];
-			r_mul=r_rad-max_radius*max_radius;
-		}
-		inline void r_prime(double rv) {r_val=1+r_mul/rv;}
-		inline bool r_ctest(double crs,double mrs) {double tmp=crs+r_mul;return tmp>0&&crs*tmp>mrs;}
-		inline double r_cutoff(double x) {return x*r_val;}
-		inline double r_max_add(double rs) {return rs+max_radius*max_radius;}
-		inline double r_current_sub(double rs,int ijk,int q) {
-			return rs-p[ijk][4*q+3]*p[ijk][4*q+3];
-		}
-		inline double r_scale(double rs,int ijk,int q) {
-			return rs+r_rad-p[ijk][4*q+3]*p[ijk][4*q+3];
-		}
-		inline bool r_scale_check(double &rs,double mrs,int ijk,int q) {
-			double trs=rs;
-			rs+=r_rad-p[ijk][4*q+3]*p[ijk][4*q+3];
-			return rs<sqrt(mrs*trs);
-		}
 		friend class voro_compute<container_periodic_poly>;
 };
 

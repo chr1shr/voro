@@ -79,7 +79,7 @@ container::container(double ax_,double bx_,double ay_,double by_,double az_,doub
 container_poly::container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
 	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
 	: container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,xperiodic_,yperiodic_,zperiodic_,init_mem,4),
-	max_radius(0), vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_,zperiodic_?2*nz_+1:nz_) {}
+	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_,zperiodic_?2*nz_+1:nz_) {ppr=p;}
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
