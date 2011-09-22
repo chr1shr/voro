@@ -20,6 +20,9 @@ Version 0.4.2 (...)
   Thanks to Martin Brehm for help with this.
 * Factored out the regular/radical inline routines into separate classes, so
   that they don't have to be duplicated in the container_periodic classes.
+* Fixed problems with the container_periodic classes referencing the wrong
+  loop classes. Thanks to Wang Chuncheng (Nanyang Technological University) for
+  pointing this out.
 * Code comment cleanups, particularly in wall.hh
 
 Version 0.4.1 (September 7th 2011)
