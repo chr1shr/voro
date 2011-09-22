@@ -458,7 +458,7 @@ void container_periodic_poly::clear() {
  * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
 void container_periodic::print_custom(const char *format,FILE *fp) {
-	c_loop_all vl(*this);
+	c_loop_all_periodic vl(*this);
 	print_custom(vl,format,fp);
 }
 
@@ -467,7 +467,7 @@ void container_periodic::print_custom(const char *format,FILE *fp) {
  * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
 void container_periodic_poly::print_custom(const char *format,FILE *fp) {
-	c_loop_all vl(*this);
+	c_loop_all_periodic vl(*this);
 	print_custom(vl,format,fp);
 }
 
@@ -496,7 +496,7 @@ void container_periodic_poly::print_custom(const char *format,const char *filena
  * volume evaluation or cell output. */
 void container_periodic::compute_all_cells() {
 	voronoicell c;
-	c_loop_all vl(*this);
+	c_loop_all_periodic vl(*this);
 	if(vl.start()) do compute_cell(c,vl);
 	while(vl.inc());
 }
@@ -507,7 +507,7 @@ void container_periodic::compute_all_cells() {
  * volume evaluation or cell output. */
 void container_periodic_poly::compute_all_cells() {
 	voronoicell c;
-	c_loop_all vl(*this);
+	c_loop_all_periodic vl(*this);
 	if(vl.start()) do compute_cell(c,vl);while(vl.inc());
 }
 
@@ -518,7 +518,7 @@ void container_periodic_poly::compute_all_cells() {
 double container_periodic::sum_cell_volumes() {
 	voronoicell c;
 	double vol=0;
-	c_loop_all vl(*this);
+	c_loop_all_periodic vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
 	return vol;
 }
@@ -530,7 +530,7 @@ double container_periodic::sum_cell_volumes() {
 double container_periodic_poly::sum_cell_volumes() {
 	voronoicell c;
 	double vol=0;
-	c_loop_all vl(*this);
+	c_loop_all_periodic vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
 	return vol;
 }
