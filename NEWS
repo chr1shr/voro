@@ -1,5 +1,5 @@
 Version 0.4.2 (September 23rd 2011)
-===================
+===================================
 * Fixed a bug in the put_remap routine where a z periodic boolean was
   switched to an x periodic boolean. This would only be noticed when using
   mixed periodic boundary conditions and import particles that need to be
@@ -25,8 +25,8 @@ Version 0.4.2 (September 23rd 2011)
   pointing this out.
 * Added c_loop_order_periodic class for doing ordered loops with the periodic
   container classes
-* Update the README file in the src directory. The detailed description of each
-  file has been removed since this is difficult to maintain and this
+* Updated the README file in the src directory. The detailed description of
+  each file has been removed since this is difficult to maintain and this
   information is already present in the class reference manual.
 * Fixed an error in the pre_container selection of the optimal computational
   grid size
