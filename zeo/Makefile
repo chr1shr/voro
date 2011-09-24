@@ -21,10 +21,10 @@ src=$(patsubst %.o,%.cc,$(objs))
 	$(CXX) $(CFLAGS) -I../src -c $<
 
 network: network.cc v_network.o v_network.hh r_table.cc
-	$(CC) $(CFLAGS) -I../src -L../src -o network network.cc v_network.o -lvoro++
+	$(CXX) $(CFLAGS) -I../src -L../src -o network network.cc v_network.o -lvoro++
 
 images: images.cc
-	$(CC) $(CFLAGS) -I../src -L../src -o images images.cc -lvoro++
+	$(CXX) $(CFLAGS) -I../src -L../src -o images images.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)

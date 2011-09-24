@@ -94,9 +94,8 @@ If this option is specified, then an additional output file is generated with
 the ".gnu" extension, which contains a description of all the cells in a format
 that can be viewed using gnuplot using the
 .I splot
-command. Caution:
-For large input files, the gnuplot output file will be extremely large, so this
-option is best used on smaller systems.
+command. Caution: For large input files, the gnuplot output file will be
+extremely large, so this option is best used on smaller systems.
 .B
 .IP \-h or \-\-help
 This option prints out a summary of the command syntax and the available
@@ -236,7 +235,8 @@ The z coordinate of the particle.
 The position vector of the particle, short for "%x %y %z".
 .B
 .IP %r
-The radius of the particle (only printed if the polydisperse information is available).
+The radius of the particle (only printed if the polydisperse information is
+available).
 
 .PP
 Vertex-related entries:
@@ -246,16 +246,19 @@ Vertex-related entries:
 The number of vertices in the Voronoi cell.
 .B
 .IP %p
-A list of the vertices of the Voronoi cell in the format (x,y,z), relative to the particle center.
+A list of the vertices of the Voronoi cell in the format (x,y,z), relative to
+the particle center.
 .B
 .IP %P
-A list of the vertices of the Voronoi cell in the format (x,y,z), relative to the global coordinate system.
+A list of the vertices of the Voronoi cell in the format (x,y,z), relative to
+the global coordinate system.
 .B
 .IP %o
 A list of the orders of each vertex.
 .B
 .IP %m
-The maximum radius squared of a vertex position, relative to the particle center.
+The maximum radius squared of a vertex position, relative to the particle
+center.
 
 .PP
 Edge-related entries:
