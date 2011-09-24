@@ -83,7 +83,7 @@ container_periodic::container_periodic(double bx_,double bxy_,double by_,double 
 container_periodic_poly::container_periodic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
 	int nx_,int ny_,int nz_,int init_mem_)
 	: container_periodic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem_,4),
-	vc(*this,2*nx_+1,2*ey+1,2*ez+1) {ppr=p+3;}
+	vc(*this,2*nx_+1,2*ey+1,2*ez+1) {ppr=p;}
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
