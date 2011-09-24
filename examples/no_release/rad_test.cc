@@ -47,7 +47,7 @@ int main() {
 		}
 
 		sprintf(buf,"rad_test_out/fr%d.pov",i);
-		FILE *pf=safe_fopen(buf,"w");
+//		FILE *pf=safe_fopen(buf,"w");
 		j=0;
 		c_loop_all cl(con);
 		voronoicell c;
@@ -56,12 +56,12 @@ int main() {
 			if(con.compute_cell(c,cl)) {
 				vol+=c.volume();
 				cl.pos(x,y,z);
-				c.draw_pov(x,y,z,pf);
+//				c.draw_pov(x,y,z,pf);
 				j++;
 			}
 		} while(cl.inc());
 
 		printf("%g %d %g %g\n",mul,j,vol,vol-8);
-		fclose(pf);
+//		fclose(pf);
 	}
 }
