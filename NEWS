@@ -19,11 +19,14 @@ Version 0.4.2 (...)
   consistency, and more compatibility with older versions of MS Visual C++.
   Thanks to Martin Brehm for help with this.
 * Factored out the regular/radical inline routines into separate classes, so
-  that they don't have to be duplicated in the container_periodic classes.
+  that they don't have to be duplicated in the container_periodic classes
 * Fixed problems with the container_periodic classes referencing the wrong
   loop classes. Thanks to Wang Chuncheng (Nanyang Technological University) for
   pointing this out.
+* Added c_loop_order_periodic class for doing ordered loops with the periodic
+  container classes
 * Code comment cleanups, particularly in wall.hh
+* Updated Doxyfile to version 1.7.5.1
 
 Version 0.4.1 (September 7th 2011)
 ==================================
@@ -152,7 +155,7 @@ Version 0.4 (August 30th 2011)
   (Texas A&M University) for pointing this out.
 * Removed the add_vertex() and init_test() routines, which were mainly used for
   debugging
-* Updated Doxyfile to 1.7.4
+* Updated Doxyfile to version 1.7.4
 
 Version 0.3.1 (September 29, 2009)
 ==================================
@@ -162,7 +165,7 @@ Version 0.3.1 (September 29, 2009)
 * Many code cleanups and standardizations. Some double and triple loops
   were concatenated into one to reduce the amount of indentation.
 * Fixed the import.cc example program
-* Updated Doxyfile to 1.6.1
+* Updated Doxyfile to version 1.6.1
 
 Version 0.3 (August 17, 2009)
 =============================
