@@ -43,7 +43,7 @@ class radius_poly {
 	protected:
 		double r_rad,r_mul,r_val;
 		inline void r_init(int ijk,int s) {
-			r_rad=ppr[ijk][4*s+3]*ppr[ijk][4*s+3];
+			r_rad=ppr[ijk][4*s]*ppr[ijk][4*s];
 			r_mul=r_rad-max_radius*max_radius;
 		}
 		inline void r_prime(double rv) {r_val=1+r_mul/rv;}
@@ -51,14 +51,14 @@ class radius_poly {
 		inline double r_cutoff(double x) {return x*r_val;}
 		inline double r_max_add(double rs) {return rs+max_radius*max_radius;}
 		inline double r_current_sub(double rs,int ijk,int q) {
-			return rs-ppr[ijk][4*q+3]*ppr[ijk][4*q+3];
+			return rs-ppr[ijk][4*q]*ppr[ijk][4*q];
 		}
 		inline double r_scale(double rs,int ijk,int q) {
-			return rs+r_rad-ppr[ijk][4*q+3]*ppr[ijk][4*q+3];
+			return rs+r_rad-ppr[ijk][4*q]*ppr[ijk][4*q];
 		}
 		inline bool r_scale_check(double &rs,double mrs,int ijk,int q) {
 			double trs=rs;
-			rs+=r_rad-ppr[ijk][4*q+3]*ppr[ijk][4*q+3];
+			rs+=r_rad-ppr[ijk][4*q]*ppr[ijk][4*q];
 			return rs<sqrt(mrs*trs);
 		}
 };
