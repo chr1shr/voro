@@ -15,7 +15,7 @@ using namespace std;
 
 /** \brief A class encapsulating all the routines for storing and calculating a
  * single Voronoi cell. */
-class voronoicell_2d {
+class voronoicell_base_2d {
 	public:
 		/** This holds the current size of the ed and pts arrays. If
 		 * more vertices are created than can fit in these arrays, then
@@ -34,7 +34,7 @@ class voronoicell_2d {
 		double *pts;
 		voronoicell_2d();
 		~voronoicell_2d();
-		void init(double xmin,double xmax,double ymin,double ymax);
+		void init_base(double xmin,double xmax,double ymin,double ymax);
 		void draw_gnuplot(double x,double y,FILE *fp=stdout);
 		/** Outputs the edges of the Voronoi cell in gnuplot format to
 		 * an output stream.
@@ -42,7 +42,7 @@ class voronoicell_2d {
 		 *            cell's position.
 		 * \param[in] filename the file to write to. */
 		inline void draw_gnuplot(double x,double y,const char *filename) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_gnuplot(x,y,fp);
 			fclose(fp);
 		}
@@ -53,7 +53,7 @@ class voronoicell_2d {
 		 *                    cell's position.
 		 * \param[in] filename the file to write to. */
 		inline void draw_pov(double x,double y,const char *filename) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			draw_pov(x,y,z,fp);
 			fclose(fp);
 		}
@@ -73,16 +73,23 @@ class voronoicell_2d {
 		 * \param[in] r a radius associated with the particle.
 		 * \param[in] filename the file to write to. */
 		inline void output_custom(const char *format,int i,double x,double y,double r,const char *filename) {
-			FILE *fp(voropp_safe_fopen(filename,"w"));
+			FILE *fp=safe_fopen(filename,"w");
 			output_custom(format,i,x,y,r,fp);
 			fclose(fp);
 		}
-		bool plane(double x,double y,double rs);
+		template<class vc_class>
+		bool plane(vc_class &vc,double x,double y,double rs);
 		double max_radius_squared();
 		double perimeter();
 		double area();
+		void vertices(vector<double> &v);
+		void output_vertices(FILE *fp=stdout);
+		void vertices(double x,double y,double z,vector<double> &v);
+		void output_vertices(double x,double y,double z,FILE *fp=stdout);		
 		void centroid(double &cx,double &cy);
+		virtual void neighbors(vector<int> &v) {v.clear();}
 	private:
+		template<class vc_class>
 		void add_memory_vertices();
 		void add_memory_ds(int *&stackp);
 		/** Computes the distance of a Voronoi cell vertex to a plane.
@@ -98,6 +105,62 @@ class voronoicell_2d {
 		/** A pointer to the end of the delete stack, used to detect
 		 * when it is full. */
 		int *stacke;
+};
+
+class voronoicell_2d : public voronoicell_2d {
+	public:
+		using voronoicell_base_2d::nplane;
+		inline bool nplane(double x,double y,double rs,int p_id) {
+			return nplane(*this,x,y,rs,0);
+		}
+		inline bool nplane(double x,double y,int p_id) {
+			double rs=x*x+y*y;
+			return nplane(*this,x,y,rs,0);
+		}
+		inline bool plane(double x,double y,double rs) {
+			return nplane(*this,x,y,rs,0);
+		}
+		inline bool plane(double x,double y) {
+			double rs=x*x+y*y;
+			return nplane(*this,x,y,rs,0);
+		}
+		inline void init(double xmin,double xmax,double ymin,double ymax) {
+			init_base(xmin,xmax,ymin,ymax);
+		}
+	private:
+		inline void n_copy(int a,int b) {}
+		inline void n_set(int a,int id) {}
+		inline void n_add_memory_vertices() {}
+		friend class voronoicell_base_2d;
+};
+
+class voronoicell_neighbor_2d : public voronoicell_2d {
+	public:
+		using voronoicell_base_2d::nplane;
+		int *ne;
+		voronoicell_neighbor_2d() : ne(new double[init_vertices]) {}
+		~voronoicell_neighbor_2d() {delete [] ne;}
+		inline bool nplane(double x,double y,double rs,int p_id) {
+			return nplane(*this,x,y,rs,p_id);
+		}
+		inline bool nplane(double x,double y,int p_id) {
+			double rs=x*x+y*y;
+			return nplane(*this,x,y,rs,p_id);
+		}
+		inline bool plane(double x,double y,double rs) {
+			return nplane(*this,x,y,rs,0);
+		}
+		inline bool plane(double x,double y) {
+			double rs=x*x+y*y;
+			return nplane(*this,x,y,rs,0);
+		}
+		void init(double xmin,double xmax,double ymin,double ymax);
+		virtual void neighbors(vector<int> &v);
+	private:
+		inline void n_copy(int a,int b) {ne[a]=ne[b];}
+		inline void n_set(int a,int id) {ne[a]=id;}
+		inline void n_add_memory_vertices();
+		friend class voronoicell_base_2d;
 };
 
 #endif

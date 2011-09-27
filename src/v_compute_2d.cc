@@ -5,7 +5,7 @@
 // Date     : August 30th 2011
 
 /** \file v_compute_2d.cc
- * \brief Function implementantions for the v_compute class. */
+ * \brief Function implementantions for the 2D voro_compute class. */
 
 #include "worklist_2d.hh"
 #include "v_compute_2d.hh"
@@ -580,7 +580,7 @@ template<class c_class_2d>
 template<class v_cell_2d>
 inline bool voro_compute_2d<c_class_2d>::edge_z_test(v_cell_2d &c,double xl,double yl,double xh,double yh) {
 	if(c.plane_intersects_guess(xl,yh,con.r_cutoff(xl*xl+yl*yh))) return false;
-	if(c.plane_intersects(xl,yl,con.r_cutoff(xl*xl+yl*yl))) return false;
+//	if(c.plane_intersects(xl,yl,con.r_cutoff(xl*xl+yl*yl))) return false;  XXX not needed?
 	if(c.plane_intersects(xh,yl,con.r_cutoff(xl*xh+yl*yl))) return false;
 	return true;
 }
@@ -625,10 +625,10 @@ inline bool voro_compute_2d<c_class_2d>::face_y_test(v_cell_2d &c,double x0,doub
  * of a nearby region. If the point is within the distance of the region, then
  * the routine returns true, and computes the maximum distance from the point
  * to the region. Otherwise, the routine returns false.
- * \param[in] (di,dj,dk) the position of the nearby region to be tested,
+ * \param[in] (di,dj) the position of the nearby region to be tested,
  *                       relative to the region that the point is in.
- * \param[in] (fx,fy,fz) the displacement of the point within its region.
- * \param[in] (gxs,gys,gzs) the maximum squared distances from the point to the
+ * \param[in] (fx,fy) the displacement of the point within its region.
+ * \param[in] (gxs,gys) the maximum squared distances from the point to the
  *                          sides of its region.
  * \param[out] crs a reference in which to return the maximum distance to the
  *                 region (only computed if the routine returns positive).
@@ -636,54 +636,23 @@ inline bool voro_compute_2d<c_class_2d>::face_y_test(v_cell_2d &c,double x0,doub
  * \return False if the region is further away than mrs, true if the region in
  *         within mrs.*/
 template<class c_class_2d>
-bool voro_compute_2d<c_class_2d>::compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gxs,double gys,double gzs,double &crs,double mrs) {
-	double xlo,ylo,zlo;
+bool voro_compute_2d<c_class_2d>::compute_min_max_radius(int di,int dj,double fx,double fy,double gxs,double gys,double &crs,double mrs) {
+	double xlo,ylo;
 	if(di>0) {
 		xlo=di*boxx-fx;
 		crs=xlo*xlo;
 		if(dj>0) {
 			ylo=dj*boxy-fy;
 			crs+=ylo*ylo;
-			if(dk>0) {
-				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=bxsq+2*(boxx*xlo+boxy*ylo+boxz*zlo);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=bxsq+2*(boxx*xlo+boxy*ylo-boxz*zlo);
-			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxx*(2*xlo+boxx)+boxy*(2*ylo+boxy)+gzs;
-			}
+			if(con.r_cutoff(crs)>mrs) return true;
+			crs+=bxsq+2*xlo*boxx+2*ylo*boxy;
 		} else if(dj<0) {
 			ylo=(dj+1)*boxy-fy;
 			crs+=ylo*ylo;
-			if(dk>0) {
-				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=bxsq+2*(boxx*xlo-boxy*ylo+boxz*zlo);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=bxsq+2*(boxx*xlo-boxy*ylo-boxz*zlo);
-			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxx*(2*xlo+boxx)+boxy*(-2*ylo+boxy)+gzs;
-			}
+			if(con.r_cutoff(crs)>mrs) return true;
+			crs+=bxsq+2*xlo*boxx-2*ylo*boxy;
 		} else {
-			if(dk>0) {
-				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(2*zlo+boxz);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(-2*zlo+boxz);
-			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
-				crs+=gzs;
-			}
+			if(con.r_cutoff(crs)>mrs) return true;
 			crs+=gys+boxx*(2*xlo+boxx);
 		}
 	} else if(di<0) {
@@ -692,94 +661,29 @@ bool voro_compute_2d<c_class_2d>::compute_min_max_radius(int di,int dj,int dk,do
 		if(dj>0) {
 			ylo=dj*boxy-fy;
 			crs+=ylo*ylo;
-			if(dk>0) {
-				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=bxsq+2*(-boxx*xlo+boxy*ylo+boxz*zlo);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=bxsq+2*(-boxx*xlo+boxy*ylo-boxz*zlo);
-			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxx*(-2*xlo+boxx)+boxy*(2*ylo+boxy)+gzs;
-			}
+			if(con.r_cutoff(crs)>mrs) return true;
+			crs+=bxsq-2*xlo*boxx+2*ylo*boxy;
 		} else if(dj<0) {
 			ylo=(dj+1)*boxy-fy;
 			crs+=ylo*ylo;
-			if(dk>0) {
-				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=bxsq+2*(-boxx*xlo-boxy*ylo+boxz*zlo);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=bxsq+2*(-boxx*xlo-boxy*ylo-boxz*zlo);
-			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxx*(-2*xlo+boxx)+boxy*(-2*ylo+boxy)+gzs;
-			}
+			if(con.r_cutoff(crs)>mrs) return true;
+			crs+=bxsq-2*xlo*boxx-2*ylo*boxy;
 		} else {
-			if(dk>0) {
-				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(2*zlo+boxz);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(-2*zlo+boxz);
-			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
-				crs+=gzs;
-			}
+			if(con.r_cutoff(crs)>mrs) return true;
 			crs+=gys+boxx*(-2*xlo+boxx);
 		}
 	} else {
 		if(dj>0) {
 			ylo=dj*boxy-fy;
 			crs=ylo*ylo;
-			if(dk>0) {
-				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(2*zlo+boxz);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(-2*zlo+boxz);
-			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
-				crs+=gzs;
-			}
+			if(con.r_cutoff(crs)>mrs) return true;
 			crs+=boxy*(2*ylo+boxy);
 		} else if(dj<0) {
 			ylo=(dj+1)*boxy-fy;
 			crs=ylo*ylo;
-			if(dk>0) {
-				zlo=dk*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(2*zlo+boxz);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;
-				crs+=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(-2*zlo+boxz);
-			} else {
-				if(con.r_cutoff(crs)>mrs) return true;
-				crs+=gzs;
-			}
+			if(con.r_cutoff(crs)>mrs) return true;
 			crs+=boxy*(-2*ylo+boxy);
-		} else {
-			if(dk>0) {
-				zlo=dk*boxz-fz;crs=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(2*zlo+boxz);
-			} else if(dk<0) {
-				zlo=(dk+1)*boxz-fz;crs=zlo*zlo;if(con.r_cutoff(crs)>mrs) return true;
-				crs+=boxz*(-2*zlo+boxz);
-			} else {
-				crs=0;
-				voro_fatal_error("Min/max radius function called for central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
-			}
-			crs+=gys;
-		}
+		} else voro_fatal_error("Min/max radius function called for central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
 		crs+=gxs;
 	}
 	return false;

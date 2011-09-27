@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-/** \file v_base.cc
- * \brief Function implementations for the base Voronoi container class. */
+/** \file v_base_2d.cc
+ * \brief Function implementations for the base 2D Voronoi container class. */
 
 #include "v_base_2d.hh"
 #include "config_2d.hh"

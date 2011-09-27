@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-/** \file c_loops.cc
- * \brief Function implementations for the loop classes. */
+/** \file c_loops_2d.cc
+ * \brief Function implementations for the 2D loop classes. */
 
 #include "c_loops.hh"
 

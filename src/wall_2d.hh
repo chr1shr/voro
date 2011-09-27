@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-/** \file wall.hh
- * \brief Header file for the derived wall classes. */
+/** \file wall_2d.hh
+ * \brief Header file for the 2D derived wall classes. */
 
 #ifndef VOROPP_WALL_2D_HH
 #define VOROPP_WALL_2D_HH

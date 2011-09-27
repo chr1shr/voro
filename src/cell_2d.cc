@@ -4,14 +4,14 @@
 #include "cell_2d.hh"
 
 /** Constructs a 2D Voronoi cell and sets up the initial memory. */
-voronoicell_2d::voronoicell_2d() :
+voronoicell_base_2d::voronoicell_2d() :
 	current_vertices(init_vertices), current_delete_size(init_delete_size),
 	ed(new int[2*current_vertices]), pts(new double[2*current_vertices]),
 	ds(new int[current_delete_size]), stacke(ds+current_delete_size) {
 }
 
 /** The voronoicell_2d destructor deallocates all of the dynamic memory. */
-voronoicell_2d::~voronoicell_2d() {
+voronoicell_base_2d::~voronoicell_2d() {
 	delete [] ds;
 	delete [] pts;
 	delete [] ed;
@@ -20,7 +20,7 @@ voronoicell_2d::~voronoicell_2d() {
 /** Initializes a Voronoi cell as a rectangle with the given dimensions.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates. */
-void voronoicell_2d::init(double xmin,double xmax,double ymin,double ymax) {
+void voronoicell_base_2d::init_base(double xmin,double xmax,double ymin,double ymax) {
 	p=4;xmin*=2;xmax*=2;ymin*=2;ymax*=2;
 	*pts=xmin;pts[1]=ymin;
 	pts[2]=xmax;pts[3]=ymin;
@@ -34,7 +34,7 @@ void voronoicell_2d::init(double xmin,double xmax,double ymin,double ymax) {
  * stream.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
  * \param[in] fp the file handle to write to. */
-void voronoicell_2d::draw_gnuplot(double x,double y,FILE *fp) {
+void voronoicell_base_2d::draw_gnuplot(double x,double y,FILE *fp) {
 	if(p==0) return;
 	int k=0;
 	do {
@@ -48,7 +48,7 @@ void voronoicell_2d::draw_gnuplot(double x,double y,FILE *fp) {
  * stream, displacing the cell by given vector.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
  * \param[in] fp the file handle to write to. */
-void voronoicell_2d::draw_pov(double x,double y,FILE *fp) {
+void voronoicell_base_2d::draw_pov(double x,double y,FILE *fp) {
 	if(p==0) return;
 	int k=0;
 	do {
@@ -64,7 +64,7 @@ void voronoicell_2d::draw_pov(double x,double y,FILE *fp) {
  * cell. It can be used to determine when enough particles have been testing an
  * all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
-double voronoicell_2d::max_radius_squared() {
+double voronoicell_base_2d::max_radius_squared() {
 	double r,s,*ptsp(pts+2),*ptse(pts+2*p);
 	r=*pts*(*pts)+pts[1]*pts[1];
 	while(ptsp<ptse) {
@@ -81,7 +81,8 @@ double voronoicell_2d::max_radius_squared() {
  * \param[in] (x,y) the normal vector to the plane.
  * \param[in] rsq the distance along this vector of the plane.
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
-bool voronoicell_2d::plane(double x,double y,double rsq) {
+template<class vc_class>
+bool voronoicell_base_2d::plane(vc_class &vc,double x,double y,double rsq,int p_id) {
 	int cp,lp,up=0,up2,up3,*stackp(ds);
 	double fac,l,u,u2,u3;
 
@@ -109,8 +110,8 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 		}
 	}
 
-	// Add this point to the delete stack, and search clockwise
-	// to find additional points that need to be deleted.
+	// Add this point to the delete stack, and search counter-clockwise to
+	// find additional points that need to be deleted.
 	*(stackp++)=up;
 	l=u;up2=ed[2*up];
 	u2=pos(x,y,rsq,up2);
@@ -123,24 +124,25 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 		if(up2==up) return false;
 	}
 
-	// Consider the first point that was found in the clockwise direction
-	// that was not inside the cutting plane. If it lies on the cutting
-	// plane then do nothing. Otherwise, introduce a new vertex.
-	if(u2>-tolerance) {
-		cp=up2;
-	} else {
+	// Consider the first point that was found in the counter-clockwise
+	// direction that was not inside the cutting plane. If it lies on the
+	// cutting plane then do nothing. Otherwise, introduce a new vertex.
+	if(u2>-tolerance) cp=up2;
+	else {
 		if(p==current_vertices) add_memory_vertices();
 		lp=ed[2*up2+1];
 		fac=1/(u2-l);
 		pts[2*p]=(pts[2*lp]*u2-pts[2*up2]*l)*fac;
 		pts[2*p+1]=(pts[2*lp+1]*u2-pts[2*up2+1]*l)*fac;
+		n_copy(p,lp);
 		ed[2*p]=up2;
 		ed[2*up2+1]=p;
 		cp=p++;
 	}
 
-	// Search counter-clockwise for additional points that need to be
-	// deleted
+	n_set(cp,p_id);
+
+	// Search clockwise for additional points that need to be deleted
 	l=u;up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
 	while(u3>tolerance) {
 		if(stackp==stacke) add_memory_ds(stackp);
@@ -152,7 +154,7 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 	}
 
 	// Either adjust the existing vertex or create new one, and connect it
-	// with the vertex found on the previous search in the clockwise
+	// with the vertex found on the previous search in the counter-clockwise
 	// direction
 	if(u3>tolerance) {
 		ed[2*cp+1]=up3;
@@ -181,6 +183,7 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 			ed[2*ed[2*p+1]]=up;
 			pts[2*up]=pts[2*p];
 			pts[2*up+1]=pts[2*p+1];
+			n_copy(up,p);
 			ed[2*up]=ed[2*p];
 			ed[2*up+1]=ed[2*p+1];
 		} else p++;
@@ -188,9 +191,53 @@ bool voronoicell_2d::plane(double x,double y,double rsq) {
 	return true;
 }
 
+/** Returns a vector of the vertex vectors using the local coordinate system.
+ * \param[out] v the vector to store the results in. */
+void voronoicell_base::vertices(vector<double> &v) {
+	v.resize(2*p);
+	double *ptsp=pts;
+	for(int i=0;i<2*p;i+=2) {
+		v[i]=*(ptsp++)*0.5;
+		v[i+1]=*(ptsp++)*0.5;
+	}
+}
+
+/** Outputs the vertex vectors using the local coordinate system.
+ * \param[out] fp the file handle to write to. */
+void voronoicell_base::output_vertices(FILE *fp) {
+	if(p>0) {
+		fprintf(fp,"(%g,%g)",*pts*0.5,pts[1]*0.5);
+		for(double *ptsp=pts+2;ptsp<pts+2*p;ptsp+=2) fprintf(fp," (%g,%g)",*ptsp*0.5,ptsp[1]*0.5);
+	}
+}
+
+/** Returns a vector of the vertex vectors in the global coordinate system.
+ * \param[out] v the vector to store the results in.
+ * \param[in] (x,y,z) the position vector of the particle in the global
+ *                    coordinate system. */
+void voronoicell_base::vertices(double x,double y,vector<double> &v) {
+	v.resize(2*p);
+	double *ptsp=pts;
+	for(int i=0;i<2*p;i+=2) {
+		v[i]=x+*(ptsp++)*0.5;
+		v[i+1]=y+*(ptsp++)*0.5;
+	}
+}
+
+/** Outputs the vertex vectors using the global coordinate system.
+ * \param[out] fp the file handle to write to.
+ * \param[in] (x,y,z) the position vector of the particle in the global
+ *                    coordinate system. */
+void voronoicell_base::output_vertices(double x,double y,FILE *fp) {
+	if(p>0) {
+		fprintf(fp,"(%g,%g,%g)",x+*pts*0.5,y+pts[1]*0.5);
+		for(double *ptsp=pts+2;ptsp<pts+2*p;ptsp+=2) fprintf(fp," (%g,%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5);
+	}
+}
+
 /** Calculates the perimeter of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
-double voronoicell_2d::perimeter() {
+double voronoicell_base_2d::perimeter() {
 	if(p==0) return 0;
 	int k=0,l;double perim=0,dx,dy;
 	do {
@@ -205,7 +252,7 @@ double voronoicell_2d::perimeter() {
 
 /** Calculates the area of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
-double voronoicell_2d::area() {
+double voronoicell_base_2d::area() {
 	if(p==0) return 0;
 	int k(*ed);double area=0,x=*pts,y=pts[1],dx1,dy1,dx2,dy2;
 	dx1=pts[2*k]-x;dy1=pts[2*k+1]-y;
@@ -221,7 +268,7 @@ double voronoicell_2d::area() {
 
 /** Calculates the centroid of the Voronoi cell.
  * \param[out] (cx,cy) The coordinates of the centroid. */
-void voronoicell_2d::centroid(double &cx,double &cy) {
+void voronoicell_base_2d::centroid(double &cx,double &cy) {
 	cx=cy=0;
 	static const double third=1/3.0;
 	if(p==0) return;
@@ -254,7 +301,7 @@ void voronoicell_2d::centroid(double &cx,double &cy) {
  *                    cell.
  * \param[in] r a radius associated with the particle.
  * \param[in] fp the file handle to write to. */
-void voronoicell_2d::output_custom(const char *format,int i,double x,double y,double r,FILE *fp) {
+void voronoicell_base_2d::output_custom(const char *format,int i,double x,double y,double r,FILE *fp) {
 	char *fmp(const_cast<char*>(format));
 	vector<int> vi;
 	vector<double> vd;
@@ -316,7 +363,8 @@ void voronoicell_2d::output_custom(const char *format,int i,double x,double y,do
 /** Doubles the storage for the vertices, by reallocating the pts and ed
  * arrays. If the allocation exceeds the absolute maximum set in max_vertices,
  * then the routine exits with a fatal error. */
-void voronoicell_2d::add_memory_vertices() {
+template<vc_class>
+void voronoicell_base_2d::add_memory_vertices(vc_class &vc) {
 	double *ppe(pts+2*current_vertices);
 	int *ede(ed+2*current_vertices);
 
@@ -336,13 +384,32 @@ void voronoicell_2d::add_memory_vertices() {
 	int *ned(new int[2*current_vertices]),*nep(ned),*edp(ed);
 	while(edp<ede) *(nep++)=*(edp++);
 	delete [] ed;ed=ned;
+
+	// Double the neighbor information if necessary
+	vc.n_add_memory_vertices();
+}
+
+inline void voronoicell_neighbor_2d::add_memory_vertices() {
+	int *nne=new int[current_vertices],*nee=ne+(current_vertices>>1),*nep=ne,*nnep=nne;
+	while(nep<nee) *(nnep++)=*(nep++);
+	delete [] ne;ne=nne;
+}
+
+virtual void voronoicell_neighbor_2d::vertices(vector<int> &v) {
+	v.resize(p);
+	for(int i=0;i<p;i++) v[i]=ne[i];
+}
+
+void voronoicell_neighbor_2d::init(double xmin,double xmax,double ymin,double ymax) {
+	init_base(xmin,xmax,ymin,ymax);
+	*ne=-3;ne[1]=-2;ne[2]=-4;ne[3]=-1;
 }
 
 /** Doubles the size allocation of the delete stack. If the allocation exceeds
  * the absolute maximum set in max_delete_size, then routine causes a fatal
  * error.
  * \param[in] stackp a reference to the current stack pointer. */
-void voronoicell_2d::add_memory_ds(int *&stackp) {
+void voronoicell_base_2d::add_memory_ds(int *&stackp) {
 	current_delete_size<<=1;
 	if(current_delete_size>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2

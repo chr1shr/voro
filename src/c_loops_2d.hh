@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-/** \file c_loops.hh
- * \brief Header file for the loop classes. */
+/** \file c_loops_2d.hh
+ * \brief Header file for the 2D loop classes. */
 
 #ifndef VOROPP_C_LOOPS_2D_HH
 #define VOROPP_C_LOOPS_2D_HH
@@ -104,7 +104,7 @@ class c_loop_base_2d {
 		inline double y() {return p[ijk][ps*q+1];}
 		/** Returns the ID of the particle currently being considered
 		 * by the loop. */
-		inline double pid() {return id[ijk][q];}
+		inline int pid() {return id[ijk][q];}
 };
 
 /** \brief Class for looping over all of the particles in a container.

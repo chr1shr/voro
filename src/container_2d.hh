@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-/** \file container.hh
- * \brief Header file for the container_base template and related classes. */
+/** \file container_2d.hh
+ * \brief Header file for the container_base_2d and related classes. */
 
 #ifndef VOROPP_CONTAINER_2D_HH
 #define VOROPP_CONTAINER_2D_HH

@@ -4,8 +4,8 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-/** \file wall.cc
- * \brief Function implementations for the derived wall classes. */
+/** \file wall_2d.cc
+ * \brief Function implementations for the 2D derived wall classes. */
 
 #include "wall.hh"
 

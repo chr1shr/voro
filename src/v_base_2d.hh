@@ -5,7 +5,7 @@
 // Date     : August 30th 2011
 
 /** \file v_base.hh
- * \brief Header file for the base Voronoi container class. */
+ * \brief Header file for the base 2D Voronoi container class. */
 
 #ifndef VOROPP_V_BASE_2D_HH
 #define VOROPP_V_BASE_2D_HH

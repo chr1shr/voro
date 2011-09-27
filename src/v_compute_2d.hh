@@ -5,7 +5,7 @@
 // Date     : August 30th 2011
 
 /** \file v_compute.hh
- * \brief Header file for the container_base template and related classes. */
+ * \brief Header file for the 2D voro_compute template and related classes. */
 
 #ifndef VOROPP_V_COMPUTE_2D_HH
 #define VOROPP_V_COMPUTE_2D_HH
