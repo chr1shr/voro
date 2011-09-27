@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=rad_test finite_sys cylinder_inv period
+EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -21,6 +21,9 @@ finite_sys: finite_sys.cc
 
 cylinder_inv: cylinder_inv.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o cylinder_inv cylinder_inv.cc -lvoro++
+
+single_cell_2d: single_cell_2d.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o single_cell_2d single_cell_2d.cc -lvoro++
 
 period: period.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o period period.cc -lvoro++
