@@ -105,7 +105,7 @@ int main() {
 
 	// Output the particle positions in POV-Ray format
 	con.draw_particles_pov("torus_p.pov");
-con.draw_cells_gnuplot("torus.gnu");
+
 	// Output the Voronoi cells in POV-Ray format
 	con.draw_cells_pov("torus_v.pov");
 }

@@ -1,3 +1,7 @@
+Version 0.4.3 (...)
+===================
+* Removed spurious Gnuplot output line from torus.cc example
+
 Version 0.4.2 (September 23rd 2011)
 ===================================
 * Fixed a bug in the put_remap routine where a z periodic boolean was
