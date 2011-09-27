@@ -12,6 +12,9 @@ const int init_delete_size=256;
 /** The default initial size for the ordering class. */
 const int init_ordering_size=4096;
 
+const int init_wall_size=32;
+const int max_wall_size=4096;
+
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
 /** The maximum memory allocation for the number of vertices. */
@@ -20,7 +23,7 @@ const int max_vertices=16777216;
 const int max_delete_size=16777216;
 
 /** The maximum amount of particle memory allocated for a single region. */
-const int max_particle_memory=16777216;
+const int max_particle_memory_2d=16777216;
 
 #ifndef VOROPP_VERBOSE
 /** Voro++ can print a number of different status and debugging messages to

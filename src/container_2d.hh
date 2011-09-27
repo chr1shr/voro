@@ -306,7 +306,7 @@ class container_2d : public container_base_2d {
 			fclose(fp);
 		}
 		void compute_all_cells();
-		double sum_cell_volumes();
+		double sum_cell_areas();
 		/** Dumps particle IDs and positions to a file.
 		 * \param[in] vl the loop class to use.
 		 * \param[in] fp a file handle to write to. */
@@ -393,7 +393,7 @@ class container_2d : public container_base_2d {
 			if(vl.start()) do if(compute_cell(c,vl)) {
 				fprintf(fp,"// cell %d\n",id[vl.ij][vl.q]);
 				pp=p[vl.ij]+ps*vl.q;
-				c.draw_pov(*pp,pp[1],0,fp);
+				c.draw_pov(*pp,pp[1],fp);
 			} while(vl.inc());
 		}
 		/** Computes all Voronoi cells and saves the output in POV-Ray
@@ -446,7 +446,7 @@ class container_2d : public container_base_2d {
 		 * condition, then the routine returns false. */
 		template<class v_cell_2d,class c_loop_2d>
 		inline bool compute_cell(v_cell_2d &c,c_loop_2d &vl) {
-			return vc.compute_cell(c,vl.ij,vl.q,vl.i,vl.j,vl.k);
+			return vc.compute_cell(c,vl.ij,vl.q,vl.i,vl.j);
 		}
 		/** Computes the Voronoi cell for given particle.
 		 * \param[out] c a Voronoi cell class in which to store the
@@ -459,7 +459,7 @@ class container_2d : public container_base_2d {
 		template<class v_cell_2d>
 		inline bool compute_cell(v_cell_2d &c,int ij,int q) {
 			int j=ij/nx,i=ij-j*nx;
-			return vc.compute_cell(c,ij,q,i,j,k);
+			return vc.compute_cell(c,ij,q,i,j);
 		}
 	private:
 		voro_compute_2d<container_2d> vc;
@@ -483,7 +483,7 @@ class container_poly_2d : public container_base_2d {
 		 * determine when to cut off the radical Voronoi computation.
 		 * */
 		double max_radius;
-		container_poly(double ax_,double bx_,double ay_,double by_,
+		container_poly_2d(double ax_,double bx_,double ay_,double by_,
 			       int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem);
 		void clear();
 		void put(int n,double x,double y,double r);
@@ -517,7 +517,7 @@ class container_poly_2d : public container_base_2d {
 			fclose(fp);
 		}
 		void compute_all_cells();
-		double sum_cell_volumes();
+		double sum_cell_areas();
 		/** Dumps particle IDs, positions and radii to a file.
 		 * \param[in] vl the loop class to use.
 		 * \param[in] fp a file handle to write to. */

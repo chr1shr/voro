@@ -25,8 +25,8 @@ namespace voro {
  * \param[in] init_mem the initial memory allocation for each block.
  * \param[in] ps_ the number of floating point entries to store for each
  *                particle. */
-container_base_2d::container_base_2d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-		int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem,int ps_)
+container_base_2d::container_base_2d(double ax_,double bx_,double ay_,double by_,
+		int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem,int ps_)
 	: voro_base_2d(nx_,ny_,(bx_-ax_)/nx_,(by_-ay_)/ny_),
 	ax(ax_), bx(bx_), ay(ay_), by(by_), xperiodic(xperiodic_), yperiodic(yperiodic_), 
 	id(new int*[nxy]), p(new double*[nxy]), co(new int[nxy]), mem(new int[nxy]), ps(ps_) {
@@ -58,7 +58,7 @@ container_base_2d::~container_base_2d() {
  * \param[in] init_mem the initial memory allocation for each block. */
 container_2d::container_2d(double ax_,double bx_,double ay_,double by_,
 	int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
-	: container_base(ax_,bx_,ay_,by_,nx_,ny_,xperiodic_,yperiodic_,init_mem,2),
+	: container_base_2d(ax_,bx_,ay_,by_,nx_,ny_,xperiodic_,yperiodic_,init_mem,2),
 	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_) {}
 
 /** The class constructor sets up the geometry of container.
@@ -70,8 +70,8 @@ container_2d::container_2d(double ax_,double bx_,double ay_,double by_,
  *				      periodic in each coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block. */
 container_poly_2d::container_poly_2d(double ax_,double bx_,double ay_,double by_,
-	int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem)
-	: container_base(ax_,bx_,ay_,by_,nx_,ny_,xperiodic_,yperiodic_,init_mem,3),
+	int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
+	: container_base_2d(ax_,bx_,ay_,by_,nx_,ny_,xperiodic_,yperiodic_,init_mem,3),
 	max_radius(0), vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_) {}
 
 /** Put a particle into the correct region of the container.
@@ -199,7 +199,7 @@ inline bool container_base_2d::remap(int &ai,int &aj,int &ci,int &cj,double &x,d
 		else return false;
 	} else aj=0;
 
-	ijk=ci+nx*cj;
+	ij=ci+nx*cj;
 	return true;
 }
 
@@ -249,7 +249,7 @@ bool container_2d::find_voronoi_cell(double x,double y,double &rx,double &ry,int
  * \return True if a particle was found. If the container has no particles,
  * then the search will not find a Voronoi cell and false is returned. */
 bool container_poly_2d::find_voronoi_cell(double x,double y,double &rx,double &ry,int &pid) {
-	int ai,aj,ci,cj,ijk;
+	int ai,aj,ci,cj,ij;
 	particle_record_2d w;
 	double mrs;
 
@@ -332,7 +332,7 @@ void container_2d::import(particle_order &vo,FILE *fp) {
 void container_poly_2d::import(FILE *fp) {
 	int i,j;
 	double x,y,r;
-	while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z,&r))==4) put(i,x,y,r);
+	while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&r))==4) put(i,x,y,r);
 	if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
@@ -352,7 +352,7 @@ void container_poly_2d::import(particle_order &vo,FILE *fp) {
 /** Outputs the a list of all the container regions along with the number of
  * particles stored within each. */
 void container_base_2d::region_count() {
-	int i,j,k,*cop=co;
+	int i,j,*cop=co;
 	for(j=0;j<ny;j++) for(i=0;i<nx;i++)
 		printf("Region (%d,%d): %d particles\n",i,j,*(cop++));
 }
@@ -410,7 +410,7 @@ void container_poly_2d::print_custom(const char *format,const char *filename) {
  * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 void container_2d::compute_all_cells() {
-	voronoicell c;
+	voronoicell_2d c;
 	c_loop_all_2d vl(*this);
 	if(vl.start()) do compute_cell(c,vl);
 	while(vl.inc());
@@ -421,7 +421,7 @@ void container_2d::compute_all_cells() {
  * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 void container_poly_2d::compute_all_cells() {
-	voronoicell c;
+	voronoicell_2d c;
 	c_loop_all_2d vl(*this);
 	if(vl.start()) do compute_cell(c,vl);while(vl.inc());
 }
@@ -431,7 +431,7 @@ void container_poly_2d::compute_all_cells() {
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
 double container_2d::sum_cell_areas() {
-	voronoicell c;
+	voronoicell_2d c;
 	double area=0;
 	c_loop_all_2d vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) area+=c.area();while(vl.inc());
@@ -443,7 +443,7 @@ double container_2d::sum_cell_areas() {
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
 double container_poly_2d::sum_cell_areas() {
-	voronoicell c;
+	voronoicell_2d c;
 	double area=0;
 	c_loop_all_2d vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) area+=c.area();while(vl.inc());
@@ -479,18 +479,18 @@ void container_base_2d::draw_domain_pov(FILE *fp) {
 
 
 /** The wall_list constructor sets up an array of pointers to wall classes. */
-wall_list_2d::wall_list() : walls(new wall_2d*[init_wall_size]), wep(walls), wel(walls+init_wall_size),
+wall_list_2d::wall_list_2d() : walls(new wall_2d*[init_wall_size]), wep(walls), wel(walls+init_wall_size),
 	current_wall_size(init_wall_size) {}
 
 /** The wall_list destructor frees the array of pointers to the wall classes.
  */
-wall_list_2d::~wall_list() {
+wall_list_2d::~wall_list_2d() {
 	delete [] walls;
 }
 
 /** Adds all of the walls on another wall_list to this class.
  * \param[in] wl a reference to the wall class. */
-void wall_list_2d::add_wall(wall_list &wl) {
+void wall_list_2d::add_wall(wall_list_2d &wl) {
 	for(wall_2d **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
 }
 
