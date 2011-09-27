@@ -16,8 +16,8 @@
 #include <vector>
 using namespace std;
 
-#include "config_2d.hh"
-#include "common_2d.hh"
+#include "config.hh"
+#include "common.hh"
 #include "v_base_2d.hh"
 #include "cell_2d.hh"
 #include "c_loops_2d.hh"
@@ -38,10 +38,10 @@ class wall_2d {
 		virtual bool point_inside(double x,double y) = 0;
 		/** A pure virtual function for cutting a cell without
 		 * neighbor-tracking with a wall. */
-		virtual bool cut_cell(voronoicell &c,double x,double y) = 0;
+		virtual bool cut_cell(voronoicell_2d &c,double x,double y) = 0;
 		/** A pure virtual function for cutting a cell with
 		 * neighbor-tracking enabled with a wall. */
-		virtual bool cut_cell(voronoicell_neighbor &c,double x,double y) = 0;
+		virtual bool cut_cell(voronoicell_neighbor_2d &c,double x,double y) = 0;
 };
 
 /** \brief A class for storing a list of pointers to walls.
@@ -85,7 +85,7 @@ class wall_list_2d {
 		 * \return True if the cell still exists, false if the cell is
 		 * deleted. */
 		template<class c_class_2d>
-		bool apply_walls(c_class &c,double x,double y) {
+		bool apply_walls(c_class_2d &c,double x,double y) {
 			for(wall_2d **wp=walls;wp<wep;wp++) if(!((*wp)->cut_cell(c,x,y))) return false;
 			return true;
 		}
@@ -167,7 +167,7 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
 		 * space is equally divided in either direction from the
 		 * particle's initial position. Plane cuts made by any walls
 		 * that have been added are then applied to the cell.
-		 * \param[in,out] c a reference to a voronoicell object.
+		 * \param[in,out] c a reference to a voronoicell_2d object.
 		 * \param[in] ij the block that the particle is within.
 		 * \param[in] q the index of the particle within its block.
 		 * \param[in] (ci,cj) the coordinates of the block in the
@@ -179,16 +179,16 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
 		 *		    compute_cell routine.
 		 * \return False if the plane cuts applied by walls completely
 		 * removed the cell, true otherwise. */
-		template<class v_cell_2d_2d>
-		inline bool initialize_voronoicell(v_cell_2d_2d &c,int ij,int q,int ci,int cj,
+		template<class v_cell_2d>
+		inline bool initialize_voronoicell(v_cell_2d &c,int ij,int q,int ci,int cj,
 				int &i,int &j,double &x,double &y,int &disp) {
-			double x1,x2,y1,y2,*pp=p[ijk]+ps*q;
+			double x1,x2,y1,y2,*pp=p[ij]+ps*q;
 			x=*(pp++);y=*(pp++);
 			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
 			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
 			c.init(x1,x2,y1,y2);
 			if(!apply_walls(c,x,y)) return false;
-			disp=ijk-i-nx*j;
+			disp=ij-i-nx*j;
 			return true;
 		}
 		/** Initializes parameters for a find_voronoi_cell call within
@@ -203,7 +203,7 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
 		inline void initialize_search(int ci,int cj,int ij,int &i,int &j,int &disp) {
 			i=xperiodic?nx:ci;
 			j=yperiodic?ny:cj;
-			disp=ijk-i-nx*j;
+			disp=ij-i-nx*j;
 		}
 		/** Returns the position of a particle currently being computed
 		 * relative to the computational block that it is within. It is
@@ -314,8 +314,8 @@ class container_2d : public container_base_2d {
 		void draw_particles(c_loop_2d &vl,FILE *fp) {
 			double *pp;
 			if(vl.start()) do {
-				pp=p[vl.ijk]+2*vl.q;
-				fprintf(fp,"%d %g %g\n",id[vl.ijk][vl.q],*pp,pp[1]);
+				pp=p[vl.ij]+2*vl.q;
+				fprintf(fp,"%d %g %g\n",id[vl.ij][vl.q],*pp,pp[1]);
 			} while(vl.inc());
 		}
 		/** Dumps all of the particle IDs and positions to a file.
@@ -338,9 +338,9 @@ class container_2d : public container_base_2d {
 		void draw_particles_pov(c_loop_2d &vl,FILE *fp) {
 			double *pp;
 			if(vl.start()) do {
-				pp=p[vl.ijk]+2*vl.q;
+				pp=p[vl.ij]+2*vl.q;
 				fprintf(fp,"// id %d\nsphere{<%g,%g,0>,s}\n",
-						id[vl.ijk][vl.q],*pp,pp[1]);
+						id[vl.ij][vl.q],*pp,pp[1]);
 			} while(vl.inc());
 		}
 		/** Dumps all particle positions in POV-Ray format.
@@ -362,7 +362,7 @@ class container_2d : public container_base_2d {
 		 * \param[in] fp a file handle to write to. */
 		template<class c_loop_2d>
 		void draw_cells_gnuplot(c_loop_2d &vl,FILE *fp) {
-			voronoicell c;double *pp;
+			voronoicell_2d c;double *pp;
 			if(vl.start()) do if(compute_cell(c,vl)) {
 				pp=p[vl.ij]+ps*vl.q;
 				c.draw_gnuplot(*pp,pp[1],fp);
@@ -389,7 +389,7 @@ class container_2d : public container_base_2d {
 		 * \param[in] fp a file handle to write to. */
 		template<class c_loop_2d>
 		void draw_cells_pov(c_loop_2d &vl,FILE *fp) {
-			voronoicell c;double *pp;
+			voronoicell_2d c;double *pp;
 			if(vl.start()) do if(compute_cell(c,vl)) {
 				fprintf(fp,"// cell %d\n",id[vl.ij][vl.q]);
 				pp=p[vl.ij]+ps*vl.q;
@@ -575,7 +575,7 @@ class container_poly_2d : public container_base_2d {
 		 * \param[in] fp a file handle to write to. */
 		template<class c_loop_2d>
 		void draw_cells_gnuplot(c_loop_2d &vl,FILE *fp) {
-			voronoicell c;double *pp;
+			voronoicell_2d c;double *pp;
 			if(vl.start()) do if(compute_cell(c,vl)) {
 				pp=p[vl.ij]+ps*vl.q;
 				c.draw_gnuplot(*pp,pp[1],fp);
@@ -602,7 +602,7 @@ class container_poly_2d : public container_base_2d {
 		 * \param[in] fp a file handle to write to. */
 		template<class c_loop_2d>
 		void draw_cells_pov(c_loop_2d &vl,FILE *fp) {
-			voronoicell c;double *pp;
+			voronoicell_2d c;double *pp;
 			if(vl.start()) do if(compute_cell(c,vl)) {
 				fprintf(fp,"// cell %d\n",id[vl.ij][vl.q]);
 				pp=p[vl.ij]+ps*vl.q;

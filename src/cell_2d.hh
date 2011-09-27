@@ -32,8 +32,8 @@ class voronoicell_base_2d {
 		/** An array with size 2*current_vertices for holding
 		 * the positions of the vertices. */
 		double *pts;
-		voronoicell_2d();
-		~voronoicell_2d();
+		voronoicell_base_2d();
+		~voronoicell_base_2d();
 		void init_base(double xmin,double xmax,double ymin,double ymax);
 		void draw_gnuplot(double x,double y,FILE *fp=stdout);
 		/** Outputs the edges of the Voronoi cell in gnuplot format to
@@ -54,7 +54,7 @@ class voronoicell_base_2d {
 		 * \param[in] filename the file to write to. */
 		inline void draw_pov(double x,double y,const char *filename) {
 			FILE *fp=safe_fopen(filename,"w");
-			draw_pov(x,y,z,fp);
+			draw_pov(x,y,fp);
 			fclose(fp);
 		}
 		void output_custom(const char *format,int i,double x,double y,double r,FILE *fp=stdout);
@@ -78,19 +78,19 @@ class voronoicell_base_2d {
 			fclose(fp);
 		}
 		template<class vc_class>
-		bool plane(vc_class &vc,double x,double y,double rs);
+		bool nplane(vc_class &vc,double x,double y,double rs,int p_id);
 		double max_radius_squared();
 		double perimeter();
 		double area();
 		void vertices(vector<double> &v);
 		void output_vertices(FILE *fp=stdout);
-		void vertices(double x,double y,double z,vector<double> &v);
-		void output_vertices(double x,double y,double z,FILE *fp=stdout);		
+		void vertices(double x,double y,vector<double> &v);
+		void output_vertices(double x,double y,FILE *fp=stdout);		
 		void centroid(double &cx,double &cy);
 		virtual void neighbors(vector<int> &v) {v.clear();}
 	private:
 		template<class vc_class>
-		void add_memory_vertices();
+		void add_memory_vertices(vc_class &vc);
 		void add_memory_ds(int *&stackp);
 		/** Computes the distance of a Voronoi cell vertex to a plane.
 		 * \param[in] (x,y) the normal vector to the plane.
@@ -107,7 +107,7 @@ class voronoicell_base_2d {
 		int *stacke;
 };
 
-class voronoicell_2d : public voronoicell_2d {
+class voronoicell_2d : public voronoicell_base_2d {
 	public:
 		using voronoicell_base_2d::nplane;
 		inline bool nplane(double x,double y,double rs,int p_id) {
@@ -128,17 +128,17 @@ class voronoicell_2d : public voronoicell_2d {
 			init_base(xmin,xmax,ymin,ymax);
 		}
 	private:
+		inline void n_add_memory_vertices() {}
 		inline void n_copy(int a,int b) {}
 		inline void n_set(int a,int id) {}
-		inline void n_add_memory_vertices() {}
 		friend class voronoicell_base_2d;
 };
 
-class voronoicell_neighbor_2d : public voronoicell_2d {
+class voronoicell_neighbor_2d : public voronoicell_base_2d {
 	public:
 		using voronoicell_base_2d::nplane;
 		int *ne;
-		voronoicell_neighbor_2d() : ne(new double[init_vertices]) {}
+		voronoicell_neighbor_2d() : ne(new int[init_vertices]) {}
 		~voronoicell_neighbor_2d() {delete [] ne;}
 		inline bool nplane(double x,double y,double rs,int p_id) {
 			return nplane(*this,x,y,rs,p_id);
@@ -157,9 +157,9 @@ class voronoicell_neighbor_2d : public voronoicell_2d {
 		void init(double xmin,double xmax,double ymin,double ymax);
 		virtual void neighbors(vector<int> &v);
 	private:
+		inline void n_add_memory_vertices();
 		inline void n_copy(int a,int b) {ne[a]=ne[b];}
 		inline void n_set(int a,int id) {ne[a]=id;}
-		inline void n_add_memory_vertices();
 		friend class voronoicell_base_2d;
 };
 

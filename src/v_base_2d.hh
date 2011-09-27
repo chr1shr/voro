@@ -47,8 +47,8 @@ class voro_base_2d {
 		/** The pre-computed block worklists. */
 		static const unsigned int wl[wl_seq_length_2d*wl_hgridsq_2d];
 		bool contains_neighbor(const char* format);
-		voro_base(int nx_,int ny_,double boxx_,double boxy_);
-		~voro_base() {delete [] mrad;}
+		voro_base_2d(int nx_,int ny_,double boxx_,double boxy_);
+		~voro_base_2d() {delete [] mrad;}
 	protected:
 		/** A custom int function that returns consistent stepping
 		 * for negative numbers, so that (-1.5, -0.5, 0.5, 1.5) maps

@@ -4,14 +4,14 @@
 #include "cell_2d.hh"
 
 /** Constructs a 2D Voronoi cell and sets up the initial memory. */
-voronoicell_base_2d::voronoicell_2d() :
+voronoicell_base_2d::voronoicell_base_2d() :
 	current_vertices(init_vertices), current_delete_size(init_delete_size),
 	ed(new int[2*current_vertices]), pts(new double[2*current_vertices]),
 	ds(new int[current_delete_size]), stacke(ds+current_delete_size) {
 }
 
 /** The voronoicell_2d destructor deallocates all of the dynamic memory. */
-voronoicell_base_2d::~voronoicell_2d() {
+voronoicell_base_2d::~voronoicell_base_2d() {
 	delete [] ds;
 	delete [] pts;
 	delete [] ed;
@@ -53,10 +53,10 @@ void voronoicell_base_2d::draw_pov(double x,double y,FILE *fp) {
 	int k=0;
 	do {
 		fprintf(fp,"sphere{<%g,%g,0>,r}\ncylinder{<%g,%g,0>,<"
-			,x+0.5*pts[2*k],y+0.5*pts[2*k+1],z
-			,x+0.5*pts[2*k],y+0.5*pts[2*k+1],z);
+			,x+0.5*pts[2*k],y+0.5*pts[2*k+1]
+			,x+0.5*pts[2*k],y+0.5*pts[2*k+1]);
 		k=ed[2*k];
-		fprintf(fp,"%g,%g,0>,r}\n",x+0.5*pts[2*k],y+0.5*pts[2*k+1],z);
+		fprintf(fp,"%g,%g,0>,r}\n",x+0.5*pts[2*k],y+0.5*pts[2*k+1]);
 	} while (k!=0);
 }
 
@@ -82,7 +82,7 @@ double voronoicell_base_2d::max_radius_squared() {
  * \param[in] rsq the distance along this vector of the plane.
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class vc_class>
-bool voronoicell_base_2d::plane(vc_class &vc,double x,double y,double rsq,int p_id) {
+bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p_id) {
 	int cp,lp,up=0,up2,up3,*stackp(ds);
 	double fac,l,u,u2,u3;
 
@@ -129,18 +129,19 @@ bool voronoicell_base_2d::plane(vc_class &vc,double x,double y,double rsq,int p_
 	// cutting plane then do nothing. Otherwise, introduce a new vertex.
 	if(u2>-tolerance) cp=up2;
 	else {
-		if(p==current_vertices) add_memory_vertices();
+		if(p==current_vertices) add_memory_vertices(vc);
 		lp=ed[2*up2+1];
 		fac=1/(u2-l);
 		pts[2*p]=(pts[2*lp]*u2-pts[2*up2]*l)*fac;
 		pts[2*p+1]=(pts[2*lp+1]*u2-pts[2*up2+1]*l)*fac;
-		n_copy(p,lp);
+		vc.n_copy(p,lp);
 		ed[2*p]=up2;
 		ed[2*up2+1]=p;
 		cp=p++;
 	}
 
-	n_set(cp,p_id);
+	// Set neighbor information for the newly created edge
+	vc.n_set(cp,p_id);
 
 	// Search clockwise for additional points that need to be deleted
 	l=u;up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
@@ -160,7 +161,7 @@ bool voronoicell_base_2d::plane(vc_class &vc,double x,double y,double rsq,int p_
 		ed[2*cp+1]=up3;
 		ed[2*up3]=cp;
 	} else {
-		if(p==current_vertices) add_memory_vertices();
+		if(p==current_vertices) add_memory_vertices(vc);
 		lp=ed[2*up3];
 		fac=1/(u3-l);
 		pts[2*p]=(pts[2*lp]*u3-pts[2*up3]*l)*fac;
@@ -183,7 +184,7 @@ bool voronoicell_base_2d::plane(vc_class &vc,double x,double y,double rsq,int p_
 			ed[2*ed[2*p+1]]=up;
 			pts[2*up]=pts[2*p];
 			pts[2*up+1]=pts[2*p+1];
-			n_copy(up,p);
+			vc.n_copy(up,p);
 			ed[2*up]=ed[2*p];
 			ed[2*up+1]=ed[2*p+1];
 		} else p++;
@@ -193,7 +194,7 @@ bool voronoicell_base_2d::plane(vc_class &vc,double x,double y,double rsq,int p_
 
 /** Returns a vector of the vertex vectors using the local coordinate system.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::vertices(vector<double> &v) {
+void voronoicell_base_2d::vertices(vector<double> &v) {
 	v.resize(2*p);
 	double *ptsp=pts;
 	for(int i=0;i<2*p;i+=2) {
@@ -204,7 +205,7 @@ void voronoicell_base::vertices(vector<double> &v) {
 
 /** Outputs the vertex vectors using the local coordinate system.
  * \param[out] fp the file handle to write to. */
-void voronoicell_base::output_vertices(FILE *fp) {
+void voronoicell_base_2d::output_vertices(FILE *fp) {
 	if(p>0) {
 		fprintf(fp,"(%g,%g)",*pts*0.5,pts[1]*0.5);
 		for(double *ptsp=pts+2;ptsp<pts+2*p;ptsp+=2) fprintf(fp," (%g,%g)",*ptsp*0.5,ptsp[1]*0.5);
@@ -215,7 +216,7 @@ void voronoicell_base::output_vertices(FILE *fp) {
  * \param[out] v the vector to store the results in.
  * \param[in] (x,y,z) the position vector of the particle in the global
  *                    coordinate system. */
-void voronoicell_base::vertices(double x,double y,vector<double> &v) {
+void voronoicell_base_2d::vertices(double x,double y,vector<double> &v) {
 	v.resize(2*p);
 	double *ptsp=pts;
 	for(int i=0;i<2*p;i+=2) {
@@ -228,10 +229,10 @@ void voronoicell_base::vertices(double x,double y,vector<double> &v) {
  * \param[out] fp the file handle to write to.
  * \param[in] (x,y,z) the position vector of the particle in the global
  *                    coordinate system. */
-void voronoicell_base::output_vertices(double x,double y,FILE *fp) {
+void voronoicell_base_2d::output_vertices(double x,double y,FILE *fp) {
 	if(p>0) {
-		fprintf(fp,"(%g,%g,%g)",x+*pts*0.5,y+pts[1]*0.5);
-		for(double *ptsp=pts+2;ptsp<pts+2*p;ptsp+=2) fprintf(fp," (%g,%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5);
+		fprintf(fp,"(%g,%g)",x+*pts*0.5,y+pts[1]*0.5);
+		for(double *ptsp=pts+2;ptsp<pts+2*p;ptsp+=2) fprintf(fp," (%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5);
 	}
 }
 
@@ -320,16 +321,16 @@ void voronoicell_base_2d::output_custom(const char *format,int i,double x,double
 				// Vertex-related output
 				case 'w': fprintf(fp,"%d",p);break;
 				case 'p': output_vertices(fp);break;
-				case 'P': output_vertices(x,y,z,fp);break;
+				case 'P': output_vertices(x,y,fp);break;
 				case 'm': fprintf(fp,"%g",0.25*max_radius_squared());break;
 
 				// Edge-related output
 				case 'g': fprintf(fp,"%d",p);break;
-				case 'p': fprintf(fp,"%g",perimeter());break;
-				case 'e': edge_length(vd);voro_print_vector(vd,fp);break;
-				case 'l': normals(vd);
-					  voro_print_positions_2d(vd,fp);
-					  break;
+				case 'E': fprintf(fp,"%g",perimeter());break;
+				//case 'e': edge_length(vd);voro_print_vector(vd,fp);break;
+				//case 'l': normals(vd);
+				//	  voro_print_positions_2d(vd,fp);
+				//	  break;
 				case 'n': neighbors(vi);
 					  voro_print_vector(vi,fp);
 					  break;
@@ -363,14 +364,14 @@ void voronoicell_base_2d::output_custom(const char *format,int i,double x,double
 /** Doubles the storage for the vertices, by reallocating the pts and ed
  * arrays. If the allocation exceeds the absolute maximum set in max_vertices,
  * then the routine exits with a fatal error. */
-template<vc_class>
+template<class vc_class>
 void voronoicell_base_2d::add_memory_vertices(vc_class &vc) {
 	double *ppe(pts+2*current_vertices);
 	int *ede(ed+2*current_vertices);
 
 	// Double the memory allocation and check it is within range
 	current_vertices<<=1;
-	if(current_vertices>max_vertices) voropp_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	if(current_vertices>max_vertices) voro_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Vertex memory scaled up to %d\n",current_vertices);
 #endif
@@ -389,13 +390,13 @@ void voronoicell_base_2d::add_memory_vertices(vc_class &vc) {
 	vc.n_add_memory_vertices();
 }
 
-inline void voronoicell_neighbor_2d::add_memory_vertices() {
+inline void voronoicell_neighbor_2d::n_add_memory_vertices() {
 	int *nne=new int[current_vertices],*nee=ne+(current_vertices>>1),*nep=ne,*nnep=nne;
 	while(nep<nee) *(nnep++)=*(nep++);
 	delete [] ne;ne=nne;
 }
 
-virtual void voronoicell_neighbor_2d::vertices(vector<int> &v) {
+void voronoicell_neighbor_2d::neighbors(vector<int> &v) {
 	v.resize(p);
 	for(int i=0;i<p;i++) v[i]=ne[i];
 }
@@ -411,7 +412,7 @@ void voronoicell_neighbor_2d::init(double xmin,double xmax,double ymin,double ym
  * \param[in] stackp a reference to the current stack pointer. */
 void voronoicell_base_2d::add_memory_ds(int *&stackp) {
 	current_delete_size<<=1;
-	if(current_delete_size>max_delete_size) voropp_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+	if(current_delete_size>max_delete_size) voro_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Delete stack 1 memory scaled up to %d\n",current_delete_size);
 #endif
@@ -420,3 +421,9 @@ void voronoicell_base_2d::add_memory_ds(int *&stackp) {
 	delete [] ds;ds=dsn;stackp=dsnp;
 	stacke=ds+current_delete_size;
 }
+
+// Explicit instantiation
+template bool voronoicell_base_2d::nplane(voronoicell_2d&,double,double,double,int);
+template bool voronoicell_base_2d::nplane(voronoicell_neighbor_2d&,double,double,double,int);
+template void voronoicell_base_2d::add_memory_vertices(voronoicell_2d&);
+template void voronoicell_base_2d::add_memory_vertices(voronoicell_neighbor_2d&);

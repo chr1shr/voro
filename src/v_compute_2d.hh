@@ -16,7 +16,7 @@
 #include <vector>
 using namespace std;
 
-#include "config_2d.hh"
+#include "config.hh"
 #include "worklist_2d.hh"
 #include "cell_2d.hh"
 
@@ -40,7 +40,7 @@ struct particle_record_2d {
 
 /** \brief Template for carrying out Voronoi cell computations. */
 template <class c_class_2d>
-class voro_compute {
+class voro_compute_2d {
 	public:
 		/** A reference to the container class on which to carry out*/
 		c_class_2d &con;
@@ -77,10 +77,10 @@ class voro_compute {
 		/** An array holding the number of particles within each
 		 * computational box of the container. */
 		int *co;
-		voro_compute(c_class &con_,int hx_,int hy_);
+		voro_compute_2d(c_class_2d &con_,int hx_,int hy_);
 		/** The class destructor frees the dynamically allocated memory
 		 * for the mask and queue. */
-		~voro_compute() {
+		~voro_compute_2d() {
 			delete [] qu;
 			delete [] mask;
 		}

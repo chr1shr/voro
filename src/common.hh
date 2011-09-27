@@ -22,7 +22,7 @@ using namespace std;
  * Function for printing fatal error messages and exiting.
  * \param[in] p a pointer to the message to print.
  * \param[in] status the status code to return with. */
-inline void voropp_fatal_error(const char *p,int status) {
+inline void voro_fatal_error(const char *p,int status) {
 	fprintf(stderr,"voro++: %s\n",p);
 	exit(status);
 }
@@ -32,7 +32,7 @@ inline void voropp_fatal_error(const char *p,int status) {
  * Prints a vector of positions as bracketed triplets.
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
-inline void voropp_print_positions(vector<double> &v,FILE *fp=stdout) {
+inline void voro_print_positions(vector<double> &v,FILE *fp=stdout) {
 	if(v.size()>0) {
 		fprintf(fp,"(%g,%g,%g)",v[0],v[1],v[2]);
 		for(int k=3;(unsigned int) k<v.size();k+=3) {
@@ -48,7 +48,7 @@ inline void voropp_print_positions(vector<double> &v,FILE *fp=stdout) {
  * \param[in] filename the file to open.
  * \param[in] mode the cstdio fopen mode to use.
  * \return The file handle. */
-inline FILE* voropp_safe_fopen(const char *filename,const char *mode) {
+inline FILE* safe_fopen(const char *filename,const char *mode) {
 	FILE *fp(fopen(filename,mode));
 	if(fp==NULL) {
 		fprintf(stderr,"voro++: Unable to open file '%s'\n",filename);
@@ -57,7 +57,7 @@ inline FILE* voropp_safe_fopen(const char *filename,const char *mode) {
 	return fp;
 }
 
-void voropp_print_vector(vector<int> &v,FILE *fp=stdout);
-void voropp_print_vector(vector<double> &v,FILE *fp=stdout);
+void voro_print_vector(vector<int> &v,FILE *fp=stdout);
+void voro_print_vector(vector<double> &v,FILE *fp=stdout);
 
 #endif

@@ -16,7 +16,7 @@
 #include <vector>
 using namespace std;
 
-#include "config_2d.hh"
+#include "config.hh"
 
 namespace voro {
 
@@ -26,6 +26,52 @@ enum c_loop_subset_mode_2d {
 	circle,
 	rectangle,
 	no_check
+};
+
+/** \brief A class for storing ordering information when particles are added to
+ * a container.
+ *
+ * When particles are added to a container class, they are sorted into an
+ * internal computational grid of blocks. The particle_order class provides a
+ * mechanism for remembering which block particles were sorted into. The import
+ * and put routines in the container class have variants that also take a
+ * particle_order class. Each time they are called, they will store the block
+ * that the particle was sorted into, plus the position of the particle within
+ * the block. The particle_order class can used by the c_loop_order class to
+ * specifically loop over the particles that have their information stored
+ * within it. */
+class particle_order {
+	public:
+		/** A pointer to the array holding the ordering. */
+		int *o;
+		/** A pointer to the next position in the ordering array in
+		 * which to store an entry. */
+		int *op;
+		/** The current memory allocation for the class, set to the
+		 * number of entries which can be stored. */
+		int size;
+		/** The particle_order constructor allocates memory to store the
+		 * ordering information.
+		 * \param[in] init_size the initial amount of memory to
+		 *                      allocate. */
+		particle_order(int init_size=init_ordering_size)
+			: o(new int[init_size<<1]),op(o),size(init_size) {}
+		/** The particle_order destructor frees the dynamically allocated
+		 * memory used to store the ordering information. */
+		~particle_order() {
+			delete [] o;
+		}
+		/** Adds a record to the order, corresponding to the memory
+		 * address of where a particle was placed into the container.
+		 * \param[in] ijk the block into which the particle was placed.
+		 * \param[in] q the position within the block where the
+		 * 		particle was placed. */
+		inline void add(int ijk,int q) {
+			if(op==o+size) add_ordering_memory();
+			*(op++)=ijk;*(op++)=q;
+		}
+	private:
+		void add_ordering_memory();
 };
 
 /** \brief Base class for looping over particles in a container.
@@ -73,9 +119,9 @@ class c_loop_base_2d {
 		 * base container class.
 		 * \param[in] con the container class to use. */
 		template<class c_class_2d>
-		c_loop_base(c_class_2d &con) : nx(con.nx), ny(con.ny), nxy(con.nxy),
-					       ps(con.ps), p(con.p), id(con.id),
-					       co(con.co) {}
+		c_loop_base_2d(c_class_2d &con) : nx(con.nx), ny(con.ny), nxy(con.nxy),
+						  ps(con.ps), p(con.p), id(con.id),
+						  co(con.co) {}
 		/** Returns the position vector of the particle currently being
 		 * considered by the loop.
 		 * \param[out] (x,y) the position vector of the particle. */
@@ -98,13 +144,13 @@ class c_loop_base_2d {
 		}
 		/** Returns the x position of the particle currently being
 		 * considered by the loop. */
-		inline double x() {return p[ijk][ps*q];}
+		inline double x() {return p[ij][ps*q];}
 		/** Returns the y position of the particle currently being
 		 * considered by the loop. */
-		inline double y() {return p[ijk][ps*q+1];}
+		inline double y() {return p[ij][ps*q+1];}
 		/** Returns the ID of the particle currently being considered
 		 * by the loop. */
-		inline int pid() {return id[ijk][q];}
+		inline int pid() {return id[ij][q];}
 };
 
 /** \brief Class for looping over all of the particles in a container.

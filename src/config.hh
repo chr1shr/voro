@@ -9,6 +9,8 @@
 const int init_vertices=256;
 /** The initial size for the delete stack. */
 const int init_delete_size=256;
+/** The default initial size for the ordering class. */
+const int init_ordering_size=4096;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
@@ -33,6 +35,9 @@ const int max_particle_memory=16777216;
 
 /** A radius to use as a placeholder when no other information is available. */
 const double default_radius=0.5;
+
+/** A radius to use as a placeholder when no other information is available. */
+const double default_radius_2d=0.5;
 
 /** If a point is within this distance of a cutting plane, then the code
  * assumes that point exactly lies on the plane. */
