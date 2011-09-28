@@ -9,12 +9,14 @@
 
 #include "common.hh"
 
+namespace voro {
+
 /** \brief Prints a vector of integers.
  *
  * Prints a vector of integers.
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
-void voropp_print_vector(vector<int> &v,FILE *fp) {
+void voro_print_vector(vector<int> &v,FILE *fp) {
 	int k(0),s(v.size());
 	while(k+4<s) {
 		fprintf(fp,"%d %d %d %d ",v[k],v[k+1],v[k+2],v[k+3]);
@@ -34,7 +36,7 @@ void voropp_print_vector(vector<int> &v,FILE *fp) {
  * Prints a vector of doubles.
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
-void voropp_print_vector(vector<double> &v,FILE *fp) {
+void voro_print_vector(vector<double> &v,FILE *fp) {
 	int k(0),s(v.size());
 	while(k+4<s) {
 		fprintf(fp,"%g %g %g %g ",v[k],v[k+1],v[k+2],v[k+3]);
@@ -47,4 +49,6 @@ void voropp_print_vector(vector<double> &v,FILE *fp) {
 		if(k+2==s) fprintf(fp,"%g %g",v[k],v[k+1]);
 		else fprintf(fp,"%g",v[k]);
 	}
+}
+
 }

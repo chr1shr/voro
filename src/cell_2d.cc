@@ -3,6 +3,8 @@
 
 #include "cell_2d.hh"
 
+namespace voro {
+
 /** Constructs a 2D Voronoi cell and sets up the initial memory. */
 voronoicell_base_2d::voronoicell_base_2d() :
 	current_vertices(init_vertices), current_delete_size(init_delete_size),
@@ -288,6 +290,45 @@ double voronoicell_base_2d::perimeter() {
 	return 0.5*perim;
 }
 
+/** Calculates the perimeter of the Voronoi cell.
+ * \return A floating point number holding the calculated distance. */
+void voronoicell_base_2d::edge_lengths(vector<double> &vd) {
+	if(p==0) {vd.clear();return;}
+	vd.resize(p);
+	int i=0,k=0,l;double dx,dy;
+	do {
+		l=ed[2*k];
+		dx=pts[2*k]-pts[2*l];
+		dy=pts[2*k+1]-pts[2*l+1];
+		vd[i++]=sqrt(dx*dx+dy*dy);
+		k=l;
+	} while (k!=0);
+}
+
+/** Calculates the perimeter of the Voronoi cell.
+ * \return A floating point number holding the calculated distance. */
+void voronoicell_base_2d::normals(vector<double> &vd) {
+	if(p==0) {vd.clear();return;}
+	vd.resize(2*p);
+	int i=0,k=0,l;double dx,dy,nor;
+	do {
+		l=ed[2*k];
+		dx=pts[2*k]-pts[2*l];
+		dy=pts[2*k+1]-pts[2*l+1];
+		nor=dx*dx+dy*dy;
+		if(nor>tolerance_sq) {
+			nor=1/sqrt(nor);
+			vd[i++]=dy*nor;
+			vd[i++]=-dx*nor;
+		} else {
+			vd[i++]=0;
+			vd[i++]=0;
+		}
+		k=l;
+	} while (k!=0);
+}
+
+
 /** Calculates the area of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
 double voronoicell_base_2d::area() {
@@ -364,10 +405,10 @@ void voronoicell_base_2d::output_custom(const char *format,int i,double x,double
 				// Edge-related output
 				case 'g': fprintf(fp,"%d",p);break;
 				case 'E': fprintf(fp,"%g",perimeter());break;
-				//case 'e': edge_length(vd);voro_print_vector(vd,fp);break;
-				//case 'l': normals(vd);
-				//	  voro_print_positions_2d(vd,fp);
-				//	  break;
+				case 'e': edge_lengths(vd);voro_print_vector(vd,fp);break;
+				case 'l': normals(vd);
+					  voro_print_positions_2d(vd,fp);
+					  break;
 				case 'n': neighbors(vi);
 					  voro_print_vector(vi,fp);
 					  break;
@@ -464,3 +505,5 @@ template bool voronoicell_base_2d::nplane(voronoicell_2d&,double,double,double,i
 template bool voronoicell_base_2d::nplane(voronoicell_neighbor_2d&,double,double,double,int);
 template void voronoicell_base_2d::add_memory_vertices(voronoicell_2d&);
 template void voronoicell_base_2d::add_memory_vertices(voronoicell_neighbor_2d&);
+
+}

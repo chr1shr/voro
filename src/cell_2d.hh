@@ -13,6 +13,8 @@ using namespace std;
 #include "common.hh"
 #include "config.hh"
 
+namespace voro {
+
 /** \brief A class encapsulating all the routines for storing and calculating a
  * single Voronoi cell. */
 class voronoicell_base_2d {
@@ -89,7 +91,9 @@ class voronoicell_base_2d {
 		void vertices(vector<double> &v);
 		void output_vertices(FILE *fp=stdout);
 		void vertices(double x,double y,vector<double> &v);
-		void output_vertices(double x,double y,FILE *fp=stdout);		
+		void output_vertices(double x,double y,FILE *fp=stdout);
+		void edge_lengths(vector<double> &vd);
+		void normals(vector<double> &vd);	
 		void centroid(double &cx,double &cy);
 		virtual void neighbors(vector<int> &v) {v.clear();}
 	private:
@@ -166,5 +170,7 @@ class voronoicell_neighbor_2d : public voronoicell_base_2d {
 		inline void n_set(int a,int id) {ne[a]=id;}
 		friend class voronoicell_base_2d;
 };
+
+}
 
 #endif

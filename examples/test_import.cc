@@ -1,4 +1,5 @@
 #include "voro++_2d.hh"
+using namespace voro;
 
 int main() {
 

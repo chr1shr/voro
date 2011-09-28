@@ -17,6 +17,8 @@ using namespace std;
 
 #include "config.hh"
 
+namespace voro {
+
 /** \brief Function for printing fatal error messages and exiting.
  *
  * Function for printing fatal error messages and exiting.
@@ -25,6 +27,20 @@ using namespace std;
 inline void voro_fatal_error(const char *p,int status) {
 	fprintf(stderr,"voro++: %s\n",p);
 	exit(status);
+}
+
+/** \brief Prints a vector of 2D positions.
+ *
+ * Prints a vector of positions as bracketed triplets.
+ * \param[in] v the vector to print.
+ * \param[in] fp the file stream to print to. */
+inline void voro_print_positions_2d(vector<double> &v,FILE *fp=stdout) {
+	if(v.size()>0) {
+		fprintf(fp,"(%g,%g)",v[0],v[1]);
+		for(int k=2;(unsigned int) k<v.size();k+=2) {
+			fprintf(fp," (%g,%g)",v[k],v[k+1]);
+		}
+	}
 }
 
 /** \brief Prints a vector of positions.
@@ -59,5 +75,7 @@ inline FILE* safe_fopen(const char *filename,const char *mode) {
 
 void voro_print_vector(vector<int> &v,FILE *fp=stdout);
 void voro_print_vector(vector<double> &v,FILE *fp=stdout);
+
+}
 
 #endif

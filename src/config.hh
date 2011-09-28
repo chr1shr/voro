@@ -47,6 +47,8 @@ const double default_radius_2d=0.5;
  * assumes that point exactly lies on the plane. */
 const double tolerance=1e-10;
 
+const double tolerance_sq=1e-20;
+
 /** If this is set to 1, then the code reports any instances of particles being
  * put outside of the container geometry. */
 #define VOROPP_REPORT_OUT_OF_BOUNDS 0
