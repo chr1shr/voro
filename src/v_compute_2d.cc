@@ -578,17 +578,6 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		add_to_mask(ei,ej,qu_e);
 	}
 
-	{
-		int ii,jj;
-		for(jj=hy-1;jj>=0;jj--) {
-			for(ii=0;ii<hx;ii++) {
-				if(mask[ii+hx*jj]==mv) printf("*");
-				else printf(".");
-			}
-			puts("");
-		}
-	}
-
 	return true;
 }
 
