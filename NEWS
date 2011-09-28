@@ -1,6 +1,7 @@
 Version 0.4.3 (...)
 ===================
 * Removed spurious Gnuplot output line from torus.cc example
+* More changes for better Visual C++ compatibility
 
 Version 0.4.2 (September 23rd 2011)
 ===================================

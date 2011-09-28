@@ -19,7 +19,7 @@ int main() {
 	double x,y,z,r,rmin,rmax;
 	double theta,phi,phi_step;
 	voronoicell v;
-	FILE *fp(safe_fopen("cell_cut_region.gnu","w"));
+	FILE *fp=safe_fopen("cell_cut_region.gnu","w");
 
 	// Initialize the Voronoi cell to be an octahedron and make a single
 	// plane cut to add some variation
