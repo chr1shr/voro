@@ -27,7 +27,7 @@ $ls=63;
 $dis=8;
 
 # Constants used mask indexing
-$d=$dis*(2*$d+1);$dd=$d*$d;$d0=(1+$d+$dd)*$dis;
+$d=2*$dis+1;$dd=$d*$d;$d0=(1+$d+$dd)*$dis;
 
 use Math::Trig;
 
