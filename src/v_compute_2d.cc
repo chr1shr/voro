@@ -18,7 +18,7 @@ namespace voro {
  * \param[in] con_ a reference to the container class to use.
  * \param[in] (hx_,hy_) the size of the mask to use. */
 template<class c_class_2d>
-voro_compute_2d<c_class_2d>::voro_compute_2d(c_class &con_,int hx_,int hy_) :
+voro_compute_2d<c_class_2d>::voro_compute_2d(c_class_2d &con_,int hx_,int hy_) :
 	con(con_), boxx(con_.boxx), boxy(con_.boxy), xsp(con_.xsp),
 	ysp(con_.ysp), hx(hx_), hy(hy_), hxy(hx_*hy_), ps(con_.ps),
 	id(con_.id), p(con_.p), co(con_.co), bxsq(boxx*boxx+boxy*boxy),
@@ -49,7 +49,7 @@ inline void voro_compute_2d<c_class_2d>::scan_all(int ij,double x,double y,int d
 		rs=con.r_current_sub(x1*x1+y1*y1,ij,l);
 		if(rs<mrs) {mrs=rs;w.l=l;in_block=true;}
 	}
-	if(in_block) {w.ij=ij;w.di=di;w.dj=dj}
+	if(in_block) {w.ij=ij;w.di=di;w.dj=dj;}
 }
 
 /** Finds the Voronoi cell that given vector is within. For containers that are
@@ -66,7 +66,7 @@ inline void voro_compute_2d<c_class_2d>::scan_all(int ij,double x,double y,int d
 template<class c_class_2d>
 void voro_compute_2d<c_class_2d>::find_voronoi_cell(double x,double y,int ci,int cj,int ij,particle_record_2d &w,double &mrs) {
 	double qx=0,qy=0,rs;
-	int i,j,k,di,dj,ei,ej,f,g,disp;
+	int i,j,di,dj,ei,ej,f,g,disp;
 	double fx,fy,mxs,mys,*radp;
 	unsigned int q,*e,*mij;
 
@@ -156,7 +156,7 @@ void voro_compute_2d<c_class_2d>::find_voronoi_cell(double x,double y,int ci,int
 	if(mv==0) {reset_mask();mv=1;}
 	int *qu_s=qu,*qu_e=qu;
 
-	while(g<wl_seq_length-1) {
+	while(g<wl_seq_length_2d-1) {
 
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done
@@ -274,7 +274,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 	static const int count_list[8]={7,11,15,19,26,35,45,59},*count_e=count_list+8;
 	double x,y,x1,y1,qx=0,qy=0;
 	double xlo,ylo,xhi,yhi,x2,y2,rs;
-	int i,j,k,di,dj,ei,ej,f,g,l,disp;
+	int i,j,di,dj,ei,ej,f,g,l,disp;
 	double fx,fy,gxs,gys,*radp;
 	unsigned int q,*e,*mij;
 
@@ -311,7 +311,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 	// region and store it in (fx,fy,fz). We use this to compute an index
 	// (di,dj,dk) of which subregion the particle is within.
 	unsigned int m1,m2;
-	con.frac_pos(x,y,z,ci,cj,fx,fy);
+	con.frac_pos(x,y,ci,cj,fx,fy);
 	di=int(fx*xsp*wl_fgrid_2d);dj=int(fy*ysp*wl_fgrid_2d);
 
 	// The indices (di,dj,dk) tell us which worklist to use, to test the
@@ -418,7 +418,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 	// Set the queue pointers
 	int *qu_s=qu,*qu_e=qu;
 
-	while(g<wl_seq_length-1) {
+	while(g<wl_seq_length_2d-1) {
 
 		// At the intervals specified by count_list, we recompute the
 		// maximum radius squared
@@ -578,7 +578,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
  * \return False if the block may intersect, true if does not. */
 template<class c_class_2d>
 template<class v_cell_2d>
-inline bool voro_compute_2d<c_class_2d>::edge_z_test(v_cell_2d &c,double xl,double yl,double xh,double yh) {
+inline bool voro_compute_2d<c_class_2d>::corner_test(v_cell_2d &c,double xl,double yl,double xh,double yh) {
 	if(c.plane_intersects_guess(xl,yh,con.r_cutoff(xl*xl+yl*yh))) return false;
 //	if(c.plane_intersects(xl,yl,con.r_cutoff(xl*xl+yl*yl))) return false;  XXX not needed?
 	if(c.plane_intersects(xh,yl,con.r_cutoff(xl*xh+yl*yl))) return false;
@@ -597,7 +597,7 @@ inline bool voro_compute_2d<c_class_2d>::edge_z_test(v_cell_2d &c,double xl,doub
  * \return False if the block may intersect, true if does not. */
 template<class c_class_2d>
 template<class v_cell_2d>
-inline bool voro_compute_2d<c_class_2d>::face_x_test(v_cell_2d &c,double xl,double y0,double y1) {
+inline bool voro_compute_2d<c_class_2d>::edge_x_test(v_cell_2d &c,double xl,double y0,double y1) {
 	if(c.plane_intersects_guess(xl,y0,con.r_cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y1,con.r_cutoff(xl*xl))) return false;
 	return true;
@@ -615,7 +615,7 @@ inline bool voro_compute_2d<c_class_2d>::face_x_test(v_cell_2d &c,double xl,doub
  * \return False if the block may intersect, true if does not. */
 template<class c_class_2d>
 template<class v_cell_2d>
-inline bool voro_compute_2d<c_class_2d>::face_y_test(v_cell_2d &c,double x0,double yl,double x1) {
+inline bool voro_compute_2d<c_class_2d>::edge_y_test(v_cell_2d &c,double x0,double yl,double x1) {
 	if(c.plane_intersects_guess(x0,yl,con.r_cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x1,yl,con.r_cutoff(yl*yl))) return false;
 	return true;
@@ -726,23 +726,23 @@ inline void voro_compute_2d<c_class_2d>::add_list_memory(int*& qu_s,int*& qu_e) 
 }
 
 // Explicit template instantiation
-template voro_compute_2d<container_2d>::voro_compute_2d(container_2d&,int,int,int);
-template voro_compute_2d<container_poly_2d>::voro_compute_2d(container_poly_2d&,int,int,int);
-template bool voro_compute_2d<container_2d>::compute_cell(voronoicell_2d&,int,int,int,int,int);
-template bool voro_compute_2d<container_2d>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int,int);
-template void voro_compute_2d<container_2d>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_2d&,double&);
-template bool voro_compute_2d<container_poly_2d>::compute_cell(voronoicell_2d&,int,int,int,int,int);
-template bool voro_compute_2d<container_poly_2d>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int,int);
-template void voro_compute_2d<container_poly_2d>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_2d&,double&);
+template voro_compute_2d<container_2d>::voro_compute_2d(container_2d&,int,int);
+template voro_compute_2d<container_poly_2d>::voro_compute_2d(container_poly_2d&,int,int);
+template bool voro_compute_2d<container_2d>::compute_cell(voronoicell_2d&,int,int,int,int);
+template bool voro_compute_2d<container_2d>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int);
+template void voro_compute_2d<container_2d>::find_voronoi_cell(double,double,int,int,int,particle_record_2d&,double&);
+template bool voro_compute_2d<container_poly_2d>::compute_cell(voronoicell_2d&,int,int,int,int);
+template bool voro_compute_2d<container_poly_2d>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int);
+template void voro_compute_2d<container_poly_2d>::find_voronoi_cell(double,double,int,int,int,particle_record_2d&,double&);
 
 // Explicit template instantiation
-template voro_compute_2d<container_periodic>::voro_compute_2d(container_periodic_2d&,int,int,int);
+/*template voro_compute_2d<container_periodic>::voro_compute_2d(container_periodic_2d&,int,int,int);
 template voro_compute_2d<container_periodic_poly>::voro_compute_2d(container_periodic_poly_2d&,int,int,int);
 template bool voro_compute_2d<container_periodic>::compute_cell(voronoicell_2d&,int,int,int,int,int);
 template bool voro_compute_2d<container_periodic>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int,int);
 template void voro_compute_2d<container_periodic>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_2d&,double&);
 template bool voro_compute_2d<container_periodic_poly>::compute_cell(voronoicell_2d&,int,int,int,int,int);
 template bool voro_compute_2d<container_periodic_poly>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int,int);
-template void voro_compute_2d<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_2d&,double&);
+template void voro_compute_2d<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_2d&,double&);*/
 
 }

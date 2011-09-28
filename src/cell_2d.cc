@@ -81,6 +81,43 @@ double voronoicell_base_2d::max_radius_squared() {
  * \param[in] (x,y) the normal vector to the plane.
  * \param[in] rsq the distance along this vector of the plane.
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
+bool voronoicell_base_2d::plane_intersects(double x,double y,double rsq) {
+	int up=0,up2,up3;
+	double u,u2,u3;
+
+	// First try and find a vertex that is within the cutting plane, if
+	// there is one. If one can't be found, then the cell is not cut by
+	// this plane and the routine immediately returns true.
+	u=pos(x,y,rsq,up);
+	if(u<tolerance) {
+		up2=ed[2*up];u2=pos(x,y,rsq,up2);
+		up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
+		if(u2>u3) {
+			while(u2<tolerance) {
+				up2=ed[2*up2];
+				u2=pos(x,y,rsq,up2);
+				if(up2==up3) return false;
+			}
+			up=up2;u=u2;
+		} else {
+			while(u3<tolerance) {
+				up3=ed[2*up3+1];
+				u3=pos(x,y,rsq,up3);
+				if(up2==up3) return false;
+			}
+			up=up3;u=u3;
+		}
+	}
+	return true;
+}
+
+
+/** Cuts the Voronoi cell by a particle whose center is at a separation of
+ * (x,y) from the cell center. The value of rsq should be initially set to
+ * \f$x^2+y^2\f$.
+ * \param[in] (x,y) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class vc_class>
 bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p_id) {
 	int cp,lp,up=0,up2,up3,*stackp(ds);

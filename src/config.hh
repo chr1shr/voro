@@ -14,6 +14,7 @@ const int init_ordering_size=4096;
 
 const int init_wall_size=32;
 const int max_wall_size=4096;
+const double large_number=1e30;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.

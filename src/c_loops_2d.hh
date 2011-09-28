@@ -220,7 +220,7 @@ class c_loop_subset_2d : public c_loop_base_2d {
 		c_loop_subset_2d(c_class_2d &con) : c_loop_base_2d(con), ax(con.ax), ay(con.ay),
 			sx(con.bx-ax), sy(con.by-ay), xsp(con.xsp), ysp(con.ysp),
 			xperiodic(con.xperiodic), yperiodic(con.yperiodic) {}
-		void setup_sphere(double vx,double vy,double r,bool bounds_test=true);
+		void setup_circle(double vx,double vy,double r,bool bounds_test=true);
 		void setup_box(double xmin,double xmax,double ymin,double ymax,bool bounds_test=true);
 		void setup_intbox(int ai_,int bi_,int aj_,int bj_);
 		bool start();

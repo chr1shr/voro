@@ -7,7 +7,7 @@
 /** \file wall_2d.cc
  * \brief Function implementations for the 2D derived wall classes. */
 
-#include "wall.hh"
+#include "wall_2d.hh"
 
 namespace voro {
 

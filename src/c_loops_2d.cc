@@ -7,7 +7,7 @@
 /** \file c_loops_2d.cc
  * \brief Function implementations for the 2D loop classes. */
 
-#include "c_loops.hh"
+#include "c_loops_2d.hh"
 
 namespace voro {
 
@@ -21,7 +21,7 @@ namespace voro {
  *                        the particle will only loop over the particles which
  *                        actually lie within the circle.
  * \return True if there is any valid point to loop over, false otherwise. */
-void c_loop_subset::setup_circle(double vx,double vy,double r,bool bounds_test) {
+void c_loop_subset_2d::setup_circle(double vx,double vy,double r,bool bounds_test) {
 	if(bounds_test) {mode=circle;v0=vx;v1=vy;v2=r*r;} else mode=no_check;
 	ai=step_int((vx-ax-r)*xsp);
 	bi=step_int((vx-ax+r)*xsp);
@@ -97,7 +97,7 @@ void c_loop_subset_2d::setup_box(double xmin,double xmax,double ymin,double ymax
  * \return True if the point is out of bounds, false otherwise. */
 bool c_loop_subset_2d::out_of_bounds() {
 	double *pp(p[ij]+ps*q);
-	if(mode==sphere) {
+	if(mode==circle) {
 		double fx(*pp+px-v0),fy(pp[1]+py-v1);
 		return fx*fx+fy*fy>v2;
 	} else {

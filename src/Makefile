@@ -8,7 +8,7 @@
 include ../config.mk
 
 # List of the common source files
-objs=common.o cell_2d.o container_2d.o
+objs=common.o cell_2d.o container_2d.o v_base_2d.o v_compute_2d.o c_loops_2d.o wall_2d.o
 src=$(patsubst %.o,%.cc,$(objs))
 
 # Makefile rules

@@ -8,7 +8,7 @@
  * \brief Function implementations for the base 2D Voronoi container class. */
 
 #include "v_base_2d.hh"
-#include "config_2d.hh"
+#include "config.hh"
 
 namespace voro {
 

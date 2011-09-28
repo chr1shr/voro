@@ -4,6 +4,10 @@
 #include "config.hh"
 #include "common.hh"
 #include "cell_2d.hh"
+#include "v_base_2d.hh"
 #include "container_2d.hh"
+#include "v_compute_2d.hh"
+#include "c_loops_2d.hh"
+#include "wall_2d.hh"
 
 #endif

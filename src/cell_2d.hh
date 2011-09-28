@@ -79,6 +79,10 @@ class voronoicell_base_2d {
 		}
 		template<class vc_class>
 		bool nplane(vc_class &vc,double x,double y,double rs,int p_id);
+		bool plane_intersects(double x,double y,double rs);
+		inline bool plane_intersects_guess(double x,double y,double rs) {
+			return plane_intersects(x,y,rs);
+		}
 		double max_radius_squared();
 		double perimeter();
 		double area();
