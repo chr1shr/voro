@@ -7,6 +7,8 @@
 /** \file v_base_2d.cc
  * \brief Function implementations for the base 2D Voronoi container class. */
 
+#include <cstdio>
+using namespace std;
 #include "v_base_2d.hh"
 #include "config.hh"
 
@@ -57,6 +59,11 @@ voro_base_2d::voro_base_2d(int nx_,int ny_,double boxx_,double boxy_) :
 			e+=wl_seq_length_2d;
 			radp+=wl_seq_length_2d;
 		}
+	}
+	for(i=0;i<wl_seq_length_2d;i++) {
+		printf("%d",i);
+		for(j=0;j<wl_hgridsq_2d;j++) printf(" %g",mrad[wl_seq_length_2d*j+i]);
+		puts("");
 	}
 }
 
