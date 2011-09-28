@@ -21,6 +21,9 @@ execs: $(execs)
 
 include Makefile.dep
 
+worklist_2d.hh v_base_wl_2d.cc: worklist_gen.pl
+	perl worklist_gen.pl
+
 libvoro++_2d.a: $(objs)
 	rm -f libvoro++_2d.a
 	ar rs libvoro++_2d.a $^

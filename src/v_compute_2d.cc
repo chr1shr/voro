@@ -493,6 +493,21 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		scan_bits_mask_add(q,mij,ei,ej,qu_e);
 	}
 
+/*	puts("block search");
+	{
+		int ii,jj;
+		for(jj=hy-1;jj>=0;jj--) {
+			for(ii=0;ii<hx;ii++) {
+				if(mask[ii+hx*jj]==mv) printf("*");
+				else if (mask[ii+hx*jj]==mv+1) printf("#");
+				else printf(".");
+			}
+			puts("");
+		}
+		mv++;
+	}
+	return true;*/
+
 	// Do a check to see if we've reached the radius cutoff
 	if(mrs<con.r_cutoff(radp[g])) return true;
 
@@ -561,6 +576,17 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		// Test the neighbors of the current block, and add them to the
 		// block list if they haven't already been tested
 		add_to_mask(ei,ej,qu_e);
+	}
+
+	{
+		int ii,jj;
+		for(jj=hy-1;jj>=0;jj--) {
+			for(ii=0;ii<hx;ii++) {
+				if(mask[ii+hx*jj]==mv) printf("*");
+				else printf(".");
+			}
+			puts("");
+		}
 	}
 
 	return true;

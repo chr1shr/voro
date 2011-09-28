@@ -60,11 +60,6 @@ voro_base_2d::voro_base_2d(int nx_,int ny_,double boxx_,double boxy_) :
 			radp+=wl_seq_length_2d;
 		}
 	}
-	for(i=0;i<wl_seq_length_2d;i++) {
-		printf("%d",i);
-		for(j=0;j<wl_hgridsq_2d;j++) printf(" %g",mrad[wl_seq_length_2d*j+i]);
-		puts("");
-	}
 }
 
 /** Computes the minimum distance from a subregion to a given block. If this distance
