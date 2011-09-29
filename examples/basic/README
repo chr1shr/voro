@@ -19,10 +19,10 @@ random points to the box. It then calculates the sum of the volumes of the
 Voronoi cells, and compares it to the container volume - since the cells should
 perfectly partition the container, these two should be identical to within
 numerical accuracy. The code then saves the particle positions to
-"random_points.gnu" and the Voronoi cells to "random_points2.gnu". These can be
-visualized in gnuplot using the command:
+"random_points_p.gnu" and the Voronoi cells to "random_points_v.gnu". These can
+be visualized in gnuplot using the command:
 
-splot 'random_points.gnu' u 2:3:4 with points, 'random_points2.gnu' with lines
+splot 'random_points_p.gnu' u 2:3:4 with points, 'random_points_v.gnu' with lines
 
 4. import.cc demonstrates the ability of the code to import a list of particles
 from a text file. The code imports a text file called 'pack_ten_cube' which
