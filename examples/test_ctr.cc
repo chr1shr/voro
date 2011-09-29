@@ -10,13 +10,13 @@ int main() {
 	// Initialize the container class to be the unit square, with
 	// non-periodic boundary conditions. Divide it into a 6 by 6 grid, with
 	// an initial memory allocation of 16 particles per grid square.
-	container_poly_2d con(0,1,0,1,20,10,false,false,16);
+	container_2d con(0,1,0,1,10,10,false,false,16);
 
 	// Add 1000 random points to the container
 	for(i=0;i<1000;i++) {
 		x=rnd();
 		y=rnd();
-		con.put(i,x,y,rnd());
+		con.put(i,x,y);
 	}
 
 	// Output the particle positions to a file
