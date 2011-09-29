@@ -179,9 +179,6 @@ bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p
 		cp=p++;
 	}
 
-	// Set neighbor information for the newly created edge
-	vc.n_set(cp,p_id);
-
 	// Search clockwise for additional points that need to be deleted
 	l=u;up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
 	while(u3>tolerance) {
@@ -199,6 +196,7 @@ bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p
 	if(u3>tolerance) {
 		ed[2*cp+1]=up3;
 		ed[2*up3]=cp;
+		vc.n_set(up3,p_id);
 	} else {
 		if(p==current_vertices) add_memory_vertices(vc);
 		lp=ed[2*up3];
@@ -207,6 +205,7 @@ bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p
 		pts[2*p+1]=(pts[2*lp+1]*u3-pts[2*up3+1]*l)*fac;
 		ed[2*p]=cp;
 		ed[2*cp+1]=p;
+		vc.n_set(p,p_id);
 		ed[2*p+1]=up3;
 		ed[2*up3]=p++;
 	}

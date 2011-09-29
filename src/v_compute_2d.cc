@@ -395,14 +395,14 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 				do {
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
-					rs=con.r_scale(x1*x1+y1*y1,ij,l);
+					rs=x1*x1+y1*y1;
 					if(con.r_scale_check(rs,mrs,ij,l)&&!c.nplane(x1,y1,rs,id[ij][l])) return false;
 					l++;
 				} while (l<co[ij]);
 			}
 		}
 	} while(g<f);
-
+	
 	// If we reach here, we were unable to compute the entire cell using
 	// the first part of the worklist. This section of the algorithm
 	// continues the worklist, but it now starts preparing the mask that we
@@ -477,7 +477,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 				do {
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
-					rs=con.r_scale(x1*x1+y1*y1,ij,l);
+					rs=x1*x1+y1*y1;
 					if(con.r_scale_check(rs,mrs,ij,l)&&!c.nplane(x1,y1,rs,id[ij][l])) return false;
 					l++;
 				} while (l<co[ij]);
@@ -493,21 +493,6 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		// on the block list, and mark the mask.
 		scan_bits_mask_add(q,mij,ei,ej,qu_e);
 	}
-
-/*	puts("block search");
-	{
-		int ii,jj;
-		for(jj=hy-1;jj>=0;jj--) {
-			for(ii=0;ii<hx;ii++) {
-				if(mask[ii+hx*jj]==mv) printf("*");
-				else if (mask[ii+hx*jj]==mv+1) printf("#");
-				else printf(".");
-			}
-			puts("");
-		}
-		mv++;
-	}
-	return true;*/
 
 	// Do a check to see if we've reached the radius cutoff
 	if(con.r_ctest(radp[g],mrs)) return true;

@@ -475,10 +475,6 @@ class container_2d : public container_base_2d, public radius_mono {
  * the particle radii. */
 class container_poly_2d : public container_base_2d, public radius_poly {
 	public:
-		/** The current maximum radius of any particle, used to
-		 * determine when to cut off the radical Voronoi computation.
-		 * */
-		double max_radius;
 		container_poly_2d(double ax_,double bx_,double ay_,double by_,
 			       int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem);
 		void clear();
@@ -521,8 +517,8 @@ class container_poly_2d : public container_base_2d, public radius_poly {
 		void draw_particles(c_loop_2d &vl,FILE *fp) {
 			double *pp;
 			if(vl.start()) do {
-				pp=p[vl.ij]+2*vl.q;
-				fprintf(fp,"%d %g %g\n",id[vl.ij][vl.q],*pp,pp[1]);
+				pp=p[vl.ij]+3*vl.q;
+				fprintf(fp,"%d %g %g %g\n",id[vl.ij][vl.q],*pp,pp[1],pp[2]);
 			} while(vl.inc());
 		}
 		/** Dumps all of the particle IDs, positions and radii to a

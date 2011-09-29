@@ -29,7 +29,7 @@ test_intersect: test_intersect.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_intersect test_intersect.cc -lvoro++_2d
 
 test_circle: test_circle.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_circle test_circle.cc -lvoro++_2d
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_circle test_circle.cc
 
 clean:
 	rm -f $(EXECUTABLES)
