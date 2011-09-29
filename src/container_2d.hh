@@ -271,7 +271,7 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
  * This class is an extension of the container_base class that has routines
  * specifically for computing the regular Voronoi tessellation with no
  * dependence on particle radii. */
-class container_2d : public container_base_2d {
+class container_2d : public container_base_2d, public radius_mono {
 	public:
 		container_2d(double ax_,double bx_,double ay_,double by_,
 			     int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem);
@@ -463,11 +463,6 @@ class container_2d : public container_base_2d {
 		}
 	private:
 		voro_compute_2d<container_2d> vc;
-		inline void r_init(int ij,int s) {};
-		inline double r_cutoff(double lrs) {return lrs;}
-		inline double r_max_add(double rs) {return rs;}
-		inline double r_current_sub(double rs,int ij,int q) {return rs;}
-		inline double r_scale(double rs,int ij,int q) {return rs;}
 		friend class voro_compute_2d<container_2d>;
 };
 
@@ -477,7 +472,7 @@ class container_2d : public container_base_2d {
  * This class is an extension of container_base class that has routines
  * specifically for computing the radical Voronoi tessellation that depends on
  * the particle radii. */
-class container_poly_2d : public container_base_2d {
+class container_poly_2d : public container_base_2d, public radius_poly {
 	public:
 		/** The current maximum radius of any particle, used to
 		 * determine when to cut off the radical Voronoi computation.
@@ -676,20 +671,6 @@ class container_poly_2d : public container_base_2d {
 		bool find_voronoi_cell(double x,double y,double &rx,double &ry,int &pid);
 	private:
 		voro_compute_2d<container_poly_2d> vc;
-		double r_rad,r_mul;
-		inline void r_init(int ij,int s) {
-			r_rad=p[ij][3*s+2];
-			r_mul=1+(r_rad*r_rad-max_radius*max_radius)/((max_radius+r_rad)*(max_radius+r_rad));
-			r_rad*=r_rad;
-		}
-		inline double r_cutoff(double lrs) {return r_mul*lrs;}
-		inline double r_max_add(double rs) {return rs+max_radius*max_radius;}
-		inline double r_current_sub(double rs,int ij,int q) {
-			return rs-p[ij][3*q+2]*p[ij][3*q+2];
-		}
-		inline double r_scale(double rs,int ij,int q) {
-			return rs+r_rad-p[ij][3*q+2]*p[ij][3*q+2];
-		}
 		friend class voro_compute_2d<container_poly_2d>;
 };
 
