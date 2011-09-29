@@ -8,15 +8,15 @@
 #include "dynamic.cc"
 
 // Set up constants for the container geometry
-const fpoint x_min=-5,x_max=5;
-const fpoint y_min=-5,y_max=5;
-const fpoint z_min=-5,z_max=5;
+const fpoint x_min=-15,x_max=15;
+const fpoint y_min=-7,y_max=7;
+const fpoint z_min=-15,z_max=15;
 
 // Set the computational grid size
-const int n_x=5,n_y=5,n_z=5;
+const int n_x=7,n_y=7,n_z=7;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=262;
+const int particles=2000;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -109,7 +109,7 @@ void wall_sphere_acc::min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint 
 
 int main() {
 	int i=0,j,k;
-	fpoint x,y,z;//char q[256];
+	fpoint x,y,z,theta;//char q[256];
 	int *u[201];
 
 	for(j=0;j<=200;j++) {
@@ -124,34 +124,30 @@ int main() {
 			false,false,false,8);
 
 	// Add a cylindrical wall to the container
-	wall_sphere_acc sph(0,0,0,4);
-	con.add_wall(sph);
+	//wall_sphere_acc sph(0,0,0,4);
+	//con.add_wall(sph);
 	
 	// Randomly add particles into the container
 	while(i<particles) {
+		theta=3.1415926535897932384626433832795*rnd();
 		x=x_min+rnd()*(x_max-x_min);
 		y=y_min+rnd()*(y_max-y_min);
 		z=z_min+rnd()*(z_max-z_min);
-		if (x*x+y*y+z*z<3*3) {con.put(i,x,y,z);i++;}
+		if (x*x+y*y+z*z>4*4) continue;
+		//x=x*x*0.2*(x<0?-1:1);
+		//y=y*y*0.2*(y<0?-1:1);
+		//z=z*z*0.2*(z<0?-1:1);
+		con.put(i,x+10*sin(theta),y,z+10*cos(theta));i++;
 	}
 
 	for(i=0;i<=200;i++) {
 		cout << i << " " << con.packing_badness<cond_all>() << endl;
-		con.full_relax(0.4);
-		con.full_relax(0.6);
 		con.full_relax(0.8);
-		con.full_relax(1.0);
-		con.full_relax(1.2);
-		con.full_relax(1.2);
-		con.full_relax(1.0);
-		con.full_relax(0.8);
-		con.full_relax(0.6);
-		con.full_relax(0.4);
-		con.full_relax(0.2);
 	}
 	
 	con.draw_particles_pov("acc_sphere_p.pov");
 	con.draw_cells_pov("acc_sphere_v.pov");
+	con.draw_particles("acc_pack");
 
 	fpoint svol=4*3.1415926535897932384626433832795/3*4*4*4;
 	fpoint vvol=con.sum_cell_volumes();
