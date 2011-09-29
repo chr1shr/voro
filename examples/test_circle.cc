@@ -32,8 +32,6 @@ int main() {
 	// Output the Voronoi cells to a file, in the gnuplot format
 	con.draw_cells_gnuplot("test_circle.gnu");
 
-	//con.print_custom("%i %q %a %n","test_circle.vol");
-
 	// Sum the Voronoi cell areas and compare to the circle area
 	double carea=pi*radius*radius,varea=con.sum_cell_areas();
 	printf("Total circle area       : %g\n"
