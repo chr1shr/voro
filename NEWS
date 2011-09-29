@@ -14,7 +14,7 @@ Version 0.4.2 (September 23rd 2011)
 ===================================
 * Fixed a bug in the put_remap routine where a z periodic boolean was
   switched to an x periodic boolean. This would only be noticed when using
-  mixed periodic boundary conditions and import particles that need to be
+  mixed periodic boundary conditions and importing particles that need to be
   remapped.
 * The pid function in the c_loop_base class was mistakenly labeled as double
   instead of int - this is now fixed. Thanks to William-Fernando Oquendo
