@@ -17,8 +17,6 @@ all: libvoro++_2d.a
 depend:
 	$(CXX) -MM $(src) >Makefile.dep
 
-execs: $(execs)
-
 include Makefile.dep
 
 worklist_2d.hh v_base_wl_2d.cc: worklist_gen.pl
@@ -38,4 +36,4 @@ help: Doxyfile $(SOURCE)
 clean:
 	rm -f $(objs) libvoro++_2d.a
 
-.PHONY: all help execs depend
+.PHONY: all help depend

@@ -8,7 +8,7 @@
 include ../config.mk
 
 # List of executables
-EXECUTABLES=test_cell test_ctr test_import test_lloyd test_intersect
+EXECUTABLES=test_cell test_ctr test_import test_lloyd test_intersect test_circle
 
 # Makefile rules
 all: $(EXECUTABLES) 
@@ -27,6 +27,9 @@ test_lloyd: test_lloyd.cc
 
 test_intersect: test_intersect.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_intersect test_intersect.cc -lvoro++_2d
+
+test_circle: test_circle.cc
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_circle test_circle.cc -lvoro++_2d
 
 clean:
 	rm -f $(EXECUTABLES)

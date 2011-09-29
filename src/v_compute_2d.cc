@@ -9,6 +9,7 @@
 
 #include "worklist_2d.hh"
 #include "v_compute_2d.hh"
+#include "rad_option.hh"
 #include "container_2d.hh"
 
 namespace voro {
@@ -351,7 +352,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done
-		if(mrs<con.r_cutoff(radp[g])) return true;
+		if(con.r_ctest(radp[g],mrs)) return true;
 		g++;
 
 		// Load in a block off the worklist, permute it with the
@@ -382,7 +383,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		// those particles which can't possibly intersect the block.
 		if(co[ij]>0) {
 			l=0;x2=x-qx;y2=y-qy;
-			if(mrs>con.r_cutoff(crs)) {
+			if(!con.r_ctest(crs,mrs)) {
 				do {
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
@@ -395,7 +396,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
 					rs=con.r_scale(x1*x1+y1*y1,ij,l);
-					if(rs<mrs&&!c.nplane(x1,y1,rs,id[ij][l])) return false;
+					if(con.r_scale_check(rs,mrs,ij,l)&&!c.nplane(x1,y1,rs,id[ij][l])) return false;
 					l++;
 				} while (l<co[ij]);
 			}
@@ -429,7 +430,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 
 		// If mrs is less than the minimum distance to any untested
 		// block, then we are done
-		if(mrs<con.r_cutoff(radp[g])) return true;
+		if(con.r_ctest(radp[g],mrs)) return true;
 		g++;
 
 		// Load in a block off the worklist, permute it with the
@@ -464,7 +465,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		// those particles which can't possibly intersect the block.
 		if(co[ij]>0) {
 			l=0;x2=x-qx;y2=y-qy;
-			if(mrs>con.r_cutoff(crs)) {
+			if(!con.r_ctest(crs,mrs)) {
 				do {
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
@@ -477,7 +478,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
 					rs=con.r_scale(x1*x1+y1*y1,ij,l);
-					if(rs<mrs&&!c.nplane(x1,y1,rs,id[ij][l])) return false;
+					if(con.r_scale_check(rs,mrs,ij,l)&&!c.nplane(x1,y1,rs,id[ij][l])) return false;
 					l++;
 				} while (l<co[ij]);
 			}
@@ -509,7 +510,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 	return true;*/
 
 	// Do a check to see if we've reached the radius cutoff
-	if(mrs<con.r_cutoff(radp[g])) return true;
+	if(con.r_ctest(radp[g],mrs)) return true;
 
 	// We were unable to completely compute the cell based on the blocks in
 	// the worklist, so now we have to go block by block, reading in items
@@ -594,6 +595,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 template<class c_class_2d>
 template<class v_cell_2d>
 inline bool voro_compute_2d<c_class_2d>::corner_test(v_cell_2d &c,double xl,double yl,double xh,double yh) {
+	con.r_prime(xl*xl+yl*yl);
 	if(c.plane_intersects_guess(xl,yh,con.r_cutoff(xl*xl+yl*yh))) return false;
 //	if(c.plane_intersects(xl,yl,con.r_cutoff(xl*xl+yl*yl))) return false;  XXX not needed?
 	if(c.plane_intersects(xh,yl,con.r_cutoff(xl*xh+yl*yl))) return false;
@@ -613,6 +615,7 @@ inline bool voro_compute_2d<c_class_2d>::corner_test(v_cell_2d &c,double xl,doub
 template<class c_class_2d>
 template<class v_cell_2d>
 inline bool voro_compute_2d<c_class_2d>::edge_x_test(v_cell_2d &c,double xl,double y0,double y1) {
+	con.r_prime(xl*xl);
 	if(c.plane_intersects_guess(xl,y0,con.r_cutoff(xl*xl))) return false;
 	if(c.plane_intersects(xl,y1,con.r_cutoff(xl*xl))) return false;
 	return true;
@@ -631,6 +634,7 @@ inline bool voro_compute_2d<c_class_2d>::edge_x_test(v_cell_2d &c,double xl,doub
 template<class c_class_2d>
 template<class v_cell_2d>
 inline bool voro_compute_2d<c_class_2d>::edge_y_test(v_cell_2d &c,double x0,double yl,double x1) {
+	con.r_prime(yl*yl);
 	if(c.plane_intersects_guess(x0,yl,con.r_cutoff(yl*yl))) return false;
 	if(c.plane_intersects(x1,yl,con.r_cutoff(yl*yl))) return false;
 	return true;
@@ -659,15 +663,15 @@ bool voro_compute_2d<c_class_2d>::compute_min_max_radius(int di,int dj,double fx
 		if(dj>0) {
 			ylo=dj*boxy-fy;
 			crs+=ylo*ylo;
-			if(con.r_cutoff(crs)>mrs) return true;
+			if(con.r_ctest(crs,mrs)) return true;
 			crs+=bxsq+2*xlo*boxx+2*ylo*boxy;
 		} else if(dj<0) {
 			ylo=(dj+1)*boxy-fy;
 			crs+=ylo*ylo;
-			if(con.r_cutoff(crs)>mrs) return true;
+			if(con.r_ctest(crs,mrs)) return true;
 			crs+=bxsq+2*xlo*boxx-2*ylo*boxy;
 		} else {
-			if(con.r_cutoff(crs)>mrs) return true;
+			if(con.r_ctest(crs,mrs)) return true;
 			crs+=gys+boxx*(2*xlo+boxx);
 		}
 	} else if(di<0) {
@@ -676,27 +680,27 @@ bool voro_compute_2d<c_class_2d>::compute_min_max_radius(int di,int dj,double fx
 		if(dj>0) {
 			ylo=dj*boxy-fy;
 			crs+=ylo*ylo;
-			if(con.r_cutoff(crs)>mrs) return true;
+			if(con.r_ctest(crs,mrs)) return true;
 			crs+=bxsq-2*xlo*boxx+2*ylo*boxy;
 		} else if(dj<0) {
 			ylo=(dj+1)*boxy-fy;
 			crs+=ylo*ylo;
-			if(con.r_cutoff(crs)>mrs) return true;
+			if(con.r_ctest(crs,mrs)) return true;
 			crs+=bxsq-2*xlo*boxx-2*ylo*boxy;
 		} else {
-			if(con.r_cutoff(crs)>mrs) return true;
+			if(con.r_ctest(crs,mrs)) return true;
 			crs+=gys+boxx*(-2*xlo+boxx);
 		}
 	} else {
 		if(dj>0) {
 			ylo=dj*boxy-fy;
 			crs=ylo*ylo;
-			if(con.r_cutoff(crs)>mrs) return true;
+			if(con.r_ctest(crs,mrs)) return true;
 			crs+=boxy*(2*ylo+boxy);
 		} else if(dj<0) {
 			ylo=(dj+1)*boxy-fy;
 			crs=ylo*ylo;
-			if(con.r_cutoff(crs)>mrs) return true;
+			if(con.r_ctest(crs,mrs)) return true;
 			crs+=boxy*(-2*ylo+boxy);
 		} else voro_fatal_error("Min/max radius function called for central block, which should never\nhappen.",VOROPP_INTERNAL_ERROR);
 		crs+=gxs;
@@ -749,15 +753,5 @@ template void voro_compute_2d<container_2d>::find_voronoi_cell(double,double,int
 template bool voro_compute_2d<container_poly_2d>::compute_cell(voronoicell_2d&,int,int,int,int);
 template bool voro_compute_2d<container_poly_2d>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int);
 template void voro_compute_2d<container_poly_2d>::find_voronoi_cell(double,double,int,int,int,particle_record_2d&,double&);
-
-// Explicit template instantiation
-/*template voro_compute_2d<container_periodic>::voro_compute_2d(container_periodic_2d&,int,int,int);
-template voro_compute_2d<container_periodic_poly>::voro_compute_2d(container_periodic_poly_2d&,int,int,int);
-template bool voro_compute_2d<container_periodic>::compute_cell(voronoicell_2d&,int,int,int,int,int);
-template bool voro_compute_2d<container_periodic>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int,int);
-template void voro_compute_2d<container_periodic>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_2d&,double&);
-template bool voro_compute_2d<container_periodic_poly>::compute_cell(voronoicell_2d&,int,int,int,int,int);
-template bool voro_compute_2d<container_periodic_poly>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int,int);
-template void voro_compute_2d<container_periodic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_2d&,double&);*/
 
 }

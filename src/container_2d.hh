@@ -21,6 +21,7 @@ using namespace std;
 #include "v_base_2d.hh"
 #include "cell_2d.hh"
 #include "c_loops_2d.hh"
+#include "rad_option.hh"
 #include "v_compute_2d.hh"
 
 namespace voro {
