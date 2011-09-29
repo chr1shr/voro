@@ -6,6 +6,9 @@ Version 0.4.3 (...)
   on the generated worklists, but would become apparent in other situations.
 * Added rad_option.hh to the list of files included by voro++.hh for
   completeness
+* Fix errors in Gnuplot commands in the basic examples README file. Thanks to
+  William-Fernando Oquendo (National University of Colombia) for pointing this
+  out.
 
 Version 0.4.2 (September 23rd 2011)
 ===================================

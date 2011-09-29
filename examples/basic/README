@@ -22,7 +22,7 @@ numerical accuracy. The code then saves the particle positions to
 "random_points.gnu" and the Voronoi cells to "random_points2.gnu". These can be
 visualized in gnuplot using the command:
 
-splot 'random_points.gnu' with points, 'random_points2.gnu' with lines
+splot 'random_points.gnu' u 2:3:4 with points, 'random_points2.gnu' with lines
 
 4. import.cc demonstrates the ability of the code to import a list of particles
 from a text file. The code imports a text file called 'pack_ten_cube' which
@@ -35,7 +35,7 @@ The code imports the particles into the container, and then saves the particles
 and Voronoi cells in gnuplot and POV-Ray formats. To visualize the particles in
 gnuplot, use the command:
 
-splot 'pack_ten_cube' with points, 'pack_ten_cube.gnu' with lines
+splot 'pack_ten_cube' u 2:3:4 with points, 'pack_ten_cube.gnu' with lines
 
 To create a POV-Ray rendering of the particles, the scene header file
 import.pov must be used, which includes the output from the program. To render
