@@ -321,6 +321,7 @@
 #include "common.hh"
 #include "cell.hh"
 #include "v_base.hh"
+#include "rad_option.hh"
 #include "container.hh"
 #include "unitcell.hh"
 #include "container_prd.hh"

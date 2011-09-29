@@ -4,6 +4,8 @@ Version 0.4.3 (...)
 * More changes for better Visual C++ compatibility
 * Fixed indexing error in worklist generation routine. This had no effect
   on the generated worklists, but would become apparent in other situations.
+* Added rad_option.hh to the list of files included by voro++.hh for
+  completeness
 
 Version 0.4.2 (September 23rd 2011)
 ===================================
