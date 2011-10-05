@@ -11,10 +11,12 @@ using namespace voro;
 const double boxl=1.2;
 
 // Set up the number of blocks that the container is divided into
-const int bl=10;
+const int bl=24;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=1000;
+const int particles=4000;
+
+const int nface=11;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -48,6 +50,7 @@ struct wall_shell : public wall {
 int main() {
 	int i=0,l;
 	double x,y,z,r,dx,dy,dz;
+	int faces[nface],*fp;
 	double p[3*particles];
 
 	// Create a container with the geometry given above, and make it
@@ -55,7 +58,7 @@ int main() {
 	// eight particles within each computational block
 	container con(-boxl,boxl,-boxl,boxl,-boxl,boxl,bl,bl,bl,false,false,false,8);
 
-	wall_shell ws(0,0,0,1,0.001);
+	wall_shell ws(0,0,0,1,0.00001);
 	con.add_wall(ws);
 
 	// Randomly add particles into the container
@@ -71,18 +74,27 @@ int main() {
 		}
 	}
 
-	for(l=0;l<50;l++) {
+	for(l=4;l<10000;l++) {
 		c_loop_all vl(con);
 		voronoicell c;
+		for(fp=faces;fp<faces+nface;fp++) *fp=0;
 		if(vl.start()) do if(con.compute_cell(c,vl)) {
 			vl.pos(i,x,y,z,r);
 			c.centroid(dx,dy,dz);
 			p[3*i]=x+dx;
 			p[3*i+1]=y+dy;
 			p[3*i+2]=z+dz;
+
+			i=c.number_of_faces()-4;
+			if(i<0) i=0;if(i>=nface) i=nface-1;
+			faces[i]++;
 		} while (vl.inc());
 		con.clear();
-		for(i=0;i<particles;i++) con.put(i,p[3*i],p[3*i+1],p[3*i+2]);
+		double fac=l<9000?0.1/sqrt(double(l)):0;
+		for(i=0;i<particles;i++) con.put(i,p[3*i]+fac*(2*rnd()-1),p[3*i+1]+fac*(2*rnd()-1),p[3*i+2]+fac*(2*rnd()-1));
+		printf("%d",l);
+		for(fp=faces;fp<faces+nface;fp++) printf(" %d",*fp);
+		puts("");
 	}
 
 	// Output the particle positions in gnuplot format
@@ -90,4 +102,18 @@ int main() {
 
 	// Output the Voronoi cells in gnuplot format
 	con.draw_cells_gnuplot("sphere_mesh_v.gnu");
+
+	FILE *ff=safe_fopen("sphere_mesh.net","w");
+	vector<int> vi;
+	voronoicell_neighbor c;
+	c_loop_all vl(con);
+	if(vl.start()) do if(con.compute_cell(c,vl)) {
+		i=vl.pid();
+		c.neighbors(vi);
+		for(l=0;l<(signed int) vi.size();l++) if(vi[l]>i)
+			fprintf(ff,"%g %g %g\n%g %g %g\n\n\n",
+				p[3*i],p[3*i+1],p[3*i+2],
+				p[3*vi[l]],p[3*vi[l]+1],p[3*vi[l]+2]);
+	} while (vl.inc());
+	fclose(ff);
 }

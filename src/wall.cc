@@ -27,8 +27,7 @@ bool wall_sphere::point_inside(double x,double y,double z) {
  * \return True if the cell still exists, false if the cell is deleted. */
 template<class v_cell>
 bool wall_sphere::cut_cell_base(v_cell &c,double x,double y,double z) {
-	double xd=x-xc,yd=y-yc,zd=z-zc,dq;
-	dq=xd*xd+yd*yd+zd*zd;
+	double xd=x-xc,yd=y-yc,zd=z-zc,dq=xd*xd+yd*yd+zd*zd;
 	if (dq>1e-5) {
 		dq=2*(sqrt(dq)*rc-dq);
 		return c.nplane(xd,yd,zd,dq,w_id);
@@ -73,8 +72,7 @@ bool wall_cylinder::point_inside(double x,double y,double z) {
  * \return True if the cell still exists, false if the cell is deleted. */
 template<class v_cell>
 bool wall_cylinder::cut_cell_base(v_cell &c,double x,double y,double z) {
-	double xd=x-xc,yd=y-yc,zd=z-zc;
-	double pa=(xd*xa+yd*ya+zd*za)*asi;
+	double xd=x-xc,yd=y-yc,zd=z-zc,pa=(xd*xa+yd*ya+zd*za)*asi;
 	xd-=xa*pa;yd-=ya*pa;zd-=za*pa;
 	pa=xd*xd+yd*yd+zd*zd;
 	if(pa>1e-5) {
@@ -88,8 +86,7 @@ bool wall_cylinder::cut_cell_base(v_cell &c,double x,double y,double z) {
  * \param[in] (x,y,z) the vector to test.
  * \return True if the point is inside, false if the point is outside. */
 bool wall_cone::point_inside(double x,double y,double z) {
-	double xd=x-xc,yd=y-yc,zd=z-zc;
-	double pa=(xd*xa+yd*ya+zd*za)*asi;
+	double xd=x-xc,yd=y-yc,zd=z-zc,pa=(xd*xa+yd*ya+zd*za)*asi;
 	xd-=xa*pa;yd-=ya*pa;zd-=za*pa;
 	pa*=gra;
 	if (pa<0) return false;
@@ -107,17 +104,15 @@ bool wall_cone::point_inside(double x,double y,double z) {
  * \return True if the cell still exists, false if the cell is deleted. */
 template<class v_cell>
 bool wall_cone::cut_cell_base(v_cell &c,double x,double y,double z) {
-	double xd=x-xc,yd=y-yc,zd=z-zc;
-	double xf,yf,zf,imoda;
-	double pa=(xd*xa+yd*ya+zd*za)*asi;
+	double xd=x-xc,yd=y-yc,zd=z-zc,xf,yf,zf,q,pa=(xd*xa+yd*ya+zd*za)*asi;
 	xd-=xa*pa;yd-=ya*pa;zd-=za*pa;
 	pa=xd*xd+yd*yd+zd*zd;
 	if(pa>1e-5) {
 		pa=1/sqrt(pa);
-		imoda=sqrt(asi);
-		xf=-sang*imoda*xa+cang*pa*xd;
-		yf=-sang*imoda*ya+cang*pa*yd;
-		zf=-sang*imoda*za+cang*pa*zd;
+		q=sqrt(asi);
+		xf=-sang*q*xa+cang*pa*xd;
+		yf=-sang*q*ya+cang*pa*yd;
+		zf=-sang*q*za+cang*pa*zd;
 		pa=2*(xf*(xc-x)+yf*(yc-y)+zf*(zc-z));
 		return c.nplane(xf,yf,zf,pa,w_id);
 	}
