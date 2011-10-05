@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period
+EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period sphere_mesh
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -27,6 +27,9 @@ single_cell_2d: single_cell_2d.cc
 
 period: period.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o period period.cc -lvoro++
+
+sphere_mesh: sphere_mesh.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o sphere_mesh sphere_mesh.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)
