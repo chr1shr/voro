@@ -40,8 +40,8 @@ container_base_2d::container_base_2d(double ax_,double bx_,double ay_,double by_
 /** The container destructor frees the dynamically allocated memory. */
 container_base_2d::~container_base_2d() {
 	int l;
-	for(l=0;l<nxy;l++) delete [] p[l];
-	for(l=0;l<nxy;l++) delete [] id[l];
+	for(l=nxy-1;l>=0;l--) delete [] p[l];
+	for(l=nxy-1;l>=0;l--) delete [] id[l];
 	delete [] id;
 	delete [] p;
 	delete [] co;

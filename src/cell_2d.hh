@@ -172,5 +172,4 @@ class voronoicell_neighbor_2d : public voronoicell_base_2d {
 };
 
 }
-
 #endif
