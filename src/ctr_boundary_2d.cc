@@ -26,14 +26,15 @@ namespace voro {
  * \param[in] init_mem the initial memory allocation for each block.
  * \param[in] ps_ the number of floating point entries to store for each
  *                particle. */
-container_boundary_base_2d::container_boundary_base_2d(double ax_,double bx_,double ay_,double by_,
-		int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem,int ps_)
+container_boundary_2d::container_boundary_2d(double ax_,double bx_,double ay_,double by_,
+		int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
 	: voro_base_2d(nx_,ny_,(bx_-ax_)/nx_,(by_-ay_)/ny_),
 	ax(ax_), bx(bx_), ay(ay_), by(by_), xperiodic(xperiodic_), yperiodic(yperiodic_), 
 	id(new int*[nxy]), p(new double*[nxy]), co(new int[nxy]), mem(new int[nxy]),
-	wid(new int*[nxy]), nlab(new int*[nxy]), plab(new int**[nxy]), soi(NULL),
-	no_of_bnds(0), bnds_size(init_bounds_size), bnds(new double[2*bnds_size]),
-	bndpts(new int*[nxy]), boundary_track(-1), ps(ps_) {
+	wid(new int*[nxy]), nlab(new int*[nxy]), plab(new int**[nxy]), bndpts(new int*[nxy]),
+	boundary_track(-1), edbc(0), edbm(init_boundary_size),
+	edb(new int[2*edbm]), bnds(new double[2*edbm]), ps(2), soi(NULL),
+	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_)	{
 	int l;
 	
 	for(l=0;l<nxy;l++) co[l]=0;
@@ -47,7 +48,7 @@ container_boundary_base_2d::container_boundary_base_2d(double ax_,double bx_,dou
 }
 
 /** The container destructor frees the dynamically allocated memory. */
-container_boundary_base_2d::~container_boundary_base_2d() {
+container_boundary_2d::~container_boundary_2d() {
 	int l;
 
 	// Clear "sphere of influence" array if it has been allocated
@@ -67,31 +68,6 @@ container_boundary_base_2d::~container_boundary_base_2d() {
 	delete [] mem;
 }
 
-/** The class constructor sets up the geometry of container.
- * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
- * \param[in] (ay_,by_) the minimum and maximum y coordinates.
- * \param[in] (nx_,ny_) the number of grid blocks in each of the three
- *                      coordinate directions.
- * \param[in] (xperiodic_,yperiodic_) flags setting whether the container is
- *				      periodic in each coordinate direction.
- * \param[in] init_mem the initial memory allocation for each block. */
-container_boundary_2d::container_boundary_2d(double ax_,double bx_,double ay_,double by_,
-	int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
-	: container_boundary_base_2d(ax_,bx_,ay_,by_,nx_,ny_,xperiodic_,yperiodic_,init_mem,2),
-	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_) {}
-
-/** The class constructor sets up the geometry of container.
- * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
- * \param[in] (ay_,by_) the minimum and maximum y coordinates.
- * \param[in] (nx_,ny_) the number of grid blocks in each of the three
- *                      coordinate directions.
- * \param[in] (xperiodic_,yperiodic_) flags setting whether the container is
- *				      periodic in each coordinate direction.
- * \param[in] init_mem the initial memory allocation for each block. */
-container_boundary_poly_2d::container_boundary_poly_2d(double ax_,double bx_,double ay_,double by_,
-	int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
-	: container_boundary_base_2d(ax_,bx_,ay_,by_,nx_,ny_,xperiodic_,yperiodic_,init_mem,3),
-	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_) {ppr=p;}
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
@@ -101,25 +77,11 @@ void container_boundary_2d::put(int n,double x,double y) {
 	if(put_locate_block(ij,x,y)) {
 		id[ij][co[ij]]=n;
 		if(boundary_track) {
-			bndpts[ij][co[ij]]=no_of_bnds;
+			bndpts[ij][co[ij]]=edbc;
 			register_boundary(x,y);
 		}	
 		double *pp=p[ij]+2*co[ij]++;
 		*(pp++)=x;*pp=y;
-	}
-}
-
-/** Put a particle into the correct region of the container.
- * \param[in] n the numerical ID of the inserted particle.
- * \param[in] (x,y) the position vector of the inserted particle.
- * \param[in] r the radius of the particle. */
-void container_boundary_poly_2d::put(int n,double x,double y,double r) {
-	int ij;
-	if(put_locate_block(ij,x,y)) {
-		id[ij][co[ij]]=n;
-		double *pp=p[ij]+3*co[ij]++;
-		*(pp++)=x;*(pp++)=y;*pp=r;
-		if(max_radius<r) max_radius=r;
 	}
 }
 
@@ -138,23 +100,6 @@ void container_boundary_2d::put(particle_order &vo,int n,double x,double y) {
 	}
 }
 
-/** Put a particle into the correct region of the container, also recording
- * into which region it was stored.
- * \param[in] vo the ordering class in which to record the region.
- * \param[in] n the numerical ID of the inserted particle.
- * \param[in] (x,y) the position vector of the inserted particle.
- * \param[in] r the radius of the particle. */
-void container_boundary_poly_2d::put(particle_order &vo,int n,double x,double y,double r) {
-	int ij;
-	if(put_locate_block(ij,x,y)) {
-		id[ij][co[ij]]=n;
-		vo.add(ij,co[ij]);
-		double *pp=p[ij]+3*co[ij]++;
-		*(pp++)=x;*(pp++)=y;*pp=r;
-		if(max_radius<r) max_radius=r;
-	}
-}
-
 /** This routine takes a particle position vector, tries to remap it into the
  * primary domain. If successful, it computes the region into which it can be
  * stored and checks that there is enough memory within this region to store
@@ -164,7 +109,7 @@ void container_boundary_poly_2d::put(particle_order &vo,int n,double x,double y,
  *                        domain if necessary.
  * \return True if the particle can be successfully placed into the container,
  * false otherwise. */
-inline bool container_boundary_base_2d::put_locate_block(int &ij,double &x,double &y) {
+inline bool container_boundary_2d::put_locate_block(int &ij,double &x,double &y) {
 	if(put_remap(ij,x,y)) {
 		if(co[ij]==mem[ij]) add_particle_memory(ij);
 		return true;
@@ -184,7 +129,7 @@ inline bool container_boundary_base_2d::put_locate_block(int &ij,double &x,doubl
  *			if necessary.
  * \return True if the particle can be successfully placed into the container,
  * false otherwise. */
-inline bool container_boundary_base_2d::put_remap(int &ij,double &x,double &y) {
+inline bool container_boundary_2d::put_remap(int &ij,double &x,double &y) {
 	int l;
 
 	ij=step_int((x-ax)*xsp);
@@ -199,36 +144,9 @@ inline bool container_boundary_base_2d::put_remap(int &ij,double &x,double &y) {
 	return true;
 }
 
-/** Takes a position vector and attempts to remap it into the primary domain.
- * \param[out] (ai,aj) the periodic image displacement that the vector is in,
- *                     with (0,0,0) corresponding to the primary domain.
- * \param[out] (ci,cj) the index of the block that the position vector is
- *                     within, once it has been remapped.
- * \param[in,out] (x,y) the position vector to consider, which is remapped into
- *			the primary domain during the routine.
- * \param[out] ij the block index that the vector is within.
- * \return True if the particle is within the container or can be remapped into
- * it, false if it lies outside of the container bounds. */
-inline bool container_boundary_base_2d::remap(int &ai,int &aj,int &ci,int &cj,double &x,double &y,int &ij) {
-	ci=step_int((x-ax)*xsp);
-	if(ci<0||ci>=nx) {
-		if(xperiodic) {ai=step_div(ci,nx);x-=ai*(bx-ax);ci-=ai*nx;}
-		else return false;
-	} else ai=0;
-
-	cj=step_int((y-ay)*ysp);
-	if(cj<0||cj>=ny) {
-		if(yperiodic) {aj=step_div(cj,ny);y-=aj*(by-ay);cj-=aj*ny;}
-		else return false;
-	} else aj=0;
-
-	ij=ci+nx*cj;
-	return true;
-}
-
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
-void container_boundary_base_2d::add_particle_memory(int i) {
+void container_boundary_2d::add_particle_memory(int i) {
 	int l,nmem=mem[i]<<1;
 
 	// Carry out a check on the memory allocation size, and
@@ -259,7 +177,7 @@ void container_boundary_base_2d::add_particle_memory(int i) {
 
 /** Outputs the a list of all the container regions along with the number of
  * particles stored within each. */
-void container_boundary_base_2d::region_count() {
+void container_boundary_2d::region_count() {
 	int i,j,*cop=co;
 	for(j=0;j<ny;j++) for(i=0;i<nx;i++)
 		printf("Region (%d,%d): %d particles\n",i,j,*(cop++));
@@ -270,13 +188,6 @@ void container_boundary_2d::clear() {
 	for(int *cop=co;cop<co+nxy;cop++) *cop=0;
 }
 
-/** Clears a container of particles, also clearing resetting the maximum radius
- * to zero. */
-void container_boundary_poly_2d::clear() {
-	for(int *cop=co;cop<co+nxy;cop++) *cop=0;
-	max_radius=0;
-}
-
 /** Computes all the Voronoi cells and saves customized information about them.
  * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
@@ -285,29 +196,10 @@ void container_boundary_2d::print_custom(const char *format,FILE *fp) {
 	print_custom(vl,format,fp);
 }
 
-/** Computes all the Voronoi cells and saves customized
- * information about them.
- * \param[in] format the custom output string to use.
- * \param[in] fp a file handle to write to. */
-void container_boundary_poly_2d::print_custom(const char *format,FILE *fp) {
-	c_loop_all_2d vl(*this);
-	print_custom(vl,format,fp);
-}
-
 /** Computes all the Voronoi cells and saves customized information about them.
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
 void container_boundary_2d::print_custom(const char *format,const char *filename) {
-	FILE *fp=safe_fopen(filename,"w");
-	print_custom(format,fp);
-	fclose(fp);
-}
-
-/** Computes all the Voronoi cells and saves customized
- * information about them
- * \param[in] format the custom output string to use.
- * \param[in] filename the name of the file to write to. */
-void container_boundary_poly_2d::print_custom(const char *format,const char *filename) {
 	FILE *fp=safe_fopen(filename,"w");
 	print_custom(format,fp);
 	fclose(fp);
@@ -324,16 +216,6 @@ void container_boundary_2d::compute_all_cells() {
 	while(vl.inc());
 }
 
-/** Computes all of the Voronoi cells in the container, but does nothing
- * with the output. It is useful for measuring the pure computation time
- * of the Voronoi algorithm, without any additional calculations such as
- * volume evaluation or cell output. */
-void container_boundary_poly_2d::compute_all_cells() {
-	voronoicell_2d c;
-	c_loop_all_2d vl(*this);
-	if(vl.start()) do compute_cell(c,vl);while(vl.inc());
-}
-
 /** Calculates all of the Voronoi cells and sums their volumes. In most cases
  * without walls, the sum of the Voronoi cell volumes should equal the volume
  * of the container to numerical precision.
@@ -346,37 +228,15 @@ double container_boundary_2d::sum_cell_areas() {
 	return area;
 }
 
-/** Calculates all of the Voronoi cells and sums their volumes. In most cases
- * without walls, the sum of the Voronoi cell volumes should equal the volume
- * of the container to numerical precision.
- * \return The sum of all of the computed Voronoi volumes. */
-double container_boundary_poly_2d::sum_cell_areas() {
-	voronoicell_2d c;
-	double area=0;
-	c_loop_all_2d vl(*this);
-	if(vl.start()) do if(compute_cell(c,vl)) area+=c.area();while(vl.inc());
-	return area;
-}
-
-/** This function tests to see if a given vector lies within the container
- * bounds and any walls.
- * \param[in] (x,y) the position vector to be tested.
- * \return True if the point is inside the container, false if the point is
- *         outside. */
-bool container_boundary_base_2d::point_inside(double x,double y) {
-	if(x<ax||x>bx||y<ay||y>by) return false;
-	return point_inside_walls(x,y);
-}
-
 /** Draws an outline of the domain in gnuplot format.
  * \param[in] fp the file handle to write to. */
-void container_boundary_base_2d::draw_domain_gnuplot(FILE *fp) {
+void container_boundary_2d::draw_domain_gnuplot(FILE *fp) {
 	fprintf(fp,"%g %g\n%g %g\n%g %g\n%g %g\n%g %g\n",ax,ay,bx,ay,bx,by,ax,by,ax,ay);
 }
 
 /** Draws an outline of the domain in POV-Ray format.
  * \param[in] fp the file handle to write to. */
-void container_boundary_base_2d::draw_domain_pov(FILE *fp) {
+void container_boundary_2d::draw_domain_pov(FILE *fp) {
 	fprintf(fp,"cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
 		   "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n",ax,ay,bx,ay,ax,by,bx,by);
 	fprintf(fp,"cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
@@ -386,12 +246,12 @@ void container_boundary_base_2d::draw_domain_pov(FILE *fp) {
 }
 
 /** This does the additional set-up for non-convex containers. We assume that
- * **p, **id, *co, *mem, *bnds, and no_of_bnds have already been setup. We then
+ * **p, **id, *co, *mem, *bnds, and edbc have already been setup. We then
  * proceed to setup **wid, *soi, and THE PROBLEM POINTS BOOLEAN ARRAY.
  * This algorithm keeps the importing seperate from the set-up */
-void container_boundary_base_2d::setup(){
-	bool *probpts=new bool[no_of_bnds];
-	bool *extpts=new bool[no_of_bnds];
+void container_boundary_2d::setup(){
+	bool *probpts=new bool[edbc];
+	bool *extpts=new bool[edbc];
 	double lx,ly,cx,cy,nx,ny;//last (x,y),current (x,y),next (x,y)
 	int widl=1,maxwid=1,fwid=1,nwid,lwid;
 	bool first=true;
@@ -399,7 +259,7 @@ void container_boundary_base_2d::setup(){
 	tmp=tmpp=new int[3*init_temp_label_size];
 	tmpe=tmp+3*init_temp_label_size;
 	
-	while(widl!=no_of_bnds){
+	while(widl!=edbc){
 		extpts[widl]=first;
 		cx=bnds[2*widl];cy=bnds[2*widl+1];
 		nwid=edb[2*widl];lwid=edb[2*widl+1];
@@ -407,7 +267,7 @@ void container_boundary_base_2d::setup(){
 		nx=bnds[2*nwid];ny=bnds[2*nwid+1];
 		
 		tag_walls(cx,cy,nx,ny,widl);
-		semi_circle_labelling(cx,cy,nx,ny,widl);
+		semi_circle_labeling(cx,cy,nx,ny,widl);
 	
 		//make sure that the cos(angle)>1 and the angle points inward	
 		if(((((lx-cx)*(nx-cx))+((ly-cy)*(ny-cy)))>tolerance) && 
@@ -439,11 +299,11 @@ void container_boundary_base_2d::setup(){
  * \param[in] (x2,y2) this is the other point.
  * \param[in] wid this is the wall id bnds[2*wid] is the x index of the first
  *                vertex in the c-c direction. */
-void container_boundary_base_2d::tag_walls(double x1,double y1,double x2,double y2,int wid) {
+void container_boundary_2d::tag_walls(double x1,double y1,double x2,double y2,int wid_) {
 	
 	// Find which boxes this points are within
 	int i1=(int) (x1-ax)*xsp,j1=(int) (y1-ay)*ysp;
-	int i2=(int) (x2-ax)*xsp,j2=(int) (y2-ay)*ysp,k,ij,ije;
+	int i2=(int) (x2-ax)*xsp,j2=(int) (y2-ay)*ysp,k,ij;
 	
 	// Swap to ensure that i1 is smaller than i2
 	double q,yfac;
@@ -458,45 +318,45 @@ void container_boundary_base_2d::tag_walls(double x1,double y1,double x2,double 
 		do {
 			j1++;
 			q=ay+j1*boxy;
-			k=int((((q-y1)*x2+x1*(y2-yp))*yfac-ax)*xsp);
+			k=int((((q-y1)*x2+x1*(y2-q))*yfac-ax)*xsp);
 			if(k>=nx) k=nx-1;
-			tag_line(ij,(j1-1)*nx+k);
+			tag_line(ij,(j1-1)*nx+k,wid_);
 			ij+=nx;
 		} while(j1<j2);
 	} else if(j1>j2) {
 		yfac=1/(y2-y1);
 		do {
 			q=ay+j1*boxy;
-			k=int((((q-y1)*x2+x1*(y2-yp))*yfac-ax)*xsp);
+			k=int((((q-y1)*x2+x1*(y2-q))*yfac-ax)*xsp);
 			if(k>=nx) k=nx-1;
-			tag_line(ij,(j1-1)*nx+k);
+			tag_line(ij,(j1-1)*nx+k,wid_);
 			ij+=nx;
 			j1--;
 		} while(j1>j2);
 	}
-	tag_line(ij,i2+j2*nx);
+	tag_line(ij,i2+j2*nx,wid_);
 }
 
-void container_boundary_base_2d::tag_line(int &ij,int ije,int wid) {
-	tag(ij,wid);
+void container_boundary_2d::tag_line(int &ij,int ije,int wid_) {
+	tag(ij,wid_);
 	while(ij<ije) {
 		ij++;
-		tag(ij,wid);
+		tag(ij,wid_);
 	}
 }
 
-inline void container_boundary_base_2d::tag(int ij,int wid) {
+inline void container_boundary_2d::tag(int ij,int wid_) {
 	int *&wp(wid[ij]);
 	if(*wp==wp[1]) {
 		int nws=wp[1]<<1;
 		if(nws>max_wall_tag_size) voro_fatal_error("Maximum wall tag memory exceeded",VOROPP_MEMORY_ERROR);
 		int *np=new int[nws+2];
 		*np=*wp;np[1]=nws;
-		for(i=2;i<*wp+2;i++) np[i]=wp[i];
+		for(int i=2;i<*wp+2;i++) np[i]=wp[i];
 		delete [] wp;
 		wp=np;
 	}
-	wp[2+(*wp)++]=wid;
+	wp[2+(*wp)++]=wid_;
 }
 
 /* Tags particles that are within a semicircle (on the appropriate side) of a
@@ -505,8 +365,9 @@ inline void container_boundary_base_2d::tag(int ij,int wid) {
  *                    is the first point reached in the counter-clockwise
  *                    direction. 
  * \param[in] (x2,y2) the end points of the wall segment. */
-void container_boundary_base_2d::semi_circle_labelling(double x1,double y1,double x2,double y2,int bid) {
-	double radius=dist(x1,y1,x2,y2)*0.5,midx=(x1+x2)*0.5,midy=(y1+y2)*0.5,cpx,cpy;
+void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,double y2,int bid) {
+	double radius=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))*0.5,
+	       midx=(x1+x2)*0.5,midy=(y1+y2)*0.5,cpx,cpy;
 	int ai=(int) ((midx-radius)-ax)*xsp,
 	    bi=(int) ((midx+radius)-ax)*xsp,
 	    aj=(int) ((midy-radius)-ay)*ysp,
@@ -521,14 +382,14 @@ void container_boundary_base_2d::semi_circle_labelling(double x1,double y1,doubl
 	// appropriate side of the wall
 	for(j=aj;j<=bj;j++) for(i=ai;i<=bi;i++) {
 		ij=i+nx*j;
-		for(k=0;k<co[box];k++) {
-			cpx=p[box][2*k];
-			cpy=p[box][2*k+1];
-			if(dist(midx,midy,cpx,cpy)<=radius&&
+		for(k=0;k<co[ij];k++) {
+			cpx=p[ij][2*k];
+			cpy=p[ij][2*k+1];
+			if((midx-cpx)*(midx-cpx)+(midy-cpy)*(midy-cpy)<=radius&&
 			cross_product((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0&& 
 			(cpx!=x1||cpy==y1)&&(cpx!=x2||cpy!=y2)) {
 				if(tmpp==tmpe) add_temporary_label_memory();
-				*(tmpp++)=box;
+				*(tmpp++)=ij;
 				*(tmpp++)=k;
 				*(tmpp++)=bid;
 			}
@@ -536,7 +397,7 @@ void container_boundary_base_2d::semi_circle_labelling(double x1,double y1,doubl
 	}
 }
 		
-void container_boundary_base_2d::create_label_table() {
+void container_boundary_2d::create_label_table() {
 	int ij,q,*pp,tlab=0;
 
 	// Clear label counters
@@ -573,10 +434,10 @@ void container_boundary_base_2d::create_label_table() {
  * is a continuous block in the bnds array, which will be true for the import
  * function. However, it may not be true in other cases, in which case this
  * routine would have to be extended.) */
-void container_boundary_base_2d::draw_boundary(FILE *fp) {
+void container_boundary_2d::draw_boundary_gnuplot(FILE *fp) {
 	int i;
 	
-	for(i=0;i<no_of_bnds;i++) {
+	for(i=0;i<edbc;i++) {
 		fprintf(fp,"%d %g %g\n",i,bnds[2*i],bnds[2*i+1]);
 
 		// If a loop is detected, than complete the loop in the output file
@@ -585,7 +446,7 @@ void container_boundary_base_2d::draw_boundary(FILE *fp) {
 	}
 }	
 
-bool container_boundary_base_2d::ok_cutting_particle(double gx,double gy,int gbox,int gindex,double cx,double cy,int cbox,int cindex,bool boundary,int bid) {
+bool container_boundary_2d::ok_cutting_particle(double gx,double gy,int gbox,int gindex,double cx,double cy,int cbox,int cindex,bool boundary,int bid) {
 	int cwid,nwid;
 	double widx1,widy1,widx2,widy2;
 
@@ -621,8 +482,7 @@ bool container_boundary_base_2d::ok_cutting_particle(double gx,double gy,int gbo
 /** Imports a list of particles from an input stream.
  * \param[in] fp a file handle to read from. */
 void container_boundary_2d::import(FILE *fp) {
-	int i,sm;
-	bool boundary(false);
+	int i;
 	double x,y;
 	char *buf(new char[512]);
 
@@ -644,7 +504,7 @@ void container_boundary_2d::import(FILE *fp) {
 
 			// Try and read three entries from the line
 			if(sscanf(buf,"%d %lg %lg",&i,&x,&y)!=3) voro_fatal_error("File import error #1",VOROPP_FILE_ERROR);
-			put(i,x,y,);
+			put(i,x,y);
 		}
 	}
 
@@ -652,64 +512,26 @@ void container_boundary_2d::import(FILE *fp) {
 	delete [] buf;	
 }
 
-/** Imports a list of particles from an input stream.
- * \param[in] fp a file handle to read from. */
-void container_boundary_poly_2d::import(FILE *fp) {
-	int i,sm;
-	bool boundary(false);
-	double x,y;
-	char *buf(new char[512]);
-
-	while(fgets(buf,512,fp)!=NULL) {
-		if(strcmp(buf,"#Start\n")==0||strcmp(buf,"# Start\n")==0) {
-
-			// Check that two consecutive start tokens haven't been
-			// encountered
-			if(boundary_track!=-1) voro_fatal_error("File import error - two consecutive start tokens found",VOROPP_FILE_ERROR);
-			start_boundary();
-
-		} else if(strcmp(buf,"#End\n")==0||strcmp(buf,"# End\n")==0) {
-			
-			// Check that two consecutive end tokens haven't been
-			// encountered
-			if(boundary_track==-1) voro_fatal_error("File import error - found end token without start token",VOROPP_FILE_ERROR);
-			end_boundary();
-		} else {
-
-			// Try and read three entries from the line
-			if(sscanf(buf,"%d %lg %lg %lg",&i,&x,&y,&r)!=4) voro_fatal_error("File import error #1",VOROPP_FILE_ERROR);
-			put(i,x,y,);
-		}
-	}
-
-	if(!feof(fp)) voro_fatal_error("File import error #2",VOROPP_FILE_ERROR);
-	delete [] buf;	
-}
-
-inline void container_boundary_base_2d::start_boundary() {
-	boundary_track=no_of_bnds;
-}
-
-inline void container_boundary_base_2d::end_boundary() {
-	if(boundary_track!=no_of_bnds) {
-		edb[2*sm+1]=no_of_bnds-1;
-		edb[2*(no_of_bnds-1)]=sm;
+inline void container_boundary_2d::end_boundary() {
+	if(boundary_track!=edbc) {
+		edb[2*boundary_track+1]=edbc-1;
+		edb[2*(edbc-1)]=boundary_track;
 	}
 	boundary_track=-1;
 }
 
-void container_boundary_base_2d::register_boundary(double x,double y) {
-	if(no_of_bnds==edb_mem) add_edb_memory();
-	if(no_of_bnds!=boundary_track) {
-		edb[2*no_of_bnds-2]=no_of_bnds;
-		edb[2*no_of_bnds+1]=no_of_bnds-1;
+void container_boundary_2d::register_boundary(double x,double y) {
+	if(edbc==edbm) add_boundary_memory();
+	if(edbc!=boundary_track) {
+		edb[2*edbc-2]=edbc;
+		edb[2*edbc+1]=edbc-1;
 	}
-	bnds[2*no_of_bnds]=x;
-	bnds[2*(no_of_bnds++)+1]=y;
+	bnds[2*edbc]=x;
+	bnds[2*(edbc++)+1]=y;
 }
 
 /** Increases the size of the temporary label memory. */
-void container_boundary_base_2d::add_temporary_label_memory() {
+void container_boundary_2d::add_temporary_label_memory() {
 	int size(tmpe-tmp);
 	size<<=1;
 	if(size>3*max_temp_label_size)
@@ -724,21 +546,24 @@ void container_boundary_base_2d::add_temporary_label_memory() {
 }
 
 /** Increases the memory allocation for the boundary points. */
-void container_boundary_base_2d::add_boundary_memory() {
-	int i,size(bnds_size<<1);
-	if(size>max_bnds_size)
-		voro_fatal_error("Absolute bounds memory allocation exceeded",VOROPP_MEMORY_ERROR);
+void container_boundary_2d::add_boundary_memory() {
+	int i;
+	edbm<<=1;
+	if(edbm>max_boundary_size)
+		voro_fatal_error("Absolute boundary memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
-	fprintf(stderr,"Bounds memory scaled up to %d\n",size);
+	fprintf(stderr,"Boundary memory scaled up to %d\n",size);
 #endif
 	
 	// Reallocate the boundary vertex information
-	double *nbnds(new double[2*size]);
-	for(i=0;i<2*no_of_bnds;i++) nbnds[i]=bnds[i];
+	double *nbnds(new double[2*edbm]);
+	for(i=0;i<2*edbc;i++) nbnds[i]=bnds[i];
 	delete [] nbnds;bnds=nbnds;
 
 	// Reallocate the edge information
-	int *nedb(new int[2*size]);
-	for(i=0;i<no_of_bnds;i++) nedb[i]=edb[i];
+	int *nedb(new int[2*edbm]);
+	for(i=0;i<2*edbc;i++) nedb[i]=edb[i];
 	delete [] edb;edb=nedb;
+}
+
 }

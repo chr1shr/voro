@@ -12,14 +12,16 @@ const int init_delete_size=256;
 /** The default initial size for the ordering class. */
 const int init_ordering_size=4096;
 
-const int init_bounds_size=256;
+const int init_boundary_size=256;
 const int init_wall_tag_size=6;
-
 const int init_wall_size=32;
-const int max_bnds_size=1048576;
+const int init_temp_label_size=256;
+
+const int max_boundary_size=1048576;
 const int max_wall_tag_size=65536;
 const int max_wall_size=4096;
 const int max_temp_label_size=16777216;
+
 const double large_number=1e30;
 
 // If the initial memory is too small, the program dynamically allocates more.
