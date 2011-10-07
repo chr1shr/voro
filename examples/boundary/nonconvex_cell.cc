@@ -31,5 +31,5 @@ int main() {
        	       "Centroid is (%g,%g)\n",v.perimeter(),v.area(),x,y);
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.draw_gnuplot(0,0,"single_cell_2d.gnu");
+	v.draw_gnuplot(0,0,"single_cell.gnu");
 }

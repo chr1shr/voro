@@ -2,36 +2,27 @@
 #
 # Author : Chris H. Rycroft (LBL / UC Berkeley)
 # Email  : chr@alum.mit.edu
-# Date   : May 18th 2011 
-
-# Load the common configuration file
-include ../config.mk
-
-# List of executables
-EXECUTABLES=test_cell test_ctr test_import test_lloyd test_intersect test_circle
+# Date   : August 30th 2011
 
 # Makefile rules
-all: $(EXECUTABLES) 
+all: ex_basic ex_walls ex_boundary ex_extra
 
-test_cell: $(SOURCE) test_cell.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_cell test_cell.cc -lvoro++_2d
+ex_basic:
+	$(MAKE) -C basic
 
-test_ctr: test_ctr.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_ctr test_ctr.cc -lvoro++_2d
+ex_walls:
+	$(MAKE) -C walls
 
-test_import: test_import.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_import test_import.cc -lvoro++_2d
+ex_boundary:
+	$(MAKE) -C boundary
 
-test_lloyd: test_lloyd.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_lloyd test_lloyd.cc -lvoro++_2d
-
-test_intersect: test_intersect.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_intersect test_intersect.cc -lvoro++_2d
-
-test_circle: test_circle.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o test_circle test_circle.cc
+ex_extra:
+	$(MAKE) -C extra
 
 clean:
-	rm -f $(EXECUTABLES)
+	$(MAKE) -C basic clean
+	$(MAKE) -C walls clean
+	$(MAKE) -C boundary clean
+	$(MAKE) -C extra clean
 
-.PHONY: all clean
+.PHONY: all ex_basic ex_walls ex_boundary ex_extra clean

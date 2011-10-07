@@ -14,5 +14,5 @@ CC=g++
 CFLAGS=-Wall -ansi -pedantic -O3
 
 # Include and library mat
-E_INC=-I../src
-E_LIB=-L../src
+E_INC=-I../../src
+E_LIB=-L../../src

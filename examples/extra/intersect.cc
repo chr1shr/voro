@@ -19,7 +19,7 @@ int main() {
 	double x,y,r,rmin,rmax;
 	double phi;
 	voronoicell_2d v;
-	FILE *fp=safe_fopen("cell_cut_region.gnu","w");
+	FILE *fp=safe_fopen("intersect_region.gnu","w");
 
 	// Initialize the Voronoi cell to be an octahedron and make a single
 	// plane cut to add some variation
@@ -27,7 +27,7 @@ int main() {
 	v.plane(1,1,1);
 
 	// Output the cell in gnuplot format
-	v.draw_gnuplot(0,0,"cell.gnu");
+	v.draw_gnuplot(0,0,"intersect_cell.gnu");
 
 	// Now test over direction vectors from the center of the sphere. For
 	// each vector, carry out a search to find the maximum distance along

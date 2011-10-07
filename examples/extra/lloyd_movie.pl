@@ -4,7 +4,7 @@
 foreach $f (0..256) {
 
 	# Create the filename
-	$fn=sprintf "lloyd/fr_%04d.png",$f;
+	$fn=sprintf "lloyd_output/fr_%04d.png",$f;
 
 	# Create a temporary gnuplot file to render the frame 
 	open A,"lloyd_movie.gnuplot";
