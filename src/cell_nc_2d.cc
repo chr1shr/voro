@@ -19,7 +19,6 @@ void voronoicell_nonconvex_neighbor_2d::init(double xmin,double xmax,double ymin
 }
 
 void voronoicell_nonconvex_base_2d::init_nonconvex_base(double xmin,double xmax,double ymin,double ymax,double wx0,double wy0,double wx1,double wy1) {
-	nonconvex=true;
 	xmin*=2;xmax*=2;ymin*=2;ymax*=2;
 	int f0=face(xmin,xmax,ymin,ymax,wx0,wy0),
 	    f1=face(xmin,xmax,ymin,ymax,wx1,wy1);
@@ -45,6 +44,18 @@ void voronoicell_nonconvex_base_2d::init_nonconvex_base(double xmin,double xmax,
 	*(q++)=1;*(q++)=p-1;
 	for(i=1;i<p-1;i++) {*(q++)=i+1;*(q++)=i-1;}
 	*(q++)=0;*q=p-2;
+
+	if(wx0*wy1>wx1*wy0) nonconvex=false;
+	else {
+		nonconvex=true;
+		if(wx0*wx1+wy0*wy1>0) {
+			*reg=wy0+wy1;reg[1]=-wx0-wx1;
+		} else {
+			*reg=wx1-wx0;reg[1]=wy1-wy0;
+		}
+		reg[2]=wx0;reg[3]=wy0;
+		reg[4]=wx1;reg[5]=wy1;
+	}
 }
 
 void voronoicell_nonconvex_neighbor_2d::init_nonconvex(double xmin,double xmax,double ymin,double ymax,double wx0,double wy0,double wx1,double wy1) {
@@ -53,6 +64,31 @@ void voronoicell_nonconvex_neighbor_2d::init_nonconvex(double xmin,double xmax,d
 	for(int i=1;i<p-1;i++) ne[i]=-99;
 	ne[p-1]=-5;
 }
+
+/** Cuts the Voronoi cell by a particle whose center is at a separation of
+ * (x,y) from the cell center. The value of rsq should be initially set to
+ * \f$x^2+y^2\f$.
+ * \param[in] (x,y) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \return False if the plane cut deleted the cell entirely, true otherwise. */
+template<class vc_class>
+bool voronoicell_nonconvex_base_2d::nplane_nonconvex(vc_class &vc,double x,double y,double rsq,int p_id) {
+	int up=0,*edd;
+	double u,rx,ry;
+
+	if(x*(*reg)>y*reg[1]) {edd=ed;rx=reg[2];ry=reg[3];}
+	else {edd=ed+1;rx=reg[4];ry=reg[5];}
+
+	up=*edd;u=pos(x,y,rsq,up);
+	while(u<tolerance) {
+		up=edd[2*up];if(up==0) return true;
+		if(rx*pts[2*up]+ry*pts[2*up+1]>0) return true;
+		u=pos(x,y,rsq,up);
+	}
+
+	return nplane_cut(vc,x,y,rsq,p_id,u,up);
+}
+
 
 inline int voronoicell_nonconvex_base_2d::face(double xmin,double xmax,double ymin,double ymax,double &wx,double &wy) {
 	if(wy>0) {
@@ -64,5 +100,14 @@ inline int voronoicell_nonconvex_base_2d::face(double xmin,double xmax,double ym
 	if(xmin*wy>ymin*wx) {wx*=ymin/wy;wy=ymin;return 3;}
 	wy*=xmin/wx;wx=xmin;return 2;
 }
+
+void voronoicell_nonconvex_neighbor_2d::neighbors(vector<int> &v) {
+	v.resize(p);
+	for(int i=0;i<p;i++) v[i]=ne[i];
+}
+
+// Explicit instantiation
+template bool voronoicell_nonconvex_base_2d::nplane_nonconvex(voronoicell_nonconvex_2d&,double,double,double,int);
+template bool voronoicell_nonconvex_base_2d::nplane_nonconvex(voronoicell_nonconvex_neighbor_2d&,double,double,double,int);
 
 }

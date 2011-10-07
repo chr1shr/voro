@@ -5,7 +5,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-/** \file container_2d.hh
+/** \file cell_nc_2d.hh
  * \brief Header file for the non-convex 2D Voronoi classes. */
 
 #ifndef VORO_CELL_NC_2D_HH
@@ -17,18 +17,34 @@ namespace voro {
 
 class voronoicell_nonconvex_base_2d : public voronoicell_base_2d {
 	public:
+		using voronoicell_base_2d::nplane;
 		bool nonconvex;
+		template<class vc_class>
+		inline bool nplane_base(vc_class &vc,double x,double y,double rs,int p_id) {
+			return nonconvex?nplane_nonconvex(vc,x,y,rs,p_id):nplane(vc,x,y,rs,p_id);
+		}
+		template<class vc_class>
+		bool nplane_nonconvex(vc_class &vc,double x,double y,double rs,int p_id);
+		inline void vecs(const char *filename) {
+			FILE *fp=safe_fopen(filename,"w");
+			double r;
+			for(int i=0;i<3;i++) {
+				r=1;//(0.6+0.2*i)/sqrt(reg[2*i]*reg[2*i]+reg[2*i+1]*reg[2*i+1]);
+				fprintf(fp,"0 0\n%g %g\n\n\n",reg[2*i]*r,reg[2*i+1]*r);
+			}
+			fclose(fp);
+		}
 		void init_nonconvex_base(double xmin,double xmax,double ymin,double ymax,double wx0,double wy0,double wx1,double wy1);
 	private:
+		double reg[6];
 		inline int face(double xmin,double xmax,double ymin,double ymax,double &wx,double &wy);
 };
 
 class voronoicell_nonconvex_2d : public voronoicell_nonconvex_base_2d {
 	public:
-		using voronoicell_base_2d::nplane;
 		bool nonconvex;
 		inline bool nplane(double x,double y,double rs,int p_id) {
-			return nplane(*this,x,y,rs,0);
+			return nplane_base(*this,x,y,rs,0);
 		}
 		inline bool nplane(double x,double y,int p_id) {
 			double rs=x*x+y*y;
@@ -57,12 +73,11 @@ class voronoicell_nonconvex_2d : public voronoicell_nonconvex_base_2d {
 
 class voronoicell_nonconvex_neighbor_2d : public voronoicell_nonconvex_base_2d {
 	public:
-		using voronoicell_base_2d::nplane;
 		int *ne;
 		voronoicell_nonconvex_neighbor_2d() : ne(new int[init_vertices]) {}
 		~voronoicell_nonconvex_neighbor_2d() {delete [] ne;}
 		inline bool nplane(double x,double y,double rs,int p_id) {
-			return nplane(*this,x,y,rs,p_id);
+			return nplane_base(*this,x,y,rs,p_id);
 		}
 		inline bool nplane(double x,double y,int p_id) {
 			double rs=x*x+y*y;
@@ -79,7 +94,13 @@ class voronoicell_nonconvex_neighbor_2d : public voronoicell_nonconvex_base_2d {
 		void init_nonconvex(double xmin,double xmax,double ymin,double ymax,double wx0,double wy0,double wx1,double wy1);
 		virtual void neighbors(vector<int> &v);
 	private:
-		inline void n_add_memory_vertices();
+		inline void n_add_memory_vertices() {
+			int *nne=new int[current_vertices],
+			    *nee=ne+(current_vertices>>1),
+			    *nep=ne,*nnep=nne;
+			while(nep<nee) *(nnep++)=*(nep++);
+			delete [] ne;ne=nne;
+		}
 		inline void n_copy(int a,int b) {ne[a]=ne[b];}
 		inline void n_set(int a,int id) {ne[a]=id;}
 		friend class voronoicell_base_2d;

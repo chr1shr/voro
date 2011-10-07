@@ -81,6 +81,8 @@ class voronoicell_base_2d {
 		}
 		template<class vc_class>
 		bool nplane(vc_class &vc,double x,double y,double rs,int p_id);
+		template<class vc_class>
+		bool nplane_cut(vc_class &vc,double x,double y,double rsq,int p_id,double u,int up);
 		bool plane_intersects(double x,double y,double rs);
 		inline bool plane_intersects_guess(double x,double y,double rs) {
 			return plane_intersects(x,y,rs);
@@ -96,10 +98,7 @@ class voronoicell_base_2d {
 		void normals(vector<double> &vd);	
 		void centroid(double &cx,double &cy);
 		virtual void neighbors(vector<int> &v) {v.clear();}
-	private:
-		template<class vc_class>
-		void add_memory_vertices(vc_class &vc);
-		void add_memory_ds(int *&stackp);
+	protected:
 		/** Computes the distance of a Voronoi cell vertex to a plane.
 		 * \param[in] (x,y) the normal vector to the plane.
 		 * \param[in] rsq the distance along this vector of the plane.
@@ -107,6 +106,10 @@ class voronoicell_base_2d {
 		inline double pos(double x,double y,double rsq,int qp) {
 			return x*pts[2*qp]+y*pts[2*qp+1]-rsq;
 		}
+	private:
+		template<class vc_class>
+		void add_memory_vertices(vc_class &vc);
+		void add_memory_ds(int *&stackp);
 		/** The delete stack, used to store the vertices that are
 		 * deleted during the plane cutting procedure. */
 		int *ds;

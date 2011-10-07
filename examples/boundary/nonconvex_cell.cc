@@ -10,7 +10,8 @@ int main() {
 
 	// Initialize the Voronoi cell to be a cube of side length 2, centered
 	// on the origin
-	v.init_nonconvex(-1,0.8,-1,0.4,10,-25,-5,-20);
+	v.init_nonconvex(-1,0.8,-1,0.4,0.2,1,1,0.2);
+	v.vecs("test_vecs");
 
 	// Cut the cell by 100 random planes which are all a distance 1 away
 	// from the origin, to make an approximation to a sphere

@@ -2,6 +2,7 @@
  * \brief Function implementations for the voronoicell_2d class. */
 
 #include "cell_2d.hh"
+#include "cell_nc_2d.hh"
 
 namespace voro {
 
@@ -122,8 +123,8 @@ bool voronoicell_base_2d::plane_intersects(double x,double y,double rsq) {
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class vc_class>
 bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p_id) {
-	int cp,lp,up=0,up2,up3,*stackp(ds);
-	double fac,l,u,u2,u3;
+	int up=0,up2,up3;
+	double u,u2,u3;
 
 	// First try and find a vertex that is within the cutting plane, if
 	// there is one. If one can't be found, then the cell is not cut by
@@ -148,6 +149,15 @@ bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p
 			up=up3;u=u3;
 		}
 	}
+
+	return nplane_cut(vc,x,y,rsq,p_id,u,up);
+}
+
+
+template<class vc_class>
+bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,int p_id,double u,int up) {
+	int cp,lp,up2,up3,*stackp=ds;
+	double fac,l,u2,u3;
 
 	// Add this point to the delete stack, and search counter-clockwise to
 	// find additional points that need to be deleted.
@@ -502,7 +512,15 @@ void voronoicell_base_2d::add_memory_ds(int *&stackp) {
 // Explicit instantiation
 template bool voronoicell_base_2d::nplane(voronoicell_2d&,double,double,double,int);
 template bool voronoicell_base_2d::nplane(voronoicell_neighbor_2d&,double,double,double,int);
+template bool voronoicell_base_2d::nplane_cut(voronoicell_2d&,double,double,double,int,double,int);
+template bool voronoicell_base_2d::nplane_cut(voronoicell_neighbor_2d&,double,double,double,int,double,int);
 template void voronoicell_base_2d::add_memory_vertices(voronoicell_2d&);
 template void voronoicell_base_2d::add_memory_vertices(voronoicell_neighbor_2d&);
+template bool voronoicell_base_2d::nplane(voronoicell_nonconvex_2d&,double,double,double,int);
+template bool voronoicell_base_2d::nplane(voronoicell_nonconvex_neighbor_2d&,double,double,double,int);
+template bool voronoicell_base_2d::nplane_cut(voronoicell_nonconvex_2d&,double,double,double,int,double,int);
+template bool voronoicell_base_2d::nplane_cut(voronoicell_nonconvex_neighbor_2d&,double,double,double,int,double,int);
+template void voronoicell_base_2d::add_memory_vertices(voronoicell_nonconvex_2d&);
+template void voronoicell_base_2d::add_memory_vertices(voronoicell_nonconvex_neighbor_2d&);
 
 }
