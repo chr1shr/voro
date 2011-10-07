@@ -10,5 +10,7 @@
 #include "v_compute_2d.hh"
 #include "c_loops_2d.hh"
 #include "wall_2d.hh"
+#include "cell_nc_2d.hh"
+#include "ctr_boundary_2d.hh"
 
 #endif

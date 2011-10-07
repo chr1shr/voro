@@ -11,6 +11,7 @@
 #include "v_compute_2d.hh"
 #include "rad_option.hh"
 #include "container_2d.hh"
+#include "ctr_boundary_2d.hh"
 
 namespace voro {
 
@@ -732,11 +733,13 @@ inline void voro_compute_2d<c_class_2d>::add_list_memory(int*& qu_s,int*& qu_e) 
 // Explicit template instantiation
 template voro_compute_2d<container_2d>::voro_compute_2d(container_2d&,int,int);
 template voro_compute_2d<container_poly_2d>::voro_compute_2d(container_poly_2d&,int,int);
+template voro_compute_2d<container_boundary_2d>::voro_compute_2d(container_boundary_2d&,int,int);
 template bool voro_compute_2d<container_2d>::compute_cell(voronoicell_2d&,int,int,int,int);
 template bool voro_compute_2d<container_2d>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int);
 template void voro_compute_2d<container_2d>::find_voronoi_cell(double,double,int,int,int,particle_record_2d&,double&);
 template bool voro_compute_2d<container_poly_2d>::compute_cell(voronoicell_2d&,int,int,int,int);
 template bool voro_compute_2d<container_poly_2d>::compute_cell(voronoicell_neighbor_2d&,int,int,int,int);
 template void voro_compute_2d<container_poly_2d>::find_voronoi_cell(double,double,int,int,int,particle_record_2d&,double&);
-
+template bool voro_compute_2d<container_boundary_2d>::compute_cell(voronoicell_nonconvex_2d&,int,int,int,int);
+template bool voro_compute_2d<container_boundary_2d>::compute_cell(voronoicell_nonconvex_neighbor_2d&,int,int,int,int);
 }

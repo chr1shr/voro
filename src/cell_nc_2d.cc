@@ -38,6 +38,7 @@ void voronoicell_nonconvex_base_2d::init_nonconvex_base(double xmin,double xmax,
 			f0++;f0&=3;
 		} while(f0!=f1);
 	}
+	pts[p++]=wx1;pts[p++]=wy1;
 	p>>=1;
 
 	int i,*q=ed;
@@ -48,7 +49,6 @@ void voronoicell_nonconvex_base_2d::init_nonconvex_base(double xmin,double xmax,
 
 void voronoicell_nonconvex_neighbor_2d::init_nonconvex(double xmin,double xmax,double ymin,double ymax,double wx0,double wy0,double wx1,double wy1) {
 	init_nonconvex_base(xmin,xmax,ymin,ymax,wx0,wy0,wx1,wy1);
-
 	*ne=-5;
 	for(int i=1;i<p-1;i++) ne[i]=-99;
 	ne[p-1]=-5;
@@ -56,13 +56,13 @@ void voronoicell_nonconvex_neighbor_2d::init_nonconvex(double xmin,double xmax,d
 
 inline int voronoicell_nonconvex_base_2d::face(double xmin,double xmax,double ymin,double ymax,double &wx,double &wy) {
 	if(wy>0) {
-		if(xmin*wy>ymax*wx) {wx=xmin;wy*=xmin/wx;return 2;}
+		if(xmin*wy>ymax*wx) {wy*=xmin/wx;wx=xmin;return 2;}
 		if(xmax*wy>ymax*wx) {wx*=ymax/wy;wy=ymax;return 1;}
-		wx=xmax;wy*=xmax/wx;return 0;
+		wy*=xmax/wx;wx=xmax;return 0;
 	}
-	if(xmax*wy>ymin*wx) {wx=xmax;wy*=xmax/wx;return 0;}
+	if(xmax*wy>ymin*wx) {wy*=xmax/wx;wx=xmax;return 0;}
 	if(xmin*wy>ymin*wx) {wx*=ymin/wy;wy=ymin;return 3;}
-	wx=xmin;wy*=xmin/wx;return 2;
+	wy*=xmin/wx;wx=xmin;return 2;
 }
 
 }

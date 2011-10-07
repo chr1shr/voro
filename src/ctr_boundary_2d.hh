@@ -5,11 +5,11 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-/** \file container_2d.hh
- * \brief Header file for the container_base_2d and related classes. */
+/** \file ctr_boundary_2d.hh
+ * \brief Header file for the container_boundary_2d and related classes. */
 
-#ifndef VOROPP_CONTAINER_2D_HH
-#define VOROPP_CONTAINER_2D_HH
+#ifndef VOROPP_CTR_BOUNDARY_2D_HH
+#define VOROPP_CTR_BOUNDARY_2D_HH
 
 #include <cstdio>
 #include <cstdlib>
@@ -102,7 +102,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		 * space is equally divided in either direction from the
 		 * particle's initial position. Plane cuts made by any walls
 		 * that have been added are then applied to the cell.
-		 * \param[in,out] c a reference to a voronoicell_2d object.
+		 * \param[in,out] c a reference to a voronoicell_nonconvex_2d object.
 		 * \param[in] ij the block that the particle is within.
 		 * \param[in] q the index of the particle within its block.
 		 * \param[in] (ci,cj) the coordinates of the block in the
@@ -122,7 +122,6 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
 			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
 			c.init(x1,x2,y1,y2);
-			if(!apply_walls(c,x,y)) return false;
 			disp=ij-i-nx*j;
 			return true;
 		}
@@ -274,7 +273,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		 * \param[in] fp a file handle to write to. */
 		template<class c_loop_2d>
 		void draw_cells_gnuplot(c_loop_2d &vl,FILE *fp) {
-			voronoicell_2d c;double *pp;
+			voronoicell_nonconvex_2d c;double *pp;
 			if(vl.start()) do if(compute_cell(c,vl)) {
 				pp=p[vl.ij]+ps*vl.q;
 				c.draw_gnuplot(*pp,pp[1],fp);
@@ -301,7 +300,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		 * \param[in] fp a file handle to write to. */
 		template<class c_loop_2d>
 		void draw_cells_pov(c_loop_2d &vl,FILE *fp) {
-			voronoicell_2d c;double *pp;
+			voronoicell_nonconvex_2d c;double *pp;
 			if(vl.start()) do if(compute_cell(c,vl)) {
 				fprintf(fp,"// cell %d\n",id[vl.ij][vl.q]);
 				pp=p[vl.ij]+ps*vl.q;
@@ -332,13 +331,13 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		void print_custom(c_loop_2d &vl,const char *format,FILE *fp) {
 			int ij,q;double *pp;
 			if(contains_neighbor(format)) {
-				voronoicell_neighbor_2d c;
+				voronoicell_nonconvex_neighbor_2d c;
 				if(vl.start()) do if(compute_cell(c,vl)) {
 					ij=vl.ij;q=vl.q;pp=p[ij]+ps*q;
 					c.output_custom(format,id[ij][q],*pp,pp[1],default_radius_2d,fp);
 				} while(vl.inc());
 			} else {
-				voronoicell_2d c;
+				voronoicell_nonconvex_2d c;
 				if(vl.start()) do if(compute_cell(c,vl)) {
 					ij=vl.ij;q=vl.q;pp=p[ij]+ps*q;
 					c.output_custom(format,id[ij][q],*pp,pp[1],default_radius_2d,fp);
