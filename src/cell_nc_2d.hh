@@ -18,9 +18,17 @@ namespace voro {
 class voronoicell_nonconvex_base_2d : public voronoicell_base_2d {
 	public:
 		using voronoicell_base_2d::nplane;
+		bool exclude;
 		bool nonconvex;
 		template<class vc_class>
 		inline bool nplane_base(vc_class &vc,double x,double y,double rs,int p_id) {
+			bool res=nplane(vc,x,y,rs,p_id);
+			printf("plane %g %g %g %g %g\n",x,y,rs,max_radius_squared(),area());
+			puts("");
+			draw_gnuplot(0,0);
+			puts("");
+			return res;
+			//if(exclude&&-x*reg[3]+y*reg[2]>tolerance&&x*reg[5]-y*reg[4]>tolerance) return true;
 			return nonconvex?nplane_nonconvex(vc,x,y,rs,p_id):nplane(vc,x,y,rs,p_id);
 		}
 		template<class vc_class>
@@ -58,7 +66,7 @@ class voronoicell_nonconvex_2d : public voronoicell_nonconvex_base_2d {
 			return nplane(x,y,rs,0);
 		}
 		inline void init(double xmin,double xmax,double ymin,double ymax) {
-			nonconvex=false;
+			nonconvex=exclude=false;
 			init_base(xmin,xmax,ymin,ymax);
 		}
 		inline void init_nonconvex(double xmin,double xmax,double ymin,double ymax,double wx0,double wy0,double wx1,double wy1) {

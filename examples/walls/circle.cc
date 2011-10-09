@@ -1,4 +1,4 @@
-#include "voro++_2d.cc"
+#include "voro++_2d.hh"
 using namespace voro;
 
 const double pi=3.1415926535897932384626433832795;
@@ -27,12 +27,12 @@ int main() {
 	}
 
 	// Output the particle positions to a file
-	con.draw_particles("test_circle.par");
+	con.draw_particles("circle.par");
 
 	// Output the Voronoi cells to a file, in the gnuplot format
-	con.draw_cells_gnuplot("test_circle.gnu");
+	con.draw_cells_gnuplot("circle.gnu");
 
-	con.print_custom("%i %q %a %n","test_circle.vol");
+	con.print_custom("%i %q %a %n","circle.vol");
 
 	// Sum the Voronoi cell areas and compare to the circle area
 	double carea=pi*radius*radius,varea=con.sum_cell_areas();

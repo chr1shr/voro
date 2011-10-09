@@ -13,7 +13,7 @@
 namespace voro {
 
 void voronoicell_nonconvex_neighbor_2d::init(double xmin,double xmax,double ymin,double ymax) {
-	nonconvex=false;
+	nonconvex=exclude=false;
 	init_base(xmin,xmax,ymin,ymax);
 	*ne=-3;ne[1]=-2;ne[2]=-4;ne[3]=-1;
 }
@@ -45,6 +45,7 @@ void voronoicell_nonconvex_base_2d::init_nonconvex_base(double xmin,double xmax,
 	for(i=1;i<p-1;i++) {*(q++)=i+1;*(q++)=i-1;}
 	*(q++)=0;*q=p-2;
 
+	exclude=true;
 	if(wx0*wy1>wx1*wy0) nonconvex=false;
 	else {
 		nonconvex=true;
@@ -76,7 +77,7 @@ bool voronoicell_nonconvex_base_2d::nplane_nonconvex(vc_class &vc,double x,doubl
 	int up=0,*edd;
 	double u,rx,ry;
 
-	if(x*(*reg)>y*reg[1]) {edd=ed;rx=reg[2];ry=reg[3];}
+	if(x*(*reg)+y*reg[1]<0) {edd=ed;rx=reg[2];ry=reg[3];}
 	else {edd=ed+1;rx=reg[4];ry=reg[5];}
 
 	up=*edd;u=pos(x,y,rsq,up);

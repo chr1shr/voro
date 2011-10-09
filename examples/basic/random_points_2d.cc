@@ -1,4 +1,4 @@
-#include "voro++_2d.cc"
+#include "voro++_2d.hh"
 using namespace voro;
 
 // This function returns a random floating point number between 0 and 1
@@ -20,10 +20,10 @@ int main() {
 	}
 
 	// Output the particle positions to a file
-	con.draw_particles("test_ctr.par");
+	con.draw_particles("random_points_2d.par");
 
 	// Output the Voronoi cells to a file, in the gnuplot format
-	con.draw_cells_gnuplot("test_ctr.gnu");
+	con.draw_cells_gnuplot("random_points_2d.gnu");
 	
 	// Sum the Voronoi cell areas and compare to the container area
 	double carea=1,varea=con.sum_cell_areas();

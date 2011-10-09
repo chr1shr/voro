@@ -1,7 +1,7 @@
 #include <cmath>
 using namespace std;
 
-#include "voro++_2d.cc"
+#include "voro++_2d.hh"
 using namespace voro;
 
 const double pi=3.1415926535897932384626433832795;

@@ -121,10 +121,25 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 			x=*(pp++);y=*(pp++);
 			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
 			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
-			c.init(x1,x2,y1,y2);
+			printf("init %g %g %d",x,y,id[ij][q]);
+			if(bndpts[ij][q]==-1) {
+				puts(" convex");
+				c.init(x1,x2,y1,y2);
+			} else {
+				puts(" nonconvex");
+				int &bid=bndpts[ij][q];
+				double cx=bnds[2*bid],cy=bnds[2*bid+1];
+				int nwid=edb[2*bid],lwid=edb[2*bid+1];
+				double lx=bnds[2*lwid],ly=bnds[2*lwid+1];
+				double nx=bnds[2*nwid],ny=bnds[2*nwid+1];
+				c.init_nonconvex(x1,x2,y1,y2,nx-cx,ny-cy,lx-cx,ly-cy);
+			}
 			disp=ij-i-nx*j;
 			return true;
 		}
+		bool point_inside(double x,double y);
+		template<class v_cell_2d>
+		bool boundary_cuts(v_cell_2d &c,int ij,double x,double y);
 		/** Initializes parameters for a find_voronoi_cell call within
 		 * the voro_compute template.
 		 * \param[in] (ci,cj) the coordinates of the test block in
@@ -373,7 +388,13 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 			return vc.compute_cell(c,ij,q,i,j);
 		}
 		void setup();
+		bool skip(int ij,int l,double x,double y);
 	private:
+		inline void draw_block(int ij) {
+			int i=ij%nx,j=ij/nx;
+			double lx=ax+i*boxx,ly=ay+j*boxy,ux=lx+boxx,uy=ly+boxy;
+			printf("%g %g\n%g %g\n%g %g\n%g %g\n%g %g\n\n\n",lx,ly,ux,ly,ux,uy,lx,uy,lx,ly);
+		}
 		int *soi;
 		int *tmp;
 		int *tmpp;

@@ -10,8 +10,11 @@ int main() {
 
 	// Initialize the Voronoi cell to be a cube of side length 2, centered
 	// on the origin
-	v.init_nonconvex(-1,0.8,-1,0.4,0.2,1,1,0.2);
-	v.vecs("test_vecs");
+	v.init_nonconvex(-1,0.8,-1,0.4,4,5,5,4);
+	v.draw_gnuplot(0,0,"nonconvex_cell.gnu");
+	v.vecs("vecs");
+	v.plane(0.3,0);
+	v.plane(0.4,0);
 
 	// Cut the cell by 100 random planes which are all a distance 1 away
 	// from the origin, to make an approximation to a sphere
@@ -32,5 +35,5 @@ int main() {
        	       "Centroid is (%g,%g)\n",v.perimeter(),v.area(),x,y);
 
 	// Output the Voronoi cell to a file, in the gnuplot format
-	v.draw_gnuplot(0,0,"nonconvex_cell.gnu");
+	v.draw_gnuplot(0,0,"nonconvex_cell2.gnu");
 }

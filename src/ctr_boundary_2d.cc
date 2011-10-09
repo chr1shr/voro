@@ -41,10 +41,11 @@ container_boundary_2d::container_boundary_2d(double ax_,double bx_,double ay_,do
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
 	for(l=0;l<nxy;l++) id[l]=new int[init_mem];
 	for(l=0;l<nxy;l++) p[l]=new double[ps*init_mem];
-
-	for(l=0;l<nxy;l++) {wid[l]=new int[init_wall_tag_size+2];*(wid[l])=0;wid[l][1]=init_wall_tag_size;}
 	for(l=0;l<nxy;l++) nlab[l]=new int[init_mem];
 	for(l=0;l<nxy;l++) plab[l]=new int*[init_mem];
+	for(l=0;l<nxy;l++) bndpts[l]=new int[init_mem];
+
+	for(l=0;l<nxy;l++) {wid[l]=new int[init_wall_tag_size+2];*(wid[l])=0;wid[l][1]=init_wall_tag_size;}
 }
 
 /** The container destructor frees the dynamically allocated memory. */
@@ -55,9 +56,10 @@ container_boundary_2d::~container_boundary_2d() {
 	if(soi!=NULL) delete [] soi;
 
 	// Deallocate the block-level arrays
+	for(l=nxy-1;l>=0;l--) delete [] wid[l];
+	for(l=nxy-1;l>=0;l--) delete [] bndpts[l];
 	for(l=nxy-1;l>=0;l--) delete [] plab[l];
 	for(l=nxy-1;l>=0;l--) delete [] nlab[l];
-	for(l=nxy-1;l>=0;l--) delete [] wid[l];
 	for(l=nxy-1;l>=0;l--) delete [] p[l];
 	for(l=nxy-1;l>=0;l--) delete [] id[l];
 
@@ -76,10 +78,10 @@ void container_boundary_2d::put(int n,double x,double y) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
 		id[ij][co[ij]]=n;
-		if(boundary_track) {
+		if(boundary_track!=-1) {
 			bndpts[ij][co[ij]]=edbc;
 			register_boundary(x,y);
-		}	
+		} else bndpts[ij][co[ij]]=-1;
 		double *pp=p[ij]+2*co[ij]++;
 		*(pp++)=x;*pp=y;
 	}
@@ -94,6 +96,10 @@ void container_boundary_2d::put(particle_order &vo,int n,double x,double y) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
 		id[ij][co[ij]]=n;
+		if(boundary_track!=-1) {
+			bndpts[ij][co[ij]]=edbc;
+			register_boundary(x,y);
+		} else bndpts[ij][co[ij]]=-1;
 		vo.add(ij,co[ij]);
 		double *pp=p[ij]+2*co[ij]++;
 		*(pp++)=x;*pp=y;
@@ -166,6 +172,8 @@ void container_boundary_2d::add_particle_memory(int i) {
 	for(l=0;l<co[i];l++) nlabp[l]=nlab[i][l];
 	int **plabp=new int*[nmem];
 	for(l=0;l<co[i];l++) plabp[l]=plab[i][l];
+	int *bndptsp=new int[nmem];
+	for(l=0;l<co[i];l++) bndptsp[l]=bndpts[i][l];
 
 	// Update pointers and delete old arrays
 	mem[i]=nmem;
@@ -173,6 +181,7 @@ void container_boundary_2d::add_particle_memory(int i) {
 	delete [] p[i];p[i]=pp;
 	delete [] nlab[i];nlab[i]=nlabp;
 	delete [] plab[i];plab[i]=plabp;
+	delete [] bndpts[i];bndpts[i]=bndptsp;
 }
 
 /** Outputs the a list of all the container regions along with the number of
@@ -210,7 +219,7 @@ void container_boundary_2d::print_custom(const char *format,const char *filename
  * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 void container_boundary_2d::compute_all_cells() {
-	voronoicell_2d c;
+	voronoicell_nonconvex_2d c;
 	c_loop_all_2d vl(*this);
 	if(vl.start()) do compute_cell(c,vl);
 	while(vl.inc());
@@ -221,7 +230,7 @@ void container_boundary_2d::compute_all_cells() {
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
 double container_boundary_2d::sum_cell_areas() {
-	voronoicell_2d c;
+	voronoicell_nonconvex_2d c;
 	double area=0;
 	c_loop_all_2d vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) area+=c.area();while(vl.inc());
@@ -250,8 +259,6 @@ void container_boundary_2d::draw_domain_pov(FILE *fp) {
  * proceed to setup **wid, *soi, and THE PROBLEM POINTS BOOLEAN ARRAY.
  * This algorithm keeps the importing seperate from the set-up */
 void container_boundary_2d::setup(){
-	bool *probpts=new bool[edbc];
-	bool *extpts=new bool[edbc];
 	double lx,ly,cx,cy,nx,ny;//last (x,y),current (x,y),next (x,y)
 	int widl=1,maxwid=1,fwid=1,nwid,lwid;
 	bool first=true;
@@ -260,7 +267,6 @@ void container_boundary_2d::setup(){
 	tmpe=tmp+3*init_temp_label_size;
 	
 	while(widl!=edbc){
-		extpts[widl]=first;
 		cx=bnds[2*widl];cy=bnds[2*widl+1];
 		nwid=edb[2*widl];lwid=edb[2*widl+1];
 		lx=bnds[lwid*2];ly=bnds[lwid*2+1];
@@ -270,12 +276,9 @@ void container_boundary_2d::setup(){
 		semi_circle_labeling(cx,cy,nx,ny,widl);
 	
 		//make sure that the cos(angle)>1 and the angle points inward	
-		if(((((lx-cx)*(nx-cx))+((ly-cy)*(ny-cy)))>tolerance) && 
-		(cross_product(lx-cx,ly-cy,nx-cx,ny-cy)==1)){
-			 probpts[widl]=true;
-		} else {
-			probpts[widl]=false;
-		}
+		//probpts=(lx-cx)*(nx-cx)+(ly-cy)*(ny-cy)>tolerance && 
+		//	cross_product(lx-cx,ly-cy,nx-cx,ny-cy);
+		
 		widl=edb[2*widl];
 		if(widl>maxwid) maxwid=widl;
 		if(widl==fwid){
@@ -301,10 +304,10 @@ void container_boundary_2d::setup(){
  *                vertex in the c-c direction. */
 void container_boundary_2d::tag_walls(double x1,double y1,double x2,double y2,int wid_) {
 	
-	// Find which boxes this points are within
-	int i1=(int) (x1-ax)*xsp,j1=(int) (y1-ay)*ysp;
-	int i2=(int) (x2-ax)*xsp,j2=(int) (y2-ay)*ysp,k,ij;
-	
+	// Find which boxes these points are within
+	int i1=int((x1-ax)*xsp),j1=int((y1-ay)*ysp);
+	int i2=int((x2-ax)*xsp),j2=int((y2-ay)*ysp),k,ij;
+
 	// Swap to ensure that i1 is smaller than i2
 	double q,yfac;
 	if(i2<i1) {
@@ -329,8 +332,8 @@ void container_boundary_2d::tag_walls(double x1,double y1,double x2,double y2,in
 			q=ay+j1*boxy;
 			k=int((((q-y1)*x2+x1*(y2-q))*yfac-ax)*xsp);
 			if(k>=nx) k=nx-1;
-			tag_line(ij,(j1-1)*nx+k,wid_);
-			ij+=nx;
+			tag_line(ij,j1*nx+k,wid_);
+			ij-=nx;
 			j1--;
 		} while(j1>j2);
 	}
@@ -409,7 +412,7 @@ void container_boundary_2d::create_label_table() {
 	// Check for case of no labels at all (which may be common)
 	if(tlab==0) {
 #if VOROPP_VERBOSE >=2
-		fputs("No labels needed",stderr);
+		fputs("No labels needed\n",stderr);
 #endif
 		return;
 	}
@@ -438,45 +441,68 @@ void container_boundary_2d::draw_boundary_gnuplot(FILE *fp) {
 	int i;
 	
 	for(i=0;i<edbc;i++) {
-		fprintf(fp,"%d %g %g\n",i,bnds[2*i],bnds[2*i+1]);
+		fprintf(fp,"%g %g\n",bnds[2*i],bnds[2*i+1]);
 
 		// If a loop is detected, than complete the loop in the output file
 		// and insert a newline
-		if(edb[i]<i) fprintf(fp,"%g %g\n\n",bnds[2*edb[i]],bnds[2*edb[i]+1]);
+		if(edb[2*i]<i) fprintf(fp,"%g %g\n\n",bnds[2*edb[i]],bnds[2*edb[i]+1]);
 	}
 }	
 
-bool container_boundary_2d::ok_cutting_particle(double gx,double gy,int gbox,int gindex,double cx,double cy,int cbox,int cindex,bool boundary,int bid) {
-	int cwid,nwid;
-	double widx1,widy1,widx2,widy2;
+bool container_boundary_2d::point_inside(double x,double y) {
+	int i=0,j=0;
+	bool sleft,left,nleft;
 
-	if(boundary){
-		int nwid=edb[2*bid]; 
-		int lwid=edb[2*bid+1];
-		double nx=bnds[2*nwid]-gx,ny=bnds[2*nwid+1]-gy;
-		double lx=bnds[2*lwid]-gx,ly=bnds[2*lwid+1]-gy;
-		double nxp=-ny,nyp=nx,lxp=ly,lyp=-lx;
-			
-		if(cross_product(lx,ly,nx,ny)==1){
-			nxp*=-1;nyp*=-1;lxp*=-1;lyp*=-1;
-			if((((lxp*(cx-gx))+(lyp*(cy-gy)))>0) && (((nxp*(cx-gx))+(nyp*(cy-gy)))>0)) return false;
-		} else {
-			if((((lxp*(cx-gx))+(lyp*(cy-gy)))<0) || (((nxp*(cx-gx))+(nyp*(cy-gy)))<0)) return false;
-		}
+	while(i<edbc) {
+		sleft=left=bnds[2*i]<x;
+		do {
+			j=edb[2*i];
+			nleft=j<i?sleft:bnds[2*j]<x;
+			if(nleft!=left&&bnds[2*j+1]*(x-bnds[2*i])+bnds[2*i+1]*(bnds[2*j]-x)<y*(bnds[2*j]-bnds[2*i])) left?j++:j--;
+			left=nleft;
+			i++;
+		} while(j>i);
 	}
 
-	for(int i=0;i<(signed int) nlab[cbox][cindex];i++){
-		cwid=plab[cbox][cindex][i];
-		widx1=bnds[2*cwid];
-		widy1=bnds[2*cwid+1];
-		nwid=edb[2*cwid];
-		widx2=bnds[2*nwid];
-		widy2=bnds[2*nwid+1];
-		if(((cx==widx1&&cy==widy1)||(cx==widx2&&cy==widy2))||(boundary&&((gx==widx1&&gy==widy1)||(gx==widx2&&gy==widy2)))) continue;
-		if(cross_product(gx-widx1,gy-widy1,widx2-widx1,widy2-widy1)!=
-			cross_product(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return false;
+#if VOROPP_VERBOSE >=2
+	if(j<0) fprintf(stderr,"Negative winding number of %d for (%g,%g)\n",j,x,y);
+	else if(j>1) fprintf(stderr,"Winding number of %d for (%g,%g)\n",j,x,y);
+#endif
+
+	return j>0;
+}
+
+template<class v_cell_2d>
+bool container_boundary_2d::boundary_cuts(v_cell_2d &c,int ij,double x,double y) {
+	int i,j,k;
+	double dx,dy;
+	for(i=2;i<*(wid[ij])+2;i++) {
+		j=2*wid[ij][i];k=2*edb[j];
+		dx=bnds[k]-bnds[j];dy=bnds[k+1]-bnds[j+1];
+		if(!c.plane(dy,-dx,2*(dy*(bnds[j]-x)-dx*(bnds[j+1]-y)))) return false;
 	}
 	return true;
+}
+
+bool container_boundary_2d::skip(int ij,int q,double x,double y) {
+	int cwid;
+	double widx1,widy1,widx2,widy2;
+	double cx=p[ij][ps*q],cy=p[ij][ps*q+1];
+
+	for(int i=0;i<nlab[ij][q];i++) {
+
+		cwid=plab[ij][q][i];
+		widx1=bnds[2*cwid];
+		widy1=bnds[2*cwid+1];
+		cwid=edb[2*cwid];
+		widx2=bnds[2*cwid];
+		widy2=bnds[2*cwid+1];
+
+		if(cross_product(x-widx1,y-widy1,widx2-widx1,widy2-widy1)!=
+			cross_product(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return true;
+	}
+	return false;
+
 }
 
 /** Imports a list of particles from an input stream.
@@ -512,7 +538,7 @@ void container_boundary_2d::import(FILE *fp) {
 	delete [] buf;	
 }
 
-inline void container_boundary_2d::end_boundary() {
+void container_boundary_2d::end_boundary() {
 	if(boundary_track!=edbc) {
 		edb[2*boundary_track+1]=edbc-1;
 		edb[2*(edbc-1)]=boundary_track;
@@ -565,5 +591,9 @@ void container_boundary_2d::add_boundary_memory() {
 	for(i=0;i<2*edbc;i++) nedb[i]=edb[i];
 	delete [] edb;edb=nedb;
 }
+
+// Explicit instantiation
+template bool container_boundary_2d::boundary_cuts(voronoicell_nonconvex_2d&,int,double,double);
+template bool container_boundary_2d::boundary_cuts(voronoicell_nonconvex_neighbor_2d&,int,double,double);
 
 }

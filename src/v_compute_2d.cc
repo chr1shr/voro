@@ -208,6 +208,7 @@ void voro_compute_2d<c_class_2d>::find_voronoi_cell(double x,double y,int ci,int
 		if(compute_min_radius(di,dj,fx,fy,mrs)) continue;
 
 		ij=con.region_index(ci,cj,ei,ej,qx,qy,disp);
+
 		scan_all(ij,x-qx,y-qy,di,dj,w,mrs);
 
 		// Test the neighbors of the current block, and add them to the
@@ -280,16 +281,17 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 	double fx,fy,gxs,gys,*radp;
 	unsigned int q,*e,*mij;
 
+	// Initialize the Voronoi cell to fill the entire container
 	if(!con.initialize_voronoicell(c,ij,s,ci,cj,i,j,x,y,disp)) return false;
 	con.r_init(ij,s);
+	if(!con.boundary_cuts(c,ij,x,y)) return false;
 
-	// Initialize the Voronoi cell to fill the entire container
 	double crs,mrs;
-
 	int next_count=3,*count_p=(const_cast<int*> (count_list));
 
 	// Test all particles in the particle's local region first
 	for(l=0;l<s;l++) {
+		if(con.skip(ij,l,x,y)) continue;
 		x1=p[ij][ps*l]-x;
 		y1=p[ij][ps*l+1]-y;
 		rs=con.r_scale(x1*x1+y1*y1,ij,l);
@@ -297,6 +299,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 	}
 	l++;
 	while(l<co[ij]) {
+		if(con.skip(ij,l,x,y)) continue;
 		x1=p[ij][ps*l]-x;
 		y1=p[ij][ps*l+1]-y;
 		rs=con.r_scale(x1*x1+y1*y1,ij,l);
@@ -377,6 +380,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		ij=con.region_index(ci,cj,ei,ej,qx,qy,disp);
+		if(!con.boundary_cuts(c,ij,x,y)) return false;
 
 		// If mrs is bigger than the maximum distance to the block,
 		// then we have to test all particles in the block for
@@ -386,6 +390,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 			l=0;x2=x-qx;y2=y-qy;
 			if(!con.r_ctest(crs,mrs)) {
 				do {
+					if(con.skip(ij,l,x,y)) {l++;continue;}
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
 					rs=con.r_scale(x1*x1+y1*y1,ij,l);
@@ -394,6 +399,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 				} while (l<co[ij]);
 			} else {
 				do {
+					if(con.skip(ij,l,x,y)) {l++;continue;}
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
 					rs=x1*x1+y1*y1;
@@ -459,6 +465,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		// Now compute which region we are going to loop over, adding a
 		// displacement for the periodic cases
 		ij=con.region_index(ci,cj,ei,ej,qx,qy,disp);
+		if(!con.boundary_cuts(c,ij,x,y)) return false;
 
 		// If mrs is bigger than the maximum distance to the block,
 		// then we have to test all particles in the block for
@@ -468,6 +475,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 			l=0;x2=x-qx;y2=y-qy;
 			if(!con.r_ctest(crs,mrs)) {
 				do {
+					if(con.skip(ij,l,x,y)) {l++;continue;}
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
 					rs=con.r_scale(x1*x1+y1*y1,ij,l);
@@ -476,6 +484,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 				} while (l<co[ij]);
 			} else {
 				do {
+					if(con.skip(ij,l,x,y)) {l++;continue;}
 					x1=p[ij][ps*l]-x2;
 					y1=p[ij][ps*l+1]-y2;
 					rs=x1*x1+y1*y1;
@@ -542,6 +551,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		// Now compute the region that we are going to test over, and
 		// set a displacement vector for the periodic cases
 		ij=con.region_index(ci,cj,ei,ej,qx,qy,disp);
+		if(!con.boundary_cuts(c,ij,x,y)) return false;
 
 		// Loop over all the elements in the block to test for cuts. It
 		// would be possible to exclude some of these cases by testing
@@ -549,6 +559,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 		if(co[ij]>0) {
 			l=0;x2=x-qx;y2=y-qy;
 			do {
+				if(con.skip(ij,l,x,y)) {l++;continue;}
 				x1=p[ij][ps*l]-x2;
 				y1=p[ij][ps*l+1]-y2;
 				rs=con.r_scale(x1*x1+y1*y1,ij,l);
