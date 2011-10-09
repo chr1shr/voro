@@ -5,6 +5,8 @@ using namespace voro;
 double rnd() {return double(rand())/RAND_MAX;}
 
 int main() {
+	int i;
+	double x,y;
 
 	// Initialize the container class to be the unit square, with
 	// non-periodic boundary conditions. Divide it into a 6 by 6 grid, with
@@ -19,8 +21,11 @@ int main() {
 	con.put(3,-0.6,0.6);
 	con.end_boundary();
 	
-	con.put(4,0.2,0.1);
-	con.put(5,-0.2,0);
+	for(i=0;i<300;i++) {
+		x=-1+2*rnd();
+		y=-1+2*rnd();
+		if(con.point_inside(x,y)) con.put(i+4,x,y);
+	}
 
 	con.draw_boundary_gnuplot("container_bd.gnu");
 	con.draw_particles("container_bd.par");

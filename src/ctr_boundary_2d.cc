@@ -450,26 +450,33 @@ void container_boundary_2d::draw_boundary_gnuplot(FILE *fp) {
 }	
 
 bool container_boundary_2d::point_inside(double x,double y) {
-	int i=0,j=0;
+	int i=0,j,k=0;
 	bool sleft,left,nleft;
 
 	while(i<edbc) {
+		printf("wtf %d %g\n",i,bnds[2*i]);
 		sleft=left=bnds[2*i]<x;
 		do {
 			j=edb[2*i];
 			nleft=j<i?sleft:bnds[2*j]<x;
-			if(nleft!=left&&bnds[2*j+1]*(x-bnds[2*i])+bnds[2*i+1]*(bnds[2*j]-x)<y*(bnds[2*j]-bnds[2*i])) left?j++:j--;
+			if(nleft!=left) {
+				if(left) {
+					if(bnds[2*j+1]*(x-bnds[2*i])+bnds[2*i+1]*(bnds[2*j]-x)<y*(bnds[2*j]-bnds[2*i])) k++;
+				} else {
+					if(bnds[2*j+1]*(x-bnds[2*i])+bnds[2*i+1]*(bnds[2*j]-x)>y*(bnds[2*j]-bnds[2*i])) k--;
+				}
+			}
 			left=nleft;
 			i++;
-		} while(j>i);
+		} while(j==i);
 	}
 
 #if VOROPP_VERBOSE >=2
-	if(j<0) fprintf(stderr,"Negative winding number of %d for (%g,%g)\n",j,x,y);
-	else if(j>1) fprintf(stderr,"Winding number of %d for (%g,%g)\n",j,x,y);
+	if(k<0) fprintf(stderr,"Negative winding number of %d for (%g,%g)\n",j,x,y);
+	else if(k>1) fprintf(stderr,"Winding number of %d for (%g,%g)\n",j,x,y);
 #endif
-
-	return j>0;
+puts("");
+	return k>0;
 }
 
 template<class v_cell_2d>
