@@ -10,6 +10,7 @@
 # Build all of the executable files
 all:
 	$(MAKE) -C src
+	$(MAKE) -C boundary
 	$(MAKE) -C examples
 
 # Build the help files (with doxygen)
@@ -19,4 +20,5 @@ help:
 # Clean up the executable files
 clean:
 	$(MAKE) -C src clean
+	$(MAKE) -C boundary clean
 	$(MAKE) -C examples clean

@@ -369,7 +369,6 @@ inline void container_boundary_2d::tag(int ij,int wid_) {
  *                    direction. 
  * \param[in] (x2,y2) the end points of the wall segment. */
 void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,double y2,int bid) {
-	printf("scl %g %g %g %g %d\n",x1,y1,x2,y2,bid);
 
 	double radius=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))*0.5,
 	       midx=(x1+x2)*0.5,midy=(y1+y2)*0.5,cpx,cpy;
@@ -381,7 +380,6 @@ void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,d
 	if(bi<0) bi=0;if(bi>=nx) bi=nx-1;
 	if(aj<0) aj=0;if(aj>=ny) aj=ny-1;
 	if(bj<0) bj=0;if(bj>=ny) bj=ny-1;
-	printf("%d %d %d %d\n",ai,bi,aj,bj);
 
 	// Now loop through all the particles in the boxes we found, tagging
 	// the ones that are within radius of (midx,midy) and are on the
@@ -394,8 +392,6 @@ void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,d
 			if((midx-cpx)*(midx-cpx)+(midy-cpy)*(midy-cpy)<=radius*radius&&
 			cross_product((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))&& 
 			(cpx!=x1||cpy==y1)&&(cpx!=x2||cpy!=y2)) {
-
-				printf("%g %g %g %g %d - %d\n",x1,y1,x2,y2,bid,id[ij][k]);
 
 				if(tmpp==tmpe) add_temporary_label_memory();
 				*(tmpp++)=ij;
@@ -506,8 +502,6 @@ bool container_boundary_2d::skip(int ij,int q,double x,double y) {
 	double cx=p[ij][ps*q],cy=p[ij][ps*q+1];
 
 	for(int i=0;i<nlab[ij][q];i++) {
-		printf("%d %d %g %g %d\n",ij,q,x,y,i);
-
 		cwid=plab[ij][q][i];
 		widx1=bnds[2*cwid];
 		widy1=bnds[2*cwid+1];
@@ -537,7 +531,8 @@ void container_boundary_2d::import(FILE *fp) {
 			if(boundary_track!=-1) voro_fatal_error("File import error - two consecutive start tokens found",VOROPP_FILE_ERROR);
 			start_boundary();
 
-		} else if(strcmp(buf,"#End\n")==0||strcmp(buf,"# End\n")==0) {
+		} else if(strcmp(buf,"#End\n")==0||strcmp(buf,"# End\n")==0||
+			  strcmp(buf,"#End")==0||strcmp(buf,"# End")==0) {
 			
 			// Check that two consecutive end tokens haven't been
 			// encountered

@@ -1,4 +1,4 @@
-#include "voro++_2d.cc"
+#include "voro++_2d.hh"
 using namespace voro;
 
 // This function returns a random floating point number between 0 and 1

@@ -22,7 +22,6 @@ class voronoicell_nonconvex_base_2d : public voronoicell_base_2d {
 		bool nonconvex;
 		template<class vc_class>
 		inline bool nplane_base(vc_class &vc,double x,double y,double rs,int p_id) {
-			printf("plane %g %g %g\n",x,y,rs);
 			return exclude?(nonconvex?
 				(-x*reg[3]+y*reg[2]<-tolerance&&x*reg[5]-y*reg[4]<-tolerance)||nplane_nonconvex(vc,x,y,rs,p_id):
 				-x*reg[3]+y*reg[2]<-tolerance||x*reg[5]-y*reg[4]<-tolerance||nplane(vc,x,y,rs,p_id)):
@@ -30,15 +29,6 @@ class voronoicell_nonconvex_base_2d : public voronoicell_base_2d {
 		}
 		template<class vc_class>
 		bool nplane_nonconvex(vc_class &vc,double x,double y,double rs,int p_id);
-		inline void vecs(const char *filename) {
-			FILE *fp=safe_fopen(filename,"w");
-			double r;
-			for(int i=0;i<3;i++) {
-				r=1;//(0.6+0.2*i)/sqrt(reg[2*i]*reg[2*i]+reg[2*i+1]*reg[2*i+1]);
-				fprintf(fp,"0 0\n%g %g\n\n\n",reg[2*i]*r,reg[2*i+1]*r);
-			}
-			fclose(fp);
-		}
 		void init_nonconvex_base(double xmin,double xmax,double ymin,double ymax,double wx0,double wy0,double wx1,double wy1);
 	private:
 		double reg[6];

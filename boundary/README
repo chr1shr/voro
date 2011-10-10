@@ -1,0 +1,83 @@
+2D Boundary command-line utility
+by Cody Robert Dance, Jeff Johnson and Chris H. Rycroft
+=======================================================
+
+Input file
+----------
+This command-line utility demonstrates the functionality of the 2D Voronoi
+boundary code. The utility accepts a single argument as the name of the
+input file to read. The input file must have lines of three entries, separated
+by spaces, corresponding to a particle ID, and its (x,y) position:
+
+<id> <x> <y>
+<id> <x> <y>
+...
+
+To create a boundary loop, the keywords "# Start" and "# End" must be included
+on separate lines. A loop of three particles would look like this:
+
+# Start
+<id> <x> <y>
+<id> <x> <y>
+<id> <x> <y>
+# End
+
+The utility checks for many simple errors in the input file, such as finding
+two start tokens in succession, or finding a boundary loop without any
+terminating end token.
+
+The boundaries must have the correct winding direction, so that they go
+clockwise around the outer edge. Holes are also allowed, and for these, they
+must be specified in a counter-clockwise direction. In both cases, the interior
+is on the left as the boundary is traversed. The utility does not do any checks
+of boundary winding, and this may cause errors if the winding is not specified
+correctly.
+
+
+Computation
+-----------
+The command-line utility first reads in the contents of the file. It computes
+the size of the domain that the particles are in, and counts the number of
+particles.
+
+To carry out the computation, the library divides the domain into a rectangular
+grid of equally-sized boxes. The optimal performance is obtained for around
+five to fifteen particles per box, and performance is further improved if the
+boxes are close to squares. The utility estimates the number of boxes based on
+the domain size and the number of particles.
+
+It then constructs the container, and imports the particles. After this is
+carried out, a routine called "setup" is run, which carries out additional
+computations that are needed for the non-convex case prior to computing Voronoi
+cells. It scans the boundary, and searches for particles that may need to be
+excluded from certain Voronoi cell computations because they lie close to a
+wall.
+
+
+Output
+------
+The code outputs several files that are designed to be plotted with Gnuplot,
+although since they are text files, it should be possible to view them in other
+plotting programs. Three files are created:
+
+<filename>.bd - a drawing of the boundary
+<filename>.gnu - a file with the computed Voronoi cells
+<filename>.net - a file visualizing the cell connectivity
+
+These files can be plotted in Gnuplot using the command
+
+plot '<filename>.gnu' t "Voronoi cells", '<filename>.bd' lw 3 t "Boundary", \
+     '<filename>.net' t "Connections", '<filename>' u 2:3 w p pt 7 t "Generators" 
+
+
+Examples
+--------
+Four example files are included. They can be run with the commands
+
+./voro++_bdry input1
+./voro++_bdry input2
+./voro++_bdry input3
+./voro++_bdry input4
+
+This will generate many output files. If the Gnuplot script figs.gnuplot is
+run, by typing "gnuplot figs.gnuplot", then four EPS figures will be created.

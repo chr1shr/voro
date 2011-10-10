@@ -17,7 +17,7 @@ nonconvex_cell: $(SOURCE) nonconvex_cell.cc
 	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o nonconvex_cell nonconvex_cell.cc -lvoro++_2d
 
 container_bd: $(SOURCE) container_bd.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o container_bd container_bd.cc -ggdb
+	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o container_bd container_bd.cc -lvoro++_2d
 
 clean:
 	rm -f $(EXECUTABLES)

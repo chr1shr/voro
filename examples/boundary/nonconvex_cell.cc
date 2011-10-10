@@ -12,7 +12,6 @@ int main() {
 	// on the origin
 	v.init_nonconvex(-1,0.8,-1,0.4,4,5,5,4);
 	v.draw_gnuplot(0,0,"nonconvex_cell.gnu");
-	v.vecs("vecs");
 	v.plane(0.3,0);
 	v.plane(0.4,0);
 

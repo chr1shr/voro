@@ -121,12 +121,8 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 			x=*(pp++);y=*(pp++);
 			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
 			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
-			printf("\ninit %g %g %d",x,y,id[ij][q]);
-			if(bndpts[ij][q]==-1) {
-				puts(" convex");
-				c.init(x1,x2,y1,y2);
-			} else {
-				puts(" nonconvex");
+			if(bndpts[ij][q]==-1) c.init(x1,x2,y1,y2);
+			else {
 				int &bid=bndpts[ij][q];
 				double cx=bnds[2*bid],cy=bnds[2*bid+1];
 				int nwid=edb[2*bid],lwid=edb[2*bid+1];

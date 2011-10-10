@@ -5,7 +5,7 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
-#include "voro++_2d.cc"
+#include "voro++_2d.hh"
 using namespace voro;
 
 #include <vector>
@@ -28,7 +28,8 @@ int main(int argc,char **argv) {
 	vector<int> vid;
 	vector<double> vpos;
 	vector<char> vbd;
-	bool boundary_track=false,start=false;
+	int mid=0;
+	bool neg_label=false,boundary_track=false,start=false;
 	char *buf(new char[512]);
 
 	FILE *fp=safe_fopen(argv[1],"r");
@@ -61,6 +62,8 @@ int main(int argc,char **argv) {
 			i++;
 
 			// Determine bounds
+			if(id<0) neg_label=true;
+			if(id>mid) mid=id;
 			if(x<minx) minx=x;
 			if(x>maxx) maxx=x;
 			if(y<miny) miny=y;
@@ -81,11 +84,11 @@ int main(int argc,char **argv) {
 	
 	// Guess the optimal computationl grid, aiming at eight particles per
 	// grid square
-	double lscale=8*sqrt(dx*dy)/i;
+	double lscale=sqrt(8.0*dx*dy/i);
 	int nx=int(dx/lscale)+1,ny=int(dy/lscale)+1;
 	
 	// Print diagnostic information
-	printf("Container bounds : %g<x<%g, %g<%g\n"
+	printf("Container bounds : [%g:%g] [%g:%g]\n"
 	       "Total particles  : %d\n"
 	       "Compute grid     : %d by %d\n",minx,maxx,miny,maxy,i,nx,ny);
 
@@ -102,25 +105,43 @@ int main(int argc,char **argv) {
 	// Carry out all of the setup prior to computing any Voronoi cells
 	con.setup();
 
+	// Save the boundary in a format that can be read by Gnuplot
+	char *outfn(new char[strlen(argv[1])+5]);
+	sprintf(outfn,"%s.bd",argv[1]);
+	con.draw_boundary_gnuplot(outfn);
+
 	// Compute the Voronoi cells and save them to file
-	char *buf2(new char[strlen(argv[1])+5]);
-	sprintf(buf2,"%s.gnu",argv[1]);
-	con.draw_cells_gnuplot(buf2);
-	delete [] buf2;
+	sprintf(outfn,"%s.gnu",argv[1]);
+	con.draw_cells_gnuplot(outfn);
 
 	// Output the neighbor mesh in gnuplot format
-/*	FILE *ff=safe_fopen("sphere_mesh.net","w");
-	vector<int> vi;
-	voronoicell_nonconvex_neighbor_2d c;
-	c_loop_all_2d cl(con);
-	if(cl.start()) do if(con.compute_cell(c,cl)) {
-		i=cl.pid();
-		c.neighbors(vi);
-		for(j=0;j<vi.size();l++) if(vi[l]>i)
-			fprintf(ff,"%g %g\n%g %g\n\n\n",
-				p[2*i],p[2*i+1],p[2*vi[l]],p[2*vi[l]+1]
-	} while (cl.inc());
-	fclose(ff);*/
+	if(mid>16777216) puts("Network output disabled due to too high Ids");
+	else if(neg_label) puts("Network output disabled due to negative IDs");
+	else {
 
+		int *mp=new int[mid+1];
+		for(j=0;j<i;j++) mp[vid[j]]=j;
+
+		sprintf(outfn,"%s.net",argv[1]);
+		FILE *ff=safe_fopen(outfn,"w");
+		int l1,l2;
+		vector<int> vi;
+		voronoicell_nonconvex_neighbor_2d c;
+		c_loop_all_2d cl(con);
+		if(cl.start()) do if(con.compute_cell(c,cl)) {
+			id=cl.pid();l1=2*mp[id];
+			c.neighbors(vi);
+			for(j=0;j<vi.size();j++) if(vi[j]>id) {
+				l2=2*mp[vi[j]];
+				fprintf(ff,"%g %g\n%g %g\n\n\n",
+					vpos[l1],vpos[l1+1],vpos[l2],vpos[l2+1]);
+			}
+		} while (cl.inc());
+		fclose(ff);
+
+		delete [] mp;
+	}
+	
+	delete [] outfn;
 	return 0;
 }
