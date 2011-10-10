@@ -402,7 +402,6 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		int *tmpp;
 		int *tmpe;
 		void create_label_table();
-		bool ok_cutting_particle(double gx,double gy,int gbox,int gindex,double cx,double cy,int cbox,int cindex,bool boundary,int bid);
 		void add_particle_memory(int i);
 		inline bool put_locate_block(int &ij,double &x,double &y);
 		inline bool put_remap(int &ij,double &x,double &y);

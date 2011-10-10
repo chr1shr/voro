@@ -14,7 +14,7 @@ EXECUTABLES=voro++_bdry
 all: $(EXECUTABLES) 
 
 voro++_bdry: voro++_bdry.cc
-	$(CC) $(CFLAGS) -I../src -L../src -o voro++_bdry voro++_bdry.cc -lvoro++_2d
+	$(CC) $(CFLAGS) -I../src -L../src -o voro++_bdry voro++_bdry.cc
 
 clean:
 	rm -f $(EXECUTABLES)

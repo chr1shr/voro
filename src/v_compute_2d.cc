@@ -299,7 +299,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 	}
 	l++;
 	while(l<co[ij]) {
-		if(con.skip(ij,l,x,y)) continue;
+		if(con.skip(ij,l,x,y)) {l++;continue;}
 		x1=p[ij][ps*l]-x;
 		y1=p[ij][ps*l+1]-y;
 		rs=con.r_scale(x1*x1+y1*y1,ij,l);
