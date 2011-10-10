@@ -27,10 +27,10 @@ two start tokens in succession, or finding a boundary loop without any
 terminating end token.
 
 The boundaries must have the correct winding direction, so that they go
-clockwise around the outer edge. Holes are also allowed, and for these, they
-must be specified in a counter-clockwise direction. In both cases, the interior
-is on the left as the boundary is traversed. The utility does not do any checks
-of boundary winding, and this may cause errors if the winding is not specified
+counter-clockwise around the outer edge. Holes are also allowed, and for these,
+they must be specified in a clockwise direction. In both cases, the interior is
+on the left as the boundary is traversed. The utility does not do any checks of
+boundary winding, and this may cause errors if the winding is not specified
 correctly.
 
 
