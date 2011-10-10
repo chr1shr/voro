@@ -65,7 +65,7 @@ container_2d::~container_2d() {
 	for(l=nxy-1;l>=0;l--) delete [] p[l];
 	for(l=nxy-1;l>=0;l--) delete [] id[l];
 
-	// Delete the two-dimensional 
+	// Delete the two-dimensional arrays 
 	delete [] plab;
 	delete [] nlab;
 	delete [] p;

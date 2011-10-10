@@ -130,7 +130,7 @@ class container_2d {
 		}
 		void Perp_vector(double x1, double y1, double &x1, double &y1, int dcp);
 		void tag_walls(double x1, double y1, double x2, double y2, int wid);
-		inline void tag(int wallid, int box){
+		inline void tag(int wallid, int box) {
 			int length=wid[box][0], *a;
 			if(length%6==0){
 				a=new int[length+6];
