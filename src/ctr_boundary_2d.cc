@@ -497,17 +497,20 @@ bool container_boundary_2d::boundary_cuts(v_cell_2d &c,int ij,double x,double y)
 }
 
 bool container_boundary_2d::skip(int ij,int q,double x,double y) {
-	int cwid;
-	double widx1,widy1,dx,dy,val;
+	int j;
+	double widx1,widy1,dx,dy,val,lx,ly;
 	double cx=p[ij][ps*q],cy=p[ij][ps*q+1];
 
 	for(int i=0;i<nlab[ij][q];i++) {
-		cwid=plab[ij][q][i];
-		widx1=bnds[2*cwid];
-		widy1=bnds[2*cwid+1];
-		cwid=edb[2*cwid];
-		dx=bnds[2*cwid]-widx1;
-		dy=bnds[2*cwid+1]-widy1;
+		j=2*plab[ij][q][i];
+		widx1=bnds[j];
+		widy1=bnds[j+1];
+		j=2*edb[j];
+		dx=bnds[j]-widx1;
+		dy=bnds[j+1]-widy1;
+		lx=widx1+bnds[j]-2*x;
+		ly=widy1+bnds[j+1]-2*y;
+		if(lx*lx+ly*ly>dx*dx+dy*dy) continue;
 		val=(x-widx1)*dy-(y-widy1)*dx;
 		if((val>tolerance&&(cx-widx1)*dy-(cy-widy1)*dx<-tolerance)
 		 ||(val<-tolerance&&(cx-widx1)*dy-(cy-widy1)*dx>tolerance)) return true;
