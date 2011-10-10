@@ -121,7 +121,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 			x=*(pp++);y=*(pp++);
 			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
 			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
-			printf("init %g %g %d",x,y,id[ij][q]);
+			printf("\ninit %g %g %d",x,y,id[ij][q]);
 			if(bndpts[ij][q]==-1) {
 				puts(" convex");
 				c.init(x1,x2,y1,y2);
@@ -291,7 +291,9 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 			voronoicell_nonconvex_2d c;double *pp;
 			if(vl.start()) do if(compute_cell(c,vl)) {
 				pp=p[vl.ij]+ps*vl.q;
+				fprintf(fp,"# [%d]\n",id[vl.ij][vl.q]);
 				c.draw_gnuplot(*pp,pp[1],fp);
+				fputs("\n",fp);
 			} while(vl.inc());
 		}
 		/** Computes all Voronoi cells and saves the output in gnuplot

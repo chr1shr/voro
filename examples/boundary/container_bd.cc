@@ -11,20 +11,24 @@ int main() {
 	// Initialize the container class to be the unit square, with
 	// non-periodic boundary conditions. Divide it into a 6 by 6 grid, with
 	// an initial memory allocation of 16 particles per grid square.
-	container_boundary_2d con(-1,1,-1,1,12,12,false,false,8);
+	container_boundary_2d con(-1,1,-1,1,6,6,false,false,8);
 	
 	// Add 1000 random points to the container
 	con.start_boundary();
-	con.put(0,-0.4,-0.6);
+	con.put(0,-0.8,-0.8);
 	con.put(1,0.8,-0.8);
-	con.put(2,0.4,0.6);
-	con.put(3,-0.6,0.6);
+	con.put(2,0.8,0.8);
+	con.put(3,0.1,0.75);
+	con.put(4,0,-0.3);
+	con.put(5,-0.1,0.95);
+	con.put(6,-0.8,0.8);
+	con.put(7,-0.799,-0.6);
 	con.end_boundary();
 	
-	for(i=0;i<300;i++) {
+	for(i=0;i<100;i++) {
 		x=-1+2*rnd();
 		y=-1+2*rnd();
-		if(con.point_inside(x,y)) con.put(i+4,x,y);
+		if(con.point_inside(x,y)) con.put(i+8,x,y);
 	}
 
 	con.draw_boundary_gnuplot("container_bd.gnu");

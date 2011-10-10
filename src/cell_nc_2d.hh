@@ -22,14 +22,11 @@ class voronoicell_nonconvex_base_2d : public voronoicell_base_2d {
 		bool nonconvex;
 		template<class vc_class>
 		inline bool nplane_base(vc_class &vc,double x,double y,double rs,int p_id) {
-			bool res=nplane(vc,x,y,rs,p_id);
-			printf("plane %g %g %g %g %g\n",x,y,rs,max_radius_squared(),area());
-			puts("");
-			draw_gnuplot(0,0);
-			puts("");
-			return res;
-			//if(exclude&&-x*reg[3]+y*reg[2]>tolerance&&x*reg[5]-y*reg[4]>tolerance) return true;
-			return nonconvex?nplane_nonconvex(vc,x,y,rs,p_id):nplane(vc,x,y,rs,p_id);
+			printf("plane %g %g %g\n",x,y,rs);
+			return exclude?(nonconvex?
+				(-x*reg[3]+y*reg[2]<-tolerance&&x*reg[5]-y*reg[4]<-tolerance)||nplane_nonconvex(vc,x,y,rs,p_id):
+				-x*reg[3]+y*reg[2]<-tolerance||x*reg[5]-y*reg[4]<-tolerance||nplane(vc,x,y,rs,p_id)):
+				nplane(vc,x,y,rs,p_id);
 		}
 		template<class vc_class>
 		bool nplane_nonconvex(vc_class &vc,double x,double y,double rs,int p_id);
@@ -50,7 +47,6 @@ class voronoicell_nonconvex_base_2d : public voronoicell_base_2d {
 
 class voronoicell_nonconvex_2d : public voronoicell_nonconvex_base_2d {
 	public:
-		bool nonconvex;
 		inline bool nplane(double x,double y,double rs,int p_id) {
 			return nplane_base(*this,x,y,rs,0);
 		}

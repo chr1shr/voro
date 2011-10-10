@@ -371,10 +371,10 @@ inline void container_boundary_2d::tag(int ij,int wid_) {
 void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,double y2,int bid) {
 	double radius=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))*0.5,
 	       midx=(x1+x2)*0.5,midy=(y1+y2)*0.5,cpx,cpy;
-	int ai=(int) ((midx-radius)-ax)*xsp,
-	    bi=(int) ((midx+radius)-ax)*xsp,
-	    aj=(int) ((midy-radius)-ay)*ysp,
-	    bj=(int) ((midy+radius)-ay)*ysp,i,j,ij,k;
+	int ai=int((midx-radius-ax)*xsp),
+	    bi=int((midx+radius-ax)*xsp),
+	    aj=int((midy-radius-ay)*ysp),
+	    bj=int((midy+radius-ay)*ysp),i,j,ij,k;
 	if(ai<0) ai=0;if(ai>=nx) ai=nx-1;
 	if(bi<0) bi=0;if(bi>=nx) bi=nx-1;
 	if(aj<0) aj=0;if(aj>=ny) aj=ny-1;
@@ -389,8 +389,11 @@ void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,d
 			cpx=p[ij][2*k];
 			cpy=p[ij][2*k+1];
 			if((midx-cpx)*(midx-cpx)+(midy-cpy)*(midy-cpy)<=radius&&
-			cross_product((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))>0&& 
+			cross_product((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))&& 
 			(cpx!=x1||cpy==y1)&&(cpx!=x2||cpy!=y2)) {
+
+				printf("%g %g %g %g %d - %d\n",x1,y1,x2,y2,bid,id[ij][k]);
+
 				if(tmpp==tmpe) add_temporary_label_memory();
 				*(tmpp++)=ij;
 				*(tmpp++)=k;
@@ -445,7 +448,7 @@ void container_boundary_2d::draw_boundary_gnuplot(FILE *fp) {
 
 		// If a loop is detected, than complete the loop in the output file
 		// and insert a newline
-		if(edb[2*i]<i) fprintf(fp,"%g %g\n\n",bnds[2*edb[i]],bnds[2*edb[i]+1]);
+		if(edb[2*i]<i) fprintf(fp,"%g %g\n\n",bnds[2*edb[2*i]],bnds[2*edb[2*i]+1]);
 	}
 }	
 
@@ -454,7 +457,6 @@ bool container_boundary_2d::point_inside(double x,double y) {
 	bool sleft,left,nleft;
 
 	while(i<edbc) {
-		printf("wtf %d %g\n",i,bnds[2*i]);
 		sleft=left=bnds[2*i]<x;
 		do {
 			j=edb[2*i];
@@ -475,25 +477,29 @@ bool container_boundary_2d::point_inside(double x,double y) {
 	if(k<0) fprintf(stderr,"Negative winding number of %d for (%g,%g)\n",j,x,y);
 	else if(k>1) fprintf(stderr,"Winding number of %d for (%g,%g)\n",j,x,y);
 #endif
-puts("");
 	return k>0;
 }
 
 template<class v_cell_2d>
 bool container_boundary_2d::boundary_cuts(v_cell_2d &c,int ij,double x,double y) {
 	int i,j,k;
-	double dx,dy;
+	double lx,ly,dx,dy,dr;
 	for(i=2;i<*(wid[ij])+2;i++) {
 		j=2*wid[ij][i];k=2*edb[j];
 		dx=bnds[k]-bnds[j];dy=bnds[k+1]-bnds[j+1];
-		if(!c.plane(dy,-dx,2*(dy*(bnds[j]-x)-dx*(bnds[j+1]-y)))) return false;
+		dr=dy*(bnds[j]-x)-dx*(bnds[j+1]-y);
+		if(dr<tolerance) continue;
+		lx=bnds[j]+bnds[k]-2*x;
+		ly=bnds[j+1]+bnds[k+1]-2*y;
+		if(lx*lx+ly*ly>dx*dx+dy*dy) continue;
+		if(!c.plane(dy,-dx,2*dr)) return false;
 	}
 	return true;
 }
 
 bool container_boundary_2d::skip(int ij,int q,double x,double y) {
 	int cwid;
-	double widx1,widy1,widx2,widy2;
+	double widx1,widy1,dx,dy,val;
 	double cx=p[ij][ps*q],cy=p[ij][ps*q+1];
 
 	for(int i=0;i<nlab[ij][q];i++) {
@@ -502,11 +508,11 @@ bool container_boundary_2d::skip(int ij,int q,double x,double y) {
 		widx1=bnds[2*cwid];
 		widy1=bnds[2*cwid+1];
 		cwid=edb[2*cwid];
-		widx2=bnds[2*cwid];
-		widy2=bnds[2*cwid+1];
-
-		if(cross_product(x-widx1,y-widy1,widx2-widx1,widy2-widy1)!=
-			cross_product(cx-widx1,cy-widy1,widx2-widx1,widy2-widy1)) return true;
+		dx=bnds[2*cwid]-widx1;
+		dy=bnds[2*cwid+1]-widy1;
+		val=(x-widx1)*dy-(y-widy1)*dx;
+		if(val>tolerance&&(cx-widx1)*dy-(cy-widy1)*dx<-tolerance) return true;
+		if(val<-tolerance&&(cx-widx1)*dy-(cy-widy1)*dx>tolerance) return true;
 	}
 	return false;
 
