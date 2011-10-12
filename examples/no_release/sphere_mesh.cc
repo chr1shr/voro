@@ -14,7 +14,7 @@ const double boxl=1.2;
 const int bl=24;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=4000;
+const int particles=1000;
 
 const int nface=11;
 
@@ -48,7 +48,7 @@ struct wall_shell : public wall {
 
 
 int main() {
-	int i=0,l;
+	int i=0,j,k,l,ll,o;
 	double x,y,z,r,dx,dy,dz;
 	int faces[nface],*fp;
 	double p[3*particles];
@@ -74,7 +74,7 @@ int main() {
 		}
 	}
 
-	for(l=4;l<10000;l++) {
+	for(l=0;l<200;l++) {
 		c_loop_all vl(con);
 		voronoicell c;
 		for(fp=faces;fp<faces+nface;fp++) *fp=0;
@@ -90,7 +90,7 @@ int main() {
 			faces[i]++;
 		} while (vl.inc());
 		con.clear();
-		double fac=l<9000?0.1/sqrt(double(l)):0;
+		double fac=0;//l<9000?0.1/sqrt(double(l)):0;
 		for(i=0;i<particles;i++) con.put(i,p[3*i]+fac*(2*rnd()-1),p[3*i+1]+fac*(2*rnd()-1),p[3*i+2]+fac*(2*rnd()-1));
 		printf("%d",l);
 		for(fp=faces;fp<faces+nface;fp++) printf(" %d",*fp);
@@ -103,17 +103,104 @@ int main() {
 	// Output the Voronoi cells in gnuplot format
 	con.draw_cells_gnuplot("sphere_mesh_v.gnu");
 
-	FILE *ff=safe_fopen("sphere_mesh.net","w");
+	// Allocate memory for neighbor relations
+	int *q=new int[particles*nface],*qn=new int[particles],*qp;
+	for(l=0;l<particles;l++) qn[l]=0;
+
+	// Create a table of all neighbor relations
 	vector<int> vi;
 	voronoicell_neighbor c;
 	c_loop_all vl(con);
 	if(vl.start()) do if(con.compute_cell(c,vl)) {
-		i=vl.pid();
+		i=vl.pid();qp=q+i*nface;
 		c.neighbors(vi);
-		for(l=0;l<(signed int) vi.size();l++) if(vi[l]>i)
-			fprintf(ff,"%g %g %g\n%g %g %g\n\n\n",
-				p[3*i],p[3*i+1],p[3*i+2],
-				p[3*vi[l]],p[3*vi[l]+1],p[3*vi[l]+2]);
+		if(vi.size()>nface+2) voro_fatal_error("Too many faces; boost nface",5);
+
+		for(l=0;l<(signed int) vi.size();l++) if(vi[l]>=0) qp[qn[i]++]=vi[l];
 	} while (vl.inc());
+
+	// Sort the connections in anti-clockwise order
+	bool connect;
+	int tote=0;
+	for(l=0;l<particles;l++) {
+		tote+=qn[l];
+		for(i=0;i<qn[l]-2;i++) {
+			o=q[l*nface+i];
+			//printf("---> %d,%d\n",i,o);
+			j=i+1;
+			while(j<qn[l]-1) {
+				ll=q[l*nface+j];
+			//	printf("-> %d %d\n",j,ll);
+				connect=false;
+				for(k=0;k<qn[ll];k++) {
+			//		printf("%d %d %d\n",ll,k,q[ll*nface+k]);
+					if(q[ll*nface+k]==o) {connect=true;break;}
+				}
+				if(connect) break;
+				j++;
+			}
+
+			// Swap the connected vertex into this location
+			//printf("%d %d\n",i+1,j);
+			o=q[l*nface+i+1];
+			q[l*nface+i+1]=q[l*nface+j];
+			q[l*nface+j]=o;
+		}
+	
+		// Reverse all connections if the have the wrong handedness
+		j=3*l;k=3*q[l*nface];o=3*q[l*nface+1];
+		x=p[j]-p[k];dx=p[j]-p[o];
+		y=p[j+1]-p[k+1];dy=p[j+1]-p[o+1];
+		z=p[j+2]-p[k+2];dz=p[j+2]-p[o+2];
+		if(p[j]*(y*dz-z*dy)+p[j+1]*(z*dx-x*dz)+p[j+2]*(x*dy-y*dx)<0) {
+			for(i=0;i<qn[l]/2;i++) {
+				o=q[l*nface+i];
+				q[l*nface+i]=q[l*nface+qn[l]-1-i];
+				q[l*nface+qn[l]-1-i]=o;
+			}
+		}
+	}
+
+	FILE *ff=safe_fopen("sphere_mesh.net","w");
+	int *mp=new int[particles],*mpi=new int[particles];
+	for(i=0;i<particles;i++) mp[i]=-1;
+	*mpi=0;*mp=0;l=1;o=0;
+	while(o<l) {
+		i=mpi[o];
+		for(j=0;j<qn[i];j++) {
+			k=q[i*nface+j];
+			if(mp[k]==-1) {
+				mpi[l]=k;
+				mp[k]=l++;
+			}
+			if(mp[i]<mp[k]) 
+				fprintf(ff,"%g %g %g\n%g %g %g\n\n\n",p[3*i],p[3*i+1],p[3*i+2],p[3*k],p[3*k+1],p[3*k+2]);
+		}
+		o++;
+	}
 	fclose(ff);
+
+	// Save binary representation of the mesh
+	FILE *fb=safe_fopen("sphere_mesh.bin","wb");
+	l=particles;
+	fwrite(&l,sizeof(int),1,fb);
+	fwrite(p,sizeof(double),3*particles,fb);
+
+	// Assemble the connections and write them
+	int sz=tote+particles+1,*red(new int[sz]),*rp=red;
+	*(rp++)=tote;
+	for(l=0;l<particles;l++) *(rp++)=qn[mpi[l]];
+	for(l=0;l<particles;l++) {
+		i=mpi[l];printf("%d",l);
+		for(j=0;j<qn[i];j++) {*(rp++)=mp[q[i*nface+j]];printf(" %d",*(rp-1));}
+		puts("");
+	}
+	fwrite(red,sizeof(int),sz,fb);
+
+	// Free dynamically allocated arrays
+	delete [] red;
+	delete [] mpi;
+	delete [] mp;
+	delete [] qn;
+	delete [] q;
 }
