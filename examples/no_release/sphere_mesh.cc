@@ -184,7 +184,13 @@ int main() {
 	FILE *fb=safe_fopen("sphere_mesh.bin","wb");
 	l=particles;
 	fwrite(&l,sizeof(int),1,fb);
-	fwrite(p,sizeof(double),3*particles,fb);
+	double *pm=new double[3*particles],*a=pm,*b;
+	for(i=0;i<particles;i++) {
+		b=p+3*mpi[i];
+		*(a++)=*(b++);*(a++)=*(b++);*(a++)=*b;
+	}
+	fwrite(pm,sizeof(double),3*particles,fb);
+	delete [] pm;
 
 	// Assemble the connections and write them
 	int sz=tote+particles+1,*red(new int[sz]),*rp=red;
