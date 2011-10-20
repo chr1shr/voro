@@ -1902,7 +1902,7 @@ void voronoicell_base::face_freq_table(vector<int> &v) {
 				l=cycle_up(ed[k][nu[k]+l],m);
 				k=m;
 			} while (k!=i);
-			if((unsigned int) q>v.size()) v.resize(q+1,0);
+			if((unsigned int) q>=v.size()) v.resize(q+1,0);
 			v[q]++;
 		}
 	}

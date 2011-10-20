@@ -9,6 +9,8 @@ Version 0.4.3 (...)
 * Fix errors in Gnuplot commands in the basic examples README file. Thanks to
   William-Fernando Oquendo (National University of Colombia) for pointing this
   out.
+* Fixed memory allocation issue in face_freq_table routine - thanks to Lingti
+  Kong for pointing this out
 * Minor cleanups and optimizations to wall classes
 
 Version 0.4.2 (September 23rd 2011)
