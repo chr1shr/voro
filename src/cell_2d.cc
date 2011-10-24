@@ -378,6 +378,11 @@ void voronoicell_base_2d::centroid(double &cx,double &cy) {
 	cy=0.5*(y+cy*tarea);
 }
 
+
+
+
+
+
 /** Computes the Voronoi cells for all particles in the container, and for each
  * cell, outputs a line containing custom information about the cell structure.
  * The output format is specified using an input string with control sequences

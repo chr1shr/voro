@@ -44,6 +44,7 @@ namespace voro {
  * encapsulates routines about the underlying computational grid. */
 class container_boundary_2d : public voro_base_2d, public radius_mono {
 	public:
+
 		/** The minimum x coordinate of the container. */
 		const double ax;
 		/** The maximum x coordinate of the container. */
@@ -83,6 +84,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		int edbm;
 		int *edb;
 		double *bnds;
+	
 		/** The amount of memory in the array structure for each
 		 * particle. This is set to 2 when the basic class is
 		 * initialized, so that the array holds (x,y) positions. If the
@@ -215,6 +217,13 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		void clear();
 		void put(int n,double x,double y);
 		void put(particle_order &vo,int n,double x,double y);
+		inline void init_globne(){
+			globne= new int*[totpar];
+			for(int i=0;i<totpar;i++){
+				globne[i]=new int[6];
+				globne[i][0]=5;
+			}
+		}
 		void import(FILE *fp=stdin);
 		/** Imports a list of particles from an open file stream into
 		 * the container. Entries of three numbers (Particle ID, x
@@ -342,13 +351,19 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		 * \param[in] fp a file handle to write to. */
 		template<class c_loop_2d>
 		void print_custom(c_loop_2d &vl,const char *format,FILE *fp) {
-			int ij,q;double *pp;
+			int ij,q;double *pp;bool glob;
+			if(contains_neighbor_global(format)){
+				init_globne();
+				glob=true;
+			}
 			if(contains_neighbor(format)) {
 				voronoicell_nonconvex_neighbor_2d c;
 				if(vl.start()) do if(compute_cell(c,vl)) {
 					ij=vl.ij;q=vl.q;pp=p[ij]+ps*q;
+					if(glob) add_globne_info(id[ij][q], c.ne, c.p);
 					c.output_custom(format,id[ij][q],*pp,pp[1],default_radius_2d,fp);
 				} while(vl.inc());
+				print_globne(fp);
 			} else {
 				voronoicell_nonconvex_2d c;
 				if(vl.start()) do if(compute_cell(c,vl)) {

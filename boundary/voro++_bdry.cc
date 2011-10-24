@@ -15,7 +15,7 @@ const double pad=0.01;
 
 int main(int argc,char **argv) {
 
-	if(argc!=2) {
+	if(argc<2) {
 		fprintf(stderr,"Syntax: voro++_bdry <input_file>\n");
 		return 1;
 	}
@@ -108,7 +108,14 @@ int main(int argc,char **argv) {
 	// Save the boundary in a format that can be read by Gnuplot
 	char *outfn(new char[strlen(argv[1])+5]);
 	sprintf(outfn,"%s.bd",argv[1]);
+
 	con.draw_boundary_gnuplot(outfn);
+	
+	//Test Global Connectivity Info
+	char *connectfn(new char[strlen(argv[1])+5]);
+	sprintf(connectfn,"%s.connect",argv[1]);
+	con.print_custom(argv[2],connectfn );
+
 
 	// Compute the Voronoi cells and save them to file
 	sprintf(outfn,"%s.gnu",argv[1]);
@@ -141,7 +148,7 @@ int main(int argc,char **argv) {
 
 		delete [] mp;
 	}
-	
+	delete [] connectfn;
 	delete [] outfn;
 	return 0;
 }

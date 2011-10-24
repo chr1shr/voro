@@ -104,6 +104,53 @@ bool voro_base_2d::contains_neighbor(const char *format) {
 	return false;
 }
 
+bool voro_base_2d::contains_neighbor_global(const char *format) {
+	        char *fmp=(const_cast<char*>(format));
+
+		        // Check to see if "%N" appears in the format sequence
+		        while(*fmp!=0) {
+				if(*fmp=='%') {
+		                        fmp++;
+					if(*fmp=='N') return true;
+					else if(*fmp==0) return false;
+				}   
+				fmp++;
+			}   
+
+		        return false;
+}
+void voro_base_2d::add_globne_info(int pid, int *nel, int length){
+	int numne=0,i,j;
+	int candidate;
+	globne[pid] = new int[length];
+	for(i=1;i<length;i++){
+		candidate=nel[i];
+		for(j=0;j<numne;j++){
+			if(globne[pid][j]==candidate) goto skip;
+		}
+		globne[pid][numne]=candidate;
+		numne++;
+		skip:
+		j=0;
+	}
+	for(i=numne;i<length;i++){
+		globne[pid][i]=-1;
+	}
+}
+void voro_base_2d::print_globne(FILE *fp){
+	int j;
+	fprintf(fp, "Global neighbor info: Format \n [Particle-ID] \t [Neighbors] \n [Particle-ID] \t [Neighbors]");
+	for(int i=0; i<totpar; i++){
+		j=0;
+		fprintf(fp,"\n %d \t",i);
+		while(globne[i][j]!=-1){
+			fprintf(fp, "%d \t", globne[i][j]);
+			j++;
+		}
+	}
+}
+
+	
 #include "v_base_wl_2d.cc"
 
 }

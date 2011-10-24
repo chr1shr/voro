@@ -36,7 +36,7 @@ container_boundary_2d::container_boundary_2d(double ax_,double bx_,double ay_,do
 	edb(new int[2*edbm]), bnds(new double[2*edbm]), ps(2), soi(NULL),
 	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_)	{
 	int l;
-	
+        totpar=0;	
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
 	for(l=0;l<nxy;l++) id[l]=new int[init_mem];
@@ -77,6 +77,7 @@ container_boundary_2d::~container_boundary_2d() {
 void container_boundary_2d::put(int n,double x,double y) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
+		totpar++;
 		id[ij][co[ij]]=n;
 		if(boundary_track!=-1) {
 			bndpts[ij][co[ij]]=edbc;
@@ -95,6 +96,7 @@ void container_boundary_2d::put(int n,double x,double y) {
 void container_boundary_2d::put(particle_order &vo,int n,double x,double y) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
+		totpar++;
 		id[ij][co[ij]]=n;
 		if(boundary_track!=-1) {
 			bndpts[ij][co[ij]]=edbc;
