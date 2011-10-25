@@ -11,7 +11,8 @@
 #define VOROPP_V_BASE_2D_HH
 
 #include "worklist_2d.hh"
-
+#include <stdio.h>
+#include <stdlib.h>
 namespace voro {
 
 /** \brief Class containing data structures common across all particle container classes.
@@ -47,13 +48,13 @@ class voro_base_2d {
 		 * construction, by the initialize_radii() routine. */
 		double *mrad;
 		/** The pre-computed block worklists. */
-		int **globne;
+		unsigned int *globne;
 		/** global neighbor information */
-		int *globnele;
-		/**the length of each array in globne */
 		inline void init_globne(){
-			globne = new int*[totpar];
-			globnele = new int*[totpar];
+			globne = new unsigned int[((totpar*totpar)/32)+1];
+			for(int i=0;i<((totpar*totpar)/32);i++){
+				globne[i] = 0;
+			}
 		}
 		void add_globne_info(int pid, int *nel, int length);
 		void print_globne(FILE *fp);

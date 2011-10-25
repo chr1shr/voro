@@ -6,8 +6,8 @@
 
 /** \file v_base_2d.cc
  * \brief Function implementations for the base 2D Voronoi container class. */
+#include <stdio.h>
 
-#include <cstdio>
 using namespace std;
 #include "v_base_2d.hh"
 #include "config.hh"
@@ -120,36 +120,25 @@ bool voro_base_2d::contains_neighbor_global(const char *format) {
 		        return false;
 }
 void voro_base_2d::add_globne_info(int pid, int *nel, int length){
-	int numne=0,i,j;
-	int candidate, temp*;
-	globne[pid] = new int[length];
-	for(i=1;i<length;i++){
-		candidate=nel[i];
-		for(j=0;j<numne;j++){
-			if(globne[pid][j]==candidate) goto skip;
+	for(int i=0;i<length;i++){
+		if(nel[i]>=0){
+			globne[((totpar*pid)+nel[i])/32] |= (unsigned int)(1 << (((totpar*pid)+nel[i])%32));
 		}
-		globne[pid][numne]=candidate;
-		numne++;
-		skip:
-		j=0;
 	}
-	temp = new int[numne];
-	for(int i=0; i<numne; i++) temp[i]=globne[pid][i];
-	del [] globne[pid];
-	globene[pid]=temp;
-	globenele[pid]=numne;
+
 }
 void voro_base_2d::print_globne(FILE *fp){
-	int j;
+	int j=0;
 	fprintf(fp, "Global neighbor info: Format \n [Particle-ID] \t [Neighbors] \n [Particle-ID] \t [Neighbors]");
 	for(int i=0; i<totpar; i++){
 		fprintf(fp,"\n %d \t",i);
-		for(int j=0; j<globenele[i] ; j++){
-			fprintf(fp, "%d \t", globne[i][j]);
+		for(j=0;j<totpar;j++){
+			if((globne[(((i*totpar)+j)/32)] & (unsigned int)(1 << (((i*totpar)+j)%32))) != 0){
+				fprintf(fp,"%d \t",j);
+			}
 		}
 	}
 }
-
 	
 #include "v_base_wl_2d.cc"
 
