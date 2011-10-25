@@ -121,7 +121,7 @@ bool voro_base_2d::contains_neighbor_global(const char *format) {
 }
 void voro_base_2d::add_globne_info(int pid, int *nel, int length){
 	int numne=0,i,j;
-	int candidate;
+	int candidate, temp*;
 	globne[pid] = new int[length];
 	for(i=1;i<length;i++){
 		candidate=nel[i];
@@ -133,19 +133,19 @@ void voro_base_2d::add_globne_info(int pid, int *nel, int length){
 		skip:
 		j=0;
 	}
-	for(i=numne;i<length;i++){
-		globne[pid][i]=-1;
-	}
+	temp = new int[numne];
+	for(int i=0; i<numne; i++) temp[i]=globne[pid][i];
+	del [] globne[pid];
+	globene[pid]=temp;
+	globenele[pid]=numne;
 }
 void voro_base_2d::print_globne(FILE *fp){
 	int j;
 	fprintf(fp, "Global neighbor info: Format \n [Particle-ID] \t [Neighbors] \n [Particle-ID] \t [Neighbors]");
 	for(int i=0; i<totpar; i++){
-		j=0;
 		fprintf(fp,"\n %d \t",i);
-		while(globne[i][j]!=-1){
+		for(int j=0; j<globenele[i] ; j++){
 			fprintf(fp, "%d \t", globne[i][j]);
-			j++;
 		}
 	}
 }

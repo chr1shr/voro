@@ -48,8 +48,12 @@ class voro_base_2d {
 		double *mrad;
 		/** The pre-computed block worklists. */
 		int **globne;
+		/** global neighbor information */
+		int *globnele;
+		/**the length of each array in globne */
 		inline void init_globne(){
 			globne = new int*[totpar];
+			globnele = new int*[totpar];
 		}
 		void add_globne_info(int pid, int *nel, int length);
 		void print_globne(FILE *fp);
