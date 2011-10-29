@@ -8,7 +8,7 @@
 include ../config.mk
 
 # List of executables
-EXECUTABLES=network images
+EXECUTABLES=network images cp_test
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -25,6 +25,9 @@ network: network.cc v_network.o v_network.hh r_table.cc
 
 images: images.cc
 	$(CXX) $(CFLAGS) -I../src -L../src -o images images.cc -lvoro++
+
+cp_test: cp_test.cc
+	$(CXX) $(CFLAGS) -I../src -L../src -o cp_test cp_test.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)
