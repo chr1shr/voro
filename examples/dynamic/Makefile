@@ -20,7 +20,7 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
 EXECUTABLES=acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig
 
 # Makefile rules
-all: acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig
+all: acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig gen_packing
 
 quick_gofr: $(SOURCE) quick_gofr.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o quick_gofr quick_gofr.cc
@@ -36,6 +36,9 @@ acc_sphere: $(SOURCE) acc_sphere.cc
 
 square_test: $(SOURCE) square_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o square_test square_test.cc
+
+gen_packing: $(SOURCE) gen_packing.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o gen_packing gen_packing.cc
 
 packing_gen: $(SOURCE) packing_gen.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o packing_gen packing_gen.cc
