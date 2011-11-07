@@ -182,19 +182,14 @@ int main() {
 
 	// Save binary representation of the mesh
 	FILE *fb=safe_fopen("sphere_mesh.bin","wb");
-	l=particles;
-	fwrite(&l,sizeof(int),1,fb);
-	double *pm=new double[3*particles],*a=pm,*b;
-	for(i=0;i<particles;i++) {
-		b=p+3*mpi[i];
-		*(a++)=*(b++);*(a++)=*(b++);*(a++)=*b;
-	}
-	fwrite(pm,sizeof(double),3*particles,fb);
-	delete [] pm;
+	
+	// Write header
+	int kk[3],sz=tote+particles+2,*red(new int[sz]),*rp=red;
+	*kk=1;kk[1]=sz;kk[2]=3*particles;
+	fwrite(kk,sizeof(int),3,fb);
 
 	// Assemble the connections and write them
-	int sz=tote+particles+1,*red(new int[sz]),*rp=red;
-	*(rp++)=tote;
+	*(rp++)=particles;*(rp++)=tote;
 	for(l=0;l<particles;l++) *(rp++)=qn[mpi[l]];
 	for(l=0;l<particles;l++) {
 		i=mpi[l];printf("%d",l);
@@ -202,6 +197,15 @@ int main() {
 		puts("");
 	}
 	fwrite(red,sizeof(int),sz,fb);
+
+
+	double *pm=new double[3*particles],*a=pm,*b;
+	for(i=0;i<particles;i++) {
+		b=p+3*mpi[i];
+		*(a++)=*(b++);*(a++)=*(b++);*(a++)=*b;
+	}
+	fwrite(pm,sizeof(double),3*particles,fb);
+	delete [] pm;
 
 	// Free dynamically allocated arrays
 	delete [] red;
