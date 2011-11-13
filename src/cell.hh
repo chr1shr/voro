@@ -482,12 +482,12 @@ class voronoicell_neighbor : public voronoicell_base {
 		int *paux2;
 		inline void n_allocate(int i,int m) {mne[i]=new int[m*i];}
 		inline void n_add_memory_vertices(int i) {
-			int **pp(new int*[i]);
+			int **pp=new int*[i];
 			for(int j=0;j<current_vertices;j++) pp[j]=ne[j];
 			delete [] ne;ne=pp;
 		}
 		inline void n_add_memory_vorder(int i) {
-			int **p2(new int*[i]);
+			int **p2=new int*[i];
 			for(int j=0;j<current_vertex_order;j++) p2[j]=mne[j];
 			delete [] mne;mne=p2;
 		}

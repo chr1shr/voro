@@ -14,7 +14,7 @@ const double boxl=1.2;
 const int bl=24;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=1000;
+const int particles=20000;
 
 const int nface=11;
 
@@ -74,7 +74,7 @@ int main() {
 		}
 	}
 
-	for(l=0;l<200;l++) {
+	for(l=0;l<1000;l++) {
 		c_loop_all vl(con);
 		voronoicell c;
 		for(fp=faces;fp<faces+nface;fp++) *fp=0;
