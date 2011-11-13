@@ -1,5 +1,5 @@
-Version 0.4.3 (...)
-===================
+Version 0.4.3 (November 12th 2011)
+==================================
 * Removed spurious Gnuplot output line from torus.cc example
 * More changes for better Visual C++ compatibility
 * Fixed indexing error in worklist generation routine. This had no effect
