@@ -1,5 +1,11 @@
 // Voronoi method to generate nanocrystalline grain boundaries
 // Nov 18, 2011
+
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+using namespace std;
+
 #include "voro++.hh"
 using namespace voro;
 
@@ -11,8 +17,8 @@ const double y_min=0,y_max=81;
 const double z_min=0,z_max=81;
 const double cvol=(x_max-x_min)*(y_max-y_min)*(x_max-x_min);
 
-// Total no of particles
-const int particles=32;
+// Total number of particles
+const int particles=24;
 
 // Lattice size
 const double h=4;
@@ -37,8 +43,11 @@ int main() {
 		con.put(i,x,y,z);
 	}
 
+	// Open the file for the particle positions
 	FILE *fp=safe_fopen("lammps_input","w");
-	  
+
+	// Create a loop class to iterate over all of the generators
+	// in the box
 	c_loop_all cl(con);
 	voronoicell c;
 	if(cl.start()) do if(con.compute_cell(c,cl)) {
@@ -61,14 +70,14 @@ int main() {
 		z3=z*cth+z2*sth;z2=-z*sth+z2*cth;
 
 		// Get a bound on how far to search
-		r=sqrt(c.max_radius_squared());
+		r=sqrt(0.25*c.max_radius_squared());
 		v=(int(r/h)+2)*h;
 
 		// Add small random displacement to lattice positioning,
 		// so that it's not always perfectly aligned with the generator
 		vx=-v+h*rnd();vy=-v+h*rnd();vz=-v+h*rnd();
 
-		// Output the basis for this point
+		// Print diagnostic information about this generator 
 		c_id=cl.pid();cl.pos(xc,yc,zc);
 		printf("Generator %d at (%g,%g,%g), random basis:\n",c_id,xc,yc,zc);
 		printf("%g %g %g\n",x1,y1,z1);
@@ -78,7 +87,7 @@ int main() {
 		// Loop over a local region of points
 		for(z=vx;z<=v;z+=h) for(y=vy;y<=v;y+=h) for(x=vz;x<=v;x+=h) {
 
-			// Construct points in the random basis
+			// Construct points rotated into the random basis
 			xt=xc+x*x1+y*x2+z*x3;
 			yt=yc+x*y1+y*y2+z*y3;
 			zt=zc+x*z1+y*z2+z*z3;
