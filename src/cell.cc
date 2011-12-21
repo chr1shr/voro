@@ -1091,7 +1091,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 					if(stackp==stacke) {
 						int dis=stackp-dsp;
 						add_memory_ds(stackp);
-						dsp=stackp+dis;
+						dsp=ds+dis;
 					}
 					*(stackp++)=qp;
 					ed[qp][nu[qp]]=-1;
