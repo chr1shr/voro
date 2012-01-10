@@ -92,6 +92,7 @@ int main() {
 		if(y<0) continue;
 
 		if(con.compute_cell(c,cl)) {
+
 			// Get the neighboring IDs of all the faces
 			c.neighbors(vi);
 

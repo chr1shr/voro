@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period sphere_mesh lloyd_box import_rahman polycrystal_rahman random_points_10 random_points_200 import_freeman
+EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period sphere_mesh lloyd_box import_rahman import_nguyen polycrystal_rahman random_points_10 random_points_200 import_freeman
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -37,8 +37,11 @@ lloyd_box: lloyd_box.cc
 import_rahman: import_rahman.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o import_rahman import_rahman.cc -lvoro++
 
+import_nguyen: import_nguyen.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o import_nguyen import_nguyen.cc -lvoro++
+
 import_freeman: import_freeman.cc
-	$(CXX) $(E_INC) $(E_LIB) -o import_freeman import_freeman.cc -ggdb
+	$(CXX) $(E_INC) $(E_LIB) -o import_freeman import_freeman.cc
 
 polycrystal_rahman: polycrystal_rahman.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o polycrystal_rahman polycrystal_rahman.cc -lvoro++
