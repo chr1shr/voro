@@ -1086,16 +1086,14 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		cp=*dsp;
 		for(edp=ed[cp];edp<ed[cp]+nu[cp];edp++) {
 			qp=*edp;
-			if(qp!=-1) {
-				if(ed[qp][nu[qp]]!=-1) {
-					if(stackp==stacke) {
-						int dis=stackp-dsp;
-						add_memory_ds(stackp);
-						dsp=ds+dis;
-					}
-					*(stackp++)=qp;
-					ed[qp][nu[qp]]=-1;
+			if(qp!=-1&&ed[qp][nu[qp]]!=-1) {
+				if(stackp==stacke) {
+					int dis=stackp-dsp;
+					add_memory_ds(stackp);
+					dsp=ds+dis;
 				}
+				*(stackp++)=qp;
+				ed[qp][nu[qp]]=-1;
 			}
 		}
 	}
