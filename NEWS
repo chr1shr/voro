@@ -1,5 +1,5 @@
-Version 0.4.4 (...)
-===================
+Version 0.4.4 (January 17th 2012)
+=================================
 * Fixed an error in pointer arithmetic that was introduced in version 0.4,
   which would occur in cases where the delete stack was extended when a large
   number of vertices were being removed. Thanks to Jeff Johnson (Lawrence
