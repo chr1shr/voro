@@ -2167,7 +2167,7 @@ void voronoicell_neighbor::check_facets() {
 			do {
 				m=ed[k][l];
 				ed[k][l]=-1-m;
-				fprintf(stderr,"Facet error at (%d,%d)=%d, started from (%d,%d)=%d\n",k,l,ne[k][l],i,j,q);
+				if(ne[k][l]!=q) fprintf(stderr,"Facet error at (%d,%d)=%d, started from (%d,%d)=%d\n",k,l,ne[k][l],i,j,q);
 				l=cycle_up(ed[k][nu[k]+l],m);
 				k=m;
 			} while (k!=i);
