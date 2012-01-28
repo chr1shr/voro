@@ -57,8 +57,8 @@ pre_container_base::~pre_container_base() {
  * a way that
  * \param[out] (nx,ny,nz) the number of blocks to use. */
 void pre_container_base::guess_optimal(int &nx,int &ny,int &nz) {
-	double dx(bx-ax),dy(by-ay),dz(bz-az);
-	double ilscale(pow(total_particles()/(optimal_particles*dx*dy*dz),1/3.0));
+	double dx=bx-ax,dy=by-ay,dz=bz-az;
+	double ilscale=pow(total_particles()/(optimal_particles*dx*dy*dz),1/3.0);
 	nx=int(dx*ilscale+1);
 	ny=int(dy*ilscale+1);
 	nz=int(dz*ilscale+1);
