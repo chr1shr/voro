@@ -2,6 +2,7 @@ Version 0.4.5 (...)
 ===================
 * Fixed an error in the check_facets diagnostic routine. Thanks to Tristan
   Carrier-Baudouin (Université catholique de Louvain) for pointing this out.
+* More changes for older MS Visual C++ compatability
 
 Version 0.4.4 (January 17th 2012)
 =================================

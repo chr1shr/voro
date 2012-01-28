@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period sphere_mesh lloyd_box import_rahman import_nguyen polycrystal_rahman random_points_10 random_points_200 import_freeman
+EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period sphere_mesh lloyd_box import_rahman import_nguyen polycrystal_rahman random_points_10 random_points_200 import_freeman voro_lf
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -51,6 +51,9 @@ random_points_10: random_points_10.cc
 
 random_points_200: random_points_200.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o random_points_200 random_points_200.cc -lvoro++
+
+voro_lf: voro_lf.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o voro_lf voro_lf.cc -lvoro++
 
 clean:
 	rm -f $(EXECUTABLES)
