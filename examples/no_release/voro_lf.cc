@@ -19,7 +19,7 @@ int main() {
 	double x,y,z;
 	vector<int> vid,neigh,f_order;
 	vector<double> vx,vy,vz,vd;
-	FILE *fp=safe_fopen("liq-900K.dat","r"),*fp2;
+	FILE *fp=safe_fopen("liq-900K.dat","r"),*fp2,*fp3;
 	while((j=fscanf(fp,"%d %lg %lg %lg",&id,&x,&y,&z))==4) {
 		vid.push_back(id);if(id>max_id) max_id=id;
 		vx.push_back(x);
@@ -50,9 +50,10 @@ int main() {
 		zi[id]=z;
 	}
 
-	// Open two output files for statistics and gnuplot cells
+	// Open three output files for statistics and gnuplot cells
 	fp=safe_fopen("liq-900K.out","w");
 	fp2=safe_fopen("liq-900K.gnu","w");
+	fp3=safe_fopen("liq-900K-orig.gnu","w");
 
 	// Loop over all particles and compute their Voronoi cells
 	voronoicell_neighbor c,c2;
@@ -66,7 +67,7 @@ int main() {
 				
 		// Get face areas et total surface of faces
 		c.face_areas(vd);c.surface_area();
-		c.draw_gnuplot(x,y,z,fp2);
+		c.draw_gnuplot(x,y,z,fp3);
 		
 		// Initialize second cell
 		c2.init(ax-x,bx-x,ay-y,by-y,az-z,bz-z);
@@ -77,8 +78,7 @@ int main() {
 		for(i=0;i<(signed int) vd.size();i++)
 			if(vd[i]>0.01*c.surface_area()&&neigh[i]>=0) {
 			j=neigh[i];
-			printf("%g %g %g\n",xi[j],yi[j],zi[j]);
-			c2.nplane(j,xi[j]-x,yi[j]-y,zi[j]-z);
+			c2.nplane(xi[j]-x,yi[j]-y,zi[j]-z,j);
 		}
 
 		// Get information of c2 cell
@@ -92,9 +92,8 @@ int main() {
 		fprintf(fp," %.3f %.3f %.3f\n",x,y,z);
 
 		c2.draw_gnuplot(x,y,z,fp2);
-		break;
 	} while (cl.inc());
-	
+
 	// Close files
 	fclose(fp);
 	fclose(fp2);
