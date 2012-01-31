@@ -21,7 +21,7 @@ voronoicell_base::voronoicell_base() :
 	current_vertices(init_vertices), current_vertex_order(init_vertex_order),
 	current_delete_size(init_delete_size), current_delete2_size(init_delete2_size),
 	ed(new int*[current_vertices]), nu(new int[current_vertices]),
-	pts(new double[3*current_vertices]), mem(new int[current_vertex_order]),
+	pts(new mpz_q[3*current_vertices]), mem(new int[current_vertex_order]),
 	mec(new int[current_vertex_order]), mep(new int*[current_vertex_order]),
 	ds(new int[current_delete_size]), stacke(ds+current_delete_size),
 	ds2(new int[current_delete2_size]), stacke2(ds2+current_delete_size),
