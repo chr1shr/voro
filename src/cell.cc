@@ -21,7 +21,7 @@ voronoicell_base::voronoicell_base() :
 	current_vertices(init_vertices), current_vertex_order(init_vertex_order),
 	current_delete_size(init_delete_size), current_delete2_size(init_delete2_size),
 	ed(new int*[current_vertices]), nu(new int[current_vertices]),
-	pts(new mpz_q[3*current_vertices]), mem(new int[current_vertex_order]),
+	pts(new mpq_class[3*current_vertices]), mem(new int[current_vertex_order]),
 	mec(new int[current_vertex_order]), mep(new int*[current_vertex_order]),
 	ds(new int[current_delete_size]), stacke(ds+current_delete_size),
 	ds2(new int[current_delete2_size]), stacke2(ds2+current_delete_size),
@@ -1588,48 +1588,15 @@ inline void voronoicell_base::reset_edges() {
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  *         plane, or 0 if the point is within the plane. */
 inline int voronoicell_base::m_test(int n,double &ans) {
-	double *pp=pts+n+(n<<1);
+	mpq_class *pp=pts+n+(n<<1);
 	ans=*(pp++)*px;
 	ans+=*(pp++)*py;
 	ans+=*pp*pz-prsq;
-	if(ans<-tolerance2) {
+	if(ans<0) {
 		return -1;
-	} else if(ans>tolerance2) {
+	} else if(ans>0) {
 		return 1;
-	}
-	return check_marginal(n,ans);
-}
-
-/** Checks to see if a given vertex is inside, outside or within the test
- * plane, for the case when the point has been detected to be very close to the
- * plane. The routine ensures that the returned results are always consistent
- * with previous tests, by keeping a table of any marginal results. The routine
- * first sees if the vertex is in the table, and if it finds a previously
- * computed result it uses that. Otherwise, it computes a result for this
- * vertex and adds it the table.
- * \param[in] n the vertex to test.
- * \param[in] ans the result of the scalar product used in evaluating
- *                the location of the point.
- * \return -1 if the point is inside the plane, 1 if the point is outside the
- *         plane, or 0 if the point is within the plane. */
-int voronoicell_base::check_marginal(int n,double &ans) {
-	int i;
-	for(i=0;i<n_marg;i+=2) if(marg[i]==n) return marg[i+1];
-	if(n_marg==current_marginal) {
-		current_marginal<<=1;
-		if(current_marginal>max_marginal)
-			voro_fatal_error("Marginal case buffer allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
-#if VOROPP_VERBOSE >=2
-		fprintf(stderr,"Marginal cases buffer scaled up to %d\n",i);
-#endif
-		int *pmarg=new int[current_marginal];
-		for(int j=0;j<n_marg;j++) pmarg[j]=marg[j];
-		delete [] marg;
-		marg=pmarg;
-	}
-	marg[n_marg++]=n;
-	marg[n_marg++]=ans>tolerance?1:(ans<-tolerance?-1:0);
-	return marg[n_marg-1];
+	} else return 0;
 }
 
 /** For each face of the Voronoi cell, this routine prints the out the normal

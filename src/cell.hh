@@ -261,13 +261,13 @@ class voronoicell_base {
 		 * the outcomes of the marginal tests. */
 		int *marg;
 		/** The x coordinate of the normal vector to the test plane. */
-		double px;
+		mpq_class px;
 		/** The y coordinate of the normal vector to the test plane. */
-		double py;
+		mpq_class py;
 		/** The z coordinate of the normal vector to the test plane. */
-		double pz;
+		mpq_class pz;
 		/** The magnitude of the normal vector to the test plane. */
-		double prsq;
+		mpq_class prsq;
 		template<class vc_class>
 		void add_memory(vc_class &vc,int i,int *stackp2);
 		template<class vc_class>
@@ -290,7 +290,6 @@ class voronoicell_base {
 		inline void normals_search(vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);
 		inline int m_test(int n,double &ans);
-		int check_marginal(int n,double &ans);
 		friend class voronoicell;
 		friend class voronoicell_neighbor;
 };
