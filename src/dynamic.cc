@@ -577,39 +577,82 @@ void container_dynamic_base<r_option>::move(v_class &vcl) {
 	int i,j,k,ijk,l,ll,ni,nj,nk;
 	fpoint x,y,z;
 
+	// For each block, introduce a second counter that counts the number of
+	// particles initially in this block, without including any that have
+	// moved into the block
 	for(ijk=0;ijk<nxyz;ijk++) gh[ijk]=co[ijk];
 
+	// Loop over the blocks within the counter
 	for(ijk=k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++,ijk++) {
 		l=0;
+
+		// Scan over the particles that started within this block
 		while(l<gh[ijk]) {
+
+			// Get the particle's initial position
 			x=p[ijk][sz*l];y=p[ijk][sz*l+1];z=p[ijk][sz*l+2];
+			
+			// Call an external routine to compute where this
+			// particle should move to
 			vcl.vel(ijk,l,x,y,z);
+			
+			// Calculate which block the particle's new position is
+			// within
 			ni=step_int((x-ax)*xsp);
 			nj=step_int((y-ay)*ysp);
 			nk=step_int((z-az)*zsp);
+			
+			// See if the particle is within the same block
 			if(ni==i&&nj==j&&nk==k) {
+
+				// If so, just update its position
 				p[ijk][sz*l]=x;
 				p[ijk][sz*l+1]=y;
 				p[ijk][sz*l+2]=z;l++;
 			} else {
+
+				// Check whether the particle's new position is
+				// within the container
 				if((xperiodic||(ni>=0&&ni<nx))&&(yperiodic||(nj>=0&&nj<ny))&&(zperiodic||(nk>=0&&nk<nz))) {
+
+					// If periodic boundary conditions are
+					// being used, then remap the particle
+					// back into the container
 					if(xperiodic) {x-=step_div(ni,nx)*(bx-ax);ni=step_mod(ni,nx);}
 					if(yperiodic) {y-=step_div(nj,ny)*(by-ay);nj=step_mod(nj,ny);}
 					if(zperiodic) {z-=step_div(nk,nz)*(bz-az);nk=step_mod(nk,nz);}
+					
+					// Calculate the index the new block
+					// where the particle is to be stored,
+					// and allocate memory if necessary
 					ni+=nx*(nj+ny*nk);
 					if(co[ni]==mem[ni]) add_particle_memory(ni);
+
+					// Add the particle to the new block
 					id[ni][co[ni]]=id[ijk][l];
 					p[ni][co[ni]*sz]=x;
 					p[ni][co[ni]*sz+1]=y;
 					p[ni][co[ni]*sz+2]=z;
+
+					// This class can support a velocity
+					// array. Move it too, if it is being
+					// used.
 					if(vcl.track_ve) {
 						ve[ni][3*co[ni]]=ve[ijk][3*l];
 						ve[ni][3*co[ni]+1]=ve[ijk][3*l+1];
 						ve[ni][3*co[ni]+2]=ve[ijk][3*l+2];
 					}
+
+					// Copy particle radius information if
+					// it being used, and add one to the
+					// number of particles in the block
 					if(sz==4) p[ni][co[ni]*sz+3]=p[ijk][l*sz+3];
 					co[ni]++;
 				}
+
+				// Delete the particle from the original block,
+				// by copying the final particle in the block's
+				// memory on top of it
 				co[ijk]--;
 				id[ijk][l]=id[ijk][co[ijk]];
 				for(ll=0;ll<sz;ll++) p[ijk][sz*l+ll]=p[ijk][sz*co[ijk]+ll];
@@ -618,9 +661,14 @@ void container_dynamic_base<r_option>::move(v_class &vcl) {
 					ve[ijk][3*l+1]=ve[ijk][3*co[ijk]+1];
 					ve[ijk][3*l+2]=ve[ijk][3*co[ijk]+2];
 				}
-				if(co[ijk]+1==gh[ijk]) {
-					gh[ijk]--;
-				} else l++;
+
+				// If the copied particle was one that had
+				// initially started off in this block, then
+				// prepare to check that one next. If it was a
+				// particle that had moved into this block,
+				// then skip it.
+				if(co[ijk]+1==gh[ijk]) gh[ijk]--;
+				else l++;
 			}
 		}
 	}
