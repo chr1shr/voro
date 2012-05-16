@@ -11,10 +11,10 @@ using namespace voro;
 const double boxl=1.2;
 
 // Set up the number of blocks that the container is divided into
-const int bl=24;
+const int bl=29;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=20000;
+const int particles=48000;
 
 const int nface=11;
 

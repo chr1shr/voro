@@ -2,7 +2,10 @@ Version 0.4.5 (...)
 ===================
 * Fixed an error in the check_facets diagnostic routine. Thanks to Tristan
   Carrier-Baudouin (Université catholique de Louvain) for pointing this out.
+* Fixed a memory leak in the new container_periodic class. Thanks to Massimo
+  Marchi (Commissariat á l'Energie Atomique) for pointing this out.
 * More changes for older MS Visual C++ compatability
+* Updated Doxyfile to 1.8.0
 
 Version 0.4.4 (January 17th 2012)
 =================================
