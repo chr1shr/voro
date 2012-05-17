@@ -50,15 +50,15 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 
 /** The container destructor frees the dynamically allocated memory. */
 container_periodic_base::~container_periodic_base() {
+	for(int l=oxyz-1;l>=0;l--) if(mem[l]>0) {
+		delete [] p[l];
+		delete [] id[l];
+	}
 	delete [] p;
 	delete [] id;
 	delete [] mem;
 	delete [] co;
 	delete [] img;
-	for(int l=oxyz-1;l>=0;l--) if(mem[l]>0) {
-		delete [] p[l];
-		delete [] id[l];
-	}
 }
 
 /** The class constructor sets up the geometry of container.
