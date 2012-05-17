@@ -54,11 +54,11 @@ container_periodic_base::~container_periodic_base() {
 		delete [] p[l];
 		delete [] id[l];
 	}
-	delete [] p;
-	delete [] id;
+	delete [] img;
 	delete [] mem;
 	delete [] co;
-	delete [] img;
+	delete [] id;
+	delete [] p;
 }
 
 /** The class constructor sets up the geometry of container.
