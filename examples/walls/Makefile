@@ -14,10 +14,10 @@ EXECUTABLES=circle polygon
 all: $(EXECUTABLES) 
 
 circle: $(SOURCE) circle.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o circle circle.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o circle circle.cc -lvoro++_2d
 
 polygon: polygon.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o polygon polygon.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o polygon polygon.cc -lvoro++_2d
 
 clean:
 	rm -f $(EXECUTABLES)

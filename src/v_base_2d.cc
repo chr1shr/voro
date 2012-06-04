@@ -6,7 +6,7 @@
 
 /** \file v_base_2d.cc
  * \brief Function implementations for the base 2D Voronoi container class. */
-#include <stdio.h>
+//#include <stdio.h>
 
 using namespace std;
 #include "v_base_2d.hh"
@@ -104,7 +104,7 @@ bool voro_base_2d::contains_neighbor(const char *format) {
 	return false;
 }
 
-bool voro_base_2d::contains_neighbor_global(const char *format) {
+/*bool voro_base_2d::contains_neighbor_global(const char *format) {
 	        char *fmp=(const_cast<char*>(format));
 
 		        // Check to see if "%N" appears in the format sequence
@@ -138,8 +138,7 @@ void voro_base_2d::print_globne(FILE *fp){
 			}
 		}
 	}
-}
+}*/
 	
 #include "v_base_wl_2d.cc"
-
 }

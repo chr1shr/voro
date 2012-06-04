@@ -7,8 +7,8 @@
 
 #include "voro++_2d.hh"
 using namespace voro;
-#include <stdio.h>
-#include <iostream>
+//#include <stdio.h>
+//#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -113,11 +113,11 @@ int main(int argc,char **argv) {
 	con.draw_boundary_gnuplot(outfn);
 
 	//Test Global Connectivity Info
-	cout << "beginning" << endl;
-	char *connectfn(new char[strlen(argv[1])+5]);
-	sprintf(connectfn,"%s.connect",argv[1]);
-	con.print_custom(argv[2],connectfn );
-	cout << "finished" << endl;
+//	cout << "beginning" << endl;
+//	char *connectfn(new char[strlen(argv[1])+5]);
+//	sprintf(connectfn,"%s.connect",argv[1]);
+//	con.print_custom(argv[2],connectfn );
+//	cout << "finished" << endl;
 
 	// Compute the Voronoi cells and save them to file
 	sprintf(outfn,"%s.gnu",argv[1]);
@@ -150,7 +150,7 @@ int main(int argc,char **argv) {
 
 		delete [] mp;
 	}
-	delete [] connectfn;
+//	delete [] connectfn;
 	delete [] outfn;
 	return 0;
 }

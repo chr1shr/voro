@@ -14,10 +14,10 @@ EXECUTABLES=intersect lloyd
 all: $(EXECUTABLES) 
 
 intersect: $(SOURCE) intersect.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o intersect intersect.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o intersect intersect.cc -lvoro++_2d
 
 lloyd: lloyd.cc
-	$(CC) $(CFLAGS) $(E_INC) $(E_LIB) -o lloyd lloyd.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o lloyd lloyd.cc -lvoro++_2d
 
 clean:
 	rm -f $(EXECUTABLES)

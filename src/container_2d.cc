@@ -31,7 +31,7 @@ container_base_2d::container_base_2d(double ax_,double bx_,double ay_,double by_
 	ax(ax_), bx(bx_), ay(ay_), by(by_), xperiodic(xperiodic_), yperiodic(yperiodic_), 
 	id(new int*[nxy]), p(new double*[nxy]), co(new int[nxy]), mem(new int[nxy]), ps(ps_) {
 	int l;
-	totpar=0;
+	//totpar=0;
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
 	for(l=0;l<nxy;l++) id[l]=new int[init_mem];
@@ -81,7 +81,7 @@ container_poly_2d::container_poly_2d(double ax_,double bx_,double ay_,double by_
 void container_2d::put(int n,double x,double y) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
-		totpar++;
+		//totpar++;
 		id[ij][co[ij]]=n;
 		double *pp=p[ij]+2*co[ij]++;
 		*(pp++)=x;*pp=y;
@@ -95,7 +95,7 @@ void container_2d::put(int n,double x,double y) {
 void container_poly_2d::put(int n,double x,double y,double r) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
-		totpar++;
+		//totpar++;
 		id[ij][co[ij]]=n;
 		double *pp=p[ij]+3*co[ij]++;
 		*(pp++)=x;*(pp++)=y;*pp=r;
@@ -111,7 +111,7 @@ void container_poly_2d::put(int n,double x,double y,double r) {
 void container_2d::put(particle_order &vo,int n,double x,double y) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
-		totpar++;
+		//totpar++;
 		id[ij][co[ij]]=n;
 		vo.add(ij,co[ij]);
 		double *pp=p[ij]+2*co[ij]++;
@@ -128,7 +128,7 @@ void container_2d::put(particle_order &vo,int n,double x,double y) {
 void container_poly_2d::put(particle_order &vo,int n,double x,double y,double r) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
-		totpar++;
+		//totpar++;
 		id[ij][co[ij]]=n;
 		vo.add(ij,co[ij]);
 		double *pp=p[ij]+3*co[ij]++;

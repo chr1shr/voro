@@ -36,7 +36,7 @@ container_boundary_2d::container_boundary_2d(double ax_,double bx_,double ay_,do
 	edb(new int[2*edbm]), bnds(new double[2*edbm]), ps(2), soi(NULL),
 	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_)	{
 	int l;
-        totpar=0;	
+//        totpar=0;	
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
 	for(l=0;l<nxy;l++) id[l]=new int[init_mem];
@@ -77,7 +77,7 @@ container_boundary_2d::~container_boundary_2d() {
 void container_boundary_2d::put(int n,double x,double y) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
-		totpar++;
+		//totpar++;
 		id[ij][co[ij]]=n;
 		if(boundary_track!=-1) {
 			bndpts[ij][co[ij]]=edbc;
@@ -96,7 +96,7 @@ void container_boundary_2d::put(int n,double x,double y) {
 void container_boundary_2d::put(particle_order &vo,int n,double x,double y) {
 	int ij;
 	if(put_locate_block(ij,x,y)) {
-		totpar++;
+		//totpar++;
 		id[ij][co[ij]]=n;
 		if(boundary_track!=-1) {
 			bndpts[ij][co[ij]]=edbc;
@@ -500,22 +500,23 @@ bool container_boundary_2d::boundary_cuts(v_cell_2d &c,int ij,double x,double y)
 
 bool container_boundary_2d::skip(int ij,int q,double x,double y) {
 	int j;
-	double widx1,widy1,dx,dy,val,lx,ly;
+	double wx1,wy1,wx2,wy2,dx,dy,lx,ly;
 	double cx=p[ij][ps*q],cy=p[ij][ps*q+1];
 
 	for(int i=0;i<nlab[ij][q];i++) {
 		j=2*plab[ij][q][i];
-		widx1=bnds[j];
-		widy1=bnds[j+1];
+		wx1=bnds[j];
+		wy1=bnds[j+1];
 		j=2*edb[j];
-		dx=bnds[j]-widx1;
-		dy=bnds[j+1]-widy1;
-		lx=widx1+bnds[j]-2*x;
-		ly=widy1+bnds[j+1]-2*y;
-		if(lx*lx+ly*ly>dx*dx+dy*dy) continue;
-		val=(x-widx1)*dy-(y-widy1)*dx;
-		if((val>tolerance&&(cx-widx1)*dy-(cy-widy1)*dx<-tolerance)
-		 ||(val<-tolerance&&(cx-widx1)*dy-(cy-widy1)*dx>tolerance)) return true;
+		wx2=bnds[j];
+		wy2=bnds[j+1];
+		dx=wx1-wx2;
+		dy=wy1-wy2;
+		wx1-=x;wy1-=y;
+		if(dx*wy1-dy*wx1>tolerance) {
+			lx=cx-x;ly=cy-y;
+			if(wx1*ly-wy1*lx>tolerance&&lx*(wy2-y)-ly*(wx2-x)>tolerance) return true;
+		}
 	}
 	return false;
 
