@@ -121,7 +121,7 @@ class c_loop_base_2d {
 		template<class c_class_2d>
 		c_loop_base_2d(c_class_2d &con) : nx(con.nx), ny(con.ny), nxy(con.nxy),
 						  ps(con.ps), p(con.p), id(con.id),
-						  co(con.co) {}
+						  co(con.co) {printf("loop constructor");}
 		/** Returns the position vector of the particle currently being
 		 * considered by the loop.
 		 * \param[out] (x,y) the position vector of the particle. */

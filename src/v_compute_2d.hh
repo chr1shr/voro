@@ -85,7 +85,7 @@ class voro_compute_2d {
 			delete [] qu;
 			delete [] mask;
 		}
-		template<class v_cell_2d>
+		template<class v_cell_2d>	
 		bool compute_cell(v_cell_2d &c,int ij,int s,int ci,int cj);
 		void find_voronoi_cell(double x,double y,int ci,int cj,int ij,particle_record_2d &w,double &mrs);
 	private:

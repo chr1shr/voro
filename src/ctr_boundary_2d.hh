@@ -78,7 +78,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		int **wid;
 		int **nlab;
 		int ***plab;
-		int **bndpts;
+		int **bndpts;	
 		int boundary_track;
 		int edbc;
 		int edbm;
@@ -104,7 +104,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		 * space is equally divided in either direction from the
 		 * particle's initial position. Plane cuts made by any walls
 		 * that have been added are then applied to the cell.
-		 * \param[in,out] c a reference to a voronoicell_nonconvex_2d object.
+		 o* \param[in,out] c a reference to a voronoicell_nonconvex_2d object.
 		 * \param[in] ij the block that the particle is within.
 		 * \param[in] q the index of the particle within its block.
 		 * \param[in] (ci,cj) the coordinates of the block in the
@@ -120,7 +120,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		inline bool initialize_voronoicell(v_cell_2d &c,int ij,int q,int ci,int cj,
 				int &i,int &j,double &x,double &y,int &disp) {
 			double x1,x2,y1,y2,*pp=p[ij]+ps*q;
-			x=*(pp++);y=*(pp++);
+				x=*(pp++);y=*(pp++);
 			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
 			if(yperiodic) {y1=-(y2=0.5*(by-ay));j=ny;} else {y1=ay-y;y2=by-y;j=cj;}
 			if(bndpts[ij][q]==-1) c.init(x1,x2,y1,y2);
@@ -135,6 +135,14 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 			disp=ij-i-nx*j;
 			return true;
 		}
+		template<class v_cell_2d>
+		inline void connect_to_cell(v_cell_2d &c,int ij, int q){
+			if(full_connect){	
+				c.set_id(id[ij][q]);
+				c.full_connect_on();
+			}
+		}
+
 		bool point_inside(double x,double y);
 		template<class v_cell_2d>
 		bool boundary_cuts(v_cell_2d &c,int ij,double x,double y);
@@ -175,7 +183,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		 *			  be added to the particles within the
 		 *			  computed block.
 		 * \param[in] disp a block displacement used internally by the
-		 * 		   find_voronoi_cell and compute_cell routines.
+		 * 		   find_voronoi_cell andcompute_cell routines.
 		 * \return The block index. */
 		inline int region_index(int ci,int cj,int ei,int ej,double &qx,double &qy,int &disp) {
 			if(xperiodic) {if(ci+ei<nx) {ei+=nx;qx=-(bx-ax);} else if(ci+ei>=(nx<<1)) {ei-=nx;qx=bx-ax;} else qx=0;}

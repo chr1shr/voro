@@ -35,6 +35,7 @@ int main(int argc,char **argv) {
 
 	FILE *fp=safe_fopen(argv[1],"r");
 
+
 	while(fgets(buf,512,fp)!=NULL) {
 
 		if(strcmp(buf,"#Start\n")==0||strcmp(buf,"# Start\n")==0) {
@@ -108,6 +109,8 @@ int main(int argc,char **argv) {
 
 	// Save the boundary in a format that can be read by Gnuplot
 	char *outfn(new char[strlen(argv[1])+5]);
+	char *outfn2(new char[strlen(argv[1])+5]);
+
 	sprintf(outfn,"%s.bd",argv[1]);
 
 	con.draw_boundary_gnuplot(outfn);
@@ -122,35 +125,62 @@ int main(int argc,char **argv) {
 	// Compute the Voronoi cells and save them to file
 	sprintf(outfn,"%s.gnu",argv[1]);
 	con.draw_cells_gnuplot(outfn);
-
 	// Output the neighbor mesh in gnuplot format
 	if(mid>16777216) puts("Network output disabled due to too high Ids");
 	else if(neg_label) puts("Network output disabled due to negative IDs");
 	else {
-
+		double vx,vy; //ADDED
 		int *mp=new int[mid+1];
 		for(j=0;j<i;j++) mp[vid[j]]=j;
 
 		sprintf(outfn,"%s.net",argv[1]);
+//		sprintf(outfn2,"%s.gv",argv[1]);//ADDED
 		FILE *ff=safe_fopen(outfn,"w");
+//		FILE *ff2=safe_fopen(outfn2,"w");//ADDED
 		int l1,l2;
 		vector<int> vi;
+//		con.full_connect_on();
+//		if(con.full_connect){
+//			printf("\n\n\n\nfull connect on\n\n\n\n");
+//		}printf("initializing\n\n");
 		voronoicell_nonconvex_neighbor_2d c;
+		printf("loop\n\n");
 		c_loop_all_2d cl(con);
+		printf("in");
 		if(cl.start()) do if(con.compute_cell(c,cl)) {
+			printf("cell1");
 			id=cl.pid();l1=2*mp[id];
-			c.neighbors(vi);
+			c.neighbors(vi);	
+			c.set_id(id);
+			printf("begin printing");
 			for(j=0;j<vi.size();j++) if(vi[j]>id) {
 				l2=2*mp[vi[j]];
 				fprintf(ff,"%g %g\n%g %g\n\n\n",
 					vpos[l1],vpos[l1+1],vpos[l2],vpos[l2+1]);
-			}
+			}printf("begin vg");
+//			for(j=0;j<c.p;j++){
+//				printf("vg info cell%i",j);
+//				vx=(c.pts[2*j]*.5)+vpos[l1]; vy=(c.pts[2*j+1]*.5)+vpos[l1+1];	
+//				for(int k=0;k<c.vertexg[j].size();k++){
+//					l2=2*mp[c.vertexg[j][k]];
+//					fprintf(ff2,"%g %g\n%g %g\n\n\n",vx,vy,vpos[l2],vpos[l2+1]);
+//				}
+//			}
+
+
 		} while (cl.inc());
 		fclose(ff);
-
+//		fclose(ff2); 
 		delete [] mp;
 	}
 //	delete [] connectfn;
 	delete [] outfn;
+
+
+
+
+
+
+
 	return 0;
 }
