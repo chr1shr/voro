@@ -97,7 +97,7 @@ void v_connect::assemble_vertex(){
 		globvertc[i]=0;
 	}
 
-
+	cout << "2.1" << endl;
 
 	double x,y,vx,vy;
 	// Create container
@@ -263,7 +263,7 @@ void v_connect::assemble_vertex(){
 			pne++;
 	
 	}while (cl.inc());
-
+	cout << "2.2" << endl;
 	//Add non-problem vertices(connectivity<=3) to class variables, add problem vertices to problem vertice data structures
 	pmap=new int[pcurrent_vertices];
 	j=0;
@@ -342,6 +342,7 @@ void v_connect::assemble_vertex(){
 
 
 	}
+	cout << "2.3\n problemverts21.size()=" << problem_verts21.size() << "\nproblem_verts32.size()=" << problem_verts32.size() << "\nproblem_verts.size()=" << problem_verts.size() << endl;
 	nv=j;
 	degenerate_vertices=j;
 	//deal with problem verts
@@ -373,7 +374,7 @@ void v_connect::assemble_vertex(){
 			}
 		}
 	}
-
+	cout << "part 2" << endl;
 	while(problem_verts32.size()>0){
 		for(int i=0;i<problem_verts32.size();i++){
 			gens=pvert_to_gen[problem_verts32[i]];
@@ -397,7 +398,7 @@ void v_connect::assemble_vertex(){
 
 
 	double standard,distance;
-
+	cout << "part3" << endl;
 	while(problem_verts.size()>0){	
 
 		if(nv==current_vertices) add_memory_vertices();
@@ -445,7 +446,7 @@ void v_connect::assemble_vertex(){
 	delete [] pvert_to_gen;
 	delete [] pvertl; 
 	delete [] globvertc;
-
+	cout << "2.4" << endl;
 	//assemble edge data structures
 	ed_to_vert=new int[2*pne];
 	vert_to_ed=new vector<int>[nv];
@@ -484,9 +485,11 @@ void v_connect::assemble_vertex(){
 	delete [] pmap;
 	delete [] ped_to_vert;
 	delete [] globedgec;
+	cout << "out" << endl;
 }
 //assemble gen_to_gen , gen_to_ed , ed_to_gen
 void v_connect::assemble_gen_ed(){
+	cout << "gen_ed 1" << endl;
 	ed_to_gen=new vector<int>[ne];
 	//though neither ed_on_bd or vert_on_bd are modified during this method, they are initialized here in case the user
 	//does not require boundary information and will not be calling assemble_boundary
@@ -495,7 +498,9 @@ void v_connect::assemble_gen_ed(){
 	vector<int> gens;
 	int g1,g2,v1,v2,j,vi;
 	double gx1,gy1,gx2,gy2,vx1,vy1,vx2,vy2;
+		cout << "gen_ed 2" << endl;
 	for(int i=0;i<ne;i++){
+
 		v1=ed_to_vert[2*i];v2=ed_to_vert[2*i+1];
 		two_in_common(vert_to_gen[v1],vert_to_gen[v2],g1,g2);
 		if(g1!=-1 && g2!=-1){
@@ -536,6 +541,7 @@ void v_connect::assemble_gen_ed(){
 			else gen_to_ed[g1].push_back(~i);
 		}
 	}
+	cout << "gen_ed 3" << endl;
 	for(int i=0;i<nv;i++){		
 		if(vert_to_ed[i].size()<=3) continue;
 		else{
@@ -548,7 +554,7 @@ void v_connect::assemble_gen_ed(){
 			}
 		}
 	}
-
+	cout << "gen_ed 4" << endl;
 	//arrange gen_to_ed gen_to_gen_e gen_to_gen_v counterclockwise
 	for(int i=0;i<ng;i++){
 		gx1=vpos[2*mp[i]];gy1=vpos[2*mp[i]+1];
@@ -556,6 +562,7 @@ void v_connect::assemble_gen_ed(){
 		arrange_cc_x_to_gen(gen_to_gen_e[i],gx1,gy1);
 		arrange_cc_x_to_gen(gen_to_gen_v[i],gx1,gy1);
 	}
+	cout << "gen_ed 5" << endl;
 	//arrange vert_to_ed cc
 	for(int i=0;i<nv;i++){
 		gx1=vertl[2*i];gy1=vertl[2*i+1];
@@ -1215,24 +1222,26 @@ void v_connect::add_memory_vertices(){
 	double *vertle(vertl+2*current_vertices);
 	int *vertex_is_generatore(vertex_is_generator+current_vertices);
 	current_vertices<<=1;
-		
+	cout << "2.2.1" << endl;	
 	//copy vertl
 	double *nvertl(new double[2*current_vertices]),*nvp(nvertl),*vp(vertl);
 	while(vp<vertle) *(nvp++)=*(vp++);
 	delete [] vertl;vertl=nvertl;
-
+	cout << "2.2.2" << endl;
 	//copy vert_to_gen, vert_to_ed
 	vector<int> *nvert_to_gen(new vector<int>[current_vertices]);
 	for(int i=0;i<(current_vertices>>1);i++){
 		nvert_to_gen[i]=vert_to_gen[i];
 	}
 	delete [] vert_to_gen;vert_to_gen=nvert_to_gen;
-
+	cout << "2.2.3" << endl;
 	//copy vertex_is_generator
 	int *nvertex_is_generator(new int[current_vertices]),*nvig(nvertex_is_generator),*vig(vertex_is_generator),*nvige(nvertex_is_generator+current_vertices);
-	while(vig<vertex_is_generatore) *(nvig++)=*(vp++);
+	while(vig<vertex_is_generatore) *(nvig++)=*(vig++);
+	cout << "inbetween" << endl;
 	while(nvig<nvige) *(nvig++)=-1;
-	
+	cout << "2.2.4" << endl;	
+	delete [] vertex_is_generator; vertex_is_generator=nvertex_is_generator;
 }
 
 //returns the signed area of the cell corresponding to generator g
@@ -1287,44 +1296,71 @@ void v_connect::lloyds(double epsilon){
 	sprintf(outfn1,"lloyds");
 	FILE *fp=safe_fopen(outfn1,"w");	
 	do{
+		cout << "iteration" << j << endl;
 		max=0;
 		char *outfn2(new char[1000]);
 		sprintf(outfn2,"lloyds%i",j);
+		cout << "blah" << endl;
 		draw_gnu(outfn2);
+		cout << "yeah" << endl;
 		delete[] outfn2;
-		for(int i=bd;i<ng;i++){
-			gx=vpos[2*mp[i]]; gy=vpos[2*mp[i]+1];
-			centroid(i,cx,cy);
-			current=pow(cx-gx,2)+pow(cy-gy,2);
-			if(current>max) max=current;
-			vpos[2*mp[i]]=cx;
-			vpos[2*mp[i]+1]=cy;
+		if(bd!=-1){
+			for(int i=bd;i<ng;i++){
+				cout << "i=" << i << endl;
+				gx=vpos[2*mp[i]]; gy=vpos[2*mp[i]+1];
+				centroid(i,cx,cy);
+				current=pow(cx-gx,2)+pow(cy-gy,2);
+				if(current>max) max=current;
+				vpos[2*mp[i]]=cx;
+				vpos[2*mp[i]+1]=cy;
+			}
 		}
 		fprintf(fp,"iteration %i, max=%f, epsilon=%f",j,max,epsilon);
 		nv=0;		
 		ne=0;
+		cout << "1" << endl;
 		current_vertices=init_vertices;
 		current_edges=init_vertices;
 		delete [] gen_to_gen_e;
 		gen_to_gen_e=new vector<int>[ng];
+		cout << "2" << endl;
 		delete [] gen_to_gen_v;
 		gen_to_gen_v=new vector<int>[ng];
+		cout << "3" << endl;
 		delete [] gen_to_ed;
 		gen_to_ed=new vector<int>[ng];
+		cout << "4" << endl;
 		delete [] gen_to_vert;
 		gen_to_vert=new vector<int>[ng];
+		cout << "5" << endl;
 		delete [] vertl;
 		vertl=new double[2*init_vertices];
+		cout << "6" << endl;
 		delete [] vert_to_gen;
 		vert_to_gen=new vector<int>[init_vertices];
+		cout << "7" << endl;
+		delete [] vertex_is_generator;
+		cout << "7.1" << endl;
+		vertex_is_generator=new int[init_vertices];
+		cout << "7.2" << endl;
+		for(int k=0;k<init_vertices;k++) vertex_is_generator[k]=-1;
+		cout << "8" << endl;
+		delete [] generator_is_vertex;
+		generator_is_vertex=new int[ng];
+		for(int k=0;k<ng;k++) generator_is_vertex[k]=-1;
+		cout << "9" << endl;
 		delete [] ed_to_vert;
 		delete [] vert_to_ed;
 		delete [] ed_to_gen;
 		delete [] ed_on_bd;
 		delete [] vert_on_bd;
+		cout << "1..." << endl;
 		assemble_vertex();
+		cout << "2..." << endl;
 		assemble_gen_ed();
+		cout << "3..." << endl;
 		assemble_boundary();
+		cout << "4..." << endl;
 		j++;
 	}while(max>epsilon);
 	fclose(fp);
