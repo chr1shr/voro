@@ -182,9 +182,9 @@ class voronoicell_base {
 		inline void output_custom(const char *format,FILE *fp=stdout) {output_custom(format,0,0,0,0,default_radius,fp);}
 		void output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp=stdout);
 		template<class vc_class>
-		bool nplane(vc_class &vc,double x,double y,double z,double rs,int p_id);
-		bool plane_intersects(double x,double y,double z,double rs);
-		bool plane_intersects_guess(double x,double y,double z,double rs);
+		bool nplane(vc_class &vc,double x,double y,double z,double rsq,int p_id);
+		bool plane_intersects(double x,double y,double z,double rsq);
+		bool plane_intersects_guess(double x,double y,double z,double rsq);
 		void construct_relations();
 		void check_relations();
 		void check_duplicates();

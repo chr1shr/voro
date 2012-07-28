@@ -10,6 +10,8 @@ Version 0.4.5 (...)
   Marchi (Commissariat á l'Energie Atomique) for pointing this out.
 * Removed some duplicate or unnecessary #include statements of the standard C++
   header files
+* Fix small naming mismatch between cell.cc and cell.hh in plane_intersects
+  and nplane routines, which would give a warning with Doxygen
 * More changes for older MS Visual C++ compatability
 * Updated Doxyfile to 1.8.1.1
 
