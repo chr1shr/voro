@@ -10,12 +10,6 @@
 #ifndef VOROPP_C_LOOPS_HH
 #define VOROPP_C_LOOPS_HH
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-#include <vector>
-using namespace std;
-
 #include "config.hh"
 
 namespace voro {

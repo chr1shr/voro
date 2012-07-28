@@ -8,9 +8,7 @@
  * \brief Function implementations for the pre_container and related classes.
  */
 
-#include <cstdio>
 #include <cmath>
-using namespace std;
 
 #include "config.hh"
 #include "pre_container.hh"

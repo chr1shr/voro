@@ -11,6 +11,8 @@
 #ifndef VOROPP_RAD_OPTION_HH
 #define VOROPP_RAD_OPTION_HH
 
+#include <cmath>
+
 namespace voro {
 
 /** \brief Class containing all of the routines that are specific to computing 

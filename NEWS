@@ -1,11 +1,17 @@
 Version 0.4.5 (...)
 ===================
+* Removed "using namespace std" from the header files and added extra "std::"
+  qualifiers on STL vectors and queues. This is to prevent naming conflicts
+  with other libraries. Thanks to Florian Hoffmann (University of Luxembourg)
+  for pointing this out.
 * Fixed an error in the check_facets diagnostic routine. Thanks to Tristan
   Carrier-Baudouin (Université catholique de Louvain) for pointing this out.
 * Fixed a memory leak in the new container_periodic class. Thanks to Massimo
   Marchi (Commissariat á l'Energie Atomique) for pointing this out.
+* Removed some duplicate or unnecessary #include statements of the standard C++
+  header files
 * More changes for older MS Visual C++ compatability
-* Updated Doxyfile to 1.8.0
+* Updated Doxyfile to 1.8.1.1
 
 Version 0.4.4 (January 17th 2012)
 =================================

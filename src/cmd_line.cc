@@ -8,6 +8,7 @@
  * \brief Source code for the command-line utility. */
 
 #include <cstring>
+
 #include "voro++.hh"
 using namespace voro;
 

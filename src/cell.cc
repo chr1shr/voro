@@ -7,8 +7,8 @@
 /** \file cell.cc
  * \brief Function implementations for the voronoicell and related classes. */
 
+#include <cmath>
 #include <cstring>
-using namespace std;
 
 #include "config.hh"
 #include "common.hh"
@@ -1333,7 +1333,7 @@ double voronoicell_base::volume() {
 /** Calculates the areas of each face of the Voronoi cell and prints the
  * results to an output stream.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::face_areas(vector<double> &v) {
+void voronoicell_base::face_areas(std::vector<double> &v) {
 	double area;
 	v.clear();
 	int i,j,k,l,m,n;
@@ -1636,7 +1636,7 @@ int voronoicell_base::check_marginal(int n,double &ans) {
  * vector of the face, and scales it to the distance from the cell center to
  * that plane.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::normals(vector<double> &v) {
+void voronoicell_base::normals(std::vector<double> &v) {
 	int i,j,k;
 	v.clear();
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
@@ -1657,7 +1657,7 @@ void voronoicell_base::normals(vector<double> &v) {
  * \param[in] i the initial vertex of the face to test.
  * \param[in] j the index of an edge of the vertex.
  * \param[in] k the neighboring vertex of i, set to ed[i][j]. */
-inline void voronoicell_base::normals_search(vector<double> &v,int i,int j,int k) {
+inline void voronoicell_base::normals_search(std::vector<double> &v,int i,int j,int k) {
 	ed[i][j]=-1-k;
 	int l=cycle_up(ed[i][nu[i]+j],k),m;
 	double ux,uy,uz,vx,vy,vz,wx,wy,wz,wmag;
@@ -1741,7 +1741,7 @@ int voronoicell_base::number_of_faces() {
 
 /** Returns a vector of the vertex orders.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::vertex_orders(vector<int> &v) {
+void voronoicell_base::vertex_orders(std::vector<int> &v) {
 	v.resize(p);
 	for(int i=0;i<p;i++) v[i]=nu[i];
 }
@@ -1757,7 +1757,7 @@ void voronoicell_base::output_vertex_orders(FILE *fp) {
 
 /** Returns a vector of the vertex vectors using the local coordinate system.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::vertices(vector<double> &v) {
+void voronoicell_base::vertices(std::vector<double> &v) {
 	v.resize(3*p);
 	double *ptsp=pts;
 	for(int i=0;i<3*p;i+=3) {
@@ -1781,7 +1781,7 @@ void voronoicell_base::output_vertices(FILE *fp) {
  * \param[out] v the vector to store the results in.
  * \param[in] (x,y,z) the position vector of the particle in the global
  *                    coordinate system. */
-void voronoicell_base::vertices(double x,double y,double z,vector<double> &v) {
+void voronoicell_base::vertices(double x,double y,double z,std::vector<double> &v) {
 	v.resize(3*p);
 	double *ptsp=pts;
 	for(int i=0;i<3*p;i+=3) {
@@ -1804,7 +1804,7 @@ void voronoicell_base::output_vertices(double x,double y,double z,FILE *fp) {
 
 /** This routine returns the perimeters of each face.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::face_perimeters(vector<double> &v) {
+void voronoicell_base::face_perimeters(std::vector<double> &v) {
 	v.clear();
 	int i,j,k,l,m;
 	double dx,dy,dz,perim;
@@ -1836,7 +1836,7 @@ void voronoicell_base::face_perimeters(vector<double> &v) {
 /** For each face, this routine outputs a bracketed sequence of numbers
  * containing a list of all the vertices that make up that face.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::face_vertices(vector<int> &v) {
+void voronoicell_base::face_vertices(std::vector<int> &v) {
 	int i,j,k,l,m,vp(0),vn;
 	v.clear();
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
@@ -1863,7 +1863,7 @@ void voronoicell_base::face_vertices(vector<int> &v) {
 
 /** Outputs a list of the number of edges in each face.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::face_orders(vector<int> &v) {
+void voronoicell_base::face_orders(std::vector<int> &v) {
 	int i,j,k,l,m,q;
 	v.clear();
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
@@ -1888,7 +1888,7 @@ void voronoicell_base::face_orders(vector<int> &v) {
 /** Computes the number of edges that each face has and outputs a frequency
  * table of the results.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base::face_freq_table(vector<int> &v) {
+void voronoicell_base::face_freq_table(std::vector<int> &v) {
 	int i,j,k,l,m,q;
 	v.clear();
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
@@ -2022,8 +2022,8 @@ int voronoicell_base::number_of_edges() {
  * \param[in] fp the file handle to write to. */
 void voronoicell_base::output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp) {
 	char *fmp=(const_cast<char*>(format));
-	vector<int> vi;
-	vector<double> vd;
+	std::vector<int> vi;
+	std::vector<double> vd;
 	while(*fmp!=0) {
 		if(*fmp=='%') {
 			fmp++;
@@ -2195,7 +2195,7 @@ voronoicell_neighbor::~voronoicell_neighbor() {
 }
 
 /** Computes a vector list of neighbors. */
-void voronoicell_neighbor::neighbors(vector<int> &v) {
+void voronoicell_neighbor::neighbors(std::vector<int> &v) {
 	v.clear();
 	int i,j,k,l,m;
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {

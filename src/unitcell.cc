@@ -7,8 +7,8 @@
 /** \file unitcell.cc
  * \brief Function implementations for the unitcell class. */
 
+#include <cmath>
 #include <queue>
-using namespace std;
 
 #include "unitcell.hh"
 #include "cell.hh"
@@ -119,7 +119,7 @@ bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
  *                centered in the middle of the primary domain.
  * \param[out] vd a vector containing the fraction of the Voronoi cell volume
  *                within each corresponding image listed in vi. */
-void unitcell::images(vector<int> &vi,vector<double> &vd) {
+void unitcell::images(std::vector<int> &vi,std::vector<double> &vd) {
 	const int ms2=max_unit_voro_shells*2+1,mss=ms2*ms2*ms2;
 	bool *a=new bool[mss],*ac=a+max_unit_voro_shells*(1+ms2*(1+ms2)),*ap=a;
 	int i,j,k;
@@ -131,7 +131,7 @@ void unitcell::images(vector<int> &vi,vector<double> &vd) {
 	while(ap<a+mss) *(ap++)=true;
 
 	// Set up the queue and add (0,0,0) image to it
-	queue<int> q;
+	std::queue<int> q;
 	q.push(0);q.push(0);q.push(0);
 
 	while(!q.empty()) {

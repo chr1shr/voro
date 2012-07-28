@@ -16,7 +16,7 @@ namespace voro {
  * Prints a vector of integers.
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
-void voro_print_vector(vector<int> &v,FILE *fp) {
+void voro_print_vector(std::vector<int> &v,FILE *fp) {
 	int k=0,s=v.size();
 	while(k+4<s) {
 		fprintf(fp,"%d %d %d %d ",v[k],v[k+1],v[k+2],v[k+3]);
@@ -36,7 +36,7 @@ void voro_print_vector(vector<int> &v,FILE *fp) {
  * Prints a vector of doubles.
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
-void voro_print_vector(vector<double> &v,FILE *fp) {
+void voro_print_vector(std::vector<double> &v,FILE *fp) {
 	int k=0,s=v.size();
 	while(k+4<s) {
 		fprintf(fp,"%g %g %g %g ",v[k],v[k+1],v[k+2],v[k+3]);
@@ -59,7 +59,7 @@ void voro_print_vector(vector<double> &v,FILE *fp) {
  * until the end of the vector is reached.
  * \param[in] v the vector to interpret and print.
  * \param[in] fp the file stream to print to. */
-void voro_print_face_vertices(vector<int> &v,FILE *fp) {
+void voro_print_face_vertices(std::vector<int> &v,FILE *fp) {
 	int j,k=0,l;
 	if(v.size()>0) {
 		l=v[k++];

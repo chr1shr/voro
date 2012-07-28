@@ -10,11 +10,7 @@
 #ifndef VOROPP_CELL_HH
 #define VOROPP_CELL_HH
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
 #include <vector>
-using namespace std;
 
 #include "config.hh"
 #include "common.hh"
@@ -132,50 +128,50 @@ class voronoicell_base {
 		void centroid(double &cx,double &cy,double &cz);
 		int number_of_faces();
 		int number_of_edges();
-		void vertex_orders(vector<int> &v);
+		void vertex_orders(std::vector<int> &v);
 		void output_vertex_orders(FILE *fp=stdout);
-		void vertices(vector<double> &v);
+		void vertices(std::vector<double> &v);
 		void output_vertices(FILE *fp=stdout);
-		void vertices(double x,double y,double z,vector<double> &v);
+		void vertices(double x,double y,double z,std::vector<double> &v);
 		void output_vertices(double x,double y,double z,FILE *fp=stdout);
-		void face_areas(vector<double> &v);
+		void face_areas(std::vector<double> &v);
 		/** Outputs the areas of the faces.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_face_areas(FILE *fp=stdout) {
-			vector<double> v;face_areas(v);
+			std::vector<double> v;face_areas(v);
 			voro_print_vector(v,fp);
 		}
-		void face_orders(vector<int> &v);
+		void face_orders(std::vector<int> &v);
 		/** Outputs a list of the number of sides of each face.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_face_orders(FILE *fp=stdout) {
-			vector<int> v;face_orders(v);
+			std::vector<int> v;face_orders(v);
 			voro_print_vector(v,fp);
 		}
-		void face_freq_table(vector<int> &v);
+		void face_freq_table(std::vector<int> &v);
 		/** Outputs a */
 		inline void output_face_freq_table(FILE *fp=stdout) {
-			vector<int> v;face_freq_table(v);
+			std::vector<int> v;face_freq_table(v);
 			voro_print_vector(v,fp);
 		}
-		void face_vertices(vector<int> &v);
+		void face_vertices(std::vector<int> &v);
 		/** Outputs the */
 		inline void output_face_vertices(FILE *fp=stdout) {
-			vector<int> v;face_vertices(v);
+			std::vector<int> v;face_vertices(v);
 			voro_print_face_vertices(v,fp);
 		}
-		void face_perimeters(vector<double> &v);
+		void face_perimeters(std::vector<double> &v);
 		/** Outputs a list of the perimeters of each face.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_face_perimeters(FILE *fp=stdout) {
-			vector<double> v;face_perimeters(v);
+			std::vector<double> v;face_perimeters(v);
 			voro_print_vector(v,fp);
 		}
-		void normals(vector<double> &v);
+		void normals(std::vector<double> &v);
 		/** Outputs a list of the perimeters of each face.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_normals(FILE *fp=stdout) {
-			vector<double> v;normals(v);
+			std::vector<double> v;normals(v);
 			voro_print_positions(v,fp);
 		}
 		/** Outputs a custom string of information about the Voronoi
@@ -198,7 +194,7 @@ class voronoicell_base {
 		 * \param[out] v a reference to a vector in which to return the
 		 *               results. If no neighbor information is
 		 *               available, a blank vector is returned. */
-		virtual void neighbors(vector<int> &v) {v.clear();}
+		virtual void neighbors(std::vector<int> &v) {v.clear();}
 		/** This is a virtual function that is overridden by a routine
 		 * to print a list of IDs of neighboring particles
 		 * corresponding to each face. By default, when no neighbor
@@ -287,7 +283,7 @@ class voronoicell_base {
 		template<class vc_class>
 		inline void add_to_stack(vc_class &vc,int lp,int *&stackp2);
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
-		inline void normals_search(vector<double> &v,int i,int j,int k);
+		inline void normals_search(std::vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);
 		inline int m_test(int n,double &ans);
 		int check_marginal(int n,double &ans);
@@ -393,7 +389,7 @@ class voronoicell : public voronoicell_base {
 		inline void n_switch_to_aux1(int i) {};
 		inline void n_copy_to_aux1(int i,int m) {};
 		inline void n_set_to_aux1_offset(int k,int m) {};
-		inline void n_neighbors(vector<int> &v) {v.clear();};
+		inline void n_neighbors(std::vector<int> &v) {v.clear();};
 		friend class voronoicell_base;
 };
 
@@ -471,10 +467,10 @@ class voronoicell_neighbor : public voronoicell_base {
 		void init_octahedron(double l);
 		void init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3);
 		void check_facets();
-		virtual void neighbors(vector<int> &v);
+		virtual void neighbors(std::vector<int> &v);
 		virtual void print_edges_neighbors(int i);
 		virtual void output_neighbors(FILE *fp=stdout) {
-			vector<int> v;neighbors(v);
+			std::vector<int> v;neighbors(v);
 			voro_print_vector(v,fp);
 		}
 	private:

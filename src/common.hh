@@ -13,7 +13,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
-using namespace std;
 
 #include "config.hh"
 
@@ -34,7 +33,7 @@ inline void voro_fatal_error(const char *p,int status) {
  * Prints a vector of positions as bracketed triplets.
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
-inline void voro_print_positions(vector<double> &v,FILE *fp=stdout) {
+inline void voro_print_positions(std::vector<double> &v,FILE *fp=stdout) {
 	if(v.size()>0) {
 		fprintf(fp,"(%g,%g,%g)",v[0],v[1],v[2]);
 		for(int k=3;(unsigned int) k<v.size();k+=3) {
@@ -59,9 +58,9 @@ inline FILE* safe_fopen(const char *filename,const char *mode) {
 	return fp;
 }
 
-void voro_print_vector(vector<int> &v,FILE *fp=stdout);
-void voro_print_vector(vector<double> &v,FILE *fp=stdout);
-void voro_print_face_vertices(vector<int> &v,FILE *fp=stdout);
+void voro_print_vector(std::vector<int> &v,FILE *fp=stdout);
+void voro_print_vector(std::vector<double> &v,FILE *fp=stdout);
+void voro_print_face_vertices(std::vector<int> &v,FILE *fp=stdout);
 
 }
 

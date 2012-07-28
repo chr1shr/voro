@@ -4,6 +4,9 @@
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
+#include <vector>
+using namespace std;
+
 #include "voro++.hh"
 using namespace voro;
 

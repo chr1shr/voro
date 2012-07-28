@@ -10,6 +10,8 @@
 #ifndef VOROPP_PRE_CONTAINER_HH
 #define VOROPP_PRE_CONTAINER_HH
 
+#include <cstdio>
+
 #include "c_loops.hh"
 #include "container.hh"
 

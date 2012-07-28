@@ -11,7 +11,6 @@
 #define VOROPP_UNITCELL_HH
 
 #include <vector>
-using namespace std;
 
 #include "config.hh"
 #include "cell.hh"
@@ -61,7 +60,7 @@ class unitcell {
 		}
 		void draw_domain_pov(FILE *fp=stdout);
 		bool intersects_image(double dx,double dy,double dz,double &vol);
-		void images(vector<int> &vi,vector<double> &vd);
+		void images(std::vector<int> &vi,std::vector<double> &vd);
 	protected:
 		/** The maximum y-coordinate that could possibly cut the
 		 * computed unit Voronoi cell. */

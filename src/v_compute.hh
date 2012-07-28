@@ -10,12 +10,6 @@
 #ifndef VOROPP_V_COMPUTE_HH
 #define VOROPP_V_COMPUTE_HH
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-#include <vector>
-using namespace std;
-
 #include "config.hh"
 #include "worklist.hh"
 #include "cell.hh"
