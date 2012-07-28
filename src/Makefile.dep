@@ -4,7 +4,7 @@ container.o: container.cc container.hh config.hh common.hh v_base.hh \
   worklist.hh cell.hh c_loops.hh v_compute.hh rad_option.hh
 unitcell.o: unitcell.cc unitcell.hh config.hh cell.hh common.hh
 v_compute.o: v_compute.cc worklist.hh v_compute.hh config.hh cell.hh \
-  common.hh container.hh v_base.hh c_loops.hh rad_option.hh \
+  common.hh rad_option.hh container.hh v_base.hh c_loops.hh \
   container_prd.hh unitcell.hh
 c_loops.o: c_loops.cc c_loops.hh config.hh
 v_base.o: v_base.cc v_base.hh worklist.hh config.hh v_base_wl.cc
