@@ -1,5 +1,5 @@
-Version 0.4.5 (...)
-===================
+Version 0.4.5 (July 27th 2012)
+==============================
 * Removed "using namespace std" from the header files and added extra "std::"
   qualifiers on STL vectors and queues. This is to prevent naming conflicts
   with other libraries. Thanks to Florian Hoffmann (University of Luxembourg)
