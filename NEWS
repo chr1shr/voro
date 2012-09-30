@@ -1,3 +1,9 @@
+Version 0.4.6 (...)
+===================
+* Added routines to the container classes to compute a ghost Voronoi cell at
+  any given location, as though an extra particle was inserted at that
+  location.
+
 Version 0.4.5 (July 27th 2012)
 ==============================
 * Removed "using namespace std" from the header files and added extra "std::"
