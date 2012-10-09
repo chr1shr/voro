@@ -29,14 +29,14 @@ int main() {
 	// Create a container with the geometry given above, and make it
 	// non-periodic in each of the three coordinates. Allocate space for
 	// eight particles within each computational block
-	container_periodic con(2,0.5,2,0,0,2,n_x,n_y,n_z,8);
+	container_periodic_poly con(2,0.5,2,0,0,2,n_x,n_y,n_z,8);
 
 	// Randomly add particles into the container
 	for(i=0;i<4;i++) {
 		x=x_min+rnd()*(x_max-x_min);
 		y=y_min+rnd()*(y_max-y_min);
 		z=z_min+rnd()*(z_max-z_min);
-		con.put(i,x,y,0);
+		con.put(i,x,y,0,1);
 	}
 
 	// Output the particle positions in gnuplot format
@@ -45,9 +45,20 @@ int main() {
 	// Output the Voronoi cells in gnuplot format
 	con.draw_cells_gnuplot("ghost_test_v.gnu");
 
+	// Open file for test ghost cell
 	FILE *fp=safe_fopen("ghost_test_c.gnu","w");
 	voronoicell c;
-	for(y=-3.5;y<3.5;y+=0.02) if(con.compute_ghost_cell(c,1,y,0))
-		c.draw_gnuplot(1,y,0,fp);
+
+	// Compute a range of ghost cells
+//	for(y=-3.5;y<3.5;y+=0.05) if(con.compute_ghost_cell(c,1,y,0,1))
+//		c.draw_gnuplot(1,y,0,fp);
+
+	// Compute a single ghost cell
+	if(con.compute_ghost_cell(c,1.56,0.67,0,1)) c.draw_gnuplot(1.56,0.67,0,fp);
+	
+	// Close ghost cell file
 	fclose(fp);
+
+	// Draw the domain
+	con.draw_domain_gnuplot("ghost_test_d.gnu");
 }
