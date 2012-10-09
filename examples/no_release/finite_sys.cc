@@ -7,6 +7,9 @@
 #include "voro++.hh"
 using namespace voro;
 
+#include <vector>
+using namespace std;
+
 // Set up constants for the container geometry
 const double x_min=-15,x_max=15;
 const double y_min=-7,y_max=7;

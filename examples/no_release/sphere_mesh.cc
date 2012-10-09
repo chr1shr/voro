@@ -7,6 +7,9 @@
 #include "voro++.hh"
 using namespace voro;
 
+#include <vector>
+using namespace std;
+
 // Set up constants for the container geometry
 const double boxl=1.2;
 
