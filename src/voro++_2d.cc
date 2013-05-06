@@ -7,4 +7,3 @@
 #include "wall_2d.cc"
 #include "cell_nc_2d.cc"
 #include "ctr_boundary_2d.cc"
-#include "v_connect.cc"

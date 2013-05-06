@@ -13,13 +13,12 @@
 namespace voro {
 
 void voronoicell_nonconvex_neighbor_2d::init(double xmin,double xmax,double ymin,double ymax) {
-	nonconvex=exclude=full_connect=false;
+	nonconvex=exclude=false;
 	init_base(xmin,xmax,ymin,ymax);
 	*ne=-3;ne[1]=-2;ne[2]=-4;ne[3]=-1;
 }
 
 void voronoicell_nonconvex_base_2d::init_nonconvex_base(double xmin,double xmax,double ymin,double ymax,double wx0,double wy0,double wx1,double wy1) {
-	full_connect=false;
 	xmin*=2;xmax*=2;ymin*=2;ymax*=2;
 	int f0=face(xmin,xmax,ymin,ymax,wx0,wy0),
 	    f1=face(xmin,xmax,ymin,ymax,wx1,wy1);
@@ -27,7 +26,7 @@ void voronoicell_nonconvex_base_2d::init_nonconvex_base(double xmin,double xmax,
 	*pts=0;pts[1]=0;
 	pts[2]=wx0;pts[3]=wy0;p=4;
 	if(f0!=f1||wx0*wy1<wx1*wy0) {
-		do {//VTG INFO???
+		do {
 			if(f0>1) {
 				if(f0==2) {pts[p++]=xmin;pts[p++]=ymin;}
 				else {pts[p++]=xmax;pts[p++]=ymin;}
@@ -45,13 +44,6 @@ void voronoicell_nonconvex_base_2d::init_nonconvex_base(double xmin,double xmax,
 	*(q++)=1;*(q++)=p-1;
 	for(i=1;i<p-1;i++) {*(q++)=i+1;*(q++)=i-1;}
 	*(q++)=0;*q=p-2;
-
-
-
-
-
-
-
 
 	exclude=true;
 	if(wx0*wy1>wx1*wy0) nonconvex=false;

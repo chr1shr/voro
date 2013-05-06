@@ -147,7 +147,6 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
 		 * more is allocated using the add_particle_memory() function.
 		 */
 		int *mem;
-	
 		/** The amount of memory in the array structure for each
 		 * particle. This is set to 2 when the basic class is
 		 * initialized, so that the array holds (x,y) positions. If the
@@ -196,14 +195,6 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
 			disp=ij-i-nx*j;
 			return true;
 		}
-		template<class v_cell_2d>
-		inline void connect_to_cell(v_cell_2d &c,int ij, int q){
-			if(full_connect){	
-				c.set_id(id[ij][q]);
-				c.full_connect_on();
-			}
-		}
-
 		/** Initializes parameters for a find_voronoi_cell call within
 		 * the voro_compute template.
 		 * \param[in] (ci,cj) the coordinates of the test block in

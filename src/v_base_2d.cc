@@ -25,7 +25,6 @@ namespace voro {
 voro_base_2d::voro_base_2d(int nx_,int ny_,double boxx_,double boxy_) :
 	nx(nx_), ny(ny_), nxy(nx_*ny_), boxx(boxx_), boxy(boxy_),
 	xsp(1/boxx_), ysp(1/boxy_), mrad(new double[wl_hgridsq_2d*wl_seq_length_2d]) {
-	full_connect=false;
 	const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25;
 	const double xstep=boxx/wl_fgrid_2d,ystep=boxy/wl_fgrid_2d;
 	int i,j,lx,ly,q;
@@ -139,10 +138,7 @@ void voro_base_2d::print_globne(FILE *fp){
 			}
 		}
 	}
-}
-//returns true if a and be are connected(share an edge,) note that add_globne_info must be called with all cells first.
-bool voro_base_2d::connected(int a, int b){
-	return (((globne[(((a*totpar)+b)/32)]) & (unsigned int)(1 << (((a*totpar)+b)%32))) != 0);
 }*/
+	
 #include "v_base_wl_2d.cc"
 }

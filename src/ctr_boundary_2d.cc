@@ -36,7 +36,6 @@ container_boundary_2d::container_boundary_2d(double ax_,double bx_,double ay_,do
 	edb(new int[2*edbm]), bnds(new double[2*edbm]), ps(2), soi(NULL),
 	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_)	{
 	int l;
-	full_connect=false;
 //        totpar=0;	
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
@@ -417,7 +416,7 @@ void container_boundary_2d::create_label_table() {
 	// Check for case of no labels at all (which may be common)
 	if(tlab==0) {
 #if VOROPP_VERBOSE >=2
-
+		fputs("No labels needed\n",stderr);
 #endif
 		return;
 	}
@@ -610,10 +609,6 @@ void container_boundary_2d::add_boundary_memory() {
 	int *nedb(new int[2*edbm]);
 	for(i=0;i<2*edbc;i++) nedb[i]=edb[i];
 	delete [] edb;edb=nedb;
-
-
-
-
 }
 
 // Explicit instantiation

@@ -280,11 +280,12 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 	int i,j,di,dj,ei,ej,f,g,l,disp;
 	double fx,fy,gxs,gys,*radp;
 	unsigned int q,*e,*mij;
+
 	// Initialize the Voronoi cell to fill the entire container
 	if(!con.initialize_voronoicell(c,ij,s,ci,cj,i,j,x,y,disp)) return false;
 	con.r_init(ij,s);
 	if(!con.boundary_cuts(c,ij,x,y)) return false;
-	con.connect_to_cell(c,ij,s);
+
 	double crs,mrs;
 	int next_count=3,*count_p=(const_cast<int*> (count_list));
 
@@ -739,11 +740,6 @@ inline void voro_compute_2d<c_class_2d>::add_list_memory(int*& qu_s,int*& qu_e) 
 	qu_l=qu+qu_size;
 	qu_e=qu_c;
 }
-
-
-
-	
-
 
 // Explicit template instantiation
 template voro_compute_2d<container_2d>::voro_compute_2d(container_2d&,int,int);

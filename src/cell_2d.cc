@@ -1,7 +1,7 @@
 /** \file cell_2d.cc
  * \brief Function implementations for the voronoicell_2d class. */
 
-//#include "cell_2d.cpp"
+#include "cell_2d.hh"
 #include "cell_nc_2d.hh"
 
 namespace voro {
@@ -10,18 +10,14 @@ namespace voro {
 voronoicell_base_2d::voronoicell_base_2d() :
 	current_vertices(init_vertices), current_delete_size(init_delete_size),
 	ed(new int[2*current_vertices]), pts(new double[2*current_vertices]),
-	ds(new int[current_delete_size]), stacke(ds+current_delete_size) {full_connect=false;
+	ds(new int[current_delete_size]), stacke(ds+current_delete_size) {
 }
-
 
 /** The voronoicell_2d destructor deallocates all of the dynamic memory. */
 voronoicell_base_2d::~voronoicell_base_2d() {
 	delete [] ds;
 	delete [] pts;
 	delete [] ed;
-	if(full_connect){
-		delete [] vertexg;
-	}
 }
 
 /** Initializes a Voronoi cell as a rectangle with the given dimensions.
@@ -35,40 +31,8 @@ void voronoicell_base_2d::init_base(double xmin,double xmax,double ymin,double y
 	pts[6]=xmin;pts[7]=ymax;
 	int *q=ed;
 	*q=1;q[1]=3;q[2]=2;q[3]=0;q[4]=3;q[5]=1;q[6]=0;q[7]=2;
-	if(full_connect){
-		printf("\n\n\ninit_base full connect on!\n\n\n");
-		for(int i=0;i<p;i++){
-			vertexg[i].push_back(my_id);
-		}
-	}
 }
-//called from voro_connect. Given two vectors a and b, find a common element !=c
-vector<int> voronoicell_base_2d::common_gen(vector<int> &a,vector<int> &b){ 
-	vector<int> newg;
-        for(int i=0;i<(signed int)a.size();i++){
-		for(int j=0;j<(signed int)b.size();j++){		
-			if(b[j]==a[i]){
-				newg.push_back(b[j]);
-				continue;
-			}
-                }   
-	} 
-	return newg;
-}   
-//called from voro_connect. Adds the generator g to a
-void voronoicell_base_2d::add_vg(vector<int> &a,int g){
-	for(int i=0;i<a.size();i++){
-		if(a[i]==g) return;
-	}
-	a.push_back(g);
 
-
-}
-//called from voro_connect. copies vector n(new) onto vector o(old)
-void voronoicell_base_2d::vg_copy(int o,int n){
-	vertexg[o]=vertexg[n];
-}
-	
 /** Outputs the edges of the Voronoi cell in gnuplot format to an output
  * stream.
  * \param[in] (x,y) a displacement vector to be added to the cell's position.
@@ -192,9 +156,6 @@ bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p
 
 template<class vc_class>
 bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,int p_id,double u,int up) {
-
-
-
 	int cp,lp,up2,up3,*stackp=ds;
 	double fac,l,u2,u3;
 
@@ -215,29 +176,19 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
 	// Consider the first point that was found in the counter-clockwise
 	// direction that was not inside the cutting plane. If it lies on the
 	// cutting plane then do nothing. Otherwise, introduce a new vertex.
-	if(u2>-tolerance){//ADDED
-
-		cp=up2;
-		if(vc.full_connect) vertexg[cp].push_back(p_id);;
-	}
+	if(u2>-tolerance) cp=up2;
 	else {
-
 		if(p==current_vertices) add_memory_vertices(vc);
 		lp=ed[2*up2+1];
 		fac=1/(u2-l);
 		pts[2*p]=(pts[2*lp]*u2-pts[2*up2]*l)*fac;
 		pts[2*p+1]=(pts[2*lp+1]*u2-pts[2*up2+1]*l)*fac;
 		vc.n_copy(p,lp);
-
-		if(vc.full_connect){//ADDED
-			vertexg[p]=vertexg[lp];
-			vertexg[p].push_back(p_id);
-		}
 		ed[2*p]=up2;
 		ed[2*up2+1]=p;
 		cp=p++;
 	}
-	
+
 	// Search clockwise for additional points that need to be deleted
 	l=u;up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
 	while(u3>tolerance) {
@@ -252,18 +203,12 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
 	// Either adjust the existing vertex or create new one, and connect it
 	// with the vertex found on the previous search in the counter-clockwise
 	// direction
-	if(u3>-tolerance) {//>-TOLERANCE??
-
+	if(u3>tolerance) {
 		ed[2*cp+1]=up3;
 		ed[2*up3]=cp;
 		vc.n_set(up3,p_id);
-		if(vc.full_connect) vertexg[up3].push_back(p_id);
 	} else {
-
-		if(p==current_vertices){
-
-			add_memory_vertices(vc);
-		}
+		if(p==current_vertices) add_memory_vertices(vc);
 		lp=ed[2*up3];
 		fac=1/(u3-l);
 		pts[2*p]=(pts[2*lp]*u3-pts[2*up3]*l)*fac;
@@ -271,12 +216,7 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
 		ed[2*p]=cp;
 		ed[2*cp+1]=p;
 		vc.n_set(p,p_id);
-		if(vc.full_connect){//ADDED
-			vertexg[p]=vertexg[lp];
-			vertexg[p].push_back(p_id);
-		}
-
-		ed[2*p+1]=up3;//ADD NEIGHBOR INFO TO P???
+		ed[2*p+1]=up3;
 		ed[2*up3]=p++;
 	}
 
@@ -287,20 +227,12 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
 	while(stackp>ds) {
 		while(ed[2*--p]==-1);
 		up=*(--stackp);
-		if(up<p) {//copy p to up?
-		
+		if(up<p) {
 			ed[2*ed[2*p]+1]=up;
 			ed[2*ed[2*p+1]]=up;
 			pts[2*up]=pts[2*p];
 			pts[2*up+1]=pts[2*p+1];
-	
 			vc.n_copy(up,p);
-
-			if(vc.full_connect){//ADDED
-
-				vc.vg_copy(up,p);
-
-			}
 			ed[2*up]=ed[2*p];
 			ed[2*up+1]=ed[2*p+1];
 		} else p++;
@@ -548,12 +480,6 @@ void voronoicell_base_2d::add_memory_vertices(vc_class &vc) {
 
 	// Double the neighbor information if necessary
 	vc.n_add_memory_vertices();
-	if(full_connect){//ADDED	
-		vector<int> *nvertexg(new vector<int>[current_vertices]);
-		for(int i=0;i<(current_vertices>>1);i++) nvertexg[i]=vertexg[i];
-		delete [] vertexg;
-		vertexg=nvertexg;
-	}
 }
 
 inline void voronoicell_neighbor_2d::n_add_memory_vertices() {

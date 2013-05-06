@@ -34,12 +34,6 @@ class voronoicell_base_2d {
 		/** An array with size 2*current_vertices for holding
 		 * the positions of the vertices. */
 		double *pts;
-		// Turn on if to be used with voro_connect
-		bool full_connect;
-		// To be used with voro_connect
-		vector<int> *vertexg;
-		// To be used with voro_connect
-		int my_id;
 		voronoicell_base_2d();
 		~voronoicell_base_2d();
 		void init_base(double xmin,double xmax,double ymin,double ymax);
@@ -103,24 +97,6 @@ class voronoicell_base_2d {
 		void edge_lengths(vector<double> &vd);
 		void normals(vector<double> &vd);	
 		void centroid(double &cx,double &cy);
-		//given 2 vectors a and b, returns an element that they have in common !=c
-		vector<int> common_gen(vector<int> &a,vector<int> &b);
-		//called from voro_connect
-		inline void full_connect_on(){
-			full_connect=true;
-			vertexg=new vector<int>[current_vertices];
-			for(int i=0;i<p;i++){
-				vertexg[i].push_back(my_id);
-			}
-		}
-		//called from voro_connect
-		inline void set_id(int id){
-			my_id=id;
-		}
-		//called from voro_connect(add vertex-generator)
-		void add_vg(vector<int> &a,int g);
-		void vg_copy(int o,int n);		
-
 		virtual void neighbors(vector<int> &v) {v.clear();}
 	protected:
 		/** Computes the distance of a Voronoi cell vertex to a plane.

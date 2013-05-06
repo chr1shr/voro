@@ -31,7 +31,6 @@ container_base_2d::container_base_2d(double ax_,double bx_,double ay_,double by_
 	ax(ax_), bx(bx_), ay(ay_), by(by_), xperiodic(xperiodic_), yperiodic(yperiodic_), 
 	id(new int*[nxy]), p(new double*[nxy]), co(new int[nxy]), mem(new int[nxy]), ps(ps_) {
 	int l;
-	full_connect=false;
 	//totpar=0;
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
@@ -61,7 +60,7 @@ container_base_2d::~container_base_2d() {
 container_2d::container_2d(double ax_,double bx_,double ay_,double by_,
 	int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
 	: container_base_2d(ax_,bx_,ay_,by_,nx_,ny_,xperiodic_,yperiodic_,init_mem,2),
-	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_) {full_connect=false;}
+	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_) {}
 
 /** The class constructor sets up the geometry of container.
  * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
@@ -74,7 +73,7 @@ container_2d::container_2d(double ax_,double bx_,double ay_,double by_,
 container_poly_2d::container_poly_2d(double ax_,double bx_,double ay_,double by_,
 	int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
 	: container_base_2d(ax_,bx_,ay_,by_,nx_,ny_,xperiodic_,yperiodic_,init_mem,3),
-	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_) {ppr=p; full_connect=false;}
+	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_) {ppr=p;}
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
