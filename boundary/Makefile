@@ -8,7 +8,7 @@
 include ../config.mk
 
 # List of executables
-EXECUTABLES=voro++_bdry voro++_test1 voro++_test2
+EXECUTABLES=voro++_bdry
 
 # Makefile rules
 all: $(EXECUTABLES) 
