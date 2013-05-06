@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=single_cell_2d random_points_2d import_2d
+EXECUTABLES=single_cell_2d random_points_2d import_2d doe_diagram
 
 # Makefile rules
 all: $(EXECUTABLES) 
@@ -21,6 +21,9 @@ random_points_2d: random_points_2d.cc
 
 import_2d: import_2d.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o import_2d import_2d.cc -lvoro++_2d
+
+doe_diagram: doe_diagram.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o doe_diagram doe_diagram.cc -lvoro++_2d
 
 clean:
 	rm -f $(EXECUTABLES)
