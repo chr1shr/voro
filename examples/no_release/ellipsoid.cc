@@ -56,7 +56,7 @@ class wall_ellipsoid : public wall {
 		bool cut_cell_base(v_cell &c,double x,double y,double z) {
 			x-=xc;y-=yc;z-=zc;
 			double xx=x*x,yy=y*y,zz=z*z,s[4],
-				b_cal=1.0-(xx+yy)*rr_inv+(4.0-zz*rr_inv)*aa_inv+1.0*aa_inv*aa_inv,
+				b_cal=1.0-(xx+yy)*rr_inv+(4.0-zz*rr_inv)*aa_inv+aa_inv*aa_inv,
 				c_cal=2.0*(1.0-(xx+yy+zz)*rr_inv)*aa_inv+2.0*aa_inv*aa_inv,
 				d_cal=(1.0-(xx+yy+zz*aa)*rr_inv)*aa_inv*aa_inv,
 				xell[4],yell[4],zell[4],d2[4];
