@@ -8,6 +8,7 @@ Version 0.4.6 (October 17th 2013)
   any given location, as though an extra particle was inserted at that
   location
 * Removed unused private variable in c_loops.hh
+* Updated Doxyfile to 1.8.5
 
 Version 0.4.5 (July 27th 2012)
 ==============================
