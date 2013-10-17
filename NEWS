@@ -1,8 +1,13 @@
-Version 0.4.6 (...)
-===================
+Version 0.4.6 (October 17th 2013)
+=================================
+* Fixed an issue with template instantiation in wall.cc that was causing
+  compilation problems with new versions of Apple Xcode. Thanks to Barend
+  Thijsse (Delft University of Technology) and Juan Pablo Cruz Pérez (Instituto
+  de Física y Matemáticas) for pointing this out.
 * Added routines to the container classes to compute a ghost Voronoi cell at
   any given location, as though an extra particle was inserted at that
-  location.
+  location
+* Removed unused private variable in c_loops.hh
 
 Version 0.4.5 (July 27th 2012)
 ==============================
