@@ -11,11 +11,11 @@
 CXX=g++
 
 # Flags for the C++ compiler
-CFLAGS=-Wall -ansi -pedantic -O3
+CFLAGS=-Wall -ansi -pedantic -O3 -I/opt/local/include -L/opt/local/lib
 
 # Relative include and library paths for compilation of the examples
 E_INC=-I../../src
-E_LIB=-L../../src
+E_LIB=-L../../src -lgmpxx -lgmp
 
 # Installation directory
 PREFIX=/usr/local

@@ -25,7 +25,7 @@ libvoro++.a: $(objs)
 	ar rs libvoro++.a $^
 
 voro++: libvoro++.a cmd_line.cc
-	$(CXX) $(CFLAGS) -L. -o voro++ cmd_line.cc -lvoro++
+	$(CXX) $(CFLAGS) -L. -o voro++ cmd_line.cc -lvoro++ -lgmpxx -lgmp
 
 %.o: %.cc
 	$(CXX) $(CFLAGS) -c $<

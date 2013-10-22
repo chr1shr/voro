@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+#include <gmpxx.h>
 using namespace std;
 
 #include "config.hh"
@@ -87,6 +88,8 @@ class voronoicell_base {
 		/** This in an array with size 3*current_vertices for holding
 		 * the positions of the vertices. */
 		double *pts;
+		mpq_class *ptsq;
+		bool synced;
 		voronoicell_base();
 		~voronoicell_base();
 		void init_base(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
@@ -125,6 +128,7 @@ class voronoicell_base {
 			draw_gnuplot(x,y,z,fp);
 			fclose(fp);
 		}
+		void sync();
 		double volume();
 		double max_radius_squared();
 		double total_edge_distance();
@@ -282,14 +286,10 @@ class voronoicell_base {
 		inline bool collapse_order2(vc_class &vc);
 		template<class vc_class>
 		inline bool delete_connection(vc_class &vc,int j,int k,bool hand);
-		template<class vc_class>
-		inline bool search_for_outside_edge(vc_class &vc,int &up);
-		template<class vc_class>
-		inline void add_to_stack(vc_class &vc,int lp,int *&stackp2);
-		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
+		inline bool plane_intersects_track(mpq_class x,mpq_class y,mpq_class z,mpq_class rs,mpq_class g);
 		inline void normals_search(vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);
-		inline int m_test(int n,double &ans);
+		inline int m_test(int n,mpq_class &ans);
 		friend class voronoicell;
 		friend class voronoicell_neighbor;
 };
