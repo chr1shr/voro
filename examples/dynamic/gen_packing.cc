@@ -12,8 +12,8 @@ double rnd() {return double(rand())/RAND_MAX;}
 
 int main(int argc,char **argv) {
 	if(argc!=8&&argc!=9) {
-		cerr << "Syntax: ./gen_packing <x_size> <y_size> <z_size> {<num> | <frac>% }\n"
-			"                      <num_relax> <relax_param> <filename> [seed]\n";
+		cerr << "Syntax: ./gen_packing <x_size> <y_size> <z_size> { <num> | <frac>% }\n"
+			"                      <num_relax> <relax_param> <filename> [<seed>]\n";
 		return 1;
 	}
 	int i;
@@ -51,9 +51,6 @@ int main(int argc,char **argv) {
 	double rp(atof(argv[6]));
 	if(rp<=0||rp>=1)
 		cerr << "Warning: relaxation value of " << rp << " is outside range of (0,1)\n";
-
-	// Output information about the number of particles and packing fraction
-	cout << "Using " << n << " particles, " << packf << "% packing fraction\n";
 	
 	// Seed random number generator if requested
 	if(argc==9) srand(atoi(argv[8]));
@@ -62,7 +59,11 @@ int main(int argc,char **argv) {
 	fpoint ilscale(pow(n/(5.0*x*y*z),1/3.0));
 	int nx=int(x*ilscale+1),ny=int(y*ilscale+1),nz=int(z*ilscale+1);
 
-	cout << nx << " " << ny << " " << nz << endl;
+
+	// Output diagnostic information 
+	cout << "Using " << n << " particles, " << packf << "% packing fraction\n";
+	cout << "Computational grid : " << nx << " by " << ny << " by " << nz << "\n\n";
+	
 	// Create particle container
 	container_dynamic con(0,x,0,y,0,z,nx,ny,nz,true,true,true,8);
 	
@@ -78,10 +79,9 @@ int main(int argc,char **argv) {
 	cout << "Packing badnesses:\nInitial : " << con.packing_badness<cond_all>() << "\n";
 	for(i=1;i<=nr;i++) {
 		con.full_relax(rp);
-		if(i%10==0||i==nr) cout << "Relaxion " << i << " : " << con.packing_badness<cond_all>() << "\n";
+		if(i%10==0||i==nr) cout << "Relaxation " << i << " : " << con.packing_badness<cond_all>() << "\n";
 	}
 
 	// Output particle configuration
 	con.draw_particles(argv[7]);
-	con.draw_particles_pov(argv[7]);
 }
