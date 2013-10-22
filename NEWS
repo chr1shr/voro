@@ -1,3 +1,8 @@
+Version 0.4.7 (...)
+===================
+* Fixed typo in random_points.cc example. Thanks to Guo-Jie Gao (Osaka
+* University) for pointing this out.
+
 Version 0.4.6 (October 17th 2013)
 =================================
 * Fixed an issue with template instantiation in wall.cc that was causing

@@ -14,10 +14,10 @@ using namespace std;
 const double boxl=1.2;
 
 // Set up the number of blocks that the container is divided into
-const int bl=29;
+const int bl=14;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=48000;
+const int particles=2000;
 
 const int nface=11;
 
@@ -77,7 +77,7 @@ int main() {
 		}
 	}
 
-	for(l=0;l<1000;l++) {
+	for(l=0;l<100;l++) {
 		c_loop_all vl(con);
 		voronoicell c;
 		for(fp=faces;fp<faces+nface;fp++) *fp=0;
