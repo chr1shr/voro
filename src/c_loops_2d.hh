@@ -239,7 +239,7 @@ class c_loop_subset_2d : public c_loop_base_2d {
 		const bool xperiodic,yperiodic;
 		double px,py,apx,apy;
 		double v0,v1,v2,v3;
-		int ai,bi,aj,bj,s;
+		int ai,bi,aj,bj;
 		int ci,cj,di,dj,inc1;
 		inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
 		inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}

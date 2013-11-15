@@ -54,4 +54,10 @@ bool wall_plane_2d::cut_cell_base(v_cell_2d &c,double x,double y) {
 	return c.nplane(xc,yc,dq,w_id);
 }
 
+// Explicit instantiation
+template bool wall_circle_2d::cut_cell_base(voronoicell_2d &c,double x,double y);
+template bool wall_circle_2d::cut_cell_base(voronoicell_neighbor_2d &c,double x,double y);
+template bool wall_plane_2d::cut_cell_base(voronoicell_2d &c,double x,double y);
+template bool wall_plane_2d::cut_cell_base(voronoicell_neighbor_2d &c,double x,double y);
+
 }
