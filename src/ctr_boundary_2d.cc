@@ -8,6 +8,8 @@
 /** \file ctr_boundary_2d.cc
  * \brief Function implementations for the ctr_boundary_2d and related classes. */
 
+#include <cstring>
+
 #include "ctr_boundary_2d.hh"
 
 namespace voro {
