@@ -7,9 +7,9 @@
 
 #include "voro++_2d.hh"
 using namespace voro;
-//#include <stdio.h>
-//#include <iostream>
+
 #include <vector>
+#include <cstring>
 using namespace std;
 
 const double pad=0.01;

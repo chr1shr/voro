@@ -263,17 +263,18 @@ void container_boundary_2d::draw_domain_pov(FILE *fp) {
  * proceed to setup **wid, *soi, and THE PROBLEM POINTS BOOLEAN ARRAY.
  * This algorithm keeps the importing seperate from the set-up */
 void container_boundary_2d::setup(){
-	double lx,ly,cx,cy,nx,ny;//last (x,y),current (x,y),next (x,y)
-	int widl=1,maxwid=1,fwid=1,nwid,lwid;
-	bool first=true;
+//	double lx,ly;//last (x,y)
+	double cx,cy,nx,ny;//current (x,y),next (x,y)
+	int widl=1,maxwid=1,fwid=1,nwid;//lwid;
+//	bool first=true;
 	
 	tmp=tmpp=new int[3*init_temp_label_size];
 	tmpe=tmp+3*init_temp_label_size;
 	
 	while(widl!=edbc){
 		cx=bnds[2*widl];cy=bnds[2*widl+1];
-		nwid=edb[2*widl];lwid=edb[2*widl+1];
-		lx=bnds[lwid*2];ly=bnds[lwid*2+1];
+		nwid=edb[2*widl];//lwid=edb[2*widl+1];
+		//lx=bnds[lwid*2];ly=bnds[lwid*2+1];
 		nx=bnds[2*nwid];ny=bnds[2*nwid+1];
 		
 		tag_walls(cx,cy,nx,ny,widl);
@@ -289,7 +290,7 @@ void container_boundary_2d::setup(){
 			widl=maxwid+1;
 			fwid=widl;
 			maxwid++;
-			first=false;
+		//	first=false;
 		}		
 	}
 
@@ -456,7 +457,7 @@ void container_boundary_2d::draw_boundary_gnuplot(FILE *fp) {
 }	
 
 bool container_boundary_2d::point_inside(double x,double y) {
-	int i=0,j,k=0;
+	int i=0,j=0,k=0;
 	bool sleft,left,nleft;
 
 	while(i<edbc) {
