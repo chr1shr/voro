@@ -8,7 +8,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period sphere_mesh lloyd_box import_rahman import_nguyen polycrystal_rahman random_points_10 random_points_200 import_freeman voro_lf split_cell ghost_test neigh_test
+EXECUTABLES=rad_test finite_sys cylinder_inv single_cell_2d period sphere_mesh lloyd_box import_rahman import_nguyen polycrystal_rahman random_points_10 random_points_200 import_freeman voro_lf split_cell ghost_test neigh_test tri_mesh sphere r_pts_interface
 
 # Makefile rules
 all: $(EXECUTABLES)
