@@ -83,6 +83,10 @@ class voronoicell_base {
 		/** This in an array with size 3*current_vertices for holding
 		 * the positions of the vertices. */
 		double *pts;
+		double tol;
+		double tol2;
+		double tol_sq;
+		double big_tol;
 		voronoicell_base();
 		~voronoicell_base();
 		void init_base(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
@@ -183,6 +187,7 @@ class voronoicell_base {
 		void output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp=stdout);
 		template<class vc_class>
 		bool nplane(vc_class &vc,double x,double y,double z,double rsq,int p_id);
+		bool nplane_new(double x,double y,double z,double rsq,int p_id);
 		bool plane_intersects(double x,double y,double z,double rsq);
 		bool plane_intersects_guess(double x,double y,double z,double rsq);
 		void construct_relations();
@@ -282,10 +287,12 @@ class voronoicell_base {
 		inline bool search_for_outside_edge(vc_class &vc,int &up);
 		template<class vc_class>
 		inline void add_to_stack(vc_class &vc,int lp,int *&stackp2);
+		inline bool fuzzy_max(double x,double y,double z,int &ls,int &tp,double t,double &g);
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
 		inline void normals_search(std::vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);
 		inline int m_test(int n,double &ans);
+		inline void flip(int tp) {ed[tp][nu[tp]<<1]=-1-ed[tp][nu[tp]<<1];}
 		int check_marginal(int n,double &ans);
 		friend class voronoicell;
 		friend class voronoicell_neighbor;
@@ -371,6 +378,7 @@ class voronoicell : public voronoicell_base {
 		inline void init_tetrahedron(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
 			init_tetrahedron_base(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3);
 		}
+		void init_l_shape();
 	private:
 		inline void n_allocate(int i,int m) {};
 		inline void n_add_memory_vertices(int i) {};
