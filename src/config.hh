@@ -29,6 +29,8 @@ const int init_marginal=64;
 const int init_delete_size=256;
 /** The initial size for the auxiliary delete stack. */
 const int init_delete2_size=256;
+/** The initial size for the extra search stack. */
+const int init_xsearch_size=32;
 /** The initial size for the wall pointer array. */
 const int init_wall_size=32;
 /** The default initial size for the ordering class. */
@@ -50,6 +52,8 @@ const int max_marginal=16777216;
 const int max_delete_size=16777216;
 /** The maximum size for the auxiliary delete stack. */
 const int max_delete2_size=16777216;
+/** The maximum size for the extra search stack. */
+const int max_xsearch_size=32;
 /** The maximum amount of particle memory allocated for a single region. */
 const int max_particle_memory=16777216;
 /** The maximum size for the wall pointer array. */

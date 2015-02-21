@@ -20,13 +20,15 @@ namespace voro {
 voronoicell_base::voronoicell_base() :
 	current_vertices(init_vertices), current_vertex_order(init_vertex_order),
 	current_delete_size(init_delete_size), current_delete2_size(init_delete2_size),
+	current_xsearch_size(init_xsearch_size),
 	ed(new int*[current_vertices]), nu(new int[current_vertices]),
 	pts(new double[3*current_vertices]), tol(1e-11), tol2(2*tol),
 	tol_sq(tol*tol), big_tol(100*tol), mem(new int[current_vertex_order]),
 	mec(new int[current_vertex_order]),
 	mep(new int*[current_vertex_order]), ds(new int[current_delete_size]),
 	stacke(ds+current_delete_size), ds2(new int[current_delete2_size]),
-	stacke2(ds2+current_delete_size), current_marginal(init_marginal),
+	stacke2(ds2+current_delete2_size), xse(new int[current_xsearch_size]),
+	stacke3(xse+current_xsearch_size), current_marginal(init_marginal),
 	marg(new int[current_marginal]) {
 	int i;
 	for(i=0;i<3;i++) {
@@ -44,7 +46,7 @@ voronoicell_base::voronoicell_base() :
 /** The voronoicell destructor deallocates all the dynamic memory. */
 voronoicell_base::~voronoicell_base() {
 	for(int i=current_vertex_order-1;i>=0;i--) if(mem[i]>0) delete [] mep[i];
-	delete [] marg;
+	delete [] marg;delete [] xse;
 	delete [] ds2;delete [] ds;
 	delete [] mep;delete [] mec;
 	delete [] mem;delete [] pts;
@@ -57,7 +59,7 @@ voronoicell_base::~voronoicell_base() {
 template<class vc_class>
 void voronoicell_base::check_memory_for_copy(vc_class &vc,voronoicell_base* vb) {
 	while(current_vertex_order<vb->current_vertex_order) add_memory_vorder(vc);
-	for(int i=0;i<current_vertex_order;i++) while(mem[i]<vb->mec[i]) add_memory(vc,i,ds2);
+	for(int i=0;i<current_vertex_order;i++) while(mem[i]<vb->mec[i]) add_memory(vc,i);
 	while(current_vertices<vb->p) add_memory_vertices(vc);
 }
 
@@ -124,7 +126,7 @@ void voronoicell_base::translate(double x,double y,double z) {
  * array.
  * \param[in] i the order of the vertex memory to be increased. */
 template<class vc_class>
-void voronoicell_base::add_memory(vc_class &vc,int i,int *stackp2) {
+void voronoicell_base::add_memory(vc_class &vc,int i) {
 	int s=(i<<1)+1;
 	if(mem[i]==0) {
 		vc.n_allocate(i,init_n_vertices);
@@ -157,7 +159,16 @@ void voronoicell_base::add_memory(vc_class &vc,int i,int *stackp2) {
 						break;
 					}
 				}
-				if(dsp==stackp2) voro_fatal_error("Couldn't relocate dangling pointer",VOROPP_INTERNAL_ERROR);
+				if(dsp==stackp2) {
+					for(dsp=xse;dsp<stackp3;dsp++) {
+						if(ed[*dsp]==mep[i]+j) {
+							ed[*dsp]=l+j;
+							vc.n_set_to_aux1_offset(*dsp,m);
+							break;
+						}
+					}				
+					if(dsp==stackp3) voro_fatal_error("Couldn't relocate dangling pointer",VOROPP_INTERNAL_ERROR);
+				}
 #if VOROPP_VERBOSE >=3
 				fputs("Relocated dangling pointer",stderr);
 #endif
@@ -225,7 +236,7 @@ void voronoicell_base::add_memory_vorder(vc_class &vc) {
 /** Doubles the size allocation of the main delete stack. If the allocation
  * exceeds the absolute maximum set in max_delete_size, then routine causes a
  * fatal error. */
-void voronoicell_base::add_memory_ds(int *&stackp) {
+void voronoicell_base::add_memory_ds() {
 	current_delete_size<<=1;
 	if(current_delete_size>max_delete_size) voro_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
@@ -240,7 +251,7 @@ void voronoicell_base::add_memory_ds(int *&stackp) {
 /** Doubles the size allocation of the auxiliary delete stack. If the
  * allocation exceeds the absolute maximum set in max_delete2_size, then the
  * routine causes a fatal error. */
-void voronoicell_base::add_memory_ds2(int *&stackp2) {
+void voronoicell_base::add_memory_ds2() {
 	current_delete2_size<<=1;
 	if(current_delete2_size>max_delete2_size) voro_fatal_error("Delete stack 2 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
@@ -251,6 +262,22 @@ void voronoicell_base::add_memory_ds2(int *&stackp2) {
 	delete [] ds2;ds2=dsn;stackp2=dsnp;
 	stacke2=ds2+current_delete2_size;
 }
+
+/** Doubles the size allocation of the auxiliary delete stack. If the
+ * allocation exceeds the absolute maximum set in max_delete2_size, then the
+ * routine causes a fatal error. */
+void voronoicell_base::add_memory_xse() {
+	current_xsearch_size<<=1;
+	if(current_xsearch_size>max_xsearch_size) voro_fatal_error("Extra search stack memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+#if VOROPP_VERBOSE >=2
+	fprintf(stderr,"Extra search stack memory scaled up to %d\n",current_delete2_size);
+#endif
+	int *dsn=new int[current_xsearch_size],*dsnp=dsn,*dsp=xse;
+	while(dsp<stackp3) *(dsnp++)=*(dsp++);
+	delete [] xse;xse=dsn;stackp3=dsnp;
+	stacke3=xse+current_xsearch_size;
+}
+
 
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
@@ -400,11 +427,9 @@ void voronoicell_base::construct_relations() {
 /** Starting from a point within the current cutting plane, this routine attempts
  * to find an edge to a point outside the cutting plane. This prevents the plane
  * routine from .
- * \param[in] vc a reference to the specialized version of the calling class.
  * \param[in,out] up */
-template<class vc_class>
-inline bool voronoicell_base::search_for_outside_edge(vc_class &vc,int &up) {
-	int i,lp,lw,*j(ds2),*stackp2(ds2);
+inline bool voronoicell_base::search_for_outside_edge(int &up) {
+	int i,lp,lw,*j=ds2,*stackp2=ds2;
 	double l;
 	*(stackp2++)=up;
 	while(j<stackp2) {
@@ -413,7 +438,7 @@ inline bool voronoicell_base::search_for_outside_edge(vc_class &vc,int &up) {
 			lp=ed[up][i];
 			lw=m_test(lp,l);
 			if(lw==-1) return true;
-			else if(lw==0) add_to_stack(vc,lp,stackp2);
+			else if(lw==0) add_to_stack(lp);
 		}
 	}
 	return false;
@@ -423,148 +448,161 @@ inline bool voronoicell_base::search_for_outside_edge(vc_class &vc,int &up) {
  * \param[in] vc a reference to the specialized version of the calling class.
  * \param[in] lp the index of the point to add.
  * \param[in,out] stackp2 a pointer to the end of the stack entries. */
-template<class vc_class>
-inline void voronoicell_base::add_to_stack(vc_class &vc,int lp,int *&stackp2) {
-	for(int *k(ds2);k<stackp2;k++) if(*k==lp) return;
-	if(stackp2==stacke2) add_memory_ds2(stackp2);
+inline void voronoicell_base::add_to_stack(int lp) {
+	for(int *k=ds2;k<stackp2;k++) if(*k==lp) return;
+	if(stackp2==stacke2) add_memory_ds2();
 	*(stackp2++)=lp;
 }
 
-bool voronoicell_base::nplane_new(double x,double y,double z,double rsq,int p_id) {
-	int ls,us,tp,count=0;
-	double g,t;up=0;
-	g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
-	printf("%d %g\n",up,g);
+/** Assuming that the point up is outside the cutting plane, this routine
+ * searches upwards along edges trying to find an edge that intersects the
+ * cutting plane.
+ * \param[in] (x,y,z) the normal vector to the plane.
+ * \param[in] rsq the distance along this vector of the plane.
+ * \param[in,out] u the dot product of point up with the normal.
+ * \return True if the cutting plane was reached, false otherwise. */
+bool voronoicell_base::search_upward(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
+	int count=0,vs;
+	u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2]-rsq;
+	lp=up;l=u;
 
 	// The test point is outside of the cutting space
-	for(us=0;us<nu[up];us++) {
-		tp=ed[up][us];
-		t=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
-		printf("-> %d %g\n",tp,t);
-		if(t>g) {
-			ls=ed[up][nu[up]+us];
-			break;
-		}
+	for(ls=0;ls<nu[lp];ls++) {
+		up=ed[lp][ls];
+		u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2]-rsq;
+		printf("-> %d %g\n",up,u);
+		if(u>l) break;
 	}
-	if(us==nu[up]) if(!fuzzy_max(x,y,z,ls,tp,g,t)) return false;
-	up=tp;
-
-	while (t<rsq) {
-		printf("%d %g\n",up,t);
-		if(++count>=p) {
-#if VOROPP_VERBOSE >=1
-			fputs("Bailed out of convex calculation",stderr);
-#endif
-			for(tp=0;tp<p;tp++) if(x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) return true;
-			return false;
-		}
+	if(ls==nu[lp]) if(definite_max(x,y,z,rsq,lp,ls,l,u)) {
+		up=lp;
+		return false;
+	}
+	
+	while (u<-tol) {
+		printf("hi %d %g\n",up,u);
+		if(++count>=p) failsafe_find(x,y,z,rsq,lp,ls,l,u);
 
 		// Test all the neighbors of the current point
 		// and find the one which is closest to the
 		// plane
-		for(us=0;us<ls;us++) {
-			tp=ed[up][us];double *pp=pts+(tp+(tp<<1));
-			g=x*(*pp)+y*pp[1]+z*pp[2];
-			printf("-> %d %g (%g)\n",tp,g,t);
-			if(g>t) break;
+		vs=ed[lp][nu[lp]+ls];lp=up;l=u;
+		for(ls=0;ls<nu[up];ls++) {
+			if(ls==vs) continue;
+			up=ed[lp][ls];double *pp=pts+(up+(up<<1));
+			u=x*(*pp)+y*pp[1]+z*pp[2]-rsq;
+			printf("-> %d %g (%g)\n",up,u,l);
+			if(u>l) break;
 		}
-		if(us==ls) {
-			us++;
-			while(us<nu[up]) {
-				tp=ed[up][us];double *pp=pts+(tp+(tp<<1));
-				g=x*(*pp)+y*pp[1]+z*pp[2];
-				printf("+> %d %g\n",tp,g);
-				if(g>t) break;
-				us++;
-			}
-			if(us==nu[up]&&!fuzzy_max(x,y,z,ls,tp,t,g)) return false;
+		if(ls==nu[lp]&&definite_max(x,y,z,rsq,lp,ls,l,u)) {
+			up=lp;
+			return false;
 		}
-		ls=ed[up][nu[up]+us];up=tp;t=g;
 	}
-	return false;
+	return true;
 }
 
-inline bool voronoicell_base::fuzzy_max(double x,double y,double z,int &ls,int &tp,double t,double &g) {
-	int us;big_tol=1.5;
+/** Checks whether a particular point lp is a definite maximum, searching
+ * through any possible minor non-convexities, for a better maximum.
+ * \param[in] (x,y,z) the normal vector to the plane. */
+bool voronoicell_base::definite_max(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
+	int tp=lp,ts,qp=0;
+	double q;
 
-	printf("FM %g\n",t);
+	printf("FM %g %g\n",l,big_tol);
 	// Check to see whether point up is a well-defined maximum. Otherwise
 	// any neighboring vertices of up that are marginal need to be
 	// followed, to see if they lead to a better maximum.
-	for(us=0;us<nu[up];us++) {
-		tp=ed[up][us];
-		g=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
-		printf("FM %d %g -> %d %g (%g)\n",up,t,tp,g,big_tol);
-		if(g>t-big_tol) break;
+	for(ts=0;ts<nu[tp];ts++) {
+		qp=ed[tp][ts];
+		q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2]-rsq;
+		printf("FM %d %g -> %d %g (%g)\n",tp,l,qp,q,big_tol);
+		if(q>l-big_tol) break;
 	}
-	if(us==nu[up]) return false;
-	printf("FM %d %d\n",up,tp);
+	if(ts==nu[tp]) return true;
+	printf("FM %d %d\n",tp,qp);
 
 	// The point tp is marginal, so it will be necessary to do the
-	// flood-fill search. Mark the point up and the point tp, search
-	// any remaining neighbors of point up.
+	// flood-fill search. Mark the point tp and the point qp, and search
+	// any remaining neighbors of the point tp.
 	int *stackp=ds+1;
-	flip(up);
-	flip(tp);
-	*ds=tp;
-	us++;
-	while(us<nu[up]) {
-		tp=ed[up][us];
-		g=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
-		printf("FM %d %g +> %d %g (%g)\n",up,t,tp,g,big_tol);
-		if(g>t-big_tol) {
-			if(stackp==stacke) add_memory_ds(stackp);
-			*(stackp++)=tp;
-			flip(tp);
+	flip(lp);
+	flip(qp);
+	*ds=qp;
+	ts++;
+	while(ts<nu[tp]) {
+		qp=ed[tp][ts];
+		q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2]-rsq;
+		printf("FM %d %g +> %d %g (%g)\n",tp,l,qp,q,big_tol);
+		if(q>l-big_tol) {
+			printf("Search %d\n",up);
+			if(stackp==stacke) add_memory_ds();
+			*(stackp++)=up;
+			flip(up);
 		}
-		us++;
+		ts++;
 	}
 
 	// Consider additional marginal points, starting with the original
-	// point tp
+	// point qp
 	int *spp=ds;
 	while(spp<stackp) {
-		up=*(spp++);
-		printf("FMM %d\n",up);
-		for(us=0;us<nu[up];us++) {
-			tp=ed[up][us];
-			printf("O %d\n",tp);
+		tp=*(spp++);
+		printf("FMM %d\n",tp);
+		for(ts=0;ts<nu[tp];ts++) {
+			qp=ed[tp][ts];
+			printf("O %d\n",qp);
 
 			// Skip the point if it's already marked
-			if(ed[tp][2*nu[tp]]<0) continue;
-			g=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
-			printf("OG %g\n",g);
+			if(ed[qp][2*nu[qp]]<0) continue;
+			q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2]-rsq;
+			printf("OG %g\n",u);
 			
 			// This point is a better maximum. Reset markers and
 			// return true.
-			if(g>t) {
-				printf("Break to %d %g\n",tp,g);
-				ls=ed[up][nu[up]+us];
-				flip(up);
+			if(q>l) {
+				printf("Break to %d %g\n",qp,q);
+				flip(lp);
+				lp=tp;
+				ls=ts;
+				l=x*pts[3*lp]+y*pts[3*lp+1]+z*pts[3*lp+2]-rsq;
+				up=qp;
+				u=q;
 				while(stackp>ds) flip(*(--stackp));
-				return true;
+				return false;
 			}
 
 			// The point is marginal and therefore must also be
 			// considered
-			if(g>t-big_tol) {
+			if(q>l-big_tol) {
+				printf("Search %d\n",up);
 				if(stackp==stacke) {
 					int nn=stackp-spp;
-					add_memory_ds(stackp);
+					add_memory_ds();
 					spp=stackp-nn;
 				}
-				*(stackp++)=tp;
-				flip(tp);
+				*(stackp++)=qp;
+				flip(qp);
 			}
 		}
 	}
 
 	// Reset markers and return false
-	flip(up);
+	puts("It's a definite max");
+	flip(lp);
 	while(stackp>ds) flip(*(--stackp));
-	return false;
+	return true;
 }
 
+bool voronoicell_base::search_downward(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
+	puts("hi");
+	return true;
+}
+
+bool voronoicell_base::definite_min(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
+	puts("hola");
+	return true;
+}
+	
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
  * (x,y,z) from the cell center. The value of rsq should be initially set to
  * \f$x^2+y^2+z^2\f$.
@@ -575,194 +613,217 @@ inline bool voronoicell_base::fuzzy_max(double x,double y,double z,int &ls,int &
  * \return False if the plane cut deleted the cell entirely, true otherwise. */
 template<class vc_class>
 bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq,int p_id) {
-	int count=0,i,j,k,lp=up,cp,qp,rp,*stackp=ds,*stackp2=ds2,*dsp;
-	int us=0,ls=0,qs,iqs,cs,uw,qw,lw;
-	int *edp,*edd;
-	double u,l,r,q;bool complicated_setup=false,new_double_edge=false,double_edge=false;
+	int i,j,lp=up,cp,qp,*dsp;
+	int us=0,ls=0,lw;
+	int *edp,*edd;stackp=ds;
+	double u,l;
+
+	u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2]-rsq;
+	printf("%g\n",rsq);
+	if(u>tol) {
+		if(!search_downward(x,y,z,rsq,lp,ls,l,u)) return false;
+		if(l<-tol2) {
+			n_marg=0;
+		} else {
+			n_marg=2;
+			*marg=lp;
+			if(l<-tol) marg[1]=-1;
+			else {
+				marg[1]=0;
+				up=lp;u=l;
+				lp=-1;
+			}
+		}
+		if(lp!=-1&&u<tol2) {
+			marg[n_marg++]=up;
+			marg[n_marg++]=1;
+		}
+	} else if(u<tol) {
+		if(!search_upward(x,y,z,rsq,lp,ls,l,u)) return true;
+		if(u>tol2) {
+			n_marg=0;
+		} else {
+			n_marg=2;
+			*marg=up;
+			if(u>tol) marg[1]=1;
+			else {
+				marg[1]=0;
+				lp=-1;
+			}
+		}
+		if(lp!=-1&&l>-tol2) {
+			marg[n_marg++]=lp;
+			marg[n_marg++]=-1;
+		}
+	} else {
+		*marg=up;
+		marg[1]=0;
+		lp=-1;
+	}
+	puts("Hi");
+	printf("%d %d\n",lp,up);
 
 	// Initialize the safe testing routine
-	n_marg=0;px=x;py=y;pz=z;prsq=rsq;
+	px=x;py=y;pz=z;prsq=rsq;
+	
+	// Set stack pointers
+	stackp=ds;stackp2=ds2;stackp3=xse;
 
-	// Test approximately sqrt(n)/4 points for their proximity to the plane
-	// and keep the one which is closest
-	uw=m_test(up,u);
+	// Store initial number of vertices
+	int op=p;
+	big_tol=2;
 
-	// Starting from an initial guess, we now move from vertex to vertex,
-	// to try and find an edge which intersects the cutting plane,
-	// or a vertex which is on the plane
-	try {
-		if(uw==1) {
+	if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
+	int k=0;
+	while(xse+k<stackp3) {
+		up=xse[k++];
+		for(us=0;us<nu[up];us++) {
+			lp=ed[up][us];
+			
+			// Skip if this is a new vertex
+			if(lp>=op) continue;
 
-			// The test point is inside the cutting plane.
-			us=0;
-			do {
-				lp=ed[up][us];
-				lw=m_test(lp,l);
-				if(l<u) break;
-				us++;
-			} while (us<nu[up]);
+			// Test position of this point relative to the plane
+			lw=m_test(lp,l);
+			if(lw<0) {
 
-			if(us==nu[up]) {
-				return false;
-			}
-
-			ls=ed[up][nu[up]+us];
-			while(lw==1) {
-				if(++count>=p) throw true;
-				u=l;up=lp;
-				for(us=0;us<ls;us++) {
-					lp=ed[up][us];
-					lw=m_test(lp,l);
-					if(l<u) break;
-				}
-				if(us==ls) {
-					us++;
-					while(us<nu[up]) {
-						lp=ed[up][us];
-						lw=m_test(lp,l);
-						if(l<u) break;
-						us++;
+				// If this marginally outside, mark it
+				// to search unless it's already marked
+				if(lw==-1) {
+					if(ed[lp][nu[lp]<<1]!=-1) {
+						ed[lp][nu[lp]<<1]=-1;
+						if(stackp3==stacke3) add_memory_xse();
+						*(stackp3++)=lp;
 					}
-					if(us==nu[up]) {
-						return false;
-					}
-				}
-				ls=ed[up][nu[up]+us];
-			}
-
-			// If the last point in the iteration is within the
-			// plane, we need to do the complicated setup
-			// routine. Otherwise, we use the regular iteration.
-			if(lw==0) {
-				up=lp;
-				complicated_setup=true;
-			} else complicated_setup=false;
-		} else if(uw==-1) {
-			us=0;
-			do {
-				qp=ed[up][us];
-				qw=m_test(qp,q);
-				if(u<q) break;
-				us++;
-			} while (us<nu[up]);
-			if(us==nu[up]) return true;
-
-			while(qw==-1) {
-				qs=ed[up][nu[up]+us];
-				if(++count>=p) throw true;
-				u=q;up=qp;
-				for(us=0;us<qs;us++) {
-					qp=ed[up][us];
-					qw=m_test(qp,q);
-					if(u<q) break;
-				}
-				if(us==qs) {
-					us++;
-					while(us<nu[up]) {
-						qp=ed[up][us];
-						qw=m_test(qp,q);
-						if(u<q) break;
-						us++;
-					}
-					if(us==nu[up]) return true;
-				}
-			}
-			if(qw==1) {
-				lp=up;ls=us;l=u;
-				up=qp;us=ed[lp][nu[lp]+ls];u=q;
-				complicated_setup=false;
-			} else {
-				up=qp;
-				complicated_setup=true;
-			}
-		} else {
-
-			// Our original test point was on the plane, so we
-			// automatically head for the complicated setup
-			// routine
-			complicated_setup=true;
-		}
-	}
-	catch(bool except) {
-		// This routine is a fall-back, in case floating point errors
-		// cause the usual search routine to fail. In the fall-back
-		// routine, we just test every edge to find one straddling
-		// the plane.
-#if VOROPP_VERBOSE >=1
-		fputs("Bailed out of convex calculation\n",stderr);
-#endif
-		qw=1;lw=0;
-		for(qp=0;qp<p;qp++) {
-			qw=m_test(qp,q);
-			if(qw==1) {
-
-				// The point is inside the cutting space. Now
-				// see if we can find a neighbor which isn't.
-				for(us=0;us<nu[qp];us++) {
-					lp=ed[qp][us];
-					if(lp<qp) {
-						lw=m_test(lp,l);
-						if(lw!=1) break;
-					}
-				}
-				if(us<nu[qp]) {
-					up=qp;
-					if(lw==0) {
-						complicated_setup=true;
-					} else {
-						complicated_setup=false;
-						u=q;
-						ls=ed[up][nu[up]+us];
-					}
-					break;
-				}
-			} else if(qw==-1) {
-
-				// The point is outside the cutting space. See
-				// if we can find a neighbor which isn't.
-				for(ls=0;ls<nu[qp];ls++) {
-					up=ed[qp][ls];
-					if(up<qp) {
-						uw=m_test(up,u);
-						if(uw!=-1) break;
-					}
-				}
-				if(ls<nu[qp]) {
-					if(uw==0) {
-						up=qp;
-						complicated_setup=true;
-					} else {
-						complicated_setup=false;
-						lp=qp;l=q;
-						us=ed[lp][nu[lp]+ls];
-					}
-					break;
 				}
 			} else {
+				if(lw==0) {
 
-				// The point is in the plane, so we just
-				// proceed with the complicated setup routine
-				up=qp;
-				complicated_setup=true;
-				break;
+					// This is a possible facet starting
+					// from a vertex on the cutting plane
+					up=lp;
+					if(create_facet(vc,-1,0,0,0,l,p_id)) return false;
+				} else {
+
+					// This is a new facet 
+					ls=ed[up][nu[up]+us];
+					if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
+				}
 			}
 		}
-		if(qp==p) return qw==-1?true:false;
 	}
+
+	// Reset back pointers on extra search stack
+	for(dsp=xse;dsp<stackp3;dsp++) {
+		j=*dsp;
+		ed[j][nu[j]<<1]=j;
+	}
+
+	// Delete points: first, remove any duplicates
+	dsp=ds;
+	while(dsp<stackp) {
+		j=*dsp;
+		if(ed[j][nu[j]]!=-1) {
+			ed[j][nu[j]]=-1;
+			dsp++;
+		} else *dsp=*(--stackp);
+	}
+
+	// Add the points in the auxiliary delete stack,
+	// and reset their back pointers
+	for(dsp=ds2;dsp<stackp2;dsp++) {
+		j=*dsp;
+		ed[j][nu[j]<<1]=j;
+		if(ed[j][nu[j]]!=-1) {
+			ed[j][nu[j]]=-1;
+			if(stackp==stacke) add_memory_ds();
+			*(stackp++)=j;
+		}
+	}
+
+	// Scan connections and add in extras
+	for(dsp=ds;dsp<stackp;dsp++) {
+		cp=*dsp;
+		for(edp=ed[cp];edp<ed[cp]+nu[cp];edp++) {
+			qp=*edp;
+			if(qp!=-1&&ed[qp][nu[qp]]!=-1) {
+				if(stackp==stacke) {
+					int dis=stackp-dsp;
+					add_memory_ds();
+					dsp=ds+dis;
+				}
+				*(stackp++)=qp;
+				ed[qp][nu[qp]]=-1;
+			}
+		}
+	}
+	up=0;
+
+	// Delete them from the array structure
+	while(stackp>ds) {
+		--p;
+		while(ed[p][nu[p]]==-1) {
+			j=nu[p];
+			edp=ed[p];edd=(mep[j]+((j<<1)+1)*--mec[j]);
+			while(edp<ed[p]+(j<<1)+1) *(edp++)=*(edd++);
+			vc.n_set_aux2_copy(p,j);
+			vc.n_copy_pointer(ed[p][(j<<1)],p);
+			ed[ed[p][(j<<1)]]=ed[p];
+			--p;
+		}
+		up=*(--stackp);
+		if(up<p) {
+
+			// Vertex management
+			pts[3*up]=pts[3*p];
+			pts[3*up+1]=pts[3*p+1];
+			pts[3*up+2]=pts[3*p+2];
+
+			// Memory management
+			j=nu[up];
+			edp=ed[up];edd=(mep[j]+((j<<1)+1)*--mec[j]);
+			while(edp<ed[up]+(j<<1)+1) *(edp++)=*(edd++);
+			vc.n_set_aux2_copy(up,j);
+			vc.n_copy_pointer(ed[up][j<<1],up);
+			vc.n_copy_pointer(up,p);
+			ed[ed[up][j<<1]]=ed[up];
+
+			// Edge management
+			ed[up]=ed[p];
+			nu[up]=nu[p];
+			for(i=0;i<nu[up];i++) ed[ed[up][i]][ed[up][nu[up]+i]]=up;
+			ed[up][nu[up]<<1]=up;
+		} else up=p++;
+	}
+
+	// Check for any vertices of zero order
+	if(*mec>0) voro_fatal_error("Zero order vertex formed",VOROPP_INTERNAL_ERROR);
+
+	// Collapse any order 2 vertices and exit
+	return collapse_order2(vc);
+}
+
+/** Creates a new facet.
+ * \return True if cell deleted, false otherwise. */
+template<class vc_class>
+bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,double u,int p_id) {
+	int i,j,k,lw,qw,qp,qs,iqs,cp,cs,rp,*edp,*edd;
+	bool new_double_edge=false,double_edge=false;
+	double q,r;
 
 	// We're about to add the first point of the new facet. In either
 	// routine, we have to add a point, so first check there's space for
 	// it.
 	if(p==current_vertices) add_memory_vertices(vc);
 
-	if(complicated_setup) {
+	if(lp==-1) {
 
 		// We want to be strict about reaching the conclusion that the
 		// cell is entirely within the cutting plane. It's not enough
 		// to find a vertex that has edges which are all inside or on
 		// the plane. If the vertex has neighbors that are also on the
 		// plane, we should check those too.
-		if(!search_for_outside_edge(vc,up)) return false;
+		if(!search_for_outside_edge(up)) return true;
 
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
@@ -790,7 +851,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 				// then all of the vertices are inside
 				// or on the plane, so the cell is completely
 				// deleted
-				if(i==nu[up]) return false;
+				if(i==nu[up]) return true;
 				lp=ed[up][i];
 				lw=m_test(lp,l);
 			} while (lw!=-1);
@@ -822,7 +883,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			// Add memory for the new vertex if needed, and
 			// initialize
 			while (nu[p]>=current_vertex_order) add_memory_vorder(vc);
-			if(mec[nu[p]]==mem[nu[p]]) add_memory(vc,nu[p],stackp2);
+			if(mec[nu[p]]==mem[nu[p]]) add_memory(vc,nu[p]);
 			vc.n_set_pointer(p,nu[p]);
 			ed[p]=mep[nu[p]]+((nu[p]<<1)+1)*mec[nu[p]]++;
 			ed[p][nu[p]<<1]=p;
@@ -857,7 +918,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 				// If i reaches zero, then we have a point in
 				// the plane all of whose edges are outside
 				// the cutting space, so we just exit
-				if(i==0) return true;
+				if(i==0) return false;
 				lp=ed[up][i];
 				lw=m_test(lp,l);
 			}
@@ -890,7 +951,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			// already
 			k=1;
 			while(nu[p]>=current_vertex_order) add_memory_vorder(vc);
-			if(mec[nu[p]]==mem[nu[p]]) add_memory(vc,nu[p],stackp2);
+			if(mec[nu[p]]==mem[nu[p]]) add_memory(vc,nu[p]);
 
 			// Copy the edges of the original vertex into the new
 			// one. Delete the edges of the original vertex, and
@@ -930,7 +991,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		} else vc.n_copy(p,0,up,qs);
 
 		// Add this point to the auxiliary delete stack
-		if(stackp2==stacke2) add_memory_ds2(stackp2);
+		if(stackp2==stacke2) add_memory_ds2();
 		*(stackp2++)=up;
 
 		// Look at the edges on either side of the group that was
@@ -950,7 +1011,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		// points lp and up. Create a new vertex between them which
 		// lies on the cutting plane. Since u and l differ by at least
 		// the tolerance, this division should never screw up.
-		if(stackp==stacke) add_memory_ds(stackp);
+		if(stackp==stacke) add_memory_ds();
 		*(stackp++)=up;
 		r=u/(u-l);l=1-r;
 		pts[3*p]=pts[3*lp]*r+pts[3*up]*l;
@@ -960,7 +1021,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		// This point will always have three edges. Connect one of them
 		// to lp.
 		nu[p]=3;
-		if(mec[3]==mem[3]) add_memory(vc,3,stackp2);
+		if(mec[3]==mem[3]) add_memory(vc,3);
 		vc.n_set_pointer(p,3);
 		vc.n_set(p,0,p_id);
 		vc.n_copy(p,1,up,us);
@@ -997,7 +1058,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			qs=cycle_up(ed[qp][nu[qp]+qs],lp);
 			qp=lp;
 			q=l;
-			if(stackp==stacke) add_memory_ds(stackp);
+			if(stackp==stacke) add_memory_ds();
 			*(stackp++)=qp;
 
 		} else if(lw==-1) {
@@ -1013,7 +1074,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			pts[3*p+1]=pts[3*lp+1]*r+pts[3*qp+1]*l;
 			pts[3*p+2]=pts[3*lp+2]*r+pts[3*qp+2]*l;
 			nu[p]=3;
-			if(mec[3]==mem[3]) add_memory(vc,3,stackp2);
+			if(mec[3]==mem[3]) add_memory(vc,3);
 			ls=ed[qp][qs+nu[qp]];
 			vc.n_set_pointer(p,3);
 			vc.n_set(p,0,p_id);
@@ -1136,7 +1197,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 			// we are forming. Add memory for it if it doesn't exist
 			// already.
 			while(k>=current_vertex_order) add_memory_vorder(vc);
-			if(mec[k]==mem[k]) add_memory(vc,k,stackp2);
+			if(mec[k]==mem[k]) add_memory(vc,k);
 
 			// Now create a new vertex with order k, or augment
 			// the existing one
@@ -1146,6 +1207,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 				// actually need any more edges, just skip this
 				// routine to avoid memory confusion
 				if(nu[j]!=k) {
+
 					// Allocate memory and copy the edges
 					// of the previous instance into it
 					vc.n_set_aux1(k);
@@ -1178,7 +1240,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 				vc.n_set_pointer(p,k);
 				ed[p]=mep[k]+((k<<1)+1)*mec[k]++;
 				ed[p][k<<1]=p;
-				if(stackp2==stacke2) add_memory_ds2(stackp2);
+				if(stackp2==stacke2) add_memory_ds2();
 				*(stackp2++)=qp;
 				pts[3*p]=pts[3*qp];
 				pts[3*p+1]=pts[3*qp+1];
@@ -1231,89 +1293,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	*ed[rp]=cp;
 	ed[cp][nu[cp]+cs]=0;
 	ed[rp][nu[rp]]=cs;
-
-	// Delete points: first, remove any duplicates
-	dsp=ds;
-	while(dsp<stackp) {
-		j=*dsp;
-		if(ed[j][nu[j]]!=-1) {
-			ed[j][nu[j]]=-1;
-			dsp++;
-		} else *dsp=*(--stackp);
-	}
-
-	// Add the points in the auxiliary delete stack,
-	// and reset their back pointers
-	for(dsp=ds2;dsp<stackp2;dsp++) {
-		j=*dsp;
-		ed[j][nu[j]<<1]=j;
-		if(ed[j][nu[j]]!=-1) {
-			ed[j][nu[j]]=-1;
-			if(stackp==stacke) add_memory_ds(stackp);
-			*(stackp++)=j;
-		}
-	}
-
-	// Scan connections and add in extras
-	for(dsp=ds;dsp<stackp;dsp++) {
-		cp=*dsp;
-		for(edp=ed[cp];edp<ed[cp]+nu[cp];edp++) {
-			qp=*edp;
-			if(qp!=-1&&ed[qp][nu[qp]]!=-1) {
-				if(stackp==stacke) {
-					int dis=stackp-dsp;
-					add_memory_ds(stackp);
-					dsp=ds+dis;
-				}
-				*(stackp++)=qp;
-				ed[qp][nu[qp]]=-1;
-			}
-		}
-	}
-	up=0;
-
-	// Delete them from the array structure
-	while(stackp>ds) {
-		--p;
-		while(ed[p][nu[p]]==-1) {
-			j=nu[p];
-			edp=ed[p];edd=(mep[j]+((j<<1)+1)*--mec[j]);
-			while(edp<ed[p]+(j<<1)+1) *(edp++)=*(edd++);
-			vc.n_set_aux2_copy(p,j);
-			vc.n_copy_pointer(ed[p][(j<<1)],p);
-			ed[ed[p][(j<<1)]]=ed[p];
-			--p;
-		}
-		up=*(--stackp);
-		if(up<p) {
-
-			// Vertex management
-			pts[3*up]=pts[3*p];
-			pts[3*up+1]=pts[3*p+1];
-			pts[3*up+2]=pts[3*p+2];
-
-			// Memory management
-			j=nu[up];
-			edp=ed[up];edd=(mep[j]+((j<<1)+1)*--mec[j]);
-			while(edp<ed[up]+(j<<1)+1) *(edp++)=*(edd++);
-			vc.n_set_aux2_copy(up,j);
-			vc.n_copy_pointer(ed[up][j<<1],up);
-			vc.n_copy_pointer(up,p);
-			ed[ed[up][j<<1]]=ed[up];
-
-			// Edge management
-			ed[up]=ed[p];
-			nu[up]=nu[p];
-			for(i=0;i<nu[up];i++) ed[ed[up][i]][ed[up][nu[up]+i]]=up;
-			ed[up][nu[up]<<1]=up;
-		} else up=p++;
-	}
-
-	// Check for any vertices of zero order
-	if(*mec>0) voro_fatal_error("Zero order vertex formed",VOROPP_INTERNAL_ERROR);
-
-	// Collapse any order 2 vertices and exit
-	return collapse_order2(vc);
+	return false;
 }
 
 /** During the creation of a new facet in the plane routine, it is possible
@@ -1432,7 +1412,7 @@ inline bool voronoicell_base::delete_connection(vc_class &vc,int j,int k,bool ha
 		return false;
 	}
 #endif
-	if(mec[i]==mem[i]) add_memory(vc,i,ds2);
+	if(mec[i]==mem[i]) add_memory(vc,i);
 	vc.n_set_aux1(i);
 	for(l=0;l<q;l++) vc.n_copy_aux1(j,l);
 	while(l<i) {
@@ -1463,6 +1443,71 @@ inline bool voronoicell_base::delete_connection(vc_class &vc,int j,int k,bool ha
 	ed[j]=edp;
 	nu[j]=i;
 	return true;
+}
+
+/** This routine is a fall-back, in case floating point errors caused the usual
+ * search routine to fail. In the fall-back routine, we just test every edge to
+ * find one straddling the plane. */
+bool voronoicell_base::failsafe_find(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
+	fputs("Bailed out of convex calculation (not supported yet)\n",stderr);
+	exit(1);
+/*	qw=1;lw=0;
+	for(qp=0;qp<p;qp++) {
+		qw=m_test(qp,q);
+		if(qw==1) {
+
+			// The point is inside the cutting space. Now
+			// see if we can find a neighbor which isn't.
+			for(us=0;us<nu[qp];us++) {
+				lp=ed[qp][us];
+				if(lp<qp) {
+					lw=m_test(lp,l);
+					if(lw!=1) break;
+				}
+			}
+			if(us<nu[qp]) {
+				up=qp;
+				if(lw==0) {
+					complicated_setup=true;
+				} else {
+					complicated_setup=false;
+					u=q;
+					ls=ed[up][nu[up]+us];
+				}
+				break;
+			}
+		} else if(qw==-1) {
+
+			// The point is outside the cutting space. See
+			// if we can find a neighbor which isn't.
+			for(ls=0;ls<nu[qp];ls++) {
+				up=ed[qp][ls];
+				if(up<qp) {
+					uw=m_test(up,u);
+					if(uw!=-1) break;
+				}
+			}
+			if(ls<nu[qp]) {
+				if(uw==0) {
+					up=qp;
+					complicated_setup=true;
+				} else {
+					complicated_setup=false;
+					lp=qp;l=q;
+					us=ed[lp][nu[lp]+ls];
+				}
+				break;
+			}
+		} else {
+
+			// The point is in the plane, so we just
+			// proceed with the complicated setup routine
+			up=qp;
+			complicated_setup=true;
+			break;
+		}
+	}
+	if(qp==p) return qw==-1?true:false;*/
 }
 
 /** Calculates the volume of the Voronoi cell, by decomposing the cell into
@@ -1765,10 +1810,14 @@ inline int voronoicell_base::m_test(int n,double &ans) {
 	ans=*(pp++)*px;
 	ans+=*(pp++)*py;
 	ans+=*pp*pz-prsq;
-	if(ans<-tol2) {
+	if(ans<-big_tol) {
 		return -1;
 	} else if(ans>tol2) {
 		return 1;
+	} else if(ans<-tol2) {
+		if(stackp3==stacke3) add_memory_xse();
+		*(stackp3++)=n;
+		return -1;
 	}
 	return check_marginal(n,ans);
 }

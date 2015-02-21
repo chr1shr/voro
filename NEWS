@@ -4,6 +4,12 @@ Version 0.5 (...)
   University) and Jose Adsuara (Universit of Valencia) for pointing this out.
 * Fixed documentation error in normals routine. Thanks to Jean Farago
   (Université de Strasbourg) for pointing this out.
+* Fixed bug in the initialization of stacke2 in voronoicell_base. It was set
+  based on current_delete_size and not current_delete2_size. By default these
+  are the same in config.hh, so this would not cause a problem. However,
+  changing config.hh could create a problem.
+* Cleaned up comments
+* Updated Doxyfile to 1.8.7
 
 Version 0.4.6 (October 17th 2013)
 =================================

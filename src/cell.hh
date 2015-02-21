@@ -47,6 +47,8 @@ class voronoicell_base {
 		int current_delete_size;
 		/** This sets the size of the auxiliary delete stack. */
 		int current_delete2_size;
+		/** This sets the size of the extra search stack. */
+		int current_xsearch_size;		
 		/** This sets the total number of vertices in the current cell.
 		 */
 		int p;
@@ -187,7 +189,6 @@ class voronoicell_base {
 		void output_custom(const char *format,int i,double x,double y,double z,double r,FILE *fp=stdout);
 		template<class vc_class>
 		bool nplane(vc_class &vc,double x,double y,double z,double rsq,int p_id);
-		bool nplane_new(double x,double y,double z,double rsq,int p_id);
 		bool plane_intersects(double x,double y,double z,double rsq);
 		bool plane_intersects_guess(double x,double y,double z,double rsq);
 		void construct_relations();
@@ -248,10 +249,12 @@ class voronoicell_base {
 		/** This is the delete stack, used to store the vertices which
 		 * are going to be deleted during the plane cutting procedure.
 		 */
-		int *ds,*stacke;
+		int *ds,*stackp,*stacke;
 		/** This is the auxiliary delete stack, which has size set by
 		 * current_delete2_size. */
-		int *ds2,*stacke2;
+		int *ds2,*stackp2,*stacke2;
+		/** This is the extra search stack. */
+		int *xse,*stackp3,*stacke3;
 		/** This stores the current memory allocation for the marginal
 		 * cases. */
 		int current_marginal;
@@ -270,24 +273,31 @@ class voronoicell_base {
 		/** The magnitude of the normal vector to the test plane. */
 		double prsq;
 		template<class vc_class>
-		void add_memory(vc_class &vc,int i,int *stackp2);
+		void add_memory(vc_class &vc,int i);
 		template<class vc_class>
 		void add_memory_vertices(vc_class &vc);
 		template<class vc_class>
 		void add_memory_vorder(vc_class &vc);
-		void add_memory_ds(int *&stackp);
-		void add_memory_ds2(int *&stackp2);
+		void add_memory_ds();
+		void add_memory_ds2();
+		void add_memory_xse();
+		bool failsafe_find(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
+		template<class vc_class>
+		bool create_facet(vc_class &vc,int lp,int ls,double l,int us,double u,int p_id);
 		template<class vc_class>
 		inline bool collapse_order1(vc_class &vc);
 		template<class vc_class>
 		inline bool collapse_order2(vc_class &vc);
 		template<class vc_class>
 		inline bool delete_connection(vc_class &vc,int j,int k,bool hand);
-		template<class vc_class>
-		inline bool search_for_outside_edge(vc_class &vc,int &up);
-		template<class vc_class>
-		inline void add_to_stack(vc_class &vc,int lp,int *&stackp2);
-		inline bool fuzzy_max(double x,double y,double z,int &ls,int &tp,double t,double &g);
+		inline bool search_for_outside_edge(int &up);
+		inline void add_to_stack(int lp);
+	public:
+		bool search_downward(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
+		bool definite_max(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
+		bool search_upward(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
+		bool definite_min(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
+	private:
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
 		inline void normals_search(std::vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);
