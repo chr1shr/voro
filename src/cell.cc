@@ -677,6 +677,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	int k=0;
 	while(xse+k<stackp3) {
 		up=xse[k++];
+		printf("%d %d %d %d\n",k,stackp3-xse,up,xse[k]);
 		for(us=0;us<nu[up];us++) {
 			lp=ed[up][us];
 			
@@ -685,6 +686,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 			// Test position of this point relative to the plane
 			lw=m_test(lp,l);
+			printf("%d %d %g\n",lp,lw,l);
 			if(lw<0) {
 
 				// If this marginally outside, mark it
@@ -707,6 +709,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 					// This is a new facet 
 					ls=ed[up][nu[up]+us];
+					printf("cf %d %d %d %d %g %g\n",lp,ls,up,us,l,u);
 					if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
 				}
 			}
