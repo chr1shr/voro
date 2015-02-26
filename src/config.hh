@@ -53,7 +53,7 @@ const int max_delete_size=16777216;
 /** The maximum size for the auxiliary delete stack. */
 const int max_delete2_size=16777216;
 /** The maximum size for the extra search stack. */
-const int max_xsearch_size=32;
+const int max_xsearch_size=16777216;
 /** The maximum amount of particle memory allocated for a single region. */
 const int max_particle_memory=16777216;
 /** The maximum size for the wall pointer array. */

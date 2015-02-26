@@ -268,6 +268,7 @@ void voronoicell_base::add_memory_ds2() {
  * routine causes a fatal error. */
 void voronoicell_base::add_memory_xse() {
 	current_xsearch_size<<=1;
+	printf("XSE %d\n",current_xsearch_size);
 	if(current_xsearch_size>max_xsearch_size) voro_fatal_error("Extra search stack memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Extra search stack memory scaled up to %d\n",current_delete2_size);
@@ -614,12 +615,12 @@ bool voronoicell_base::definite_min(double x,double y,double z,double rsq,int &l
 template<class vc_class>
 bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq,int p_id) {
 	int i,j,lp=up,cp,qp,*dsp;
-	int us=0,ls=0,lw;
+	int us=0,ls=0,lw,uw;
 	int *edp,*edd;stackp=ds;
-	double u,l;
+	double u,l;up=0;
 
 	u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2]-rsq;
-	printf("%g\n",rsq);
+	printf("Nplane:\nup=%d, u=%g\n",up,u);
 	if(u>tol) {
 		if(!search_downward(x,y,z,rsq,lp,ls,l,u)) return false;
 		if(l<-tol2) {
@@ -673,42 +674,44 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	int op=p;
 	big_tol=2;
 
+	us=ed[lp][nu[lp]+ls];
 	if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
 	int k=0;
 	while(xse+k<stackp3) {
-		up=xse[k++];
+		lp=xse[k++];
 		printf("%d %d %d %d\n",k,stackp3-xse,up,xse[k]);
-		for(us=0;us<nu[up];us++) {
-			lp=ed[up][us];
+		for(ls=0;ls<nu[lp];ls++) {
+			up=ed[lp][ls];
 			
 			// Skip if this is a new vertex
-			if(lp>=op) continue;
+			if(up>=op) continue;
 
 			// Test position of this point relative to the plane
-			lw=m_test(lp,l);
-			printf("%d %d %g\n",lp,lw,l);
-			if(lw<0) {
+			uw=m_test(up,u);
+			printf("%d %d %g\n",up,uw,u);
+			if(uw<0) {
 
 				// If this marginally outside, mark it
 				// to search unless it's already marked
-				if(lw==-1) {
-					if(ed[lp][nu[lp]<<1]!=-1) {
-						ed[lp][nu[lp]<<1]=-1;
+				if(uw==-1) {
+					if(ed[up][nu[up]<<1]!=-1) {
+						ed[up][nu[up]<<1]=-1;
 						if(stackp3==stacke3) add_memory_xse();
-						*(stackp3++)=lp;
+						*(stackp3++)=up;
+						printf("Add %d\n",up);
 					}
 				}
 			} else {
-				if(lw==0) {
+				if(uw==0) {
 
 					// This is a possible facet starting
 					// from a vertex on the cutting plane
-					up=lp;
-					if(create_facet(vc,-1,0,0,0,l,p_id)) return false;
+					if(create_facet(vc,-1,0,0,0,u,p_id)) return false;
 				} else {
 
 					// This is a new facet 
-					ls=ed[up][nu[up]+us];
+					us=ed[lp][nu[lp]+ls];
+					lw=m_test(lp,l);
 					printf("cf %d %d %d %d %g %g\n",lp,ls,up,us,l,u);
 					if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
 				}
@@ -1818,8 +1821,11 @@ inline int voronoicell_base::m_test(int n,double &ans) {
 	} else if(ans>tol2) {
 		return 1;
 	} else if(ans<-tol2) {
-		if(stackp3==stacke3) add_memory_xse();
-		*(stackp3++)=n;
+		if(ed[up][nu[up]<<1]!=-1) {
+			ed[up][nu[up]<<1]=-1;
+			if(stackp3==stacke3) add_memory_xse();
+			*(stackp3++)=n;
+		}
 		return -1;
 	}
 	return check_marginal(n,ans);

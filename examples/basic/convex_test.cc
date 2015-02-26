@@ -15,13 +15,21 @@ int main() {
 	voronoicell v;
 
 	v.init_l_shape();
+	v.draw_gnuplot(0,0,0,"single_cell.gnu");
 	int lp,ls;
 	double l,u;
 	//bool suc=v.search_upward(-1,3,0,0.5,lp,ls,l,u);
 	v.plane(-1,3,0,0.5);
+	v.draw_gnuplot(0,0,0,"single_cell2.gnu");
+	v.plane(-1,3,0.4,0.53);
+	puts("cr");
+	v.check_relations();
+	v.check_duplicates();
+	puts("fi");
+//	v.plane(-1,3,-0.2,0.54);
 bool suc=true;
 
 	printf("%s lp=%d ls=%d l=%g u=%g up=%d\n",suc?"True":"False",lp,ls,l,u,v.up);
 
-	v.draw_gnuplot(0,0,0,"single_cell.gnu");
+	v.draw_gnuplot(0,0,0,"single_cell3.gnu");
 }
