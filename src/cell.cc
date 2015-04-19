@@ -2249,19 +2249,19 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 //	int count=0,ls,us,tp;
 //	double t;
 
-	for(int tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) return true;
-	return false;
+//	for(int tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) return true;
+//	return false;
 	
 	int ls,us,lp;
 	double l,u;
-	unsigned int lw;
+	unsigned int uw;
 
 	// Initialize the safe testing routine
 	px=x;py=y;pz=z;prsq=rsq;
 	maskc+=4;
 	if(maskc<4) reset_mask();
 
-	return search_upward(lw,lp,ls,us,l,u);
+	return search_upward(uw,lp,ls,us,l,u);
 }
 /*
 	// The test point is outside of the cutting space
