@@ -1883,14 +1883,16 @@ inline int voronoicell_base::m_test(int n,double &ans) {
 	double *pp=pts+(n<<2);
 	if(mask[n]>=maskc) {
 		ans=pp[3];
+		return mask[n]&3;
 	} else {
 		ans=*(pp++)*px;
 		ans+=*(pp++)*py;
 		ans+=*(pp++)*pz-prsq;
 		*pp=ans;
-		mask[n]=maskc|(ans<-tol?0:(ans>tol?2:1));
+		unsigned int maskr=ans<-tol?0:(ans>tol?2:1);
+		mask[n]=maskc|maskr;
+		return maskr;
 	}
-	return mask[n]&3;
 }
 
 
