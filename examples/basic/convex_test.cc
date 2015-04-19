@@ -22,6 +22,7 @@ int main() {
 	v.plane(-1,3,0,0.5);
 	v.draw_gnuplot(0,0,0,"single_cell2.gnu");
 	v.plane(-1,3,0.4,0.53);
+	v.plane(-1,3,-0.4,0.54);
 	puts("cr");
 	v.check_relations();
 	v.check_duplicates();

@@ -28,7 +28,8 @@ namespace voro {
  *                particle. */
 container_periodic_base::container_periodic_base(double bx_,double bxy_,double by_,
 		double bxz_,double byz_,double bz_,int nx_,int ny_,int nz_,int init_mem_,int ps_)
-	: unitcell(bx_,bxy_,by_,bxz_,byz_,bz_), voro_base(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_),
+	: unitcell(bx_,bxy_,by_,bxz_,byz_,bz_), 
+	voro_base(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_), max_len_sq(unit_voro.max_radius_squared()),
 	ey(int(max_uv_y*ysp+1)), ez(int(max_uv_z*zsp+1)), wy(ny+ey), wz(nz+ez),
 	oy(ny+2*ey), oz(nz+2*ez), oxyz(nx*oy*oz), id(new int*[oxyz]), p(new double*[oxyz]),
 	co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), init_mem(init_mem_), ps(ps_) {
@@ -497,7 +498,7 @@ void container_periodic_poly::print_custom(const char *format,const char *filena
  * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 void container_periodic::compute_all_cells() {
-	voronoicell c;
+	voronoicell c(*this);
 	c_loop_all_periodic vl(*this);
 	if(vl.start()) do compute_cell(c,vl);
 	while(vl.inc());
@@ -508,7 +509,7 @@ void container_periodic::compute_all_cells() {
  * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 void container_periodic_poly::compute_all_cells() {
-	voronoicell c;
+	voronoicell c(*this);
 	c_loop_all_periodic vl(*this);
 	if(vl.start()) do compute_cell(c,vl);while(vl.inc());
 }
@@ -518,7 +519,7 @@ void container_periodic_poly::compute_all_cells() {
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
 double container_periodic::sum_cell_volumes() {
-	voronoicell c;
+	voronoicell c(*this);
 	double vol=0;
 	c_loop_all_periodic vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
@@ -530,7 +531,7 @@ double container_periodic::sum_cell_volumes() {
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
 double container_periodic_poly::sum_cell_volumes() {
-	voronoicell c;
+	voronoicell c(*this);
 	double vol=0;
 	c_loop_all_periodic vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());

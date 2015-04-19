@@ -9,6 +9,8 @@ using namespace voro;
 
 const double pi=3.1415926535897932384626433832795;
 
+double rnd() {return 0.001*double(rand())/RAND_MAX;}
+
 int main() {
 	int i=0;
 	double x,y,z,evol,vvol;

@@ -29,6 +29,7 @@ int main() {
 			r=1/sqrt(rsq);x*=r;y*=r;z*=r;
 			v.plane(x,y,z,1);
 		}
+		printf("%d\n",v.p);
 	}
 
 	// Output the Voronoi cell to a file, in the gnuplot format

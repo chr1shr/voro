@@ -42,6 +42,7 @@ namespace voro {
  * information about the underlying computational grid. */
 class container_periodic_base : public unitcell, public voro_base {
 	public:
+		const double max_len_sq;
 		/** The lower y index (inclusive) of the primary domain within
 		 * the block structure. */
 		int ey;

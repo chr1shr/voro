@@ -31,8 +31,11 @@ container_base::container_base(double ax_,double bx_,double ay_,double by_,doubl
 		int nx_,int ny_,int nz_,bool xperiodic_,bool yperiodic_,bool zperiodic_,int init_mem,int ps_)
 	: voro_base(nx_,ny_,nz_,(bx_-ax_)/nx_,(by_-ay_)/ny_,(bz_-az_)/nz_),
 	ax(ax_), bx(bx_), ay(ay_), by(by_), az(az_), bz(bz_),
+	max_len_sq((bx-ax)*(bx-ax)*(xperiodic_?0.25:1)+(by-ay)*(by-ay)*(yperiodic_?0.25:1)
+		  +(bz-az)*(bz-az)*(zperiodic_?0.25:1)),
 	xperiodic(xperiodic_), yperiodic(yperiodic_), zperiodic(zperiodic_),
 	id(new int*[nxyz]), p(new double*[nxyz]), co(new int[nxyz]), mem(new int[nxyz]), ps(ps_) {
+
 	int l;
 	for(l=0;l<nxyz;l++) co[l]=0;
 	for(l=0;l<nxyz;l++) mem[l]=init_mem;
@@ -433,7 +436,7 @@ void container_poly::print_custom(const char *format,const char *filename) {
  * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 void container::compute_all_cells() {
-	voronoicell c;
+	voronoicell c(*this);
 	c_loop_all vl(*this);
 	if(vl.start()) do compute_cell(c,vl);
 	while(vl.inc());
@@ -444,7 +447,7 @@ void container::compute_all_cells() {
  * of the Voronoi algorithm, without any additional calculations such as
  * volume evaluation or cell output. */
 void container_poly::compute_all_cells() {
-	voronoicell c;
+	voronoicell c(*this);
 	c_loop_all vl(*this);
 	if(vl.start()) do compute_cell(c,vl);while(vl.inc());
 }
@@ -454,7 +457,8 @@ void container_poly::compute_all_cells() {
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
 double container::sum_cell_volumes() {
-	voronoicell c;
+	voronoicell c(*this);
+	printf("Tolerance: %.14g %.14g %.14g\n",c.tol,c.tol_cu,c.big_tol);
 	double vol=0;
 	c_loop_all vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
@@ -466,7 +470,7 @@ double container::sum_cell_volumes() {
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
 double container_poly::sum_cell_volumes() {
-	voronoicell c;
+	voronoicell c(*this);
 	double vol=0;
 	c_loop_all vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());

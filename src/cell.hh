@@ -82,14 +82,14 @@ class voronoicell_base {
 		 * cell. This array is dynamically allocated, with its current
 		 * size held by current_vertices. */
 		int *nu;
+		unsigned int *mask;
 		/** This in an array with size 3*current_vertices for holding
 		 * the positions of the vertices. */
 		double *pts;
 		double tol;
-		double tol2;
-		double tol_sq;
+		double tol_cu;
 		double big_tol;
-		voronoicell_base();
+		voronoicell_base(double max_len_sq);
 		~voronoicell_base();
 		void init_base(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
 		void init_octahedron_base(double l);
@@ -255,15 +255,7 @@ class voronoicell_base {
 		int *ds2,*stackp2,*stacke2;
 		/** This is the extra search stack. */
 		int *xse,*stackp3,*stacke3;
-		/** This stores the current memory allocation for the marginal
-		 * cases. */
-		int current_marginal;
-		/** This stores the total number of marginal points which are
-		 * currently in the buffer. */
-		int n_marg;
-		/** This array contains a list of the marginal points, and also
-		 * the outcomes of the marginal tests. */
-		int *marg;
+		unsigned int maskc;
 		/** The x coordinate of the normal vector to the test plane. */
 		double px;
 		/** The y coordinate of the normal vector to the test plane. */
@@ -281,7 +273,7 @@ class voronoicell_base {
 		void add_memory_ds();
 		void add_memory_ds2();
 		void add_memory_xse();
-		bool failsafe_find(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
+		bool failsafe_find(int &lp,int &ls,int &us,double &l,double &u);
 		template<class vc_class>
 		bool create_facet(vc_class &vc,int lp,int ls,double l,int us,double u,int p_id);
 		template<class vc_class>
@@ -291,17 +283,22 @@ class voronoicell_base {
 		template<class vc_class>
 		inline bool delete_connection(vc_class &vc,int j,int k,bool hand);
 		inline bool search_for_outside_edge(int &up);
-		inline void add_to_stack(int lp);
+		inline void add_to_stack(int sc2,int lp);
+		inline void reset_mask() {
+			for(int i=0;i<current_vertices;i++) mask[i]=0;
+			maskc=4;
+		}
 	public:
-		bool search_downward(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
-		bool definite_max(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
-		bool search_upward(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
-		bool definite_min(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u);
+		bool search_downward(unsigned int &uw,int &lp,int &ls,int &us,double &l,double &u);
+		bool definite_max(int &lp,int &ls,double &l,double &u,unsigned int &uw);
+		bool search_upward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u);
+		bool definite_min(int &lp,int &us,double &l,double &u,unsigned int &lw);
 	private:
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
 		inline void normals_search(std::vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);
 		inline int m_test(int n,double &ans);
+		inline int m_testx(int n,double &ans);
 		inline void flip(int tp) {ed[tp][nu[tp]<<1]=-1-ed[tp][nu[tp]<<1];}
 		int check_marginal(int n,double &ans);
 		friend class voronoicell;
@@ -317,6 +314,10 @@ class voronoicell_base {
 class voronoicell : public voronoicell_base {
 	public:
 		using voronoicell_base::nplane;
+		voronoicell() : voronoicell_base(default_length*default_length) {}
+		voronoicell(double max_len_sq_) : voronoicell_base(max_len_sq_) {}
+		template<class c_class>
+		voronoicell(c_class &con) : voronoicell_base(con.max_len_sq) {}
 		/** Copies the information from another voronoicell class into
 		 * this class, extending memory allocation if necessary.
 		 * \param[in] c the class to copy. */
@@ -433,7 +434,16 @@ class voronoicell_neighbor : public voronoicell_base {
 		 * i. It is set to the ID number of the plane that made the
 		 * face that is clockwise from the jth edge. */
 		int **ne;
-		voronoicell_neighbor();
+		voronoicell_neighbor() : voronoicell_base(default_length*default_length) {
+			memory_setup();
+		}
+		voronoicell_neighbor(double max_len_sq_) : voronoicell_base(max_len_sq_) {
+			memory_setup();
+		}
+		template<class c_class>
+		voronoicell_neighbor(c_class &con) : voronoicell_base(con.max_len_sq) {
+			memory_setup();
+		}		
 		~voronoicell_neighbor();
 		void operator=(voronoicell &c);
 		void operator=(voronoicell_neighbor &c);
@@ -494,6 +504,7 @@ class voronoicell_neighbor : public voronoicell_base {
 	private:
 		int *paux1;
 		int *paux2;
+		void memory_setup();
 		inline void n_allocate(int i,int m) {mne[i]=new int[m*i];}
 		inline void n_add_memory_vertices(int i) {
 			int **pp=new int*[i];

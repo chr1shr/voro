@@ -20,7 +20,6 @@ int main() {
 	v.plane(1,-1,-1);
 	v.plane(-1,1,-1);
 	v.plane(-1,-1,1);
-
 	v.draw_gnuplot(0,0,0,"tetrahedron.gnu");
 
 	// Create a cube. Since this is the default shape
@@ -38,7 +37,6 @@ int main() {
 	v.plane(-1,1,-1);
 	v.plane(1,-1,-1);
 	v.plane(-1,-1,-1);
-
 	v.draw_gnuplot(0,0,0,"octahedron.gnu");
 
 	// Create a dodecahedron

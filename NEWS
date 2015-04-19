@@ -8,8 +8,10 @@ Version 0.5 (...)
   based on current_delete_size and not current_delete2_size. By default these
   are the same in config.hh, so this would not cause a problem. However,
   changing config.hh could create a problem.
+* Updated plane cutting routine to handle non-convex cases. This should remove
+  some extremely rare errors where cells can accidentally be deleted.
 * Cleaned up comments
-* Updated Doxyfile to 1.8.7
+* Updated Doxyfile to 1.8.9.1
 
 Version 0.4.6 (October 17th 2013)
 =================================

@@ -17,20 +17,21 @@
 namespace voro {
 
 /** Constructs a Voronoi cell and sets up the initial memory. */
-voronoicell_base::voronoicell_base() :
+voronoicell_base::voronoicell_base(double max_len_sq) :
 	current_vertices(init_vertices), current_vertex_order(init_vertex_order),
 	current_delete_size(init_delete_size), current_delete2_size(init_delete2_size),
 	current_xsearch_size(init_xsearch_size),
 	ed(new int*[current_vertices]), nu(new int[current_vertices]),
-	pts(new double[3*current_vertices]), tol(1e-11), tol2(2*tol),
-	tol_sq(tol*tol), big_tol(100*tol), mem(new int[current_vertex_order]),
+	mask(new unsigned int[current_vertices]),
+	pts(new double[current_vertices<<2]), tol(tolerance*max_len_sq),
+	tol_cu(tol*sqrt(tol)), big_tol(big_tolerance_fac*tol), mem(new int[current_vertex_order]),
 	mec(new int[current_vertex_order]),
 	mep(new int*[current_vertex_order]), ds(new int[current_delete_size]),
 	stacke(ds+current_delete_size), ds2(new int[current_delete2_size]),
 	stacke2(ds2+current_delete2_size), xse(new int[current_xsearch_size]),
-	stacke3(xse+current_xsearch_size), current_marginal(init_marginal),
-	marg(new int[current_marginal]) {
+	stacke3(xse+current_xsearch_size), maskc(0) {
 	int i;
+	for(i=0;i<current_vertices;i++) mask[i]=0;
 	for(i=0;i<3;i++) {
 		mem[i]=init_n_vertices;mec[i]=0;
 		mep[i]=new int[init_n_vertices*((i<<1)+1)];
@@ -46,10 +47,11 @@ voronoicell_base::voronoicell_base() :
 /** The voronoicell destructor deallocates all the dynamic memory. */
 voronoicell_base::~voronoicell_base() {
 	for(int i=current_vertex_order-1;i>=0;i--) if(mem[i]>0) delete [] mep[i];
-	delete [] marg;delete [] xse;
+	delete [] xse;
 	delete [] ds2;delete [] ds;
 	delete [] mep;delete [] mec;
 	delete [] mem;delete [] pts;
+	delete [] mask;
 	delete [] nu;delete [] ed;
 }
 
@@ -75,7 +77,7 @@ void voronoicell_base::copy(voronoicell_base* vb) {
 		for(j=0;j<mec[i]*(2*i+1);j+=2*i+1) ed[mep[i][j+2*i]]=mep[i]+j;
 	}
 	for(i=0;i<p;i++) nu[i]=vb->nu[i];
-	for(i=0;i<3*p;i++) pts[i]=vb->pts[i];
+	for(i=0;i<(p<<2);i++) pts[i]=vb->pts[i];
 }
 
 /** Copies the information from another voronoicell class into this
@@ -109,8 +111,8 @@ void voronoicell_neighbor::operator=(voronoicell_neighbor &c) {
 void voronoicell_base::translate(double x,double y,double z) {
 	x*=2;y*=2;z*=2;
 	double *ptsp=pts;
-	while(ptsp<pts+3*p) {
-		*(ptsp++)=x;*(ptsp++)=y;*(ptsp++)=z;
+	while(ptsp<pts+(p<<2)) {
+		*(ptsp++)=x;*(ptsp++)=y;*(ptsp++)=z;ptsp++;
 	}
 }
 
@@ -190,6 +192,7 @@ void voronoicell_base::add_memory(vc_class &vc,int i) {
 template<class vc_class>
 void voronoicell_base::add_memory_vertices(vc_class &vc) {
 	int i=(current_vertices<<1),j,**pp,*pnu;
+	unsigned int* pmask;
 	if(i>max_vertices) voro_fatal_error("Vertex memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Vertex memory scaled up to %d\n",i);
@@ -202,8 +205,12 @@ void voronoicell_base::add_memory_vertices(vc_class &vc) {
 	pnu=new int[i];
 	for(j=0;j<current_vertices;j++) pnu[j]=nu[j];
 	delete [] nu;nu=pnu;
-	ppts=new double[3*i];
-	for(j=0;j<3*current_vertices;j++) ppts[j]=pts[j];
+	pmask=new unsigned int[i];
+	for(j=0;j<current_vertices;j++) pmask[j]=mask[j];
+	while(j<i) pmask[j++]=0;
+	delete [] mask;mask=pmask;
+	ppts=new double[i<<2];
+	for(j=0;j<(current_vertices<<2);j++) ppts[j]=pts[j];
 	delete [] pts;pts=ppts;
 	current_vertices=i;
 }
@@ -288,13 +295,13 @@ void voronoicell_base::init_base(double xmin,double xmax,double ymin,double ymax
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
 	*pts=xmin;pts[1]=ymin;pts[2]=zmin;
-	pts[3]=xmax;pts[4]=ymin;pts[5]=zmin;
-	pts[6]=xmin;pts[7]=ymax;pts[8]=zmin;
-	pts[9]=xmax;pts[10]=ymax;pts[11]=zmin;
-	pts[12]=xmin;pts[13]=ymin;pts[14]=zmax;
-	pts[15]=xmax;pts[16]=ymin;pts[17]=zmax;
-	pts[18]=xmin;pts[19]=ymax;pts[20]=zmax;
-	pts[21]=xmax;pts[22]=ymax;pts[23]=zmax;
+	pts[4]=xmax;pts[5]=ymin;pts[6]=zmin;
+	pts[8]=xmin;pts[9]=ymax;pts[10]=zmin;
+	pts[12]=xmax;pts[13]=ymax;pts[14]=zmin;
+	pts[16]=xmin;pts[17]=ymin;pts[18]=zmax;
+	pts[20]=xmax;pts[21]=ymin;pts[22]=zmax;
+	pts[24]=xmin;pts[25]=ymax;pts[26]=zmax;
+	pts[28]=xmax;pts[29]=ymax;pts[30]=zmax;
 	int *q=mep[3];
 	*q=1;q[1]=4;q[2]=2;q[3]=2;q[4]=1;q[5]=0;q[6]=0;
 	q[7]=3;q[8]=5;q[9]=0;q[10]=2;q[11]=1;q[12]=0;q[13]=1;
@@ -315,17 +322,17 @@ void voronoicell::init_l_shape() {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=12;
 	*pts=-1;pts[1]=-1;pts[2]=-1;
-	pts[3]=1;pts[4]=-1;pts[5]=-1;
-	pts[6]=-1;pts[7]=0;pts[8]=-1;
-	pts[9]=0;pts[10]=0;pts[11]=-1;
-	pts[12]=0;pts[13]=1;pts[14]=-1;
-	pts[15]=1;pts[16]=1;pts[17]=-1;
-	pts[18]=-1;pts[19]=-1;pts[20]=1;
-	pts[21]=1;pts[22]=-1;pts[23]=1;
-	pts[24]=-1;pts[25]=0;pts[26]=1;
-	pts[27]=0;pts[28]=0;pts[29]=1;
-	pts[30]=0;pts[31]=1;pts[32]=1;
-	pts[33]=1;pts[34]=1;pts[35]=1;
+	pts[4]=1;pts[5]=-1;pts[6]=-1;
+	pts[8]=-1;pts[9]=0;pts[10]=-1;
+	pts[12]=0;pts[13]=0;pts[14]=-1;
+	pts[16]=0;pts[17]=1;pts[18]=-1;
+	pts[20]=1;pts[21]=1;pts[22]=-1;
+	pts[24]=-1;pts[25]=-1;pts[26]=1;
+	pts[28]=1;pts[29]=-1;pts[30]=1;
+	pts[32]=-1;pts[33]=0;pts[34]=1;
+	pts[36]=0;pts[37]=0;pts[38]=1;
+	pts[40]=0;pts[41]=1;pts[42]=1;
+	pts[44]=1;pts[45]=1;pts[46]=1;
 	int *q=mep[3];
 	*q=1;q[1]=6;q[2]=2;q[6]=0;
 	q[7]=5;q[8]=7;q[9]=0;q[13]=1;
@@ -353,11 +360,11 @@ void voronoicell_base::init_octahedron_base(double l) {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[4]=p=6;l*=2;
 	*pts=-l;pts[1]=0;pts[2]=0;
-	pts[3]=l;pts[4]=0;pts[5]=0;
-	pts[6]=0;pts[7]=-l;pts[8]=0;
-	pts[9]=0;pts[10]=l;pts[11]=0;
-	pts[12]=0;pts[13]=0;pts[14]=-l;
-	pts[15]=0;pts[16]=0;pts[17]=l;
+	pts[4]=l;pts[5]=0;pts[6]=0;
+	pts[8]=0;pts[9]=-l;pts[10]=0;
+	pts[12]=0;pts[13]=l;pts[14]=0;
+	pts[16]=0;pts[17]=0;pts[18]=-l;
+	pts[20]=0;pts[21]=0;pts[22]=l;
 	int *q=mep[4];
 	*q=2;q[1]=5;q[2]=3;q[3]=4;q[4]=0;q[5]=0;q[6]=0;q[7]=0;q[8]=0;
 	q[9]=2;q[10]=4;q[11]=3;q[12]=5;q[13]=2;q[14]=2;q[15]=2;q[16]=2;q[17]=1;
@@ -379,9 +386,9 @@ void voronoicell_base::init_tetrahedron_base(double x0,double y0,double z0,doubl
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=4;
 	*pts=x0*2;pts[1]=y0*2;pts[2]=z0*2;
-	pts[3]=x1*2;pts[4]=y1*2;pts[5]=z1*2;
-	pts[6]=x2*2;pts[7]=y2*2;pts[8]=z2*2;
-	pts[9]=x3*2;pts[10]=y3*2;pts[11]=z3*2;
+	pts[4]=x1*2;pts[5]=y1*2;pts[6]=z1*2;
+	pts[8]=x2*2;pts[9]=y2*2;pts[10]=z2*2;
+	pts[12]=x3*2;pts[13]=y3*2;pts[14]=z3*2;
 	int *q=mep[3];
 	*q=1;q[1]=3;q[2]=2;q[3]=0;q[4]=0;q[5]=0;q[6]=0;
 	q[7]=0;q[8]=2;q[9]=3;q[10]=0;q[11]=2;q[12]=1;q[13]=1;
@@ -430,7 +437,7 @@ void voronoicell_base::construct_relations() {
  * routine from .
  * \param[in,out] up */
 inline bool voronoicell_base::search_for_outside_edge(int &up) {
-	int i,lp,lw,*j=ds2,*stackp2=ds2;
+	int i,lp,lw,*j=ds2,sc2=stackp2-ds2;
 	double l;
 	*(stackp2++)=up;
 	while(j<stackp2) {
@@ -438,10 +445,14 @@ inline bool voronoicell_base::search_for_outside_edge(int &up) {
 		for(i=0;i<nu[up];i++) {
 			lp=ed[up][i];
 			lw=m_test(lp,l);
-			if(lw==-1) return true;
-			else if(lw==0) add_to_stack(lp);
+			if(lw==0) {
+				stackp2=ds2+sc2;
+				return true;
+			}
+			else if(lw==1) add_to_stack(sc2,lp);
 		}
 	}
+	stackp2=ds2+sc2;
 	return false;
 }
 
@@ -449,8 +460,8 @@ inline bool voronoicell_base::search_for_outside_edge(int &up) {
  * \param[in] vc a reference to the specialized version of the calling class.
  * \param[in] lp the index of the point to add.
  * \param[in,out] stackp2 a pointer to the end of the stack entries. */
-inline void voronoicell_base::add_to_stack(int lp) {
-	for(int *k=ds2;k<stackp2;k++) if(*k==lp) return;
+inline void voronoicell_base::add_to_stack(int sc2,int lp) {
+	for(int *k=ds2+sc2;k<stackp2;k++) if(*k==lp) return;
 	if(stackp2==stacke2) add_memory_ds2();
 	*(stackp2++)=lp;
 }
@@ -458,55 +469,62 @@ inline void voronoicell_base::add_to_stack(int lp) {
 /** Assuming that the point up is outside the cutting plane, this routine
  * searches upwards along edges trying to find an edge that intersects the
  * cutting plane.
- * \param[in] (x,y,z) the normal vector to the plane.
  * \param[in] rsq the distance along this vector of the plane.
  * \param[in,out] u the dot product of point up with the normal.
  * \return True if the cutting plane was reached, false otherwise. */
-bool voronoicell_base::search_upward(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
+bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int &us,double &l,double &u) {
 	int count=0,vs;
-	u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2]-rsq;
 	lp=up;l=u;
+
+//	for(up=0;up<p;up++) {
+//		uw=m_test(up,u);
+//		if(uw==2)
+
 
 	// The test point is outside of the cutting space
 	for(ls=0;ls<nu[lp];ls++) {
 		up=ed[lp][ls];
-		u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2]-rsq;
+		uw=m_test(up,u);
 		printf("-> %d %g\n",up,u);
 		if(u>l) break;
 	}
-	if(ls==nu[lp]) if(definite_max(x,y,z,rsq,lp,ls,l,u)) {
+	if(ls==nu[lp]) if(definite_max(lp,ls,l,u,uw)) {
 		up=lp;
 		return false;
 	}
 	
-	while (u<-tol) {
-		printf("hi %d %g\n",up,u);
-		if(++count>=p) failsafe_find(x,y,z,rsq,lp,ls,l,u);
+	while(uw==0) {
+		printf("\n\nUPS %d %.16g\n",up,u);
+		if(++count>=p) failsafe_find(lp,ls,us,l,u);
 
 		// Test all the neighbors of the current point
 		// and find the one which is closest to the
 		// plane
 		vs=ed[lp][nu[lp]+ls];lp=up;l=u;
-		for(ls=0;ls<nu[up];ls++) {
-			if(ls==vs) continue;
-			up=ed[lp][ls];double *pp=pts+(up+(up<<1));
-			u=x*(*pp)+y*pp[1]+z*pp[2]-rsq;
-			printf("-> %d %g (%g)\n",up,u,l);
-			if(u>l) break;
+		for(ls=0;ls<nu[lp];ls++) {
+			//if(ls==vs) continue;
+			up=ed[lp][ls];
+			uw=m_test(up,u);
+			printf("-> %d %d %.16g (%.16g)\n",ls,up,u,l);
+			if(u>l) {puts("Better");break;}
 		}
-		if(ls==nu[lp]&&definite_max(x,y,z,rsq,lp,ls,l,u)) {
+		printf("WTF %d %d %d\n",ls,vs,nu[up]);
+		if(ls==nu[lp]&&definite_max(lp,ls,l,u,uw)) {
 			up=lp;
+			puts("return here");
 			return false;
 		}
 	}
+	us=ed[lp][nu[lp]+ls];
 	return true;
 }
 
 /** Checks whether a particular point lp is a definite maximum, searching
  * through any possible minor non-convexities, for a better maximum.
  * \param[in] (x,y,z) the normal vector to the plane. */
-bool voronoicell_base::definite_max(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
+bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned int &uw) {
 	int tp=lp,ts,qp=0;
+	unsigned int qw;
 	double q;
 
 	printf("FM %g %g\n",l,big_tol);
@@ -515,7 +533,7 @@ bool voronoicell_base::definite_max(double x,double y,double z,double rsq,int &l
 	// followed, to see if they lead to a better maximum.
 	for(ts=0;ts<nu[tp];ts++) {
 		qp=ed[tp][ts];
-		q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2]-rsq;
+		m_test(qp,q);
 		printf("FM %d %g -> %d %g (%g)\n",tp,l,qp,q,big_tol);
 		if(q>l-big_tol) break;
 	}
@@ -532,7 +550,7 @@ bool voronoicell_base::definite_max(double x,double y,double z,double rsq,int &l
 	ts++;
 	while(ts<nu[tp]) {
 		qp=ed[tp][ts];
-		q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2]-rsq;
+		m_test(qp,q);
 		printf("FM %d %g +> %d %g (%g)\n",tp,l,qp,q,big_tol);
 		if(q>l-big_tol) {
 			printf("Search %d\n",up);
@@ -554,8 +572,8 @@ bool voronoicell_base::definite_max(double x,double y,double z,double rsq,int &l
 			printf("O %d\n",qp);
 
 			// Skip the point if it's already marked
-			if(ed[qp][2*nu[qp]]<0) continue;
-			q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2]-rsq;
+			if(ed[qp][nu[qp]<<1]<0) continue;
+			qw=m_test(qp,q);
 			printf("OG %g\n",u);
 			
 			// This point is a better maximum. Reset markers and
@@ -565,8 +583,9 @@ bool voronoicell_base::definite_max(double x,double y,double z,double rsq,int &l
 				flip(lp);
 				lp=tp;
 				ls=ts;
-				l=x*pts[3*lp]+y*pts[3*lp+1]+z*pts[3*lp+2]-rsq;
+				m_test(lp,l);
 				up=qp;
+				uw=qw;
 				u=q;
 				while(stackp>ds) flip(*(--stackp));
 				return false;
@@ -594,13 +613,116 @@ bool voronoicell_base::definite_max(double x,double y,double z,double rsq,int &l
 	return true;
 }
 
-bool voronoicell_base::search_downward(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
-	puts("hi");
+bool voronoicell_base::search_downward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u) {
+	int count=0,vs;
+
+	// The test point is outside of the cutting space
+	for(us=0;us<nu[up];us++) {
+		lp=ed[up][us];
+		lw=m_test(lp,l);
+		if(u>l) break;
+	}
+	if(us==nu[up]) if(definite_min(lp,us,l,u,lw)) return false;
+	
+	while(lw==2) {
+		if(++count>=p) failsafe_find(lp,ls,us,l,u);
+
+		// Test all the neighbors of the current point
+		// and find the one which is closest to the
+		// plane
+		vs=ed[up][nu[up]+us];up=lp;u=l;
+		for(us=0;us<nu[up];us++) {
+			if(us==vs) continue;
+			lp=ed[up][us];
+			lw=m_test(lp,l);
+			if(u>l) break;
+		}
+		if(us==nu[up]&&definite_min(lp,us,l,u,lw)) return false;
+	}
+	ls=ed[up][nu[up]+us];
 	return true;
 }
 
-bool voronoicell_base::definite_min(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
-	puts("hola");
+bool voronoicell_base::definite_min(int &lp,int &us,double &l,double &u,unsigned int &lw) {
+	int tp=up,ts,qp=0;
+	unsigned int qw;
+	double q;
+	return true;
+
+	// Check to see whether point up is a well-defined maximum. Otherwise
+	// any neighboring vertices of up that are marginal need to be
+	// followed, to see if they lead to a better maximum.
+	for(ts=0;ts<nu[tp];ts++) {
+		qp=ed[tp][ts];
+		m_test(qp,q);
+		if(q<u+big_tol) break;
+	}
+	if(ts==nu[tp]) return true;
+
+	// The point tp is marginal, so it will be necessary to do the
+	// flood-fill search. Mark the point tp and the point qp, and search
+	// any remaining neighbors of the point tp.
+	int *stackp=ds+1;
+	flip(up);
+	flip(qp);
+	*ds=qp;
+	ts++;
+	while(ts<nu[tp]) {
+		qp=ed[tp][ts];
+		m_test(qp,q);
+		if(q<u+big_tol) {
+			if(stackp==stacke) add_memory_ds();
+			*(stackp++)=lp;
+			flip(lp);
+		}
+		ts++;
+	}
+
+	// Consider additional marginal points, starting with the original
+	// point qp
+	int *spp=ds;
+	while(spp<stackp) {
+		tp=*(spp++);
+		for(ts=0;ts<nu[tp];ts++) {
+			qp=ed[tp][ts];
+
+			// Skip the point if it's already marked
+			if(ed[qp][nu[qp]<<1]<0) continue;
+			qw=m_test(qp,q);
+			
+			// This point is a better minimum. Reset markers and
+			// return true.
+			if(q<u) {
+				printf("Break to %d %g\n",qp,q);
+				flip(up);
+				up=tp;
+				us=ts;
+				m_test(up,u);
+				lp=qp;
+				lw=qw;
+				l=q;
+				while(stackp>ds) flip(*(--stackp));
+				return false;
+			}
+
+			// The point is marginal and therefore must also be
+			// considered
+			if(q<u+big_tol) {
+				if(stackp==stacke) {
+					int nn=stackp-spp;
+					add_memory_ds();
+					spp=stackp-nn;
+				}
+				*(stackp++)=qp;
+				flip(qp);
+			}
+		}
+	}
+
+	// Reset markers and return false
+	puts("It's a definite min");
+	flip(up);
+	while(stackp>ds) flip(*(--stackp));
 	return true;
 }
 	
@@ -615,71 +737,78 @@ bool voronoicell_base::definite_min(double x,double y,double z,double rsq,int &l
 template<class vc_class>
 bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq,int p_id) {
 	int i,j,lp=up,cp,qp,*dsp;
-	int us=0,ls=0,lw,uw;
+	int us=0,ls=0;
+	unsigned int uw,lw;
 	int *edp,*edd;stackp=ds;
 	double u,l;up=0;
 
-	u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2]-rsq;
+	// Initialize the safe testing routine
+	px=x;py=y;pz=z;prsq=rsq;
+	maskc+=4;
+	if(maskc<4) reset_mask();
+
+	// Set to lowest
+	printf("Nplane: %g %g",tol,big_tol);
+	bool inters=false;
+	double mi=large_number;
+	for(i=0;i<p;i++) {
+		uw=m_test(i,u);
+		printf("(%g,%g,%g) up=%d uw=%d u=%g nu=%d",pts[i<<2],pts[(i<<2)+1],pts[(i<<2)+2],i,uw,u,nu[i]);
+		for(j=0;j<nu[i];j++) printf(" %d",ed[i][j]);
+		puts("");
+		if(uw==2) inters=true;
+		if(u<mi) {
+			mi=u;
+			up=i;
+		}
+	}
+
+	uw=m_test(up,u);
 	printf("Nplane:\nup=%d, u=%g\n",up,u);
-	if(u>tol) {
-		if(!search_downward(x,y,z,rsq,lp,ls,l,u)) return false;
-		if(l<-tol2) {
-			n_marg=0;
-		} else {
-			n_marg=2;
-			*marg=lp;
-			if(l<-tol) marg[1]=-1;
-			else {
-				marg[1]=0;
-				up=lp;u=l;
-				lp=-1;
+	if(uw==2) {
+		puts("Downsearch");
+		if(!search_downward(lw,lp,ls,us,l,u)) return false;
+		if(lw==1) {up=lp;lp=-1;}
+	} else if(uw==0) {
+		puts("Upsearch");
+		if(!search_upward(uw,lp,ls,us,l,u)) {
+			if(inters) {
+				puts("error");
+				exit(1);
 			}
+			return true;
 		}
-		if(lp!=-1&&u<tol2) {
-			marg[n_marg++]=up;
-			marg[n_marg++]=1;
-		}
-	} else if(u<tol) {
-		if(!search_upward(x,y,z,rsq,lp,ls,l,u)) return true;
-		if(u>tol2) {
-			n_marg=0;
-		} else {
-			n_marg=2;
-			*marg=up;
-			if(u>tol) marg[1]=1;
-			else {
-				marg[1]=0;
-				lp=-1;
-			}
-		}
-		if(lp!=-1&&l>-tol2) {
-			marg[n_marg++]=lp;
-			marg[n_marg++]=-1;
-		}
+		if(uw==1) lp=-1;
 	} else {
-		*marg=up;
-		marg[1]=0;
 		lp=-1;
 	}
 	puts("Hi");
-	printf("%d %d\n",lp,up);
+	if(lp!=-1) printf("%d %d %d %d %g %g  [%d]\n",lp,up,ed[lp][ls],ed[up][us],l,u,p);
+	else {
+		printf("Marginal %d %g %g  [%d]\n",up,l,u,p);
+		uw=m_test(up,u);
+		printf("Marginal %d %g %g  [%d]\n",up,l,u,p);
+	}
 
-	// Initialize the safe testing routine
-	px=x;py=y;pz=z;prsq=rsq;
+	if(lp==-1&&uw!=1) {
+		puts("Error");exit(1);
+	} else if(lp!=-1&&uw==1) {
+		puts("Error");exit(1);
+	}
 	
 	// Set stack pointers
 	stackp=ds;stackp2=ds2;stackp3=xse;
 
 	// Store initial number of vertices
 	int op=p;
-	big_tol=2;
-
-	us=ed[lp][nu[lp]+ls];
+	//big_tol=1;
+	
 	if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
-	int k=0;
+	int k=0;int xtra=0;
 	while(xse+k<stackp3) {
 		lp=xse[k++];
-		printf("%d %d %d %d\n",k,stackp3-xse,up,xse[k]);
+		printf("Ex %d\n",lp);
+		//printf("%d %d %d %d\n",k,int(stackp3-xse),up,xse[k]);
 		for(ls=0;ls<nu[lp];ls++) {
 			up=ed[lp][ls];
 			
@@ -688,21 +817,20 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 			// Test position of this point relative to the plane
 			uw=m_test(up,u);
-			printf("%d %d %g\n",up,uw,u);
-			if(uw<0) {
+			//printf("%d %d %g\n",up,uw,u);
+			if(uw<1) {
 
 				// If this marginally outside, mark it
 				// to search unless it's already marked
-				if(uw==-1) {
+				if(uw==0) {
 					if(ed[up][nu[up]<<1]!=-1) {
 						ed[up][nu[up]<<1]=-1;
 						if(stackp3==stacke3) add_memory_xse();
 						*(stackp3++)=up;
-						printf("Add %d\n",up);
 					}
 				}
 			} else {
-				if(uw==0) {
+				if(uw==1) {
 
 					// This is a possible facet starting
 					// from a vertex on the cutting plane
@@ -711,13 +839,14 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 					// This is a new facet 
 					us=ed[lp][nu[lp]+ls];
-					lw=m_test(lp,l);
-					printf("cf %d %d %d %d %g %g\n",lp,ls,up,us,l,u);
+					m_test(lp,l);
 					if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
 				}
 			}
 		}
+		xtra++;
 	}
+	printf("%d extras\n",xtra);
 
 	// Reset back pointers on extra search stack
 	for(dsp=xse;dsp<stackp3;dsp++) {
@@ -781,9 +910,9 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		if(up<p) {
 
 			// Vertex management
-			pts[3*up]=pts[3*p];
-			pts[3*up+1]=pts[3*p+1];
-			pts[3*up+2]=pts[3*p+2];
+			pts[(up<<2)]=pts[(p<<2)];
+			pts[(up<<2)+1]=pts[(p<<2)+1];
+			pts[(up<<2)+2]=pts[(p<<2)+2];
 
 			// Memory management
 			j=nu[up];
@@ -813,7 +942,8 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
  * \return True if cell deleted, false otherwise. */
 template<class vc_class>
 bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,double u,int p_id) {
-	int i,j,k,lw,qw,qp,qs,iqs,cp,cs,rp,*edp,*edd;
+	int i,j,k,qp,qs,iqs,cp,cs,rp,*edp,*edd;
+	unsigned int lw,qw;
 	bool new_double_edge=false,double_edge=false;
 	double q,r;
 
@@ -834,22 +964,22 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 		// The search algorithm found a point which is on the cutting
 		// plane. We leave that point in place, and create a new one at
 		// the same location.
-		pts[3*p]=pts[3*up];
-		pts[3*p+1]=pts[3*up+1];
-		pts[3*p+2]=pts[3*up+2];
+		pts[(p<<2)]=pts[(up<<2)];
+		pts[(p<<2)+1]=pts[(up<<2)+1];
+		pts[(p<<2)+2]=pts[(up<<2)+2];
 
 		// Search for a collection of edges of the test vertex which
 		// are outside of the cutting space. Begin by testing the
 		// zeroth edge.
 		i=0;
 		lp=*ed[up];
-		lw=m_test(lp,l);
-		if(lw!=-1) {
+		lw=m_testx(lp,l);
+		if(lw!=0) {
 
 			// The first edge is either inside the cutting space,
 			// or lies within the cutting plane. Test the edges
 			// sequentially until we find one that is outside.
-			rp=lw;
+			unsigned int rw=lw;
 			do {
 				i++;
 
@@ -859,8 +989,8 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 				// deleted
 				if(i==nu[up]) return true;
 				lp=ed[up][i];
-				lw=m_test(lp,l);
-			} while (lw!=-1);
+				lw=m_testx(lp,l);
+			} while (lw!=0);
 			j=i+1;
 
 			// We found an edge outside the cutting space. Keep
@@ -868,8 +998,8 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 			// inside or on the plane.
 			while(j<nu[up]) {
 				lp=ed[up][j];
-				lw=m_test(lp,l);
-				if(lw!=-1) break;
+				lw=m_testx(lp,l);
+				if(lw!=0) break;
 				j++;
 			}
 
@@ -880,7 +1010,7 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 			// the remaining one is on the plane. For that case we
 			// have to reduce the edge count by one to prevent
 			// doubling up.
-			if(j==nu[up]&&i==1&&rp==0) {
+			if(j==nu[up]&&i==1&&rw==1) {
 				nu[p]=nu[up];
 				double_edge=true;
 			} else nu[p]=j-i+2;
@@ -917,8 +1047,8 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 			// edge until we find an edge which isn't outside.
 			i=nu[up]-1;
 			lp=ed[up][i];
-			lw=m_test(lp,l);
-			while(lw==-1) {
+			lw=m_testx(lp,l);
+			while(lw==0) {
 				i--;
 
 				// If i reaches zero, then we have a point in
@@ -926,17 +1056,17 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 				// the cutting space, so we just exit
 				if(i==0) return false;
 				lp=ed[up][i];
-				lw=m_test(lp,l);
+				lw=m_testx(lp,l);
 			}
 
 			// Now search forwards from zero
 			j=1;
 			qp=ed[up][j];
-			qw=m_test(qp,q);
-			while(qw==-1) {
+			qw=m_testx(qp,q);
+			while(qw==0) {
 				j++;
 				qp=ed[up][j];
-				qw=m_test(qp,l);
+				qw=m_testx(qp,l);
 			}
 
 			// Compute the number of edges for the new vertex. In
@@ -946,7 +1076,7 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 			// the remaining one is on the plane. For that case we
 			// have to reduce the edge count by one to prevent
 			// doubling up.
-			if(i==j&&qw==0) {
+			if(i==j&&qw==1) {
 				double_edge=true;
 				nu[p]=nu[up];
 			} else {
@@ -1020,9 +1150,10 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 		if(stackp==stacke) add_memory_ds();
 		*(stackp++)=up;
 		r=u/(u-l);l=1-r;
-		pts[3*p]=pts[3*lp]*r+pts[3*up]*l;
-		pts[3*p+1]=pts[3*lp+1]*r+pts[3*up+1]*l;
-		pts[3*p+2]=pts[3*lp+2]*r+pts[3*up+2]*l;
+		pts[p<<2]=pts[lp<<2]*r+pts[up<<2]*l;
+		pts[(p<<2)+1]=pts[(lp<<2)+1]*r+pts[(up<<2)+1]*l;
+		pts[(p<<2)+2]=pts[(lp<<2)+2]*r+pts[(up<<2)+2]*l;
+		printf("Sreg (%g,%g,%g) %d<->%d (%g) (%g)\n",pts[(p<<2)],pts[(p<<2)+1],pts[(p<<2)+2],lp,up,r,l);
 
 		// This point will always have three edges. Connect one of them
 		// to lp.
@@ -1055,9 +1186,9 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 		// moving around it until we find a point or edge which
 		// intersects the plane.
 		lp=ed[qp][qs];
-		lw=m_test(lp,l);
+		lw=m_testx(lp,l);
 
-		if(lw==1) {
+		if(lw==2) {
 
 			// The point is still in the cutting space. Just add it
 			// to the delete stack and keep moving.
@@ -1067,7 +1198,7 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 			if(stackp==stacke) add_memory_ds();
 			*(stackp++)=qp;
 
-		} else if(lw==-1) {
+		} else if(lw==0) {
 
 			// The point is outside of the cutting space, so we've
 			// found an intersected edge. Introduce a regular point
@@ -1076,9 +1207,10 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 			// new point in the facet we're constructing.
 			if(p==current_vertices) add_memory_vertices(vc);
 			r=q/(q-l);l=1-r;
-			pts[3*p]=pts[3*lp]*r+pts[3*qp]*l;
-			pts[3*p+1]=pts[3*lp+1]*r+pts[3*qp+1]*l;
-			pts[3*p+2]=pts[3*lp+2]*r+pts[3*qp+2]*l;
+			pts[p<<2]=pts[lp<<2]*r+pts[qp<<2]*l;
+			pts[(p<<2)+1]=pts[(lp<<2)+1]*r+pts[(qp<<2)+1]*l;
+			pts[(p<<2)+2]=pts[(lp<<2)+2]*r+pts[(qp<<2)+2]*l;
+			printf("Creg (%g,%g,%g) %d<->%d (%g) (%g)\n",pts[(p<<2)],pts[(p<<2)+1],pts[(p<<2)+2],lp,qp,r,l);
 			nu[p]=3;
 			if(mec[3]==mem[3]) add_memory(vc,3);
 			ls=ed[qp][qs+nu[qp]];
@@ -1121,8 +1253,8 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 				k++;
 				qs=cycle_up(qs,qp);
 				lp=ed[qp][qs];
-				lw=m_test(lp,l);
-			} while (lw==-1);
+				lw=m_testx(lp,l);
+			} while (lw==0);
 
 			// Now we need to find out whether this marginal vertex
 			// we are on has been visited before, because if that's
@@ -1151,7 +1283,7 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 					// going to move to next is also a
 					// marginal point, so test for that
 					// first.
-					if(lw==0) {
+					if(lw==1) {
 
 						// Now see whether this marginal point
 						// has been visited before.
@@ -1183,7 +1315,7 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 					// The vertex hasn't been visited
 					// before, but let's see if it's
 					// marginal
-					if(lw==0) {
+					if(lw==1) {
 
 						// If it is, we need to check
 						// for the case that it's a
@@ -1232,7 +1364,7 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 					// structure
 					edd=mep[nu[j]]+((nu[j]<<1)+1)*--mec[nu[j]];
 					if(edd!=ed[j]) {
-						for(lw=0;lw<=(nu[j]<<1);lw++) ed[j][lw]=edd[lw];
+						for(int lll=0;lll<=(nu[j]<<1);lll++) ed[j][lll]=edd[lll];
 						vc.n_set_aux2_copy(j,nu[j]);
 						vc.n_copy_pointer(edd[nu[j]<<1],j);
 						ed[edd[nu[j]<<1]]=ed[j];
@@ -1248,9 +1380,9 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 				ed[p][k<<1]=p;
 				if(stackp2==stacke2) add_memory_ds2();
 				*(stackp2++)=qp;
-				pts[3*p]=pts[3*qp];
-				pts[3*p+1]=pts[3*qp+1];
-				pts[3*p+2]=pts[3*qp+2];
+				pts[p<<2]=pts[qp<<2];
+				pts[(p<<2)+1]=pts[(qp<<2)+1];
+				pts[(p<<2)+2]=pts[(qp<<2)+2];
 				ed[qp][nu[qp]<<1]=-p;
 				j=p++;
 				i=0;
@@ -1352,9 +1484,9 @@ inline bool voronoicell_base::collapse_order2(vc_class &vc) {
 		if(up==i) up=0;
 		if(p!=i) {
 			if(up==p) up=i;
-			pts[3*i]=pts[3*p];
-			pts[3*i+1]=pts[3*p+1];
-			pts[3*i+2]=pts[3*p+2];
+			pts[i<<2]=pts[p<<2];
+			pts[(i<<2)+1]=pts[(p<<2)+1];
+			pts[(i<<2)+2]=pts[(p<<2)+2];
 			for(k=0;k<nu[p];k++) ed[ed[p][k]][ed[p][nu[p]+k]]=i;
 			vc.n_copy_pointer(i,p);
 			ed[i]=ed[p];
@@ -1389,9 +1521,9 @@ inline bool voronoicell_base::collapse_order1(vc_class &vc) {
 		if(up==i) up=0;
 		if(p!=i) {
 			if(up==p) up=i;
-			pts[3*i]=pts[3*p];
-			pts[3*i+1]=pts[3*p+1];
-			pts[3*i+2]=pts[3*p+2];
+			pts[i<<2]=pts[p<<2];
+			pts[(i<<2)+1]=pts[(p<<2)+1];
+			pts[(i<<2)+2]=pts[(p<<2)+2];
 			for(k=0;k<nu[p];k++) ed[ed[p][k]][ed[p][nu[p]+k]]=i;
 			vc.n_copy_pointer(i,p);
 			ed[i]=ed[p];
@@ -1454,7 +1586,7 @@ inline bool voronoicell_base::delete_connection(vc_class &vc,int j,int k,bool ha
 /** This routine is a fall-back, in case floating point errors caused the usual
  * search routine to fail. In the fall-back routine, we just test every edge to
  * find one straddling the plane. */
-bool voronoicell_base::failsafe_find(double x,double y,double z,double rsq,int &lp,int &ls,double &l,double &u) {
+bool voronoicell_base::failsafe_find(int &lp,int &ls,int &us,double &l,double &u) {
 	fputs("Bailed out of convex calculation (not supported yet)\n",stderr);
 	exit(1);
 /*	qw=1;lw=0;
@@ -1526,23 +1658,23 @@ double voronoicell_base::volume() {
 	int i,j,k,l,m,n;
 	double ux,uy,uz,vx,vy,vz,wx,wy,wz;
 	for(i=1;i<p;i++) {
-		ux=*pts-pts[3*i];
-		uy=pts[1]-pts[3*i+1];
-		uz=pts[2]-pts[3*i+2];
+		ux=*pts-pts[i<<2];
+		uy=pts[1]-pts[(i<<2)+1];
+		uz=pts[2]-pts[(i<<2)+2];
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
 			if(k>=0) {
 				ed[i][j]=-1-k;
 				l=cycle_up(ed[i][nu[i]+j],k);
-				vx=pts[3*k]-*pts;
-				vy=pts[3*k+1]-pts[1];
-				vz=pts[3*k+2]-pts[2];
+				vx=pts[k<<2]-*pts;
+				vy=pts[(k<<2)+1]-pts[1];
+				vz=pts[(k<<2)+2]-pts[2];
 				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
 					n=cycle_up(ed[k][nu[k]+l],m);
-					wx=pts[3*m]-*pts;
-					wy=pts[3*m+1]-pts[1];
-					wz=pts[3*m+2]-pts[2];
+					wx=pts[(m<<2)]-*pts;
+					wy=pts[(m<<2)+1]-pts[1];
+					wz=pts[(m<<2)+2]-pts[2];
 					vol+=ux*vy*wz+uy*vz*wx+uz*vx*wy-uz*vy*wx-uy*vx*wz-ux*vz*wy;
 					k=m;l=n;vx=wx;vy=wy;vz=wz;
 					m=ed[k][l];ed[k][l]=-1-m;
@@ -1571,12 +1703,12 @@ void voronoicell_base::face_areas(std::vector<double> &v) {
 			m=ed[k][l];ed[k][l]=-1-m;
 			while(m!=i) {
 				n=cycle_up(ed[k][nu[k]+l],m);
-				ux=pts[3*k]-pts[3*i];
-				uy=pts[3*k+1]-pts[3*i+1];
-				uz=pts[3*k+2]-pts[3*i+2];
-				vx=pts[3*m]-pts[3*i];
-				vy=pts[3*m+1]-pts[3*i+1];
-				vz=pts[3*m+2]-pts[3*i+2];
+				ux=pts[4*k]-pts[4*i];
+				uy=pts[4*k+1]-pts[4*i+1];
+				uz=pts[4*k+2]-pts[4*i+2];
+				vx=pts[4*m]-pts[4*i];
+				vy=pts[4*m+1]-pts[4*i+1];
+				vz=pts[4*m+2]-pts[4*i+2];
 				wx=uy*vz-uz*vy;
 				wy=uz*vx-ux*vz;
 				wz=ux*vy-uy*vx;
@@ -1605,12 +1737,12 @@ double voronoicell_base::surface_area() {
 			m=ed[k][l];ed[k][l]=-1-m;
 			while(m!=i) {
 				n=cycle_up(ed[k][nu[k]+l],m);
-				ux=pts[3*k]-pts[3*i];
-				uy=pts[3*k+1]-pts[3*i+1];
-				uz=pts[3*k+2]-pts[3*i+2];
-				vx=pts[3*m]-pts[3*i];
-				vy=pts[3*m+1]-pts[3*i+1];
-				vz=pts[3*m+2]-pts[3*i+2];
+				ux=pts[4*k]-pts[4*i];
+				uy=pts[4*k+1]-pts[4*i+1];
+				uz=pts[4*k+2]-pts[4*i+2];
+				vx=pts[4*m]-pts[4*i];
+				vy=pts[4*m+1]-pts[4*i+1];
+				vz=pts[4*m+2]-pts[4*i+2];
 				wx=uy*vz-uz*vy;
 				wy=uz*vx-ux*vz;
 				wz=ux*vy-uy*vx;
@@ -1634,23 +1766,23 @@ void voronoicell_base::centroid(double &cx,double &cy,double &cz) {
 	int i,j,k,l,m,n;
 	double ux,uy,uz,vx,vy,vz,wx,wy,wz;
 	for(i=1;i<p;i++) {
-		ux=*pts-pts[3*i];
-		uy=pts[1]-pts[3*i+1];
-		uz=pts[2]-pts[3*i+2];
+		ux=*pts-pts[4*i];
+		uy=pts[1]-pts[4*i+1];
+		uz=pts[2]-pts[4*i+2];
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
 			if(k>=0) {
 				ed[i][j]=-1-k;
 				l=cycle_up(ed[i][nu[i]+j],k);
-				vx=pts[3*k]-*pts;
-				vy=pts[3*k+1]-pts[1];
-				vz=pts[3*k+2]-pts[2];
+				vx=pts[4*k]-*pts;
+				vy=pts[4*k+1]-pts[1];
+				vz=pts[4*k+2]-pts[2];
 				m=ed[k][l];ed[k][l]=-1-m;
 				while(m!=i) {
 					n=cycle_up(ed[k][nu[k]+l],m);
-					wx=pts[3*m]-*pts;
-					wy=pts[3*m+1]-pts[1];
-					wz=pts[3*m+2]-pts[2];
+					wx=pts[4*m]-*pts;
+					wy=pts[4*m+1]-pts[1];
+					wz=pts[4*m+2]-pts[2];
 					tvol=ux*vy*wz+uy*vz*wx+uz*vx*wy-uz*vy*wx-uy*vx*wz-ux*vz*wy;
 					vol+=tvol;
 					cx+=(wx+vx-ux)*tvol;
@@ -1663,7 +1795,7 @@ void voronoicell_base::centroid(double &cx,double &cy,double &cz) {
 		}
 	}
 	reset_edges();
-	if(vol>tol_sq) {
+	if(vol>tol_cu) {
 		vol=0.125/vol;
 		cx=cx*vol+0.5*(*pts);
 		cy=cy*vol+0.5*pts[1];
@@ -1676,12 +1808,12 @@ void voronoicell_base::centroid(double &cx,double &cy,double &cz) {
  * all planes that could cut the cell have been considered.
  * \return The maximum radius squared of a vertex.*/
 double voronoicell_base::max_radius_squared() {
-	double r,s,*ptsp=pts+3,*ptse=pts+3*p;
+	double r,s,*ptsp=pts+4,*ptse=pts+(p<<2);
 	r=*pts*(*pts)+pts[1]*pts[1]+pts[2]*pts[2];
 	while(ptsp<ptse) {
 		s=*ptsp*(*ptsp);ptsp++;
 		s+=*ptsp*(*ptsp);ptsp++;
-		s+=*ptsp*(*ptsp);ptsp++;
+		s+=*ptsp*(*ptsp);ptsp+=2;
 		if(s>r) r=s;
 	}
 	return r;
@@ -1695,9 +1827,9 @@ double voronoicell_base::total_edge_distance() {
 	for(i=0;i<p-1;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>i) {
-			dx=pts[3*k]-pts[3*i];
-			dy=pts[3*k+1]-pts[3*i+1];
-			dz=pts[3*k+2]-pts[3*i+2];
+			dx=pts[k<<2]-pts[i<<2];
+			dy=pts[(k<<2)+1]-pts[(i<<2)+1];
+			dz=pts[(k<<2)+2]-pts[(i<<2)+2];
 			dis+=sqrt(dx*dx+dy*dy+dz*dz);
 		}
 	}
@@ -1711,13 +1843,13 @@ double voronoicell_base::total_edge_distance() {
 void voronoicell_base::draw_pov(double x,double y,double z,FILE* fp) {
 	int i,j,k;double *ptsp=pts,*pt2;
 	char posbuf1[128],posbuf2[128];
-	for(i=0;i<p;i++,ptsp+=3) {
+	for(i=0;i<p;i++,ptsp+=4) {
 		sprintf(posbuf1,"%g,%g,%g",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
 		fprintf(fp,"sphere{<%s>,r}\n",posbuf1);
 		for(j=0;j<nu[i];j++) {
 			k=ed[i][j];
 			if(k<i) {
-				pt2=pts+3*k;
+				pt2=pts+(k<<2);
 				sprintf(posbuf2,"%g,%g,%g",x+*pt2*0.5,y+0.5*pt2[1],z+0.5*pt2[2]);
 				if(strcmp(posbuf1,posbuf2)!=0) fprintf(fp,"cylinder{<%s>,<%s>,r}\n",posbuf1,posbuf2);
 			}
@@ -1733,13 +1865,13 @@ void voronoicell_base::draw_gnuplot(double x,double y,double z,FILE *fp) {
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) {
-			fprintf(fp,"%g %g %g\n",x+0.5*pts[3*i],y+0.5*pts[3*i+1],z+0.5*pts[3*i+2]);
+			fprintf(fp,"%g %g %g\n",x+0.5*pts[i<<2],y+0.5*pts[(i<<2)+1],z+0.5*pts[(i<<2)+2]);
 			l=i;m=j;
 			do {
 				ed[k][ed[l][nu[l]+m]]=-1-l;
 				ed[l][m]=-1-k;
 				l=k;
-				fprintf(fp,"%g %g %g\n",x+0.5*pts[3*k],y+0.5*pts[3*k+1],z+0.5*pts[3*k+2]);
+				fprintf(fp,"%g %g %g\n",x+0.5*pts[k<<2],y+0.5*pts[(k<<2)+1],z+0.5*pts[(k<<2)+2]);
 			} while (search_edge(l,m,k));
 			fputs("\n\n",fp);
 		}
@@ -1759,7 +1891,7 @@ inline bool voronoicell_base::search_edge(int l,int &m,int &k) {
  * 1.3.2.2 of the POV-Ray documentation. The mesh2 output consists of a list of
  * vertex vectors, followed by a list of triangular faces. The routine also
  * makes use of the optional inside_vector specification, which makes the mesh
- * object solid, so the the POV-Ray Constructive Solid Geometry (CSG) can be
+ * object solid, so that the POV-Ray Constructive Solid Geometry (CSG) can be
  * applied.
  * \param[in] (x,y,z) a displacement vector to be added to the cell's position.
  * \param[in] fp a file handle to write to. */
@@ -1767,7 +1899,7 @@ void voronoicell_base::draw_pov_mesh(double x,double y,double z,FILE *fp) {
 	int i,j,k,l,m,n;
 	double *ptsp=pts;
 	fprintf(fp,"mesh2 {\nvertex_vectors {\n%d\n",p);
-	for(i=0;i<p;i++,ptsp+=3) fprintf(fp,",<%g,%g,%g>\n",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
+	for(i=0;i<p;i++,ptsp+=4) fprintf(fp,",<%g,%g,%g>\n",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
 	fprintf(fp,"}\nface_indices {\n%d\n",(p-2)<<1);
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
@@ -1812,55 +1944,48 @@ inline void voronoicell_base::reset_edges() {
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  *         plane, or 0 if the point is within the plane. */
 inline int voronoicell_base::m_test(int n,double &ans) {
-	double *pp=pts+n+(n<<1);
-	ans=*(pp++)*px;
-	ans+=*(pp++)*py;
-	ans+=*pp*pz-prsq;
-	if(ans<-big_tol) {
-		return -1;
-	} else if(ans>tol2) {
-		return 1;
-	} else if(ans<-tol2) {
-		if(ed[up][nu[up]<<1]!=-1) {
-			ed[up][nu[up]<<1]=-1;
-			if(stackp3==stacke3) add_memory_xse();
-			*(stackp3++)=n;
-		}
-		return -1;
+	double *pp=pts+(n<<2);
+	if(mask[n]>=maskc) {
+		ans=pp[3];printf("Rep %d\n",n);
+	} else {
+		ans=*(pp++)*px;
+		ans+=*(pp++)*py;
+		ans+=*(pp++)*pz-prsq;
+		*pp=ans;
+		mask[n]=maskc|(ans<-tol?0:(ans>tol?2:1));
+		printf("New %d %.16g %.16g %d\n",n,ans,tol,mask[n]&3);
 	}
-	return check_marginal(n,ans);
+	return mask[n]&3;
 }
 
+
 /** Checks to see if a given vertex is inside, outside or within the test
- * plane, for the case when the point has been detected to be very close to the
- * plane. The routine ensures that the returned results are always consistent
- * with previous tests, by keeping a table of any marginal results. The routine
- * first sees if the vertex is in the table, and if it finds a previously
- * computed result it uses that. Otherwise, it computes a result for this
- * vertex and adds it the table.
+ * plane. If the point is far away from the test plane, the routine immediately
+ * returns whether it is inside or outside. If the routine is close the the
+ * plane and within the specified tolerance, then the special check_marginal()
+ * routine is called.
  * \param[in] n the vertex to test.
- * \param[in] ans the result of the scalar product used in evaluating
- *                the location of the point.
+ * \param[out] ans the result of the scalar product used in evaluating the
+ *                 location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  *         plane, or 0 if the point is within the plane. */
-int voronoicell_base::check_marginal(int n,double &ans) {
-	int i;
-	for(i=0;i<n_marg;i+=2) if(marg[i]==n) return marg[i+1];
-	if(n_marg==current_marginal) {
-		current_marginal<<=1;
-		if(current_marginal>max_marginal)
-			voro_fatal_error("Marginal case buffer allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
-#if VOROPP_VERBOSE >=2
-		fprintf(stderr,"Marginal cases buffer scaled up to %d\n",i);
-#endif
-		int *pmarg=new int[current_marginal];
-		for(int j=0;j<n_marg;j++) pmarg[j]=marg[j];
-		delete [] marg;
-		marg=pmarg;
+inline int voronoicell_base::m_testx(int n,double &ans) {
+	double *pp=pts+(n<<2);
+	if(mask[n]>=maskc) {
+		ans=pp[3];printf("Repx %d\n",n);
+	} else {
+		ans=*(pp++)*px;
+		ans+=*(pp++)*py;
+		ans+=*(pp++)*pz-prsq;
+		*pp=ans;
+		mask[n]=maskc|(ans<-tol?0:(ans>tol?2:1));
+		printf("Newx %d %.16g %.16g %d\n",n,ans,tol,mask[n]&3);
 	}
-	marg[n_marg++]=n;
-	marg[n_marg++]=ans>tol?1:(ans<-tol?-1:0);
-	return marg[n_marg-1];
+	if((mask[n]&3)==0&&ans>-big_tol) {
+		if(stackp3==stacke3) add_memory_xse();
+		*(stackp3++)=n;
+	}
+	return mask[n]&3;
 }
 
 /** This routine calculates the unit normal vectors for every face.
@@ -1892,18 +2017,18 @@ inline void voronoicell_base::normals_search(std::vector<double> &v,int i,int j,
 	double ux,uy,uz,vx,vy,vz,wx,wy,wz,wmag;
 	do {
 		m=ed[k][l];ed[k][l]=-1-m;
-		ux=pts[3*m]-pts[3*k];
-		uy=pts[3*m+1]-pts[3*k+1];
-		uz=pts[3*m+2]-pts[3*k+2];
+		ux=pts[4*m]-pts[4*k];
+		uy=pts[4*m+1]-pts[4*k+1];
+		uz=pts[4*m+2]-pts[4*k+2];
 
 		// Test to see if the length of this edge is above the tolerance
-		if(ux*ux+uy*uy+uz*uz>tol_sq) {
+		if(ux*ux+uy*uy+uz*uz>tol) {
 			while(m!=i) {
 				l=cycle_up(ed[k][nu[k]+l],m);
 				k=m;m=ed[k][l];ed[k][l]=-1-m;
-				vx=pts[3*m]-pts[3*k];
-				vy=pts[3*m+1]-pts[3*k+1];
-				vz=pts[3*m+2]-pts[3*k+2];
+				vx=pts[4*m]-pts[4*k];
+				vy=pts[4*m+1]-pts[4*k+1];
+				vz=pts[4*m+2]-pts[4*k+2];
 
 				// Construct the vector product of this edge with
 				// the previous one
@@ -1914,7 +2039,7 @@ inline void voronoicell_base::normals_search(std::vector<double> &v,int i,int j,
 
 				// Test to see if this vector product of the
 				// two edges is above the tolerance
-				if(wmag>tol_sq) {
+				if(wmag>tol) {
 
 					// Construct the normal vector and print it
 					wmag=1/sqrt(wmag);
@@ -1987,12 +2112,12 @@ void voronoicell_base::output_vertex_orders(FILE *fp) {
 /** Returns a vector of the vertex vectors using the local coordinate system.
  * \param[out] v the vector to store the results in. */
 void voronoicell_base::vertices(std::vector<double> &v) {
-	v.resize(3*p);
+	v.resize(p<<2);
 	double *ptsp=pts;
-	for(int i=0;i<3*p;i+=3) {
+	for(int i=0;i<(p<<2);i+=4) {
 		v[i]=*(ptsp++)*0.5;
 		v[i+1]=*(ptsp++)*0.5;
-		v[i+2]=*(ptsp++)*0.5;
+		v[i+2]=*ptsp*0.5;ptsp+=2;
 	}
 }
 
@@ -2001,7 +2126,7 @@ void voronoicell_base::vertices(std::vector<double> &v) {
 void voronoicell_base::output_vertices(FILE *fp) {
 	if(p>0) {
 		fprintf(fp,"(%g,%g,%g)",*pts*0.5,pts[1]*0.5,pts[2]*0.5);
-		for(double *ptsp=pts+3;ptsp<pts+3*p;ptsp+=3) fprintf(fp," (%g,%g,%g)",*ptsp*0.5,ptsp[1]*0.5,ptsp[2]*0.5);
+		for(double *ptsp=pts+4;ptsp<pts+(p<<2);ptsp+=4) fprintf(fp," (%g,%g,%g)",*ptsp*0.5,ptsp[1]*0.5,ptsp[2]*0.5);
 	}
 }
 
@@ -2013,10 +2138,10 @@ void voronoicell_base::output_vertices(FILE *fp) {
 void voronoicell_base::vertices(double x,double y,double z,std::vector<double> &v) {
 	v.resize(3*p);
 	double *ptsp=pts;
-	for(int i=0;i<3*p;i+=3) {
+	for(int i=0;i<(p<<2);i+=4) {
 		v[i]=x+*(ptsp++)*0.5;
 		v[i+1]=y+*(ptsp++)*0.5;
-		v[i+2]=z+*(ptsp++)*0.5;
+		v[i+2]=z+*ptsp*0.5;ptsp+=2;
 	}
 }
 
@@ -2027,7 +2152,7 @@ void voronoicell_base::vertices(double x,double y,double z,std::vector<double> &
 void voronoicell_base::output_vertices(double x,double y,double z,FILE *fp) {
 	if(p>0) {
 		fprintf(fp,"(%g,%g,%g)",x+*pts*0.5,y+pts[1]*0.5,z+pts[2]*0.5);
-		for(double *ptsp=pts+3;ptsp<pts+3*p;ptsp+=3) fprintf(fp," (%g,%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
+		for(double *ptsp=pts+4;ptsp<pts+(p<<2);ptsp+=4) fprintf(fp," (%g,%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5,z+ptsp[2]*0.5);
 	}
 }
 
@@ -2040,17 +2165,17 @@ void voronoicell_base::face_perimeters(std::vector<double> &v) {
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) {
-			dx=pts[3*k]-pts[3*i];
-			dy=pts[3*k+1]-pts[3*i+1];
-			dz=pts[3*k+2]-pts[3*i+2];
+			dx=pts[k<<2]-pts[i<<2];
+			dy=pts[(k<<2)+1]-pts[(i<<2)+1];
+			dz=pts[(k<<2)+2]-pts[(i<<2)+2];
 			perim=sqrt(dx*dx+dy*dy+dz*dz);
 			ed[i][j]=-1-k;
 			l=cycle_up(ed[i][nu[i]+j],k);
 			do {
 				m=ed[k][l];
-				dx=pts[3*m]-pts[3*k];
-				dy=pts[3*m+1]-pts[3*k+1];
-				dz=pts[3*m+2]-pts[3*k+2];
+				dx=pts[m<<2]-pts[k<<2];
+				dy=pts[(m<<2)+1]-pts[(k<<2)+1];
+				dz=pts[(m<<2)+2]-pts[(k<<2)+2];
 				perim+=sqrt(dx*dx+dy*dy+dz*dz);
 				ed[k][l]=-1-m;
 				l=cycle_up(ed[k][nu[k]+l],m);
@@ -2147,7 +2272,7 @@ void voronoicell_base::face_freq_table(std::vector<int> &v) {
  * \param[in] rsq the distance along this vector of the plane.
  * \return False if the plane does not intersect the plane, true if it does. */
 bool voronoicell_base::plane_intersects(double x,double y,double z,double rsq) {
-	double g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+	double g=x*pts[up<<2]+y*pts[(up<<2)+1]+z*pts[(up<<2)+2];
 	if(g<rsq) return plane_intersects_track(x,y,z,rsq,g);
 	return true;
 }
@@ -2161,12 +2286,12 @@ bool voronoicell_base::plane_intersects(double x,double y,double z,double rsq) {
  * \return False if the plane does not intersect the plane, true if it does. */
 bool voronoicell_base::plane_intersects_guess(double x,double y,double z,double rsq) {
 	up=0;
-	double g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+	double g=x*pts[up<<2]+y*pts[(up<<2)+1]+z*pts[(up<<2)+2];
 	if(g<rsq) {
 		int ca=1,cc=p>>3,mp=1;
 		double m;
 		while(ca<cc) {
-			m=x*pts[3*mp]+y*pts[3*mp+1]+z*pts[3*mp+2];
+			m=x*pts[4*mp]+y*pts[4*mp+1]+z*pts[4*mp+2];
 			if(m>g) {
 				if(m>rsq) return true;
 				g=m;up=mp;
@@ -2187,13 +2312,28 @@ bool voronoicell_base::plane_intersects_guess(double x,double y,double z,double 
  * \param[in] g the distance of up from the plane.
  * \return False if the plane does not intersect the plane, true if it does. */
 inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,double rsq,double g) {
-	int count=0,ls,us,tp;
-	double t;
+//	int count=0,ls,us,tp;
+//	double t;
 
+	for(int tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) return true;
+	return false;
+	
+	int ls,us,lp;
+	double l,u;
+	unsigned int lw;
+
+	// Initialize the safe testing routine
+	px=x;py=y;pz=z;prsq=rsq;
+	maskc+=4;
+	if(maskc<4) reset_mask();
+
+	return search_upward(lw,lp,ls,us,l,u);
+}
+/*
 	// The test point is outside of the cutting space
 	for(us=0;us<nu[up];us++) {
 		tp=ed[up][us];
-		t=x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2];
+		t=x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2];
 		if(t>g) {
 			ls=ed[up][nu[up]+us];
 			up=tp;
@@ -2202,7 +2342,7 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 #if VOROPP_VERBOSE >=1
 					fputs("Bailed out of convex calculation",stderr);
 #endif
-					for(tp=0;tp<p;tp++) if(x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) return true;
+					for(tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) return true;
 					return false;
 				}
 
@@ -2210,14 +2350,14 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 				// and find the one which is closest to the
 				// plane
 				for(us=0;us<ls;us++) {
-					tp=ed[up][us];double *pp=pts+(tp+(tp<<1));
+					tp=ed[up][us];double *pp=pts+(tp<<2);
 					g=x*(*pp)+y*pp[1]+z*pp[2];
 					if(g>t) break;
 				}
 				if(us==ls) {
 					us++;
 					while(us<nu[up]) {
-						tp=ed[up][us];double *pp=pts+(tp+(tp<<1));
+						tp=ed[up][us];double *pp=pts+(tp<<2);
 						g=x*(*pp)+y*pp[1]+z*pp[2];
 						if(g>t) break;
 						us++;
@@ -2230,7 +2370,7 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 		}
 	}
 	return false;
-}
+}*/
 
 /** Counts the number of edges of the Voronoi cell.
  * \return the number of edges. */
@@ -2407,7 +2547,7 @@ void voronoicell_neighbor::check_facets() {
 }
 
 /** The class constructor allocates memory for storing neighbor information. */
-voronoicell_neighbor::voronoicell_neighbor() {
+void voronoicell_neighbor::memory_setup() {
 	int i;
 	mne=new int*[current_vertex_order];
 	ne=new int*[current_vertices];
@@ -2450,7 +2590,7 @@ void voronoicell_neighbor::neighbors(std::vector<int> &v) {
 void voronoicell_base::print_edges() {
 	int j;
 	double *ptsp=pts;
-	for(int i=0;i<p;i++,ptsp+=3) {
+	for(int i=0;i<p;i++,ptsp+=4) {
 		printf("%d %d  ",i,nu[i]);
 		for(j=0;j<nu[i];j++) printf(" %d",ed[i][j]);
 		printf("  ");

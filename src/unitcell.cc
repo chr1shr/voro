@@ -24,7 +24,8 @@ namespace voro {
  * \param[in] (bxz_,byz_,bz_) The x, y, and z coordinates of the third unit
  *                            vector. */
 unitcell::unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_)
-	: bx(bx_), bxy(bxy_), by(by_), bxz(bxz_), byz(byz_), bz(bz_) {
+	: bx(bx_), bxy(bxy_), by(by_), bxz(bxz_), byz(byz_), bz(bz_),
+	unit_voro(max_unit_voro_shells*max_unit_voro_shells*4*(bx*bx+by*by+bz*bz)) {
 	int i,j,l=1;
 
 	// Initialize the Voronoi cell to be a very large rectangular box
