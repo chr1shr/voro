@@ -297,8 +297,9 @@ class voronoicell_base {
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
 		inline void normals_search(std::vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);
-		unsigned int m_test(int n,double &ans);
-		unsigned int m_testx(int n,double &ans);
+		inline unsigned int m_test(int n,double &ans);
+		inline unsigned int m_testx(int n,double &ans);
+		unsigned int m_calc(int n,double &ans);
 		inline void flip(int tp) {ed[tp][nu[tp]<<1]=-1-ed[tp][nu[tp]<<1];}
 		int check_marginal(int n,double &ans);
 		friend class voronoicell;

@@ -1879,20 +1879,22 @@ inline void voronoicell_base::reset_edges() {
  *                 location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  *         plane, or 0 if the point is within the plane. */
-unsigned int voronoicell_base::m_test(int n,double &ans) {
-	double *pp=pts+(n<<2);
+inline unsigned int voronoicell_base::m_test(int n,double &ans) {
 	if(mask[n]>=maskc) {
-		ans=pp[3];
+		ans=pts[(n<<2)+3];
 		return mask[n]&3;
-	} else {
-		ans=*(pp++)*px;
-		ans+=*(pp++)*py;
-		ans+=*(pp++)*pz-prsq;
-		*pp=ans;
-		unsigned int maskr=ans<-tol?0:(ans>tol?2:1);
-		mask[n]=maskc|maskr;
-		return maskr;
-	}
+	} else return m_calc(n,ans);
+}
+
+unsigned int voronoicell_base::m_calc(int n,double &ans) {
+	double *pp=pts+(n<<2);
+	ans=*(pp++)*px;
+	ans+=*(pp++)*py;
+	ans+=*(pp++)*pz-prsq;
+	*pp=ans;
+	unsigned int maskr=ans<-tol?0:(ans>tol?2:1);
+	mask[n]=maskc|maskr;
+	return maskr;
 }
 
 
@@ -1906,22 +1908,17 @@ unsigned int voronoicell_base::m_test(int n,double &ans) {
  *                 location of the point.
  * \return -1 if the point is inside the plane, 1 if the point is outside the
  *         plane, or 0 if the point is within the plane. */
-unsigned int voronoicell_base::m_testx(int n,double &ans) {
-	double *pp=pts+(n<<2);
+inline unsigned int voronoicell_base::m_testx(int n,double &ans) {
+	unsigned int maskr;
 	if(mask[n]>=maskc) {
-		ans=pp[3];
-	} else {
-		ans=*(pp++)*px;
-		ans+=*(pp++)*py;
-		ans+=*(pp++)*pz-prsq;
-		*pp=ans;
-		mask[n]=maskc|(ans<-tol?0:(ans>tol?2:1));
-	}
-	if((mask[n]&3)==0&&ans>-big_tol) {
+		ans=pts[(n<<2)+3];
+		maskr=mask[n]&3;
+	} else maskr=m_calc(n,ans);
+	if(maskr==0&&ans>-big_tol) {
 		if(stackp3==stacke3) add_memory_xse();
 		*(stackp3++)=n;
 	}
-	return mask[n]&3;
+	return maskr;
 }
 
 /** This routine calculates the unit normal vectors for every face.
