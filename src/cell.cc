@@ -2246,8 +2246,8 @@ bool voronoicell_base::plane_intersects_guess(double x,double y,double z,double 
  * \param[in] g the distance of up from the plane.
  * \return False if the plane does not intersect the plane, true if it does. */
 inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,double rsq,double g) {
-//	int count=0,ls,us,tp;
-//	double t;
+	int count=0,ls,us,tp;
+	double t;
 
 //	for(int tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) return true;
 //	return false;
@@ -2263,6 +2263,7 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 
 	return search_upward(uw,lp,ls,us,l,u);
 }*/
+	
 	// The test point is outside of the cutting space
 	for(us=0;us<nu[up];us++) {
 		tp=ed[up][us];
