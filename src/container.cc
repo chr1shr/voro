@@ -458,7 +458,6 @@ void container_poly::compute_all_cells() {
  * \return The sum of all of the computed Voronoi volumes. */
 double container::sum_cell_volumes() {
 	voronoicell c(*this);
-	printf("Tolerance: %.14g %.14g %.14g\n",c.tol,c.tol_cu,c.big_tol);
 	double vol=0;
 	c_loop_all vl(*this);
 	if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());

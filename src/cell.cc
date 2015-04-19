@@ -275,7 +275,6 @@ void voronoicell_base::add_memory_ds2() {
  * routine causes a fatal error. */
 void voronoicell_base::add_memory_xse() {
 	current_xsearch_size<<=1;
-	printf("XSE %d\n",current_xsearch_size);
 	if(current_xsearch_size>max_xsearch_size) voro_fatal_error("Extra search stack memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
 	fprintf(stderr,"Extra search stack memory scaled up to %d\n",current_delete2_size);
@@ -485,7 +484,6 @@ bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int &us,do
 	for(ls=0;ls<nu[lp];ls++) {
 		up=ed[lp][ls];
 		uw=m_test(up,u);
-		printf("-> %d %g\n",up,u);
 		if(u>l) break;
 	}
 	if(ls==nu[lp]) if(definite_max(lp,ls,l,u,uw)) {
@@ -494,7 +492,6 @@ bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int &us,do
 	}
 	
 	while(uw==0) {
-		printf("\n\nUPS %d %.16g\n",up,u);
 		if(++count>=p) failsafe_find(lp,ls,us,l,u);
 
 		// Test all the neighbors of the current point
@@ -502,16 +499,13 @@ bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int &us,do
 		// plane
 		vs=ed[lp][nu[lp]+ls];lp=up;l=u;
 		for(ls=0;ls<nu[lp];ls++) {
-			//if(ls==vs) continue;
+			if(ls==vs) continue;
 			up=ed[lp][ls];
 			uw=m_test(up,u);
-			printf("-> %d %d %.16g (%.16g)\n",ls,up,u,l);
-			if(u>l) {puts("Better");break;}
+			if(u>l) break;
 		}
-		printf("WTF %d %d %d\n",ls,vs,nu[up]);
 		if(ls==nu[lp]&&definite_max(lp,ls,l,u,uw)) {
 			up=lp;
-			puts("return here");
 			return false;
 		}
 	}
@@ -527,18 +521,15 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 	unsigned int qw;
 	double q;
 
-	printf("FM %g %g\n",l,big_tol);
 	// Check to see whether point up is a well-defined maximum. Otherwise
 	// any neighboring vertices of up that are marginal need to be
 	// followed, to see if they lead to a better maximum.
 	for(ts=0;ts<nu[tp];ts++) {
 		qp=ed[tp][ts];
 		m_test(qp,q);
-		printf("FM %d %g -> %d %g (%g)\n",tp,l,qp,q,big_tol);
 		if(q>l-big_tol) break;
 	}
 	if(ts==nu[tp]) return true;
-	printf("FM %d %d\n",tp,qp);
 
 	// The point tp is marginal, so it will be necessary to do the
 	// flood-fill search. Mark the point tp and the point qp, and search
@@ -551,9 +542,7 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 	while(ts<nu[tp]) {
 		qp=ed[tp][ts];
 		m_test(qp,q);
-		printf("FM %d %g +> %d %g (%g)\n",tp,l,qp,q,big_tol);
 		if(q>l-big_tol) {
-			printf("Search %d\n",up);
 			if(stackp==stacke) add_memory_ds();
 			*(stackp++)=up;
 			flip(up);
@@ -566,20 +555,16 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 	int *spp=ds;
 	while(spp<stackp) {
 		tp=*(spp++);
-		printf("FMM %d\n",tp);
 		for(ts=0;ts<nu[tp];ts++) {
 			qp=ed[tp][ts];
-			printf("O %d\n",qp);
 
 			// Skip the point if it's already marked
 			if(ed[qp][nu[qp]<<1]<0) continue;
 			qw=m_test(qp,q);
-			printf("OG %g\n",u);
 			
 			// This point is a better maximum. Reset markers and
 			// return true.
 			if(q>l) {
-				printf("Break to %d %g\n",qp,q);
 				flip(lp);
 				lp=tp;
 				ls=ts;
@@ -594,7 +579,6 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 			// The point is marginal and therefore must also be
 			// considered
 			if(q>l-big_tol) {
-				printf("Search %d\n",up);
 				if(stackp==stacke) {
 					int nn=stackp-spp;
 					add_memory_ds();
@@ -607,7 +591,6 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 	}
 
 	// Reset markers and return false
-	puts("It's a definite max");
 	flip(lp);
 	while(stackp>ds) flip(*(--stackp));
 	return true;
@@ -693,7 +676,6 @@ bool voronoicell_base::definite_min(int &lp,int &us,double &l,double &u,unsigned
 			// This point is a better minimum. Reset markers and
 			// return true.
 			if(q<u) {
-				printf("Break to %d %g\n",qp,q);
 				flip(up);
 				up=tp;
 				us=ts;
@@ -720,7 +702,6 @@ bool voronoicell_base::definite_min(int &lp,int &us,double &l,double &u,unsigned
 	}
 
 	// Reset markers and return false
-	puts("It's a definite min");
 	flip(up);
 	while(stackp>ds) flip(*(--stackp));
 	return true;
@@ -747,68 +728,27 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	maskc+=4;
 	if(maskc<4) reset_mask();
 
-	// Set to lowest
-	printf("Nplane: %g %g",tol,big_tol);
-	bool inters=false;
-	double mi=large_number;
-	for(i=0;i<p;i++) {
-		uw=m_test(i,u);
-		printf("(%g,%g,%g) up=%d uw=%d u=%g nu=%d",pts[i<<2],pts[(i<<2)+1],pts[(i<<2)+2],i,uw,u,nu[i]);
-		for(j=0;j<nu[i];j++) printf(" %d",ed[i][j]);
-		puts("");
-		if(uw==2) inters=true;
-		if(u<mi) {
-			mi=u;
-			up=i;
-		}
-	}
-
 	uw=m_test(up,u);
-	printf("Nplane:\nup=%d, u=%g\n",up,u);
 	if(uw==2) {
-		puts("Downsearch");
 		if(!search_downward(lw,lp,ls,us,l,u)) return false;
 		if(lw==1) {up=lp;lp=-1;}
 	} else if(uw==0) {
-		puts("Upsearch");
-		if(!search_upward(uw,lp,ls,us,l,u)) {
-			if(inters) {
-				puts("error");
-				exit(1);
-			}
-			return true;
-		}
+		if(!search_upward(uw,lp,ls,us,l,u)) return true;
 		if(uw==1) lp=-1;
 	} else {
 		lp=-1;
 	}
-	puts("Hi");
-	if(lp!=-1) printf("%d %d %d %d %g %g  [%d]\n",lp,up,ed[lp][ls],ed[up][us],l,u,p);
-	else {
-		printf("Marginal %d %g %g  [%d]\n",up,l,u,p);
-		uw=m_test(up,u);
-		printf("Marginal %d %g %g  [%d]\n",up,l,u,p);
-	}
 
-	if(lp==-1&&uw!=1) {
-		puts("Error");exit(1);
-	} else if(lp!=-1&&uw==1) {
-		puts("Error");exit(1);
-	}
-	
 	// Set stack pointers
 	stackp=ds;stackp2=ds2;stackp3=xse;
 
 	// Store initial number of vertices
 	int op=p;
-	//big_tol=1;
 	
 	if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
 	int k=0;int xtra=0;
 	while(xse+k<stackp3) {
 		lp=xse[k++];
-		printf("Ex %d\n",lp);
-		//printf("%d %d %d %d\n",k,int(stackp3-xse),up,xse[k]);
 		for(ls=0;ls<nu[lp];ls++) {
 			up=ed[lp][ls];
 			
@@ -817,7 +757,6 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 			// Test position of this point relative to the plane
 			uw=m_test(up,u);
-			//printf("%d %d %g\n",up,uw,u);
 			if(uw<1) {
 
 				// If this marginally outside, mark it
@@ -846,7 +785,6 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		}
 		xtra++;
 	}
-	printf("%d extras\n",xtra);
 
 	// Reset back pointers on extra search stack
 	for(dsp=xse;dsp<stackp3;dsp++) {
@@ -1153,7 +1091,6 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 		pts[p<<2]=pts[lp<<2]*r+pts[up<<2]*l;
 		pts[(p<<2)+1]=pts[(lp<<2)+1]*r+pts[(up<<2)+1]*l;
 		pts[(p<<2)+2]=pts[(lp<<2)+2]*r+pts[(up<<2)+2]*l;
-		printf("Sreg (%g,%g,%g) %d<->%d (%g) (%g)\n",pts[(p<<2)],pts[(p<<2)+1],pts[(p<<2)+2],lp,up,r,l);
 
 		// This point will always have three edges. Connect one of them
 		// to lp.
@@ -1210,7 +1147,6 @@ bool voronoicell_base::create_facet(vc_class &vc,int lp,int ls,double l,int us,d
 			pts[p<<2]=pts[lp<<2]*r+pts[qp<<2]*l;
 			pts[(p<<2)+1]=pts[(lp<<2)+1]*r+pts[(qp<<2)+1]*l;
 			pts[(p<<2)+2]=pts[(lp<<2)+2]*r+pts[(qp<<2)+2]*l;
-			printf("Creg (%g,%g,%g) %d<->%d (%g) (%g)\n",pts[(p<<2)],pts[(p<<2)+1],pts[(p<<2)+2],lp,qp,r,l);
 			nu[p]=3;
 			if(mec[3]==mem[3]) add_memory(vc,3);
 			ls=ed[qp][qs+nu[qp]];
@@ -1946,14 +1882,13 @@ inline void voronoicell_base::reset_edges() {
 inline int voronoicell_base::m_test(int n,double &ans) {
 	double *pp=pts+(n<<2);
 	if(mask[n]>=maskc) {
-		ans=pp[3];printf("Rep %d\n",n);
+		ans=pp[3];
 	} else {
 		ans=*(pp++)*px;
 		ans+=*(pp++)*py;
 		ans+=*(pp++)*pz-prsq;
 		*pp=ans;
 		mask[n]=maskc|(ans<-tol?0:(ans>tol?2:1));
-		printf("New %d %.16g %.16g %d\n",n,ans,tol,mask[n]&3);
 	}
 	return mask[n]&3;
 }
@@ -1972,14 +1907,13 @@ inline int voronoicell_base::m_test(int n,double &ans) {
 inline int voronoicell_base::m_testx(int n,double &ans) {
 	double *pp=pts+(n<<2);
 	if(mask[n]>=maskc) {
-		ans=pp[3];printf("Repx %d\n",n);
+		ans=pp[3];
 	} else {
 		ans=*(pp++)*px;
 		ans+=*(pp++)*py;
 		ans+=*(pp++)*pz-prsq;
 		*pp=ans;
 		mask[n]=maskc|(ans<-tol?0:(ans>tol?2:1));
-		printf("Newx %d %.16g %.16g %d\n",n,ans,tol,mask[n]&3);
 	}
 	if((mask[n]&3)==0&&ans>-big_tol) {
 		if(stackp3==stacke3) add_memory_xse();
