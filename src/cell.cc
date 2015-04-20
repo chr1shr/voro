@@ -30,6 +30,7 @@ voronoicell_base::voronoicell_base(double max_len_sq) :
 	stacke(ds+current_delete_size), ds2(new int[current_delete2_size]),
 	stacke2(ds2+current_delete2_size), xse(new int[current_xsearch_size]),
 	stacke3(xse+current_xsearch_size), maskc(0) {
+	printf("Tol set %g %g\n",tol,max_len_sq);
 	int i;
 	for(i=0;i<current_vertices;i++) mask[i]=0;
 	for(i=0;i<3;i++) {
@@ -744,13 +745,11 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	while(xse+k<stackp3) {
 		lp=xse[k++];
 		uw=m_test(lp,l);
-		printf("\n%d %d (%d,%g)\n",k-1,lp,uw,l);
 		for(ls=0;ls<nu[lp];ls++) {
 			up=ed[lp][ls];
 			
 			// Skip if this is a new vertex
 			uw=m_test(up,u);
-			printf("%d->%d %d (%d,%g)\n",lp,up,op,uw,u); 
 			if(up>=op) continue;
 
 			if(uw==0) {
@@ -760,13 +759,11 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 					*(stackp3++)=up;
 				}
 			} else if(uw==1) {
-				puts("Create marg");
 
 				// This is a possible facet starting
 				// from a vertex on the cutting plane
 				if(create_facet(vc,-1,0,0,0,u,p_id)) return false;
 			} else {
-				puts("Create reg");
 
 				// This is a new facet 
 				us=ed[lp][nu[lp]+ls];

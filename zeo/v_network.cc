@@ -199,7 +199,6 @@ void voronoi_network::clear_network() {
 /** Outputs the network in a format that can be read by gnuplot.
  * \param[in] fp a file handle to write to. */
 void voronoi_network::draw_network(FILE *fp) {
-	voronoicell c;
 	int l,q,ai,aj,ak;
 	double x,y,z,*ptsp;
 	for(l=0;l<edc;l++) {

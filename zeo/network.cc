@@ -155,7 +155,7 @@ void compute(c_class &con,char *buffer,int bp,double vol) {
 	char *bu(buffer+bp-2);
 	int id;
 	double vvol(0),x,y,z,r;
-	voronoicell c;
+	voronoicell c(con);
 	voronoi_network vn(con,1e-5),vn2(con,1e-5);
 
 	// Compute Voronoi cells and
