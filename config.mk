@@ -8,7 +8,7 @@
 # the Makefiles.
 
 # C++ compiler
-CXX=g++-mp-4.9
+CXX=g++
 
 # Flags for the C++ compiler
 CFLAGS=-Wall -ansi -pedantic -O3

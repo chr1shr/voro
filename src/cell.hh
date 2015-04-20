@@ -277,23 +277,21 @@ class voronoicell_base {
 		template<class vc_class>
 		bool create_facet(vc_class &vc,int lp,int ls,double l,int us,double u,int p_id);
 		template<class vc_class>
-		inline bool collapse_order1(vc_class &vc);
+		bool collapse_order1(vc_class &vc);
 		template<class vc_class>
 		inline bool collapse_order2(vc_class &vc);
 		template<class vc_class>
-		inline bool delete_connection(vc_class &vc,int j,int k,bool hand);
+		bool delete_connection(vc_class &vc,int j,int k,bool hand);
 		inline bool search_for_outside_edge(int &up);
 		inline void add_to_stack(int sc2,int lp);
 		inline void reset_mask() {
 			for(int i=0;i<current_vertices;i++) mask[i]=0;
 			maskc=4;
 		}
-	public:
-		bool search_downward(unsigned int &uw,int &lp,int &ls,int &us,double &l,double &u);
+		inline bool search_downward(unsigned int &uw,int &lp,int &ls,int &us,double &l,double &u);
 		bool definite_max(int &lp,int &ls,double &l,double &u,unsigned int &uw);
-		bool search_upward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u);
+		inline bool search_upward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u);
 		bool definite_min(int &lp,int &us,double &l,double &u,unsigned int &lw);
-	private:
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
 		inline void normals_search(std::vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);

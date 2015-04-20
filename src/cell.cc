@@ -471,8 +471,8 @@ inline void voronoicell_base::add_to_stack(int sc2,int lp) {
  * \param[in] rsq the distance along this vector of the plane.
  * \param[in,out] u the dot product of point up with the normal.
  * \return True if the cutting plane was reached, false otherwise. */
-bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int &us,double &l,double &u) {
-	int count=0,vs;
+inline bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int &us,double &l,double &u) {
+	int vs;
 	lp=up;l=u;
 
 	// The test point is outside of the cutting space
@@ -487,7 +487,7 @@ bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int &us,do
 	}
 	
 	while(uw==0) {
-		if(++count>=p) failsafe_find(lp,ls,us,l,u);
+		//if(++count>=p) failsafe_find(lp,ls,us,l,u);
 
 		// Test all the neighbors of the current point
 		// and find the one which is closest to the
@@ -515,7 +515,6 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 	int tp=lp,ts,qp=0;
 	unsigned int qw;
 	double q;
-	return true;
 
 	// Check to see whether point up is a well-defined maximum. Otherwise
 	// any neighboring vertices of up that are marginal need to be
@@ -592,8 +591,8 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 	return true;
 }
 
-bool voronoicell_base::search_downward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u) {
-	int count=0,vs;
+inline bool voronoicell_base::search_downward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u) {
+	int vs;
 
 	// The test point is outside of the cutting space
 	for(us=0;us<nu[up];us++) {
@@ -604,7 +603,7 @@ bool voronoicell_base::search_downward(unsigned int &lw,int &lp,int &ls,int &us,
 	if(us==nu[up]) if(definite_min(lp,us,l,u,lw)) return false;
 	
 	while(lw==2) {
-		if(++count>=p) failsafe_find(lp,ls,us,l,u);
+		//if(++count>=p) failsafe_find(lp,ls,us,l,u);
 
 		// Test all the neighbors of the current point
 		// and find the one which is closest to the
@@ -626,7 +625,6 @@ bool voronoicell_base::definite_min(int &lp,int &us,double &l,double &u,unsigned
 	int tp=up,ts,qp=0;
 	unsigned int qw;
 	double q;
-	return true;
 
 	// Check to see whether point up is a well-defined maximum. Otherwise
 	// any neighboring vertices of up that are marginal need to be
@@ -1438,7 +1436,7 @@ inline bool voronoicell_base::collapse_order2(vc_class &vc) {
  *         having zero volume and disappearing; true if the vertex removal was
  *         successful. */
 template<class vc_class>
-inline bool voronoicell_base::collapse_order1(vc_class &vc) {
+bool voronoicell_base::collapse_order1(vc_class &vc) {
 	int i,j,k;
 	while(mec[1]>0) {
 		up=0;
@@ -1473,7 +1471,7 @@ inline bool voronoicell_base::collapse_order1(vc_class &vc) {
  * \return False if a zero order vertex was formed, indicative of the cell
  *         disappearing; true if the vertex removal was successful. */
 template<class vc_class>
-inline bool voronoicell_base::delete_connection(vc_class &vc,int j,int k,bool hand) {
+bool voronoicell_base::delete_connection(vc_class &vc,int j,int k,bool hand) {
 	int q=hand?k:cycle_up(k,j);
 	int i=nu[j]-1,l,*edp,*edd,m;
 #if VOROPP_VERBOSE >=1
