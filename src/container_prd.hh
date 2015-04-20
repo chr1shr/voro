@@ -361,7 +361,7 @@ class container_periodic : public container_periodic_base, public radius_mono {
 		void print_custom(c_loop &vl,const char *format,FILE *fp) {
 			int ijk,q;double *pp;
 			if(contains_neighbor(format)) {
-				voronoicell_neighbor c;
+				voronoicell_neighbor c(*this);
 				if(vl.start()) do if(compute_cell(c,vl)) {
 					ijk=vl.ijk;q=vl.q;pp=p[ijk]+ps*q;
 					c.output_custom(format,id[ijk][q],*pp,pp[1],pp[2],default_radius,fp);
@@ -584,7 +584,7 @@ class container_periodic_poly : public container_periodic_base, public radius_po
 		void print_custom(c_loop &vl,const char *format,FILE *fp) {
 			int ijk,q;double *pp;
 			if(contains_neighbor(format)) {
-				voronoicell_neighbor c;
+				voronoicell_neighbor c(*this);
 				if(vl.start()) do if(compute_cell(c,vl)) {
 					ijk=vl.ijk;q=vl.q;pp=p[ijk]+ps*q;
 					c.output_custom(format,id[ijk][q],*pp,pp[1],pp[2],pp[3],fp);

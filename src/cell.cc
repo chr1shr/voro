@@ -30,7 +30,6 @@ voronoicell_base::voronoicell_base(double max_len_sq) :
 	stacke(ds+current_delete_size), ds2(new int[current_delete2_size]),
 	stacke2(ds2+current_delete2_size), xse(new int[current_xsearch_size]),
 	stacke3(xse+current_xsearch_size), maskc(0) {
-	printf("Tol set %g %g\n",tol,max_len_sq);
 	int i;
 	for(i=0;i<current_vertices;i++) mask[i]=0;
 	for(i=0;i<3;i++) {
@@ -2036,7 +2035,7 @@ void voronoicell_base::output_vertex_orders(FILE *fp) {
 void voronoicell_base::vertices(std::vector<double> &v) {
 	v.resize(p<<2);
 	double *ptsp=pts;
-	for(int i=0;i<(p<<2);i+=4) {
+	for(int i=0;i<3*p;i+=3) {
 		v[i]=*(ptsp++)*0.5;
 		v[i+1]=*(ptsp++)*0.5;
 		v[i+2]=*ptsp*0.5;ptsp+=2;
@@ -2060,7 +2059,7 @@ void voronoicell_base::output_vertices(FILE *fp) {
 void voronoicell_base::vertices(double x,double y,double z,std::vector<double> &v) {
 	v.resize(3*p);
 	double *ptsp=pts;
-	for(int i=0;i<(p<<2);i+=4) {
+	for(int i=0;i<3*p;i+=3) {
 		v[i]=x+*(ptsp++)*0.5;
 		v[i+1]=y+*(ptsp++)*0.5;
 		v[i+2]=z+*ptsp*0.5;ptsp+=2;

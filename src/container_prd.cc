@@ -35,8 +35,6 @@ container_periodic_base::container_periodic_base(double bx_,double bxy_,double b
 	co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), init_mem(init_mem_), ps(ps_) {
 	int i,j,k,l;
 
-	printf("Yo %g %g\n",max_len_sq,tolerance);
-
 	// Clear the global arrays
 	int *pp=co;while(pp<co+oxyz) *(pp++)=0;
 	pp=mem;while(pp<mem+oxyz) *(pp++)=0;
