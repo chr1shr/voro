@@ -515,6 +515,7 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 	int tp=lp,ts,qp=0;
 	unsigned int qw;
 	double q;
+	return true;
 
 	// Check to see whether point up is a well-defined maximum. Otherwise
 	// any neighboring vertices of up that are marginal need to be
