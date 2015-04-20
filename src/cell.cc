@@ -1877,13 +1877,13 @@ inline void voronoicell_base::reset_edges() {
  *         plane, or 0 if the point is within the plane. */
 inline unsigned int voronoicell_base::m_test(int n,double &ans) {
 	if(mask[n]>=maskc) {
-		ans=pts[(n<<2)+3];
+		ans=pts[4*n+3];
 		return mask[n]&3;
 	} else return m_calc(n,ans);
 }
 
 unsigned int voronoicell_base::m_calc(int n,double &ans) {
-	double *pp=pts+(n<<2);
+	double *pp=pts+4*n;
 	ans=*(pp++)*px;
 	ans+=*(pp++)*py;
 	ans+=*(pp++)*pz-prsq;
@@ -1907,7 +1907,7 @@ unsigned int voronoicell_base::m_calc(int n,double &ans) {
 inline unsigned int voronoicell_base::m_testx(int n,double &ans) {
 	unsigned int maskr;
 	if(mask[n]>=maskc) {
-		ans=pts[(n<<2)+3];
+		ans=pts[4*n+3];
 		maskr=mask[n]&3;
 	} else maskr=m_calc(n,ans);
 	if(maskr==0&&ans>-big_tol) {
