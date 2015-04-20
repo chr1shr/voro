@@ -303,12 +303,12 @@ void voronoi_network::add_to_network_internal(v_cell &c,int idn,double x,double 
 
 		// Compute the real position of this vertex, and evaluate its
 		// position along the non-rectangular axes
-		vx=x+cp[3*l]*0.5;vy=y+cp[3*l+1]*0.5;vz=z+cp[3*l+2]*0.5;
+		vx=x+cp[4*l]*0.5;vy=y+cp[4*l+1]*0.5;vz=z+cp[4*l+2]*0.5;
 		gx=vx-vy*(bxy/by)+vz*(bxy*byz-by*bxz)/(by*bz);
 		gy=vy-vz*(byz/bz);
 
 		// Compute the adjusted radius, which will be needed either way
-		crad=0.5*sqrt(cp[3*l]*cp[3*l]+cp[3*l+1]*cp[3*l+1]+cp[3*l+2]*cp[3*l+2])-rad;
+		crad=0.5*sqrt(cp[4*l]*cp[4*l]+cp[4*l+1]*cp[4*l+1]+cp[4*l+2]*cp[4*l+2])-rad;
 
 		// Check to see if a vertex very close to this one already
 		// exists in the network
@@ -407,8 +407,8 @@ void voronoi_network::add_to_network_rectangular_internal(v_cell &c,int idn,doub
 	double vx,vy,vz,crad,*cp(c.pts);
 
 	for(l=0;l<c.p;l++,vmp+=4) {
-		vx=x+cp[3*l]*0.5;vy=y+cp[3*l+1]*0.5;vz=z+cp[3*l+2]*0.5;
-		crad=0.5*sqrt(cp[3*l]*cp[3*l]+cp[3*l+1]*cp[3*l+1]+cp[3*l+2]*cp[3*l+2])-rad;
+		vx=x+cp[4*l]*0.5;vy=y+cp[4*l+1]*0.5;vz=z+cp[4*l+2]*0.5;
+		crad=0.5*sqrt(cp[4*l]*cp[4*l]+cp[4*l+1]*cp[4*l+1]+cp[4*l+2]*cp[4*l+2])-rad;
 		if(safe_search_previous_rect(vx,vy,vz,ijk,q,vmp[1],vmp[2],vmp[3])) {
 			*vmp=idmem[ijk][q];
 
@@ -472,7 +472,7 @@ bool voronoi_network::search_previous(double gx,double gy,double x,double y,doub
 				pi=step_div(i,nx);px3=px2+pi*bx;mi=i-nx*pi;
 				ijk=mi+nx*(mj+ny*mk);
 				pp=pts[ijk];
-				for(q=0;q<ptsc[ijk];q++,pp+=4) if(abs(*pp+px3-x)<net_tol&&abs(pp[1]+py2-y)<net_tol&&abs(pp[2]+pz-z)<net_tol) return true;
+				for(q=0;q<ptsc[ijk];q++,pp+=4) if(fabs(*pp+px3-x)<net_tol&&fabs(pp[1]+py2-y)<net_tol&&fabs(pp[2]+pz-z)<net_tol) return true;
 			}
 		}
 	}
@@ -512,7 +512,7 @@ bool voronoi_network::search_previous_rect(double x,double y,double z,int &ijk,i
 
 	ijk+=nx*(j+ny*k);double *pp(pts[ijk]);
 	for(q=0;q<ptsc[ijk];q++,pp+=4)
-		if(abs(*pp-x)<net_tol&&abs(pp[1]-y)<net_tol&&abs(pp[2]-z)<net_tol) return true;
+		if(fabs(*pp-x)<net_tol&&fabs(pp[1]-y)<net_tol&&fabs(pp[2]-z)<net_tol) return true;
 	return false;
 }
 

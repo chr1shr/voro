@@ -72,7 +72,7 @@ const int pre_container_chunk_size=1024;
  * plane routine bails out due to floating point problems. At level 2, general
  * messages about memory expansion are printed. At level 3, technical details
  * about memory management are printed. */
-#define VOROPP_VERBOSE 0
+#define VOROPP_VERBOSE 2
 #endif
 
 /** If a point is within this distance of a cutting plane, then the code

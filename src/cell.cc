@@ -277,7 +277,7 @@ void voronoicell_base::add_memory_xse() {
 	current_xsearch_size<<=1;
 	if(current_xsearch_size>max_xsearch_size) voro_fatal_error("Extra search stack memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
-	fprintf(stderr,"Extra search stack memory scaled up to %d\n",current_delete2_size);
+	fprintf(stderr,"Extra search stack memory scaled up to %d\n",current_xsearch_size);
 #endif
 	int *dsn=new int[current_xsearch_size],*dsnp=dsn,*dsp=xse;
 	while(dsp<stackp3) *(dsnp++)=*(dsp++);
@@ -715,7 +715,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	int us=0,ls=0;
 	unsigned int uw,lw;
 	int *edp,*edd;stackp=ds;
-	double u,l;up=0;
+	double u,l=0;up=0;
 
 	// Initialize the safe testing routine
 	px=x;py=y;pz=z;prsq=rsq;
@@ -743,38 +743,35 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 	int k=0;int xtra=0;
 	while(xse+k<stackp3) {
 		lp=xse[k++];
+		uw=m_test(lp,l);
+		printf("\n%d %d (%d,%g)\n",k-1,lp,uw,l);
 		for(ls=0;ls<nu[lp];ls++) {
 			up=ed[lp][ls];
 			
 			// Skip if this is a new vertex
+			uw=m_test(up,u);
+			printf("%d->%d %d (%d,%g)\n",lp,up,op,uw,u); 
 			if(up>=op) continue;
 
-			// Test position of this point relative to the plane
-			uw=m_test(up,u);
-			if(uw<1) {
-
-				// If this marginally outside, mark it
-				// to search unless it's already marked
-				if(uw==0) {
-					if(ed[up][nu[up]<<1]!=-1) {
-						ed[up][nu[up]<<1]=-1;
-						if(stackp3==stacke3) add_memory_xse();
-						*(stackp3++)=up;
-					}
+			if(uw==0) {
+				if(u>-big_tol&&ed[up][nu[up]<<1]!=-1) {
+					ed[up][nu[up]<<1]=-1;
+					if(stackp3==stacke3) add_memory_xse();
+					*(stackp3++)=up;
 				}
+			} else if(uw==1) {
+				puts("Create marg");
+
+				// This is a possible facet starting
+				// from a vertex on the cutting plane
+				if(create_facet(vc,-1,0,0,0,u,p_id)) return false;
 			} else {
-				if(uw==1) {
+				puts("Create reg");
 
-					// This is a possible facet starting
-					// from a vertex on the cutting plane
-					if(create_facet(vc,-1,0,0,0,u,p_id)) return false;
-				} else {
-
-					// This is a new facet 
-					us=ed[lp][nu[lp]+ls];
-					m_test(lp,l);
-					if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
-				}
+				// This is a new facet 
+				us=ed[lp][nu[lp]+ls];
+				m_test(lp,l);
+				if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
 			}
 		}
 		xtra++;
@@ -1908,7 +1905,8 @@ inline unsigned int voronoicell_base::m_testx(int n,double &ans) {
 		ans=pts[4*n+3];
 		maskr=mask[n]&3;
 	} else maskr=m_calc(n,ans);
-	if(maskr==0&&ans>-big_tol) {
+	if(maskr==0&&ans>-big_tol&&ed[n][nu[n]<<1]!=-1) {
+		ed[n][nu[n]<<1]=-1;
 		if(stackp3==stacke3) add_memory_xse();
 		*(stackp3++)=n;
 	}
