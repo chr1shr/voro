@@ -475,11 +475,6 @@ bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int &us,do
 	int count=0,vs;
 	lp=up;l=u;
 
-//	for(up=0;up<p;up++) {
-//		uw=m_test(up,u);
-//		if(uw==2)
-
-
 	// The test point is outside of the cutting space
 	for(ls=0;ls<nu[lp];ls++) {
 		up=ed[lp][ls];
@@ -2245,11 +2240,9 @@ bool voronoicell_base::plane_intersects_guess(double x,double y,double z,double 
  * \param[in] g the distance of up from the plane.
  * \return False if the plane does not intersect the plane, true if it does. */
 inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,double rsq,double g) {
-	int count=0,ls,us,tp;
-	double t;
 
-//	for(int tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) return true;
-//	return false;
+	for(int tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) return true;
+	return false;
 /*	
 	int ls,us,lp;
 	double l,u;
@@ -2262,7 +2255,9 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 
 	return search_upward(uw,lp,ls,us,l,u);
 }*/
-	
+	/*
+	int count=0,ls,us,tp;
+	double t;
 	// The test point is outside of the cutting space
 	for(us=0;us<nu[up];us++) {
 		tp=ed[up][us];
@@ -2302,7 +2297,7 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 			return true;
 		}
 	}
-	return false;
+	return false;*/
 }
 
 /** Counts the number of edges of the Voronoi cell.
