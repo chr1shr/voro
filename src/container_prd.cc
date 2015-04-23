@@ -94,6 +94,7 @@ container_periodic_poly::container_periodic_poly(double bx_,double bxy_,double b
 void container_periodic::put(int n,double x,double y,double z) {
 	int ijk;
 	put_locate_block(ijk,x,y,z);
+	for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+3*l);
 	id[ijk][co[ijk]]=n;
 	double *pp=p[ijk]+3*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*pp=z;
@@ -106,6 +107,7 @@ void container_periodic::put(int n,double x,double y,double z) {
 void container_periodic_poly::put(int n,double x,double y,double z,double r) {
 	int ijk;
 	put_locate_block(ijk,x,y,z);
+	for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+4*l);
 	id[ijk][co[ijk]]=n;
 	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
@@ -121,6 +123,7 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r) {
 void container_periodic::put(int n,double x,double y,double z,int &ai,int &aj,int &ak) {
 	int ijk;
 	put_locate_block(ijk,x,y,z,ai,aj,ak);
+	for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+3*l);
 	id[ijk][co[ijk]]=n;
 	double *pp=p[ijk]+3*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*pp=z;
@@ -136,6 +139,8 @@ void container_periodic::put(int n,double x,double y,double z,int &ai,int &aj,in
 void container_periodic_poly::put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
 	int ijk;
 	put_locate_block(ijk,x,y,z,ai,aj,ak);
+	for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+4*l);
+	
 	id[ijk][co[ijk]]=n;
 	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;

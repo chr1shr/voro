@@ -77,7 +77,7 @@ const int pre_container_chunk_size=1024;
 
 /** If a point is within this distance of a cutting plane, then the code
  * assumes that point exactly lies on the plane. */
-const double tolerance=100.*std::numeric_limits<double>::epsilon();
+const double tolerance=10.*std::numeric_limits<double>::epsilon();
 
 const double big_tolerance_fac=20.;
 
