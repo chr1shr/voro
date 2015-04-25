@@ -7,7 +7,7 @@
 #include <ctime>
 using namespace std;
 
-#include "voro++.hh"
+#include "voro++.cc"
 using namespace voro;
 
 // Set up constants for the container geometry

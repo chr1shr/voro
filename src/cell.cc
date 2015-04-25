@@ -112,7 +112,7 @@ void voronoicell_base::translate(double x,double y,double z) {
 	x*=2;y*=2;z*=2;
 	double *ptsp=pts;
 	while(ptsp<pts+(p<<2)) {
-		*(ptsp++)=x;*(ptsp++)=y;*(ptsp++)=z;ptsp++;
+		*(ptsp++)+=x;*(ptsp++)+=y;*ptsp+=z;ptsp+=2;
 	}
 }
 
@@ -320,18 +320,19 @@ void voronoicell_base::init_base(double xmin,double xmax,double ymin,double ymax
 void voronoicell::init_l_shape() {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=12;
-	*pts=-1;pts[1]=-1;pts[2]=-1;
-	pts[4]=1;pts[5]=-1;pts[6]=-1;
-	pts[8]=-1;pts[9]=0;pts[10]=-1;
-	pts[12]=0;pts[13]=0;pts[14]=-1;
-	pts[16]=0;pts[17]=1;pts[18]=-1;
-	pts[20]=1;pts[21]=1;pts[22]=-1;
-	pts[24]=-1;pts[25]=-1;pts[26]=1;
-	pts[28]=1;pts[29]=-1;pts[30]=1;
-	pts[32]=-1;pts[33]=0;pts[34]=1;
-	pts[36]=0;pts[37]=0;pts[38]=1;
-	pts[40]=0;pts[41]=1;pts[42]=1;
-	pts[44]=1;pts[45]=1;pts[46]=1;
+	const double j=0.5;
+	*pts=-2;pts[1]=-2;pts[2]=-2;
+	pts[4]=2;pts[5]=-2;pts[6]=-2;
+	pts[8]=-2;pts[9]=0;pts[10]=-2;
+	pts[12]=-j;pts[13]=j;pts[14]=-2;
+	pts[16]=0;pts[17]=2;pts[18]=-2;
+	pts[20]=2;pts[21]=2;pts[22]=-2;
+	pts[24]=-2;pts[25]=-2;pts[26]=2;
+	pts[28]=2;pts[29]=-2;pts[30]=2;
+	pts[32]=-2;pts[33]=0;pts[34]=2;
+	pts[36]=-j;pts[37]=j;pts[38]=2;
+	pts[40]=0;pts[41]=2;pts[42]=2;
+	pts[44]=2;pts[45]=2;pts[46]=2;
 	int *q=mep[3];
 	*q=1;q[1]=6;q[2]=2;q[6]=0;
 	q[7]=5;q[8]=7;q[9]=0;q[13]=1;
