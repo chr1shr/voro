@@ -320,7 +320,7 @@ void voronoicell_base::init_base(double xmin,double xmax,double ymin,double ymax
 void voronoicell::init_l_shape() {
 	for(int i=0;i<current_vertex_order;i++) mec[i]=0;up=0;
 	mec[3]=p=12;
-	const double j=0.5;
+	const double j=0;
 	*pts=-2;pts[1]=-2;pts[2]=-2;
 	pts[4]=2;pts[5]=-2;pts[6]=-2;
 	pts[8]=-2;pts[9]=0;pts[10]=-2;

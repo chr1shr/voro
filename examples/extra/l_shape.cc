@@ -8,7 +8,7 @@
 using namespace voro;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=30;
+const int particles=20;
 
 // This function returns a random double between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}
@@ -62,6 +62,8 @@ int main() {
 		con.put(i,x,y,z);
 		i++;
 	}
+
+	printf("Voronoi cell volume: %.8g\n",con.sum_cell_volumes());
 
 	// Save the particles and Voronoi cells in POV-Ray format
 	con.draw_particles("l_shape_p.gnu");
