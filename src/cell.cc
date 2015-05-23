@@ -1499,9 +1499,9 @@ bool voronoicell_base::delete_connection(vc_class &vc,int j,int k,bool hand) {
 	edd=mep[nu[j]]+((nu[j]<<1)+1)*--mec[nu[j]];
 	for(l=0;l<=(nu[j]<<1);l++) ed[j][l]=edd[l];
 	vc.n_set_aux2_copy(j,nu[j]);
-	vc.n_set_to_aux2(edd[nu[j]<<1]);
+	vc.n_copy_pointer(edd[nu[j]<<1],j);
 	vc.n_set_to_aux1(j);
-	ed[edd[nu[j]<<1]]=edd;
+	ed[edd[nu[j]<<1]]=ed[j];
 	ed[j]=edp;
 	nu[j]=i;
 	return true;

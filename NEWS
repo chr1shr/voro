@@ -10,6 +10,9 @@ Version 0.5 (...)
   changing config.hh could create a problem.
 * Updated plane cutting routine to handle non-convex cases. This should remove
   some extremely rare errors where cells can accidentally be deleted.
+* Fixed a typo in the delete_connection routine in cell.cc that could cause
+  segmentation faults in extremely rare cases. Thanks to Francesco Biscani (Max
+  Planck institute for Astronomy, Heidelberg) for pointing this out.
 * Cleaned up comments
 * Updated Doxyfile to 1.8.9.1
 
