@@ -21,17 +21,11 @@ int main() {
 	v.plane(-1,1,-1);
 	v.plane(-1,-1,1);
 	v.draw_gnuplot(0,0,0,"tetrahedron.gnu");
-	double r,ar,vo;
-	for(r=0;r<=3;r+=0.02) {
-		v.minkowski(r,ar,vo);
-		printf("%g %g %g HO\n",r,ar,vo);
-	}
 
 	// Create a cube. Since this is the default shape
 	// we don't need to do any plane cutting.
 	v.init(-1,1,-1,1,-1,1);
 	v.draw_gnuplot(0,0,0,"cube.gnu");
-
 
 	// Create an octahedron
 	v.init(-2,2,-2,2,-2,2);
