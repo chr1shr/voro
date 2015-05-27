@@ -1616,7 +1616,7 @@ double voronoicell_base::volume() {
  * \param[out] vo the volume functional. */
 void voronoicell_base::minkowski(double r,double &ar,double &vo) {
 	int i,j,k,l,m,n;
-	ar=vo=0;
+	ar=vo=0;r*=2;
 	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
 		k=ed[i][j];
 		if(k>=0) {
@@ -1680,46 +1680,48 @@ inline void voronoicell_base::minkowski_contrib(int i,int k,int m,double r,doubl
 
 void voronoicell_base::minkowski_edge(double x0,double r1,double s1,double r2,double s2,double r,double &ar,double &vo) {
 	double r12=r2-r1,s12=s2-s1,l12=r12*r12+s12*s12;
-	printf("ME %g %g %g %g\n",r1,s1,r2,s2);
 	if(l12<tol*tol) return;
 	l12=1/sqrt(l12);r12*=l12;s12*=l12;
-	double y0=-s12*r1+r12*s1;
-	printf("ME2 y0=(%g,%g) z0=%g z0=%g\n",y0,-s12*r2+r12*s2,-r12*r1-s12*s1,r12*r2+s12*s2);
+	double y0=s12*r1-r12*s1;
 	if(fabs(y0)<tol) return;
-	minkowski_formula(x0,y0,r12*r1+s12*s1,r,ar,vo);
-	minkowski_formula(x0,y0,-r12*r2-s12*s2,r,ar,vo);
+	minkowski_formula(x0,y0,-r12*r1-s12*s1,r,ar,vo);
+	minkowski_formula(x0,y0,r12*r2+s12*s2,r,ar,vo);
 }
 
 void voronoicell_base::minkowski_formula(double x0,double y0,double z0,double r,double &ar,double &vo) {
-	printf("MF %g %g %g\n",x0,y0,z0);
 	const double pi=3.1415926535897932384626433832795;
 	if(fabs(z0)<tol) return;
-	double si;
+	double si;int ca;
 	if(z0<0) {z0=-z0;si=-1;} else si=1;
 	if(y0<0) {y0=-y0;si=-si;}
 	double xs=x0*x0,ys=y0*y0,zs=z0*z0,res=xs+ys,rvs=res+zs,theta=atan(z0/y0),rs=r*r,rc=rs*r,temp,voc,arc;
 	if(r<x0) {
-		puts("hi");
+		ca=0;
 		temp=2*theta-0.5*pi-asin((zs*xs-ys*rvs)/(res*(ys+zs)));
 		voc=rc/6.*temp;
 		arc=rs*0.5*temp;
-	} else if(rs<res) {
+	} else if(rs<res*1.0000000001) {
+		ca=1;
 		temp=0.5*pi+asin((zs*xs-ys*rvs)/(res*(ys+zs)));
 		voc=theta*0.5*(rs*x0-xs*x0/3.)-rc/6.*temp;
 		arc=theta*x0*r-rs*0.5*temp;
 	} else if(rs<rvs) {
+		ca=2;
 		temp=theta-pi*0.5+asin(y0/sqrt(rs-xs));
 		double temp2=(rs*x0-xs*x0/3.),
 		       x2s=rs*xs/res,y2s=rs*ys/res,
 		       temp3=asin((x2s-y2s-xs)/(rs-xs)),
 		       temp4=asin((zs*xs-ys*rvs)/(res*(ys+zs))),
 		       temp5=sqrt(rs-res);
+		printf("temp: %g %g %g %g %g   %g\n",temp,temp2,temp3,temp4,temp5,0.5*temp2*y0*r/((rs-xs)*temp5));
 		voc=0.5*temp*temp2+x0*y0/6.*temp5+r*rs/6*(temp3-temp4);
 		arc=x0*r*temp-0.5*temp2*y0*r/((rs-xs)*temp5)+x0*y0/6.*r/temp5+rs*0.5*temp3+rs*rs/3.*2*xs*ys/(res*(rs-xs)*sqrt((rs-xs)*(rs-xs)-(x2s-y2s-xs)*(x2s-y2s-xs)))-rs*0.5*temp4;
 	} else {
+		ca=3;
 		voc=x0*y0*z0/6.;
 		arc=0;
 	}
+	printf("MF %g %g %g %g %g %g %g [%d]\n",x0,y0,z0,res,rvs,voc,arc,ca);
 	vo+=voc*si;
 	ar+=arc*si;
 }
