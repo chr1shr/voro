@@ -141,6 +141,7 @@ class voronoicell_base {
 		void vertices(double x,double y,double z,std::vector<double> &v);
 		void output_vertices(double x,double y,double z,FILE *fp=stdout);
 		void face_areas(std::vector<double> &v);
+		void minkowski(double r,double &ar,double &vo);
 		/** Outputs the areas of the faces.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_face_areas(FILE *fp=stdout) {
@@ -292,6 +293,9 @@ class voronoicell_base {
 		bool definite_max(int &lp,int &ls,double &l,double &u,unsigned int &uw);
 		inline bool search_upward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u);
 		bool definite_min(int &lp,int &us,double &l,double &u,unsigned int &lw);
+		inline void minkowski_contrib(int i,int k,int m,double r,double &ar,double &vo);
+		void minkowski_edge(double x0,double r1,double s1,double r2,double s2,double r,double &ar,double &vo);
+		void minkowski_formula(double x0,double y0,double z0,double r,double &ar,double &vo);
 		inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
 		inline void normals_search(std::vector<double> &v,int i,int j,int k);
 		inline bool search_edge(int l,int &m,int &k);

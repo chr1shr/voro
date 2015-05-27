@@ -1610,6 +1610,121 @@ double voronoicell_base::volume() {
 	return vol*fe;
 }
 
+/** Calculates the contributions to the Minkowski functionals for this Voronoi cell.
+ * \param[in] r the radius to consider.
+ * \param[out] ar the area functional.
+ * \param[out] vo the volume functional. */
+void voronoicell_base::minkowski(double r,double &ar,double &vo) {
+	int i,j,k,l,m,n;
+	ar=vo=0;
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if(k>=0) {
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			m=ed[k][l];ed[k][l]=-1-m;
+			while(m!=i) {
+				n=cycle_up(ed[k][nu[k]+l],m);
+				minkowski_contrib(i,k,m,r,ar,vo);
+				k=m;l=n;
+				m=ed[k][l];ed[k][l]=-1-m;
+			}
+		}
+	}
+	vo*=0.125;
+	ar*=0.25;
+	reset_edges();
+}
+
+inline void voronoicell_base::minkowski_contrib(int i,int k,int m,double r,double &ar,double &vo) {
+	double ix=pts[4*i],iy=pts[4*i+1],iz=pts[4*i+2],
+	       kx=pts[4*k],ky=pts[4*k+1],kz=pts[4*k+2],
+	       mx=pts[4*m],my=pts[4*m+1],mz=pts[4*m+2],
+	       ux=kx-ix,uy=ky-iy,uz=kz-iz,vx=mx-kx,vy=my-ky,vz=mz-kz,
+	       e1x=uz*vy-uy*vz,e1y=ux*vz-uz*vx,e1z=uy*vx-ux*vy,e2x,e2y,e2z,
+	       wmag=e1x*e1x+e1y*e1y+e1z*e1z;
+	if(wmag<tol*tol) return;
+	wmag=1/sqrt(wmag);
+	e1x*=wmag;e1y*=wmag;e1z*=wmag;
+
+	// Compute second orthonormal vector
+	if(fabs(e1x)>0.5) {
+		e2x=-e1y;e2y=e1x;e2z=0;
+	} else if(fabs(e1y)>0.5) {
+		e2x=0;e2y=-e1z;e2z=e1y;
+	} else {
+		e2x=e1z;e2y=0;e2z=-e1x;
+	}
+	wmag=1/sqrt(e2x*e2x+e2y*e2y+e2z*e2z);
+	e2x*=wmag;e2y*=wmag;e2z*=wmag;
+
+	// Compute third orthonormal vector
+	double e3x=e1z*e2y-e1y*e2z,
+	       e3y=e1x*e2z-e1z*e2x,
+	       e3z=e1y*e2x-e1x*e2y,
+	       x0=e1x*ix+e1y*iy+e1z*iz;
+	if(x0<tol) return;
+
+	double ir=e2x*ix+e2y*iy+e2z*iz,is=e3x*ix+e3y*iy+e3z*iz,
+	       kr=e2x*kx+e2y*ky+e2z*kz,ks=e3x*kx+e3y*ky+e3z*kz,
+	       mr=e2x*mx+e2y*my+e2z*mz,ms=e3x*mx+e3y*my+e3z*mz;
+	printf("(%g,%g,%g)\n",e1x,e1y,e1z);
+	printf("(%g,%g,%g)\n",e2x,e2y,e2z);
+	printf("(%g,%g,%g)\n",e3x,e3y,e3z);
+	printf("%g %g %g %g %g %g\n",ir,is,kr,ks,mr,ms);
+
+	minkowski_edge(x0,ir,is,kr,ks,r,ar,vo);
+	minkowski_edge(x0,kr,ks,mr,ms,r,ar,vo);
+	minkowski_edge(x0,mr,ms,ir,is,r,ar,vo);
+}
+
+void voronoicell_base::minkowski_edge(double x0,double r1,double s1,double r2,double s2,double r,double &ar,double &vo) {
+	double r12=r2-r1,s12=s2-s1,l12=r12*r12+s12*s12;
+	printf("ME %g %g %g %g\n",r1,s1,r2,s2);
+	if(l12<tol*tol) return;
+	l12=1/sqrt(l12);r12*=l12;s12*=l12;
+	double y0=-s12*r1+r12*s1;
+	printf("ME2 y0=(%g,%g) z0=%g z0=%g\n",y0,-s12*r2+r12*s2,-r12*r1-s12*s1,r12*r2+s12*s2);
+	if(fabs(y0)<tol) return;
+	minkowski_formula(x0,y0,r12*r1+s12*s1,r,ar,vo);
+	minkowski_formula(x0,y0,-r12*r2-s12*s2,r,ar,vo);
+}
+
+void voronoicell_base::minkowski_formula(double x0,double y0,double z0,double r,double &ar,double &vo) {
+	printf("MF %g %g %g\n",x0,y0,z0);
+	const double pi=3.1415926535897932384626433832795;
+	if(fabs(z0)<tol) return;
+	double si;
+	if(z0<0) {z0=-z0;si=-1;} else si=1;
+	if(y0<0) {y0=-y0;si=-si;}
+	double xs=x0*x0,ys=y0*y0,zs=z0*z0,res=xs+ys,rvs=res+zs,theta=atan(z0/y0),rs=r*r,rc=rs*r,temp,voc,arc;
+	if(r<x0) {
+		puts("hi");
+		temp=2*theta-0.5*pi-asin((zs*xs-ys*rvs)/(res*(ys+zs)));
+		voc=rc/6.*temp;
+		arc=rs*0.5*temp;
+	} else if(rs<res) {
+		temp=0.5*pi+asin((zs*xs-ys*rvs)/(res*(ys+zs)));
+		voc=theta*0.5*(rs*x0-xs*x0/3.)-rc/6.*temp;
+		arc=theta*x0*r-rs*0.5*temp;
+	} else if(rs<rvs) {
+		temp=theta-pi*0.5+asin(y0/sqrt(rs-xs));
+		double temp2=(rs*x0-xs*x0/3.),
+		       x2s=rs*xs/res,y2s=rs*ys/res,
+		       temp3=asin((x2s-y2s-xs)/(rs-xs)),
+		       temp4=asin((zs*xs-ys*rvs)/(res*(ys+zs))),
+		       temp5=sqrt(rs-res);
+		voc=0.5*temp*temp2+x0*y0/6.*temp5+r*rs/6*(temp3-temp4);
+		arc=x0*r*temp-0.5*temp2*y0*r/((rs-xs)*temp5)+x0*y0/6.*r/temp5+rs*0.5*temp3+rs*rs/3.*2*xs*ys/(res*(rs-xs)*sqrt((rs-xs)*(rs-xs)-(x2s-y2s-xs)*(x2s-y2s-xs)))-rs*0.5*temp4;
+	} else {
+		voc=x0*y0*z0/6.;
+		arc=0;
+	}
+	vo+=voc*si;
+	ar+=arc*si;
+}
+
+
 /** Calculates the areas of each face of the Voronoi cell and prints the
  * results to an output stream.
  * \param[out] v the vector to store the results in. */
