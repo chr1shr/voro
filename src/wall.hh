@@ -86,7 +86,6 @@ struct wall_cylinder : public wall {
 		const double xc,yc,zc,xa,ya,za,asi,rc;
 };
 
-
 /** \brief A class representing a conical wall object.
  *
  * This class represents a cone wall object. */

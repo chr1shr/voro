@@ -48,7 +48,7 @@ class voronoicell_base {
 		/** This sets the size of the auxiliary delete stack. */
 		int current_delete2_size;
 		/** This sets the size of the extra search stack. */
-		int current_xsearch_size;		
+		int current_xsearch_size;
 		/** This sets the total number of vertices in the current cell.
 		 */
 		int p;
@@ -446,7 +446,7 @@ class voronoicell_neighbor : public voronoicell_base {
 		template<class c_class>
 		voronoicell_neighbor(c_class &con) : voronoicell_base(con.max_len_sq) {
 			memory_setup();
-		}		
+		}
 		~voronoicell_neighbor();
 		void operator=(voronoicell &c);
 		void operator=(voronoicell_neighbor &c);

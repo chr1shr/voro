@@ -28,7 +28,7 @@ namespace voro {
  *                particle. */
 container_periodic_base::container_periodic_base(double bx_,double bxy_,double by_,
 		double bxz_,double byz_,double bz_,int nx_,int ny_,int nz_,int init_mem_,int ps_)
-	: unitcell(bx_,bxy_,by_,bxz_,byz_,bz_), 
+	: unitcell(bx_,bxy_,by_,bxz_,byz_,bz_),
 	voro_base(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_), max_len_sq(unit_voro.max_radius_squared()),
 	ey(int(max_uv_y*ysp+1)), ez(int(max_uv_z*zsp+1)), wy(ny+ey), wz(nz+ez),
 	oy(ny+2*ey), oz(nz+2*ez), oxyz(nx*oy*oz), id(new int*[oxyz]), p(new double*[oxyz]),
@@ -140,7 +140,7 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r,int 
 	int ijk;
 	put_locate_block(ijk,x,y,z,ai,aj,ak);
 	for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+4*l);
-	
+
 	id[ijk][co[ijk]]=n;
 	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;

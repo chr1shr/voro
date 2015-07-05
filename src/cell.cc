@@ -168,7 +168,7 @@ void voronoicell_base::add_memory(vc_class &vc,int i) {
 							vc.n_set_to_aux1_offset(*dsp,m);
 							break;
 						}
-					}				
+					}
 					if(dsp==stackp3) voro_fatal_error("Couldn't relocate dangling pointer",VOROPP_INTERNAL_ERROR);
 				}
 #if VOROPP_VERBOSE >=3
@@ -284,7 +284,6 @@ void voronoicell_base::add_memory_xse() {
 	delete [] xse;xse=dsn;stackp3=dsnp;
 	stacke3=xse+current_xsearch_size;
 }
-
 
 /** Initializes a Voronoi cell as a rectangular box with the given dimensions.
  * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
@@ -486,7 +485,7 @@ inline bool voronoicell_base::search_upward(unsigned int &uw,int &lp,int &ls,int
 		up=lp;
 		return false;
 	}
-	
+
 	while(uw==0) {
 		//if(++count>=p) failsafe_find(lp,ls,us,l,u);
 
@@ -557,7 +556,7 @@ bool voronoicell_base::definite_max(int &lp,int &ls,double &l,double &u,unsigned
 			// Skip the point if it's already marked
 			if(ed[qp][nu[qp]<<1]<0) continue;
 			qw=m_test(qp,q);
-			
+
 			// This point is a better maximum. Reset markers and
 			// return true.
 			if(q>l) {
@@ -602,7 +601,7 @@ inline bool voronoicell_base::search_downward(unsigned int &lw,int &lp,int &ls,i
 		if(u>l) break;
 	}
 	if(us==nu[up]) if(definite_min(lp,us,l,u,lw)) return false;
-	
+
 	while(lw==2) {
 		//if(++count>=p) failsafe_find(lp,ls,us,l,u);
 
@@ -667,7 +666,7 @@ bool voronoicell_base::definite_min(int &lp,int &us,double &l,double &u,unsigned
 			// Skip the point if it's already marked
 			if(ed[qp][nu[qp]<<1]<0) continue;
 			qw=m_test(qp,q);
-			
+
 			// This point is a better minimum. Reset markers and
 			// return true.
 			if(q<u) {
@@ -701,7 +700,7 @@ bool voronoicell_base::definite_min(int &lp,int &us,double &l,double &u,unsigned
 	while(stackp>ds) flip(*(--stackp));
 	return true;
 }
-	
+
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
  * (x,y,z) from the cell center. The value of rsq should be initially set to
  * \f$x^2+y^2+z^2\f$.
@@ -739,7 +738,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 
 	// Store initial number of vertices
 	int op=p;
-	
+
 	if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
 	int k=0;int xtra=0;
 	while(xse+k<stackp3) {
@@ -747,7 +746,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 		uw=m_test(lp,l);
 		for(ls=0;ls<nu[lp];ls++) {
 			up=ed[lp][ls];
-			
+
 			// Skip if this is a new vertex
 			uw=m_test(up,u);
 			if(up>=op) continue;
@@ -765,7 +764,7 @@ bool voronoicell_base::nplane(vc_class &vc,double x,double y,double z,double rsq
 				if(create_facet(vc,-1,0,0,0,u,p_id)) return false;
 			} else {
 
-				// This is a new facet 
+				// This is a new facet
 				us=ed[lp][nu[lp]+ls];
 				m_test(lp,l);
 				if(create_facet(vc,lp,ls,l,us,u,p_id)) return false;
@@ -1716,7 +1715,6 @@ void voronoicell_base::minkowski_formula(double x0,double y0,double z0,double r,
 	ar+=arc*si;
 }
 
-
 /** Calculates the areas of each face of the Voronoi cell and prints the
  * results to an output stream.
  * \param[out] v the vector to store the results in. */
@@ -1753,7 +1751,6 @@ void voronoicell_base::face_areas(std::vector<double> &v) {
 	reset_edges();
 }
 
-
 /** Calculates the total surface area of the Voronoi cell.
  * \return The computed area. */
 double voronoicell_base::surface_area() {
@@ -1786,7 +1783,6 @@ double voronoicell_base::surface_area() {
 	reset_edges();
 	return 0.125*area;
 }
-
 
 /** Calculates the centroid of the Voronoi cell, by decomposing the cell into
  * tetrahedra extending outward from the zeroth vertex.
@@ -1992,7 +1988,6 @@ unsigned int voronoicell_base::m_calc(int n,double &ans) {
 	return maskr;
 }
 
-
 /** Checks to see if a given vertex is inside, outside or within the test
  * plane. If the point is far away from the test plane, the routine immediately
  * returns whether it is inside or outside. If the routine is close the the
@@ -2098,7 +2093,6 @@ inline void voronoicell_base::normals_search(std::vector<double> &v,int i,int j,
 	v.push_back(0);
 }
 
-
 /** Returns the number of faces of a computed Voronoi cell.
  * \return The number of faces. */
 int voronoicell_base::number_of_faces() {
@@ -2158,7 +2152,6 @@ void voronoicell_base::output_vertices(FILE *fp) {
 		for(double *ptsp=pts+4;ptsp<pts+(p<<2);ptsp+=4) fprintf(fp," (%g,%g,%g)",*ptsp*0.5,ptsp[1]*0.5,ptsp[2]*0.5);
 	}
 }
-
 
 /** Returns a vector of the vertex vectors in the global coordinate system.
  * \param[out] v the vector to store the results in.
@@ -2344,7 +2337,7 @@ inline bool voronoicell_base::plane_intersects_track(double x,double y,double z,
 
 	for(int tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) return true;
 	return false;
-/*	
+/*
 	int ls,us,lp;
 	double l,u;
 	unsigned int uw;

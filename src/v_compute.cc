@@ -779,7 +779,6 @@ inline bool voro_compute<c_class>::face_z_test(v_cell &c,double x0,double y0,dou
 	return true;
 }
 
-
 /** This routine checks to see whether a point is within a particular distance
  * of a nearby region. If the point is within the distance of the region, then
  * the routine returns true, and computes the maximum distance from the point

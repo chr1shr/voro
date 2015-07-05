@@ -419,7 +419,7 @@ class container_periodic : public container_periodic_base, public radius_mono {
 			bool q=compute_cell(c,ijk,co[ijk]-1);
 			co[ijk]--;
 			return q;
-		}		
+		}
 	private:
 		voro_compute<container_periodic> vc;
 		friend class voro_compute<container_periodic>;

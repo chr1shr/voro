@@ -265,12 +265,12 @@ int main(int argc,char **argv) {
 			double w0=atof(argv[i++]),w1=atof(argv[i++]);
 			double w2=atof(argv[i++]),w3=atof(argv[i++]);
 			double w4=atof(argv[i++]),w5=atof(argv[i]);
-			wl.add_wall(new wall_plane(-1,0,0,-w0,j));j--;			
-			wl.add_wall(new wall_plane(1,0,0,w1,j));j--;			
-			wl.add_wall(new wall_plane(0,-1,0,-w2,j));j--;			
-			wl.add_wall(new wall_plane(0,1,0,w3,j));j--;			
-			wl.add_wall(new wall_plane(0,0,-1,-w4,j));j--;			
-			wl.add_wall(new wall_plane(0,0,1,w5,j));j--;			
+			wl.add_wall(new wall_plane(-1,0,0,-w0,j));j--;
+			wl.add_wall(new wall_plane(1,0,0,w1,j));j--;
+			wl.add_wall(new wall_plane(0,-1,0,-w2,j));j--;
+			wl.add_wall(new wall_plane(0,1,0,w3,j));j--;
+			wl.add_wall(new wall_plane(0,0,-1,-w4,j));j--;
+			wl.add_wall(new wall_plane(0,0,1,w5,j));j--;
 		} else if(strcmp(argv[i],"-ws")==0) {
 			if(i>=argc-11) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
 			i++;
@@ -487,7 +487,7 @@ int main(int argc,char **argv) {
 		       "Total V. cell volume      : %g\n",tp,((double) tp)/(nx*ny*nz),
 		       vcc,(bx-ax)*(by-ay)*(bz-az),vol);
 	}
-			   
+
 	// Close output files
 	fclose(outfile);
 	if(gnu_file!=NULL) fclose(gnu_file);
@@ -495,4 +495,3 @@ int main(int argc,char **argv) {
 	if(povv_file!=NULL) fclose(povv_file);
 	return 0;
 }
-

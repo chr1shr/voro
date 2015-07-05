@@ -516,7 +516,6 @@ void container_base::draw_domain_pov(FILE *fp) {
 		   "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",ax,ay,bz,bx,ay,bz,ax,by,bz,bx,by,bz);
 }
 
-
 /** The wall_list constructor sets up an array of pointers to wall classes. */
 wall_list::wall_list() : walls(new wall*[init_wall_size]), wep(walls), wel(walls+init_wall_size),
 	current_wall_size(init_wall_size) {}
