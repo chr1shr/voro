@@ -436,7 +436,7 @@ void voronoicell_base::construct_relations() {
  * routine from .
  * \param[in,out] up */
 inline bool voronoicell_base::search_for_outside_edge(int &up) {
-	int i,lp,lw,*j=ds2,sc2=stackp2-ds2;
+	int i,lp,lw,*j=stackp2,sc2=stackp2-ds2;
 	double l;
 	*(stackp2++)=up;
 	while(j<stackp2) {
