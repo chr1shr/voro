@@ -126,7 +126,7 @@ template<class c_loop,class c_class>
 void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FILE* gnu_file,FILE* povp_file,FILE* povv_file,bool verbose,double &vol,int &vcc,int &tp) {
 	int pid,ps=con.ps;double x,y,z,r;
 	if(con.contains_neighbor(format)) {
-		voronoicell_neighbor c;
+		voronoicell_neighbor c(con);
 		if(vl.start()) do if(con.compute_cell(c,vl)) {
 			vl.pos(pid,x,y,z,r);
 			if(outfile!=NULL) c.output_custom(format,pid,x,y,z,r,outfile);
@@ -143,7 +143,7 @@ void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* outfile,FI
 			if(verbose) {vol+=c.volume();vcc++;}
 		} while(vl.inc());
 	} else {
-		voronoicell c;
+		voronoicell c(con);
 		if(vl.start()) do if(con.compute_cell(c,vl)) {
 			vl.pos(pid,x,y,z,r);
 			if(outfile!=NULL) c.output_custom(format,pid,x,y,z,r,outfile);
