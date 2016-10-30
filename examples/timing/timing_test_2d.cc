@@ -1,7 +1,7 @@
 #include <ctime>
-using namespace std;
 
 #include "voro++_2d.hh"
+using namespace voro;
 
 // Set up the number of blocks that the container is divided into. If the
 // preprocessor variable NNN hasn't been passed to the code, then initialize it

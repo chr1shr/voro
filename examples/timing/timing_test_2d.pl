@@ -12,7 +12,7 @@ $tries=20;
 $opt="-O3";
 
 foreach $r (@range) {
-	$r*=2;
+	$r*=4;
 
 	# Compile the code with the current grid size
 	system "g++ $opt -I../../src -DNNN=$r -o timing_test_2d "

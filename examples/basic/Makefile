@@ -13,17 +13,17 @@ EXECUTABLES=single_cell_2d random_points_2d import_2d doe_diagram
 # Makefile rules
 all: $(EXECUTABLES) 
 
-single_cell_2d: $(SOURCE) single_cell_2d.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o single_cell_2d single_cell_2d.cc -lvoro++_2d
+single_cell_2d: single_cell_2d.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o $@ $< -lvoro++_2d
 
 random_points_2d: random_points_2d.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o random_points_2d random_points_2d.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o $@ $< -lvoro++_2d
 
 import_2d: import_2d.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o import_2d import_2d.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o $@ $< -lvoro++_2d
 
 doe_diagram: doe_diagram.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o doe_diagram doe_diagram.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o $@ $< -lvoro++_2d
 
 clean:
 	rm -f $(EXECUTABLES)

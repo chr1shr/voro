@@ -13,11 +13,11 @@ EXECUTABLES=intersect lloyd
 # Makefile rules
 all: $(EXECUTABLES) 
 
-intersect: $(SOURCE) intersect.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o intersect intersect.cc -lvoro++_2d
+intersect: intersect.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o $@ $< -lvoro++_2d
 
 lloyd: lloyd.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o lloyd lloyd.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o $@ $< -lvoro++_2d
 
 clean:
 	rm -f $(EXECUTABLES)

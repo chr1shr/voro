@@ -381,10 +381,14 @@ void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,d
 	    bi=int((midx+radius-ax)*xsp),
 	    aj=int((midy-radius-ay)*ysp),
 	    bj=int((midy+radius-ay)*ysp),i,j,ij,k;
-	if(ai<0) ai=0;if(ai>=nx) ai=nx-1;
-	if(bi<0) bi=0;if(bi>=nx) bi=nx-1;
-	if(aj<0) aj=0;if(aj>=ny) aj=ny-1;
-	if(bj<0) bj=0;if(bj>=ny) bj=ny-1;
+	if(ai<0) ai=0;
+	if(ai>=nx) ai=nx-1;
+	if(bi<0) bi=0;
+	if(bi>=nx) bi=nx-1;
+	if(aj<0) aj=0;
+	if(aj>=ny) aj=ny-1;
+	if(bj<0) bj=0;
+	if(bj>=ny) bj=ny-1;
 
 	// Now loop through all the particles in the boxes we found, tagging
 	// the ones that are within radius of (midx,midy) and are on the
@@ -478,8 +482,8 @@ bool container_boundary_2d::point_inside(double x,double y) {
 	}
 
 #if VOROPP_VERBOSE >=2
-	if(k<0) fprintf(stderr,"Negative winding number of %d for (%g,%g)\n",j,x,y);
-	else if(k>1) fprintf(stderr,"Winding number of %d for (%g,%g)\n",j,x,y);
+	if(k<0) fprintf(stderr,"Negative winding number of %d for (%g,%g)\n",k,x,y);
+	else if(k>1) fprintf(stderr,"Winding number of %d for (%g,%g)\n",k,x,y);
 #endif
 	return k>0;
 }

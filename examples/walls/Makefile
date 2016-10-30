@@ -13,11 +13,11 @@ EXECUTABLES=circle polygon
 # Makefile rules
 all: $(EXECUTABLES) 
 
-circle: $(SOURCE) circle.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o circle circle.cc -lvoro++_2d
+circle: circle.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o $@ $< -lvoro++_2d
 
 polygon: polygon.cc
-	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o polygon polygon.cc -lvoro++_2d
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o $@ $< -lvoro++_2d
 
 clean:
 	rm -f $(EXECUTABLES)

@@ -732,7 +732,8 @@ inline void voro_compute_2d<c_class_2d>::add_list_memory(int*& qu_s,int*& qu_e) 
 	if(qu_s<=qu_e) {
 		while(qu_s<qu_e) *(qu_c++)=*(qu_s++);
 	} else {
-		while(qu_s<qu_l) *(qu_c++)=*(qu_s++);qu_s=qu;
+		while(qu_s<qu_l) *(qu_c++)=*(qu_s++);
+		qu_s=qu;
 		while(qu_s<qu_e) *(qu_c++)=*(qu_s++);
 	}
 	delete [] qu;
