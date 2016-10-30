@@ -409,7 +409,7 @@ bool voro_compute_2d<c_class_2d>::compute_cell(v_cell_2d &c,int ij,int s,int ci,
 			}
 		}
 	} while(g<f);
-	
+
 	// If we reach here, we were unable to compute the entire cell using
 	// the first part of the worklist. This section of the algorithm
 	// continues the worklist, but it now starts preparing the mask that we

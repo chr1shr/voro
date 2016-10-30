@@ -95,7 +95,7 @@ class voronoicell_base_2d {
 		void vertices(double x,double y,vector<double> &v);
 		void output_vertices(double x,double y,FILE *fp=stdout);
 		void edge_lengths(vector<double> &vd);
-		void normals(vector<double> &vd);	
+		void normals(vector<double> &vd);
 		void centroid(double &cx,double &cy);
 		virtual void neighbors(vector<int> &v) {v.clear();}
 	protected:

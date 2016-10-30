@@ -1,4 +1,3 @@
-
 #ifndef VOROPP_V_CONNECT_HH
 #define VOROPP_V_CONNECT_HH
 //To be used with voro++ to get full connectivity information
@@ -10,8 +9,6 @@ using namespace std;
 #include <vector>
 namespace voro{
 
-
-
 class v_connect{
 	public:
 		double minx,maxx,miny,maxy;
@@ -21,14 +18,14 @@ class v_connect{
 		vector<char> vbd;
 		int bd;
 		//# of generators
-		int ng;	
+		int ng;
 		//middle generator id
 		int mid;
 		//current size of vertl array/2
 		int current_vertices;
 		//number of vertices
 		int nv;
-		//for all i>=degenerate_vertices, the ith vertex is degenerate 
+		//for all i>=degenerate_vertices, the ith vertex is degenerate
 		int degenerate_vertices;
 		//current size of ed_to_vert array
 		int current_edges;
@@ -41,7 +38,7 @@ class v_connect{
 		double *vertl;
 		//vert_to_gen[i]= vector containing list of generators that ith vertex is touching
 		vector<int> *vert_to_gen;
-		//vert_to_ed[i]= vector containing list of edges that the i'th vertex is a member of			
+		//vert_to_ed[i]= vector containing list of edges that the i'th vertex is a member of
 		vector<int> *vert_to_ed;
 		//vert_on_bd[i].size()==0 if vertex i is not on boundary. if vertex i is on boundary it is a size 2 vector of the generators that define the part of the boundary it is on
 		vector<int> *vert_on_bd;
@@ -56,7 +53,7 @@ class v_connect{
 		//ed_to_vert[2*i(+1)]=the vertex with the lower(higher) id constituting edge i
 		int *ed_to_vert;
 		//ed_to_gen[2*i(+1)]=the generator with the left-hand(right-hand) orientation touching the edge
-		vector<int> *ed_to_gen; 
+		vector<int> *ed_to_gen;
 		//ed_on_bd[i].size()==0 if edge i is not on the boundary. if it is, ed_on_bd[i] is a 2 element list of the generators that define that part of the boundary that it is on
 		vector<int> *ed_on_bd;
 		//vertex_is_generator[i]=(-1 if ith vertex is not a generator)(j if ith vertex is generator j)
@@ -64,13 +61,6 @@ class v_connect{
 		//see above
 		int *generator_is_vertex;
 
-
-		
-
-
-
-
-	
 		v_connect(){
 			bd=-1;
 			nv=0;
@@ -87,7 +77,7 @@ class v_connect{
 			vertex_is_generator=new int[current_vertices];
 			for(int i=0;i<current_vertices;i++) vertex_is_generator[i]=-1;
 		}
-		
+
 		~v_connect(){
 			delete[] vertl;
 			delete[] vert_to_gen;
@@ -110,7 +100,7 @@ class v_connect{
 			import(fp);
 			fclose(fp);
 		}
-	
+
 		vector<int> groom_vertexg_help(double x, double y,double vx, double vy, vector<int> &g);
 		vector<int> groom_vertexg_help2(double x,double y,double vx,double vy,vector<int> &g);
 		inline void groom_vertexg(voronoicell_nonconvex_neighbor_2d &c){
@@ -128,12 +118,12 @@ class v_connect{
 			old=newv;
 		}
 		inline void add_memory_array(double* &old,int size){
-			double *newa= new double[2*size];	
+			double *newa= new double[2*size];
 			for(int i=0;i<(size);i++){
 				newa[i]=old[i];
 			}
 			delete [] old;
-			old=newa;	
+			old=newa;
 		}
 		inline void add_memory_array(int* &old,int size){
 			int *newa=new int[2*size];
@@ -274,7 +264,7 @@ class v_connect{
 		}
 		void label_generators(FILE *fp=stdout);
 		inline void label_generators(const char *filename){
-			FILE *fp=safe_fopen(filename,"w");	
+			FILE *fp=safe_fopen(filename,"w");
 			label_generators(fp);
 			fclose(fp);
 		}
@@ -355,7 +345,6 @@ class v_connect{
 			fclose(fp);
 		}
 };
-
 
 }
 #endif

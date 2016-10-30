@@ -114,7 +114,6 @@ bool voronoicell_base_2d::plane_intersects(double x,double y,double rsq) {
 	return true;
 }
 
-
 /** Cuts the Voronoi cell by a particle whose center is at a separation of
  * (x,y) from the cell center. The value of rsq should be initially set to
  * \f$x^2+y^2\f$.
@@ -152,7 +151,6 @@ bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p
 
 	return nplane_cut(vc,x,y,rsq,p_id,u,up);
 }
-
 
 template<class vc_class>
 bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,int p_id,double u,int up) {
@@ -337,7 +335,6 @@ void voronoicell_base_2d::normals(vector<double> &vd) {
 	} while (k!=0);
 }
 
-
 /** Calculates the area of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
 double voronoicell_base_2d::area() {
@@ -377,11 +374,6 @@ void voronoicell_base_2d::centroid(double &cx,double &cy) {
 	cx=0.5*(x+cx*tarea);
 	cy=0.5*(y+cy*tarea);
 }
-
-
-
-
-
 
 /** Computes the Voronoi cells for all particles in the container, and for each
  * cell, outputs a line containing custom information about the cell structure.

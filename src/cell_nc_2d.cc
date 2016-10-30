@@ -80,17 +80,15 @@ bool voronoicell_nonconvex_base_2d::nplane_nonconvex(vc_class &vc,double x,doubl
 	if(x*(*reg)+y*reg[1]<0) {edd=ed;rx=reg[2];ry=reg[3];sx=*reg;sy=reg[1];}
 	else {edd=ed+1;rx=reg[4];ry=reg[5];sx=-*reg;sy=-reg[1];}
 
-
 	up=*edd;u=pos(x,y,rsq,up);
 	while(u<tolerance) {
 		up=edd[2*up];if(up==0) return true;
 		if(pts[2*up]*sx+pts[2*up+1]*sy>0&&rx*pts[2*up]+ry*pts[2*up+1]>0) return true;
 		u=pos(x,y,rsq,up);
 	}
-	
+
 	return nplane_cut(vc,x,y,rsq,p_id,u,up);
 }
-
 
 inline int voronoicell_nonconvex_base_2d::face(double xmin,double xmax,double ymin,double ymax,double &wx,double &wy) {
 	if(wy>0) {

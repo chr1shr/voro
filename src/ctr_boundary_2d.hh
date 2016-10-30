@@ -84,7 +84,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		int edbm;
 		int *edb;
 		double *bnds;
-	
+
 		/** The amount of memory in the array structure for each
 		 * particle. This is set to 2 when the basic class is
 		 * initialized, so that the array holds (x,y) positions. If the
@@ -218,12 +218,6 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		void put(int n,double x,double y);
 		void put(particle_order &vo,int n,double x,double y);
 
-
-
-
-
-
-
 		void import(FILE *fp=stdin);
 		/** Imports a list of particles from an open file stream into
 		 * the container. Entries of three numbers (Particle ID, x
@@ -352,9 +346,9 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		template<class c_loop_2d>
 		void print_custom(c_loop_2d &vl,const char *format,FILE *fp) {
 			int ij,q;double *pp;
-		//	bool glob=false, loc=false;	
+		//	bool glob=false, loc=false;
 		//	if(contains_neighbor_global(format)){
-		//		init_globne();	
+		//		init_globne();
 		//		glob=true;
 		//	}
 			if(contains_neighbor(format)){
@@ -363,7 +357,7 @@ class container_boundary_2d : public voro_base_2d, public radius_mono {
 		//	if(glob || loc) {
 				voronoicell_nonconvex_neighbor_2d c;
 				if(vl.start()) do if(compute_cell(c,vl)) {
-			
+
 					ij=vl.ij;q=vl.q;pp=p[ij]+ps*q;
 			//		if(glob) add_globne_info(id[ij][q], c.ne, c.p);
 					c.output_custom(format,id[ij][q],*pp,pp[1],default_radius_2d,fp);

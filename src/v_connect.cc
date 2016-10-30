@@ -1,6 +1,3 @@
-
-
-
 #include "v_connect.hh"
 #include <math.h>
 #include <stdio.h>
@@ -8,11 +5,11 @@
 namespace voro{
 
 void v_connect::import(FILE *fp){
-	bool neg_label=false,boundary_track=false,start=false; 
+	bool neg_label=false,boundary_track=false,start=false;
 	char *buf(new char[512]);
 	int i=0,id;
 	double x, y,pad=.05;
-	
+
 	while(fgets(buf,512,fp)!=NULL) {
 
 		if(strcmp(buf,"#Start\n")==0||strcmp(buf,"# Start\n")==0) {
@@ -24,7 +21,7 @@ void v_connect::import(FILE *fp){
 
 		} else if(strcmp(buf,"#End\n")==0||strcmp(buf,"# End\n")==0||
 			  strcmp(buf,"#End")==0||strcmp(buf,"# End")==0) {
-			
+
 			// Check that two consecutive end tokens haven't been
 			// encountered
 			if(start) voro_fatal_error("File import error - end token immediately after start token",VOROPP_FILE_ERROR);
@@ -37,7 +34,7 @@ void v_connect::import(FILE *fp){
 			vid.push_back(id);
 			vpos.push_back(x);
 			vpos.push_back(y);
-			vbd.push_back(start?1:0);	
+			vbd.push_back(start?1:0);
 			i++;
 
 			// Determine bounds
@@ -51,21 +48,21 @@ void v_connect::import(FILE *fp){
 			start=false;
 		}
 	}
-	
+
 	if(boundary_track) voro_fatal_error("File import error - boundary not finished",VOROPP_FILE_ERROR);
 	if(!feof(fp)) voro_fatal_error("File import error #2",VOROPP_FILE_ERROR);
-	delete [] buf;	
-	
+	delete [] buf;
+
 	// Add small amount of padding to container bounds
 	double dx=maxx-minx,dy=maxy-miny;
 	minx-=pad*dx;maxx+=pad*dx;dx+=2*pad*dx;
 	miny-=pad*dy;maxy+=pad*dy;dy+=2*pad*dy;
-	
+
 	// Guess the optimal computationl grid, aiming at eight particles per
 	// grid square
 	double lscale=sqrt(8.0*dx*dy/i);
 	nx=(int)(dx/lscale)+1,ny=(int)(dy/lscale)+1;
-	ng=i;	
+	ng=i;
 	gen_to_vert= new vector<int>[i];
 	gen_to_ed= new vector<int>[i];
 	gen_to_gen_e= new vector<int>[i];
@@ -115,7 +112,7 @@ void v_connect::assemble_vertex(){
 	con.full_connect_on();
 	voronoicell_nonconvex_neighbor_2d c;
 	c_loop_all_2d cl(con);
-	
+
 	//Compute Voronoi Cells, adding vertices to potential data structures (p*)
 	if(cl.start()) do if(con.compute_cell(c,cl)){
 		cv=0;
@@ -123,7 +120,7 @@ void v_connect::assemble_vertex(){
 		id=cl.pid();
 		x=vpos[2*mp[id]];
 		y=vpos[2*mp[id]+1];
-		groom_vertexg(c);	
+		groom_vertexg(c);
 		do{
 			gens=c.vertexg[cv];
 			vx=.5*c.pts[2*cv]+x;
@@ -148,10 +145,10 @@ void v_connect::assemble_vertex(){
 				gx2=vpos[2*mp[gens[1]]]-(c.pts[2*cv]*.5+x);gy2=vpos[2*mp[gens[1]]+1]-(c.pts[2*cv+1]*.5+y);
 				if((((gx1*gy2)-(gy1*gx2))>-tolerance) && ((gx1*gy2)-(gy1*gx2))<tolerance){
 					if((vbd[mp[gens[0]]]|2)!=0 && vbd[mp[gens[1]]]==1){
-					
+
 						g1=gens[1]; g2=gens[0];
 					}else if((vbd[mp[gens[1]]]|2)!=0 && vbd[mp[gens[0]]]==1){
-				
+
 						g1=gens[0]; g2=gens[1];
 					}else{
 						if(mp[gens[0]]<mp[gens[1]]){
@@ -165,7 +162,7 @@ void v_connect::assemble_vertex(){
 				}else{
 					g1=gens[1]; g2=gens[0];
 				}
-				if(globvertc[2*((ng*ng*g1)+(ng*g2))]!=0){	
+				if(globvertc[2*((ng*ng*g1)+(ng*g2))]!=0){
 					seencv=true;
 					globvertc[2*((ng*ng*g1)+(ng*g2))]+=1;
 					cvi=globvertc[2*((ng*ng*g1)+(ng*g2))+1];
@@ -224,7 +221,7 @@ void v_connect::assemble_vertex(){
 					vert_size++;
 				}
 			}
-				
+
 				//add edges to potential edge structures
 				if(cv!=0){
 					if(pne==current_edges){
@@ -246,7 +243,6 @@ void v_connect::assemble_vertex(){
 				seenlv=seencv;
 				cv=c.ed[2*lv];
 
-		
 		}while(cv!=0);
 			//deal with final edge (last vertex to first vertex)
 			if(pne==current_edges){
@@ -261,7 +257,7 @@ void v_connect::assemble_vertex(){
 				ped_to_vert[2*pne+1]=fvi;
 			}
 			pne++;
-	
+
 	}while (cl.inc());
 	cout << "2.2" << endl;
 	//Add non-problem vertices(connectivity<=3) to class variables, add problem vertices to problem vertice data structures
@@ -302,7 +298,7 @@ void v_connect::assemble_vertex(){
 				g1=gens[0]; g2=gens[1];
 			}else{
 				g1=gens[1]; g2=gens[0];
-			}		
+			}
 			if(globvertc[2*((ng*ng*g1)+(ng*g2))]!=2){
 				problem_verts21.push_back(i);
 			}
@@ -317,7 +313,7 @@ void v_connect::assemble_vertex(){
 				j++;
 			}
 		}else{
-			g1=gens[0];g2=gens[1];g3=gens[2];	
+			g1=gens[0];g2=gens[1];g3=gens[2];
 			if(g1<g2 && g1<g3){
 				gl1=g1;gl2=g2;gl3=g3;
 			}else if(g2<g1 && g2<g3){
@@ -325,7 +321,7 @@ void v_connect::assemble_vertex(){
 			}else{
 				gl1=g3;gl2=g1;gl3=g2;
 			}
-			if(globvertc[2*((ng*ng*gl1)+(ng*gl2)+gl3)]!=3){	
+			if(globvertc[2*((ng*ng*gl1)+(ng*gl2)+gl3)]!=3){
 				if(globvertc[2*((ng*ng*gl1)+(ng*gl2)+gl3)]==1) problem_verts.push_back(i);
 				else problem_verts32.push_back(i);
 			}else{
@@ -340,7 +336,6 @@ void v_connect::assemble_vertex(){
 			}
 		}
 
-
 	}
 	cout << "2.3\n problemverts21.size()=" << problem_verts21.size() << "\nproblem_verts32.size()=" << problem_verts32.size() << "\nproblem_verts.size()=" << problem_verts.size() << endl;
 	nv=j;
@@ -351,7 +346,7 @@ void v_connect::assemble_vertex(){
 			for(int j=i+1;j<problem_verts21.size();j++){
 				one_in_common(pvert_to_gen[problem_verts21[i]],pvert_to_gen[problem_verts21[j]],g1);
 				if(g1==-1) continue;
-				gens=pvert_to_gen[problem_verts21[i]];		
+				gens=pvert_to_gen[problem_verts21[i]];
 				gens.push_back(not_this_one(pvert_to_gen[problem_verts21[j]],g1));
 				for(int k=0;k<problem_verts.size();k++){
 					if(contain_same_elements(gens,pvert_to_gen[problem_verts[k]])){
@@ -396,40 +391,39 @@ void v_connect::assemble_vertex(){
 		}
 	}
 
-
 	double standard,distance;
 	cout << "part3" << endl;
-	while(problem_verts.size()>0){	
+	while(problem_verts.size()>0){
 
 		if(nv==current_vertices) add_memory_vertices();
 		gens=pvert_to_gen[problem_verts[0]];
 		vx=pvertl[2*problem_verts[0]];vy=pvertl[2*problem_verts[0]+1];
-		standard=pow(vx-vpos[2*mp[gens[0]]],2)+pow(vy-vpos[2*mp[gens[0]]+1],2);	
+		standard=pow(vx-vpos[2*mp[gens[0]]],2)+pow(vy-vpos[2*mp[gens[0]]+1],2);
 		g1=gens[0];g2=gens[1];
 		pmap[problem_verts[0]]=nv;
 		problem_verts.erase(problem_verts.begin());
 		i=0;
-		while(true){	
+		while(true){
 			g3=not_these_two(pvert_to_gen[problem_verts[i]],g1,g2);
-			if(g3!=-1){	
-				distance=pow(vx-vpos[2*mp[g3]],2)+pow(vy-vpos[2*mp[g3]+1],2);	
+			if(g3!=-1){
+				distance=pow(vx-vpos[2*mp[g3]],2)+pow(vy-vpos[2*mp[g3]+1],2);
 			}
-			if(contains_two(pvert_to_gen[problem_verts[i]],g1,g2) && 
-				(distance<(standard+tolerance) && (distance>(standard-tolerance)))){	
+			if(contains_two(pvert_to_gen[problem_verts[i]],g1,g2) &&
+				(distance<(standard+tolerance) && (distance>(standard-tolerance)))){
 				if(g3==gens[0]){
 					pmap[problem_verts[i]]=nv;
 					problem_verts.erase(problem_verts.begin()+i);
 					break;
 				}
-				if(g3!=gens[2]) gens.push_back(g3);	
+				if(g3!=gens[2]) gens.push_back(g3);
 				pmap[problem_verts[i]]=nv;
-				g2=g3;				
+				g2=g3;
 				g1=pvert_to_gen[problem_verts[i]][0];
-				if(problem_verts.size()>1){		
+				if(problem_verts.size()>1){
 					problem_verts.erase(problem_verts.begin()+i);
 				}else{
 					break;
-				}	
+				}
 				i=0;
 			}else{
 				i++;
@@ -444,7 +438,7 @@ void v_connect::assemble_vertex(){
 
 	}
 	delete [] pvert_to_gen;
-	delete [] pvertl; 
+	delete [] pvertl;
 	delete [] globvertc;
 	cout << "2.4" << endl;
 	//assemble edge data structures
@@ -542,14 +536,14 @@ void v_connect::assemble_gen_ed(){
 		}
 	}
 	cout << "gen_ed 3" << endl;
-	for(int i=0;i<nv;i++){		
+	for(int i=0;i<nv;i++){
 		if(vert_to_ed[i].size()<=3) continue;
 		else{
 			gens=vert_to_gen[i];
 			for(int j=0;j<gens.size();j++){
 				for(int k=0;k<gens.size();k++){
 					if(!contains(gen_to_gen_e[gens[j]],gens[k])) gen_to_gen_v[gens[j]].push_back(gens[k]);
-				
+
 				}
 			}
 		}
@@ -626,8 +620,6 @@ void v_connect::assemble_boundary(){
 	}
 
 }
-			
-
 
 //(x,y)=my coordinates
 //(vx,vy)=vertex coordinates
@@ -689,9 +681,9 @@ vector<int> v_connect::groom_vertexg_help(double x,double y,double vx, double vy
 				}
 			}
 		}
-	} 
+	}
 	if(!contains(newg,bestg)) newg.push_back(bestg);
-	
+
 	//find left hand
 	rightside=false;
 	g1=temp[1];
@@ -1057,12 +1049,9 @@ void v_connect::draw_gnu(FILE *fp){
 	}
 }
 
-				
-
-
 void v_connect::draw_vtg_gnu(FILE *fp){
 	double vx, vy, gx, gy;
-	int l2;	
+	int l2;
 	for(int i=0;i<ng;i++){
 		gx=vpos[2*mp[i]];gy=vpos[2*mp[i]+1];
 		for(int k=0;k<gen_to_vert[i].size();k++){
@@ -1135,7 +1124,7 @@ void v_connect::print_gen_to_ed_table(FILE *fp){
 		fprintf(fp,"\n\n");
 	}
 }
-	
+
 void v_connect::print_gen_to_vert_table(FILE *fp){
 	fprintf(fp,"generator to vertex connectivity, arranged conterclockwise\n\n");
 	for(int i=0;i<ng;i++){
@@ -1149,7 +1138,7 @@ void v_connect::print_gen_to_vert_table(FILE *fp){
 void v_connect::print_vert_to_gen_table(FILE *fp){
 	fprintf(fp,"vertex to generator connectivity, arranged counterclockwise\n\n");
 	for(int i=0;i<nv;i++){
-		fprintf(fp,"vertex %i\n",i);	
+		fprintf(fp,"vertex %i\n",i);
 		for(int k=0;k<vert_to_gen[i].size();k++){
 			fprintf(fp,"\t %i\n",vert_to_gen[i][k]);
 		}
@@ -1216,13 +1205,11 @@ void v_connect::ascii_output(FILE *fp){
 	}
 }
 
-
-
 void v_connect::add_memory_vertices(){
 	double *vertle(vertl+2*current_vertices);
 	int *vertex_is_generatore(vertex_is_generator+current_vertices);
 	current_vertices<<=1;
-	cout << "2.2.1" << endl;	
+	cout << "2.2.1" << endl;
 	//copy vertl
 	double *nvertl(new double[2*current_vertices]),*nvp(nvertl),*vp(vertl);
 	while(vp<vertle) *(nvp++)=*(vp++);
@@ -1240,7 +1227,7 @@ void v_connect::add_memory_vertices(){
 	while(vig<vertex_is_generatore) *(nvig++)=*(vig++);
 	cout << "inbetween" << endl;
 	while(nvig<nvige) *(nvig++)=-1;
-	cout << "2.2.4" << endl;	
+	cout << "2.2.4" << endl;
 	delete [] vertex_is_generator; vertex_is_generator=nvertex_is_generator;
 }
 
@@ -1294,7 +1281,7 @@ void v_connect::lloyds(double epsilon){
 	int j=0;
 	char *outfn1(new char[1000]);
 	sprintf(outfn1,"lloyds");
-	FILE *fp=safe_fopen(outfn1,"w");	
+	FILE *fp=safe_fopen(outfn1,"w");
 	do{
 		cout << "iteration" << j << endl;
 		max=0;
@@ -1316,7 +1303,7 @@ void v_connect::lloyds(double epsilon){
 			}
 		}
 		fprintf(fp,"iteration %i, max=%f, epsilon=%f",j,max,epsilon);
-		nv=0;		
+		nv=0;
 		ne=0;
 		cout << "1" << endl;
 		current_vertices=init_vertices;
@@ -1407,7 +1394,5 @@ void v_connect::draw_closest_generator(FILE *fp,double x,double y){
 		fprintf(fp,"%g %g\n",vpos[2*mp[ng]],vpos[2*mp[ng]+1]);
 	}while(cg!=ng);
 }
-
-
 
 }

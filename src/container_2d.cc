@@ -28,7 +28,7 @@ namespace voro {
 container_base_2d::container_base_2d(double ax_,double bx_,double ay_,double by_,
 		int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem,int ps_)
 	: voro_base_2d(nx_,ny_,(bx_-ax_)/nx_,(by_-ay_)/ny_),
-	ax(ax_), bx(bx_), ay(ay_), by(by_), xperiodic(xperiodic_), yperiodic(yperiodic_), 
+	ax(ax_), bx(bx_), ay(ay_), by(by_), xperiodic(xperiodic_), yperiodic(yperiodic_),
 	id(new int*[nxy]), p(new double*[nxy]), co(new int[nxy]), mem(new int[nxy]), ps(ps_) {
 	int l;
 	//totpar=0;
@@ -479,9 +479,8 @@ void container_base_2d::draw_domain_pov(FILE *fp) {
 	fprintf(fp,"cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
 		   "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n",ax,ay,ax,by,bx,ay,bx,by);
 	fprintf(fp,"sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n"
-		   "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",ax,ay,bx,ay,ax,by,bx,by);	
+		   "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",ax,ay,bx,ay,ax,by,bx,by);
 }
-
 
 /** The wall_list constructor sets up an array of pointers to wall classes. */
 wall_list_2d::wall_list_2d() : walls(new wall_2d*[init_wall_size]), wep(walls), wel(walls+init_wall_size),

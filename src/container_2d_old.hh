@@ -169,7 +169,6 @@ class container_2d {
 		friend class voropp_loop_2d;
 };
 
-
 /** \brief A class to handle loops on regions of the container handling
  * non-periodic and periodic boundary conditions.
  *

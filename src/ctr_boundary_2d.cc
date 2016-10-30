@@ -31,14 +31,14 @@ namespace voro {
 container_boundary_2d::container_boundary_2d(double ax_,double bx_,double ay_,double by_,
 		int nx_,int ny_,bool xperiodic_,bool yperiodic_,int init_mem)
 	: voro_base_2d(nx_,ny_,(bx_-ax_)/nx_,(by_-ay_)/ny_),
-	ax(ax_), bx(bx_), ay(ay_), by(by_), xperiodic(xperiodic_), yperiodic(yperiodic_), 
+	ax(ax_), bx(bx_), ay(ay_), by(by_), xperiodic(xperiodic_), yperiodic(yperiodic_),
 	id(new int*[nxy]), p(new double*[nxy]), co(new int[nxy]), mem(new int[nxy]),
 	wid(new int*[nxy]), nlab(new int*[nxy]), plab(new int**[nxy]), bndpts(new int*[nxy]),
 	boundary_track(-1), edbc(0), edbm(init_boundary_size),
 	edb(new int[2*edbm]), bnds(new double[2*edbm]), ps(2), soi(NULL),
 	vc(*this,xperiodic_?2*nx_+1:nx_,yperiodic_?2*ny_+1:ny_)	{
 	int l;
-//        totpar=0;	
+//        totpar=0;
 	for(l=0;l<nxy;l++) co[l]=0;
 	for(l=0;l<nxy;l++) mem[l]=init_mem;
 	for(l=0;l<nxy;l++) id[l]=new int[init_mem];
@@ -71,7 +71,6 @@ container_boundary_2d::~container_boundary_2d() {
 	delete [] co;
 	delete [] mem;
 }
-
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
@@ -255,7 +254,7 @@ void container_boundary_2d::draw_domain_pov(FILE *fp) {
 	fprintf(fp,"cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
 		   "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n",ax,ay,ax,by,bx,ay,bx,by);
 	fprintf(fp,"sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n"
-		   "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",ax,ay,bx,ay,ax,by,bx,by);	
+		   "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",ax,ay,bx,ay,ax,by,bx,by);
 }
 
 /** This does the additional set-up for non-convex containers. We assume that
@@ -267,23 +266,23 @@ void container_boundary_2d::setup(){
 	double cx,cy,nx,ny;//current (x,y),next (x,y)
 	int widl=1,maxwid=1,fwid=1,nwid;//lwid;
 //	bool first=true;
-	
+
 	tmp=tmpp=new int[3*init_temp_label_size];
 	tmpe=tmp+3*init_temp_label_size;
-	
+
 	while(widl!=edbc){
 		cx=bnds[2*widl];cy=bnds[2*widl+1];
 		nwid=edb[2*widl];//lwid=edb[2*widl+1];
 		//lx=bnds[lwid*2];ly=bnds[lwid*2+1];
 		nx=bnds[2*nwid];ny=bnds[2*nwid+1];
-		
+
 		tag_walls(cx,cy,nx,ny,widl);
 		semi_circle_labeling(cx,cy,nx,ny,widl);
-	
-		//make sure that the cos(angle)>1 and the angle points inward	
-		//probpts=(lx-cx)*(nx-cx)+(ly-cy)*(ny-cy)>tolerance && 
+
+		//make sure that the cos(angle)>1 and the angle points inward
+		//probpts=(lx-cx)*(nx-cx)+(ly-cy)*(ny-cy)>tolerance &&
 		//	cross_product(lx-cx,ly-cy,nx-cx,ny-cy);
-		
+
 		widl=edb[2*widl];
 		if(widl>maxwid) maxwid=widl;
 		if(widl==fwid){
@@ -291,10 +290,10 @@ void container_boundary_2d::setup(){
 			fwid=widl;
 			maxwid++;
 		//	first=false;
-		}		
+		}
 	}
 
-	// The temporary array can now be used to set up the label table 
+	// The temporary array can now be used to set up the label table
 	create_label_table();
 
 	// Remove temporary array
@@ -303,12 +302,12 @@ void container_boundary_2d::setup(){
 
 /** Given two points, tags all the computational boxes that the line segment
  * specified by the two points
- * goes through. param[in] (x1,y1) this is one point 
+ * goes through. param[in] (x1,y1) this is one point
  * \param[in] (x2,y2) this is the other point.
  * \param[in] wid this is the wall id bnds[2*wid] is the x index of the first
  *                vertex in the c-c direction. */
 void container_boundary_2d::tag_walls(double x1,double y1,double x2,double y2,int wid_) {
-	
+
 	// Find which boxes these points are within
 	int i1=int((x1-ax)*xsp),j1=int((y1-ay)*ysp);
 	int i2=int((x2-ax)*xsp),j2=int((y2-ay)*ysp),k,ij;
@@ -371,7 +370,7 @@ inline void container_boundary_2d::tag(int ij,int wid_) {
  * boundary.
  * \param[in] (x1,y1) the start point of the wall segment, arranged so that it
  *                    is the first point reached in the counter-clockwise
- *                    direction. 
+ *                    direction.
  * \param[in] (x2,y2) the end points of the wall segment. */
 void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,double y2,int bid) {
 
@@ -399,7 +398,7 @@ void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,d
 			cpx=p[ij][2*k];
 			cpy=p[ij][2*k+1];
 			if((midx-cpx)*(midx-cpx)+(midy-cpy)*(midy-cpy)<=radius*radius&&
-			cross_product((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))&& 
+			cross_product((x1-x2),(y1-y2),(cpx-x2),(cpy-y2))&&
 			(cpx!=x1||cpy==y1)&&(cpx!=x2||cpy!=y2)) {
 
 				if(tmpp==tmpe) add_temporary_label_memory();
@@ -410,7 +409,7 @@ void container_boundary_2d::semi_circle_labeling(double x1,double y1,double x2,d
 		}
 	}
 }
-		
+
 void container_boundary_2d::create_label_table() {
 	int ij,q,*pp,tlab=0;
 
@@ -439,7 +438,7 @@ void container_boundary_2d::create_label_table() {
 	// Fill in the label entries
 	for(pp=tmp;pp<tmpp;pp+=3) *(plab[*pp][pp[1]]++)=pp[2];
 
-	// Reset the label pointers 
+	// Reset the label pointers
 	pp=soi;
 	for(ij=0;ij<nxy;ij++) for(q=0;q<co[ij];pp+=nlab[ij][q++]) plab[ij][q]=pp;
 }
@@ -450,7 +449,7 @@ void container_boundary_2d::create_label_table() {
  * routine would have to be extended.) */
 void container_boundary_2d::draw_boundary_gnuplot(FILE *fp) {
 	int i;
-	
+
 	for(i=0;i<edbc;i++) {
 		fprintf(fp,"%g %g\n",bnds[2*i],bnds[2*i+1]);
 
@@ -458,7 +457,7 @@ void container_boundary_2d::draw_boundary_gnuplot(FILE *fp) {
 		// and insert a newline
 		if(edb[2*i]<i) fprintf(fp,"%g %g\n\n",bnds[2*edb[2*i]],bnds[2*edb[2*i]+1]);
 	}
-}	
+}
 
 bool container_boundary_2d::point_inside(double x,double y) {
 	int i=0,j=0,k=0;
@@ -546,7 +545,7 @@ void container_boundary_2d::import(FILE *fp) {
 
 		} else if(strcmp(buf,"#End\n")==0||strcmp(buf,"# End\n")==0||
 			  strcmp(buf,"#End")==0||strcmp(buf,"# End")==0) {
-			
+
 			// Check that two consecutive end tokens haven't been
 			// encountered
 			if(boundary_track==-1) voro_fatal_error("File import error - found end token without start token",VOROPP_FILE_ERROR);
@@ -561,7 +560,7 @@ void container_boundary_2d::import(FILE *fp) {
 	if(boundary_track!=-1) voro_fatal_error("File import error - end of file reached without finding end token",VOROPP_FILE_ERROR);
 
 	if(!feof(fp)) voro_fatal_error("File import error - error reading string from file",VOROPP_FILE_ERROR);
-	delete [] buf;	
+	delete [] buf;
 }
 
 void container_boundary_2d::end_boundary() {
@@ -590,7 +589,7 @@ void container_boundary_2d::add_temporary_label_memory() {
 		voro_fatal_error("Absolute temporary label memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
 	fprintf(stderr,"Temporary label memory in region scaled up to %d\n",size);
-#endif			
+#endif
 	int *ntmp(new int[size]),*tp(tmp);tmpp=ntmp;
 	while(tp<tmpe) *(tmpp++)=*(tp++);
 	delete [] tmp;
@@ -606,7 +605,7 @@ void container_boundary_2d::add_boundary_memory() {
 #if VOROPP_VERBOSE >=3
 	fprintf(stderr,"Boundary memory scaled up to %d\n",size);
 #endif
-	
+
 	// Reallocate the boundary vertex information
 	double *nbnds(new double[2*edbm]);
 	for(i=0;i<2*edbc;i++) nbnds[i]=bnds[i];

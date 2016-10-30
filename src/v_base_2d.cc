@@ -112,9 +112,9 @@ bool voro_base_2d::contains_neighbor(const char *format) {
 		                        fmp++;
 					if(*fmp=='N') return true;
 					else if(*fmp==0) return false;
-				}   
+				}
 				fmp++;
-			}   
+			}
 
 		        return false;
 }
@@ -138,6 +138,6 @@ void voro_base_2d::print_globne(FILE *fp){
 		}
 	}
 }*/
-	
+
 #include "v_base_wl_2d.cc"
 }
