@@ -39,6 +39,7 @@ inline bool wall_sphere::cut_cell_base(voronoicell_base<n_option> &c,fpoint x,fp
  * \param[in] (x,y,z) the vector to test.
  * \param[in] (&dx,&dy,&dz) the vector of minimum distance to the wall. */ 
 void wall_sphere::min_distance(fpoint x,fpoint y,fpoint z,fpoint &dx,fpoint &dy,fpoint &dz) {
+	x-=xc;y-=yc;z-=zc;
 	fpoint rad=sqrt(x*x+y*y+z*z);
 	if(rad>tolerance) {
 		rad=rc/rad-1;

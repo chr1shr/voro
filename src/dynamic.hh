@@ -31,11 +31,11 @@ class velocity_internal {
 
 class velocity_brownian {
 	public:
-		velocity_brownian() : track_ve(false), mag(0.05), tmag(2*mag) {}; 
+		velocity_brownian() : track_ve(false), mag(0.08), tmag(2*mag) {}; 
 		inline void vel(int ijk,int q,fpoint &x,fpoint &y,fpoint &z) {
 			x+=tmag*rnd()-mag;
 			y+=tmag*rnd()-mag;
-			z+=tmag*rnd()-mag;
+		//	z+=tmag*rnd()-mag;
 		}
 		const bool track_ve;
 	private:
@@ -152,7 +152,7 @@ class container_dynamic_base : public container_base<r_option> {
 		inline int step_mod(int a,int b);
 		inline int step_div(int a,int b);
 		inline int step_int(fpoint a);
-		inline void wall_contribution(int s,int l,fpoint cx,fpoint cy,fpoint cz,fpoint alpha);
+		inline void wall_contribution(int s,int l,fpoint cx,fpoint cy,fpoint cz,fpoint alpha,fpoint cr=0.5);
 		inline void wall_badness(fpoint cx,fpoint cy,fpoint cz,fpoint &badcount);
 };
 

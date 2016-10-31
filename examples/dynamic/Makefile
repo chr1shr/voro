@@ -16,11 +16,13 @@ SOURCE=../../src/container.cc ../../src/container.hh ../../src/config.hh \
        ../../src/worklist.cc ../../src/worklist.hh ../../src/voro++.cc \
        ../../src/voro++.hh ../../src/dynamic.hh ../../src/dynamic.cc
 
+imflags=`Magick++-config --cppflags --cxxflags --ldflags --libs` -Wno-long-long
+
 # List of executables
-EXECUTABLES=acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig
+EXECUTABLES=acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig circles gen_packing
 
 # Makefile rules
-all: acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig gen_packing
+all: acc_sphere dyn_test square_test packing_gen best_gen helix yeast stz_fig gen_packing circles
 
 quick_gofr: $(SOURCE) quick_gofr.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o quick_gofr quick_gofr.cc
@@ -30,6 +32,9 @@ stz_fig: $(SOURCE) stz_fig.cc
 
 dyn_test: $(SOURCE) dyn_test.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o dyn_test dyn_test.cc
+
+circles: $(SOURCE) circles.cc
+	$(CC) $(CFLAGS) $(INCLUDE) -o circles circles.cc $(imflags)
 
 acc_sphere: $(SOURCE) acc_sphere.cc
 	$(CC) $(CFLAGS) $(INCLUDE) -o acc_sphere acc_sphere.cc

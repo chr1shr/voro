@@ -65,7 +65,7 @@ int main(int argc,char **argv) {
 	cout << "Computational grid : " << nx << " by " << ny << " by " << nz << "\n\n";
 	
 	// Create particle container
-	container_dynamic con(0,x,0,y,0,z,nx,ny,nz,true,true,true,8);
+	container_dynamic con(0,x,0,y,0,z,nx,ny,nz,false,false,false,8);
 	
 	// Randomly add particles into the container
 	for(i=0;i<n;i++) {

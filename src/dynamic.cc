@@ -228,36 +228,30 @@ void container_dynamic_base<r_option>::relax(fpoint cx,fpoint cy,fpoint cz,fpoin
 }
 
 template<class r_option>
-inline void container_dynamic_base<r_option>::wall_contribution(int s,int l,fpoint cx,fpoint cy,fpoint cz,fpoint alpha) {
+inline void container_dynamic_base<r_option>::wall_contribution(int s,int l,fpoint cx,fpoint cy,fpoint cz,fpoint alpha,fpoint cr) {
 	fpoint x,y,z,rr;
 	for(int q=0;q<wall_number;q++) {
 		walls[q]->min_distance(cx,cy,cz,x,y,z);
 		rr=x*x+y*y+z*z;
-		if (rr<0.25) {
-			rr=0.5*alpha*(1-0.5/sqrt(rr));
+		if (rr<cr*cr) {
+			rr=0.5*alpha*(1-2*cr/sqrt(rr));
 			ve[s][3*l]+=x*rr;
 			ve[s][3*l+1]+=y*rr;
 			ve[s][3*l+2]+=z*rr;
 		}
 	}
-#ifdef VOROPP_AUTO_X_WALL
 	if(!xperiodic) {
-		if(cx-ax<0.5) ve[s][3*l]+=alpha*(0.5+ax-cx);
-		if(bx-cx<0.5) ve[s][3*l]+=alpha*(bx-cx-0.5);
+		if(cx-ax<cr) ve[s][3*l]+=alpha*(cr+ax-cx);
+		if(bx-cx<cr) ve[s][3*l]+=alpha*(bx-cx-cr);
 	}
-#endif
-#ifdef VOROPP_AUTO_Y_WALL
 	if(!yperiodic) {
-		if(cy-ay<0.5) ve[s][3*l+1]+=alpha*(0.5+ay-cy);
-		if(by-cy<0.5) ve[s][3*l+1]+=alpha*(by-cy-0.5);
+		if(cy-ay<cr) ve[s][3*l+1]+=alpha*(cr+ay-cy);
+		if(by-cy<cr) ve[s][3*l+1]+=alpha*(by-cy-cr);
 	}
-#endif
-#ifdef VOROPP_AUTO_Z_WALL
 	if(!zperiodic) {
-		if(cz-az<0.5) ve[s][3*l+2]+=alpha*(0.5+az-cz);
-		if(bz-cz<0.5) ve[s][3*l+2]+=alpha*(bz-cz-0.5);
+		if(cz-az<cr) ve[s][3*l+2]+=alpha*(cr+az-cz);
+		if(bz-cz<cr) ve[s][3*l+2]+=alpha*(bz-cz-cr);
 	}
-#endif	
 }
 
 template<class r_option>
@@ -337,24 +331,18 @@ inline void container_dynamic_base<r_option>::wall_badness(fpoint cx,fpoint cy,f
 		rr=x*x+y*y+z*z;
 		if (rr<0.25) badcount+=0.25-sqrt(rr)+rr;
 	}
-#ifdef VOROPP_AUTO_X_WALL
 	if(!xperiodic) {
 		if(cx-ax<0.5) badcount+=(0.5+ax-cx)*(0.5+ax-cx);
 		if(bx-cx<0.5) badcount+=(bx-cx-0.5)*(bx-cx-0.5);
 	}
-#endif
-#ifdef VOROPP_AUTO_Y_WALL
 	if(!yperiodic) {
 		if(cy-ay<0.5) badcount+=(0.5+ay-cy)*(0.5+ay-cy);
 		if(by-cy<0.5) badcount+=(by-cy-0.5)*(by-cy-0.5);
 	}
-#endif
-#ifdef VOROPP_AUTO_Z_WALL
 	if(!zperiodic) {
 		if(cz-az<0.5) badcount+=(0.5+az-cz)*(0.5+az-cz);
 		if(bz-cz<0.5) badcount+=(bz-cz-0.5)*(bz-cz-0.5);
 	}
-#endif	
 }
 
 #ifdef YEAST_ROUTINES
@@ -478,7 +466,7 @@ inline void container_dynamic_base<r_option>::damp_velocities(fpoint damp) {
 template<class r_option>
 void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 	int i,j,k,ijk,l,q,s;
-	fpoint x,y,z,px,py,pz,cx,cy,cz,rr;
+	fpoint x,y,z,px,py,pz,cx,cy,cz,cr,tr,rr;
 	voropp_loop l1(this);
 
 	clear_velocities();
@@ -488,15 +476,17 @@ void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 			cx=p[ijk][sz*l];
 			cy=p[ijk][sz*l+1];
 			cz=p[ijk][sz*l+2];
-			s=l1.init(cx,cy,cz,1,px,py,pz);
+			cr=p[ijk][sz*l+3];
+			s=l1.init(cx,cy,cz,2,px,py,pz);
 			while(!l1.reached(i,j,k)) {
 				for(q=0;q<co[s];q++) {
 					x=p[s][sz*q]+px-cx;
 					y=p[s][sz*q+1]+py-cy;
 					z=p[s][sz*q+2]+pz-cz;
 					rr=x*x+y*y+z*z;
-					if (rr<1) {
-						rr=alpha*(0.5-0.5/sqrt(rr));
+					tr=cr+p[s][sz*q+3];
+					if (rr<tr*tr) {
+						rr=alpha*(0.5-0.5*tr/sqrt(rr));
 						ve[ijk][3*l]+=x*rr;
 						ve[ijk][3*l+1]+=y*rr;
 						ve[ijk][3*l+2]+=z*rr;
@@ -513,8 +503,9 @@ void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 				y=p[s][sz*q+1]+py-cy;
 				z=p[s][sz*q+2]+pz-cz;
 				rr=x*x+y*y+z*z;
-				if (rr<1) {
-					rr=alpha*(0.5-0.5/sqrt(rr));
+				tr=cr+p[s][sz*q+3];
+				if (rr<tr*tr) {
+					rr=alpha*(0.5-0.5*tr/sqrt(rr));
 					ve[ijk][3*l]+=x*rr;
 					ve[ijk][3*l+1]+=y*rr;
 					ve[ijk][3*l+2]+=z*rr;
@@ -523,7 +514,7 @@ void container_dynamic_base<r_option>::full_relax(fpoint alpha) {
 					ve[s][3*q+2]-=z*rr;
 				}
 			}
-			wall_contribution(ijk,l,cx,cy,cz,alpha);
+			wall_contribution(ijk,l,cx,cy,cz,alpha,cr);
 		}
 	}
 

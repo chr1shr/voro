@@ -1230,13 +1230,15 @@ bool voronoicell_base<n_option>::nplane(fpoint x,fpoint y,fpoint z,fpoint rsq,in
 
 	// Delete them from the array structure
 	while(stack>0) {
-		while(ed[--p][nu[p]]==-1) {
+		p--;
+		while(ed[p][nu[p]]==-1) {
 			j=nu[p];
 			mec[j]--;
 			for(i=0;i<=2*j;i++) ed[p][i]=(mep[j]+(2*j+1)*mec[j])[i];
 			neighbor.set_aux2_copy(p,j);
 			neighbor.copy_pointer(ed[p][2*j],p);
 			ed[ed[p][2*j]]=ed[p];
+			p--;
 		}
 		up=ds[--stack];
 		if (up<p) {

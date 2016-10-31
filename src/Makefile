@@ -11,12 +11,12 @@ include ../config.mk
 SOURCE=container.cc container.hh config.hh cell.hh cell.cc wall.cc wall.hh worklist.cc worklist.hh
 
 #Lists of the command line utilities
-EXECUTABLES="../bin/voro++"
+EXECUTABLES=../bin/voro++
 
 #Makefile rules
 all: $(EXECUTABLES)
 
-"../bin/voro++": $(SOURCE) cmd_line.cc
+../bin/voro++: $(SOURCE) cmd_line.cc
 	$(CC) $(CFLAGS) -o ../bin/voro++ cmd_line.cc
 
 clean:
