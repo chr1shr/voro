@@ -12,5 +12,6 @@
 #include "wall_2d.hh"
 #include "cell_nc_2d.hh"
 #include "ctr_boundary_2d.hh"
+#include "ctr_quad_2d.hh"
 
 #endif
