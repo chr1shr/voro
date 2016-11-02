@@ -30,7 +30,7 @@ libvoro++_2d.a: $(objs)
 	ar rs libvoro++_2d.a $^
 
 cq_test: cq_test.cc libvoro++_2d.a
-	$(CXX) $(CFLAGS) -o $@ $^
+	$(CXX) -fopenmp $(CFLAGS) -o $@ $^
 
 %.o: %.cc
 	$(CXX) $(CFLAGS) -c $<

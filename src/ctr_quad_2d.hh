@@ -7,7 +7,7 @@
 
 namespace voro {
 
-const int qt_max=8;
+const int qt_max=6;
 
 class container_quad_2d;
 

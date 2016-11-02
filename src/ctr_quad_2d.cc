@@ -190,7 +190,6 @@ bool quadtree::compute_cell(voronoicell_2d &c,int j) {
 	quadtree *q;
 
 	parent.initialize_voronoicell(c,x,p[ps*j+1]);
-
 	for(i=0;i<j;i++) {
 		x1=p[ps*i]-x;
 		y1=p[ps*i+1]-y;
@@ -218,7 +217,7 @@ bool quadtree::compute_cell(voronoicell_2d &c,int j) {
 		nei[i]->mask=bm;
 	}
 
-	do {
+	while(!dq.empty()) {
 
 		q=dq.front();dq.pop_front();
 		q->bound(xlo,xhi,ylo,yhi);
@@ -259,7 +258,7 @@ bool quadtree::compute_cell(voronoicell_2d &c,int j) {
 			dq.push_back(q->nei[i]);
 			q->nei[i]->mask=bm;
 		}
-	} while(!dq.empty());
+	} 
 	return true;
 }
 
