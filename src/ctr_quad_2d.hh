@@ -52,6 +52,7 @@ class quadtree {
 			ylo=cy-ly;yhi=cy+ly;
 		}
 		double sum_cell_areas();
+		void compute_all_cells();
 		bool compute_cell(voronoicell_2d &c,int j);
 		void reset_mask();
 	protected:

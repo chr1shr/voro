@@ -125,6 +125,18 @@ double quadtree::sum_cell_areas() {
 	return area;
 }
 
+void quadtree::compute_all_cells() {
+	if(id==NULL) {
+		qsw->compute_all_cells();
+		qse->compute_all_cells();
+		qnw->compute_all_cells();
+		qne->compute_all_cells();
+	} else{
+		voronoicell_2d c;
+		for(int j=0;j<co;j++) compute_cell(c,j);
+	}
+}
+
 void quadtree::setup_neighbors() {
 	if(id==NULL) {
 		qsw->setup_neighbors();

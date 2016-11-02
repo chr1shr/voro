@@ -27,10 +27,10 @@ int main() {
 
 		con1.setup_neighbors();
 		t2=omp_get_wtime();
-		con2.sum_cell_areas();
+		con2.compute_all_cells();
 		t2=omp_get_wtime()-t2;
 		t1=omp_get_wtime();
-		con1.sum_cell_areas();
+		con1.compute_all_cells();
 		t1=omp_get_wtime()-t1;
 
 
