@@ -16,4 +16,7 @@ cell_nc_2d.o: cell_nc_2d.cc cell_nc_2d.hh cell_2d.hh common.hh config.hh
 ctr_boundary_2d.o: ctr_boundary_2d.cc ctr_boundary_2d.hh config.hh \
  common.hh v_base_2d.hh worklist_2d.hh cell_2d.hh c_loops_2d.hh \
  rad_option.hh v_compute_2d.hh cell_nc_2d.hh
-ctr_quad_2d.o: ctr_quad_2d.cc ctr_quad_2d.hh config.hh common.hh
+ctr_quad_2d.o: ctr_quad_2d.cc ctr_quad_2d.hh config.hh common.hh \
+ quad_march.hh
+quad_march.o: quad_march.cc quad_march.hh ctr_quad_2d.hh config.hh \
+ common.hh

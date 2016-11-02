@@ -28,11 +28,21 @@ class quadtree {
 		void split();
 		void draw_particles(FILE *fp=stdout);
 		void draw_cross(FILE *fp=stdout);
+		void setup_neighbors();
 		inline void quick_put(int i,double x,double y) {
 			id[co]=i;
 			p[ps*co]=x;
 			p[1+ps*co++]=y;
 		}
+		inline void add_neighbor(quadtree *qt) {
+			if(nco==nmax) add_neighbor_memory();
+			nei[nco++]=qt;
+		}
+	protected:
+		quadtree **nei;
+		int nco;
+		int nmax;
+		void add_neighbor_memory();
 };
 
 class container_quad_2d : public quadtree {

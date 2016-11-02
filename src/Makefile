@@ -9,7 +9,8 @@ include ../config.mk
 
 # List of the common source files
 objs=common.o cell_2d.o container_2d.o v_base_2d.o v_compute_2d.o \
-     c_loops_2d.o wall_2d.o cell_nc_2d.o ctr_boundary_2d.o ctr_quad_2d.o
+     c_loops_2d.o wall_2d.o cell_nc_2d.o ctr_boundary_2d.o ctr_quad_2d.o \
+     quad_march.o
 src=$(patsubst %.o,%.cc,$(objs))
 execs=cq_test
 
