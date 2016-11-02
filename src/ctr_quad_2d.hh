@@ -29,6 +29,7 @@ class quadtree {
 		void draw_particles(FILE *fp=stdout);
 		void draw_cross(FILE *fp=stdout);
 		void setup_neighbors();
+		void draw_neighbors(FILE *fp=stdout);
 		inline void quick_put(int i,double x,double y) {
 			id[co]=i;
 			p[ps*co]=x;
@@ -42,12 +43,15 @@ class quadtree {
 		quadtree **nei;
 		int nco;
 		int nmax;
+		void we_neighbors(quadtree *qw,quadtree *qe);
+		void ns_neighbors(quadtree *qs,quadtree *qn);
 		void add_neighbor_memory();
 };
 
 class container_quad_2d : public quadtree {
 	public:
 		using quadtree::draw_particles;
+		using quadtree::draw_neighbors;
 		/** The minimum x coordinate of the container. */
 		const double ax;
 		/** The maximum x coordinate of the container. */
@@ -62,6 +66,11 @@ class container_quad_2d : public quadtree {
 			draw_particles(fp);
 			fclose(fp);
 		}
+		inline void draw_neighbors(const char* filename) {
+			FILE *fp=safe_fopen(filename,"w");
+			draw_neighbors(fp);
+			fclose(fp);
+		}		
 		void draw_quadtree(FILE *fp=stdout);
 		inline void draw_quadtree(const char* filename) {
 			FILE *fp=safe_fopen(filename,"w");

@@ -68,6 +68,17 @@ void container_quad_2d::draw_quadtree(FILE *fp) {
 	draw_cross(fp);
 }
 
+void quadtree::draw_neighbors(FILE *fp) {
+	for(int i=0;i<nco;i++)
+		fprintf(fp,"%g %g %g %g\n",cx,cy,nei[i]->cx-cx,nei[i]->cy-cy);
+	if(id==NULL) {
+		qsw->draw_neighbors(fp);
+		qse->draw_neighbors(fp);
+		qnw->draw_neighbors(fp);
+		qne->draw_neighbors(fp);
+	}
+}
+
 void quadtree::draw_particles(FILE *fp) {
 	if(id==NULL) {
 		qsw->draw_particles(fp);
@@ -79,61 +90,47 @@ void quadtree::draw_particles(FILE *fp) {
 }
 
 void quadtree::setup_neighbors() {
-	split();
-	qnw->split();
-	qnw->qse->split();
-	qnw->qse->qne->split();
-
-	quad_march<0> qm(qnw);
-
-	printf("%d %d\n",qm.s,qm.ns);
-	qm.step();
-	printf("%d %d\n",qm.s,qm.ns);
-	qm.step();
-	printf("%d %d\n",qm.s,qm.ns);
-	qm.step();
-	printf("%d %d\n",qm.s,qm.ns);
-	puts("");
-
-	quad_march<1> qm2(qne);
-	printf("%d %d\n",qm2.s,qm2.ns);
-
 	if(id==NULL) {
-//		we_neighbors(qsw,qse);
-//		we_neighbors(qnw,qne);
-//		ns_neighbors(qsw,qnw);
-//		ns_neighbors(qse,qne);
+		qsw->setup_neighbors();
+		qse->setup_neighbors();
+		qnw->setup_neighbors();
+		qne->setup_neighbors();
+		we_neighbors(qsw,qse);
+		we_neighbors(qnw,qne);
+		ns_neighbors(qsw,qnw);
+		ns_neighbors(qse,qne);
 	}
 }
 
-/*void quadtree::we_neighbors(quadtree *qw,quadtree *qe) {
-	quadtree* wlist[32],elist[32];
-	int wp=0,ep=0,w=0,e=0,wn,en,ma=1<<30;
-
-
-	elist[ep]=qe;
-	while(elist[ep]->id==NULL) {elist[ep+1]=elist[ep]->qnw;ep++}
-	en=ma>>ep;
-
-	while(w<ma||e<ma) {
-		if(wn>en) {
-			while(elist[ep-1]->qsw==elist[ep]) ep--;
-			elist[ep+1]=elist[ep]->qsw;ep++;
-			while(elist[ep]->id==NULL) {elist[ep+1]=elist[ep]->qnw;ep++}
-			en+=ma>>ep;
-		} else if (nw<ne) {
-			while(wlist[wp-1]->qse==wlist[wp]) wp--
-			wlist[wp+1]=elist[wp]->qse;wp++;
-			while(wlist[wp]->id==NULL) {wlist[wp+1]=wlist[wp]->qne;wp++}
-		} else {
-
+void quadtree::we_neighbors(quadtree *qw,quadtree *qe) {
+	const int ma=1<<30;
+	quad_march<0> mw(qw);
+	quad_march<1> me(qe);
+	while(mw.s<ma||me.s<ma) {
+		mw.cu()->add_neighbor(me.cu());
+		me.cu()->add_neighbor(mw.cu());
+		if(mw.ns>me.ns) me.step();
+		else {
+			if(mw.ns==me.ns) me.step();
+			mw.step();
 		}
 	}
 }
 
 void quadtree::ns_neighbors(quadtree *qs,quadtree *qn) {
-
-}*/
+	const int ma=1<<30;
+	quad_march<2> ms(qs);
+	quad_march<3> mn(qn);
+	while(ms.s<ma||mn.s<ma) {
+		ms.cu()->add_neighbor(mn.cu());
+		mn.cu()->add_neighbor(ms.cu());
+		if(ms.ns>mn.ns) mn.step();
+		else {
+			if(ms.ns==mn.ns) mn.step();
+			ms.step();
+		}
+	}
+}
 
 void quadtree::add_neighbor_memory() {
 	if(nmax==0) {
