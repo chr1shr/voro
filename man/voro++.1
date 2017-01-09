@@ -82,14 +82,14 @@ grid size using the \-l and \-n options.
 The utility accepts the following basic options:
 
 .B
-.IP \-c <string>
+.IP "\-c <string>"
 This option allows the format of the output file to be customized to hold a
 variety of statistics about the computed Voronoi cells. The specified string
 can contain regular characters, plus control sequences beginning with
 percentage signs that are expanded to contain different Voronoi cell
 statistics. See below for a full custom output reference.
 .B
-.IP \-g
+.IP "\-g"
 If this option is specified, then an additional output file is generated with
 the ".gnu" extension, which contains a description of all the cells in a format
 that can be viewed using gnuplot using the
@@ -97,15 +97,15 @@ that can be viewed using gnuplot using the
 command. Caution: For large input files, the gnuplot output file will be
 extremely large, so this option is best used on smaller systems.
 .B
-.IP \-h or \-\-help
+.IP "\-h or \-\-help"
 This option prints out a summary of the command syntax and the available
 options.
 .B
-.IP \-hc
+.IP "\-hc"
 This option prints out all the available control sequences for the customized
 output.
 .B
-.IP -l <len>
+.IP "-l <len>"
 Manually specify a typical length scale between particles, with which to
 configure the internal grid size. For example, if the particles represent
 densely-packed hard spheres of diameter d, then d would be an appropriate value
@@ -114,62 +114,62 @@ this option will result in a small performance boost, since the internal grid
 can be set up immediately, and it is not necessary to temporarily store the
 input file contents while estimating the grid size.
 .B
-.IP -m <mem>
+.IP "-m <mem>"
 Manually specify the initial number of particles that can be stored in each
 block. By default a value of 8 is used. For any block where this limit is
-reached, the code will dynamically allocate more memory as neccessary, so
+reached, the code will dynamically allocate more memory as necessary, so
 usually it is not necessary to alter this.
 .B
-.IP -n <nx> <ny> <nz>
+.IP "-n <nx> <ny> <nz>"
 Manually specify the internal computational grid to have nx, ny, and nz blocks
 in the x, y, and z directions respectively, giving nx*ny*nz blocks in total.
 Manually specifying the size will result in a small performance boost, since
 the internal grid can be set up immediately, and it is not necessary to
 temporarily store the input file contents while estimating the size.
 .B
-.IP \-o
+.IP "\-o"
 Ensure that particles in the output file are in the same order as those in the
 input file. This may result in a very small increase in memory usage and
 execution time, and is turned off by default.
 .B
 .B
-.IP \-p
+.IP "\-p"
 Make the container periodic in all three coordinate directions.
 .B
-.IP \-px
+.IP "\-px"
 Make container periodic in the x direction.
 .B
-.IP \-py
+.IP "\-py"
 Make container periodic in the y direction.
 .B
-.IP \-pz
+.IP "\-pz"
 Make container periodic in the z direction.
 .B
-.IP \-r
+.IP "\-r"
 Carry out a Voronoi tessellation for a polydisperse particle arrangement using
 the radical Voronoi tessellation. For this case, an extra column is required in
 the input file, that contains the particle radii. The radii are also included
 in the output file.
 .B
-.IP \-v
+.IP "\-v"
 Verbose output. After the computation is completed, some statistics are printed
 about the container geometry, the internal computational grid, the number of
 particles imported, the number Voronoi cells computed, and the volume of the
 computed Voronoi cells.
 .B
-.IP \-\-version
+.IP "\-\-version"
 Print version information.
 .B
-.IP \-y
+.IP "\-y"
 Save the particles in POV-Ray format to "filename_p.pov" and the Voronoi cells
 in POV-Ray format to "filename_v.pov". Caution: For large input files, the
 POV-Ray Voronoi cell file will be extremely large, so this option is best used
 on smaller systems.
 .B
-.IP \-yp
+.IP "\-yp"
 Save the particles in POV-Ray format to "filename_p.pov".
 .B
-.IP \-yv
+.IP "\-yv"
 Save the Voronoi cells in POV-Ray format to "filename_v.pov".
 
 .SH OPTIONS FOR WALLS
@@ -178,26 +178,26 @@ are implemented by applying extra plane cuts during the cell construction
 process. At present, four wall types are supported:
 
 .B
-.IP \-wb <x1> <x2> <x3> <x4> <x5> <x6>
+.IP "\-wb <x1> <x2> <x3> <x4> <x5> <x6>"
 Add six plane wall objects to make a box containing the space x1<x<x2, x3<y<x4,
 and x5<z<x6. This can be useful for embedding a smaller box within a larger
 container, in cases when the influence of particles outside the smaller box
 still need to be considered. This option is shorthand to avoid using the \-wp
 option six times.
 .B
-.IP \-wc <x1> <x2> <x3> <x4> <x5> <x6> <x7>
+.IP "\-wc <x1> <x2> <x3> <x4> <x5> <x6> <x7>"
 Add a cylindrical wall object, where (x1,x2,x3) is a point on the cylinder
 axis, (x4,x5,x6) is a vector along the cylinder axis, and x7 is the cylinder
 radius.
 .B
-.IP \-wo <x1> <x2> <x3> <x4> <x5> <x6> <x7>
+.IP "\-wo <x1> <x2> <x3> <x4> <x5> <x6> <x7>"
 Add a conical wall object, with apex at (x1,x2,x3), axis along (x4,x5,x6), and
 half angle x7 (specified in radians).
 .B
-.IP \-ws <x1> <x2> <x3> <x4>
+.IP "\-ws <x1> <x2> <x3> <x4>"
 Add a spherical wall object, centered on (x1,x2,x3), with radius x4.
 .B
-.IP \-wp <x1> <x2> <x3> <x4>
+.IP "\-wp <x1> <x2> <x3> <x4>"
 Add a plane wall object, with normal (x1,x2,x3), and displacement x4.
 
 Each wall is accounted for using a single approximating plane; several of the
@@ -219,22 +219,22 @@ more detail.
 Particle-related entries:
 
 .B
-.IP %i
+.IP "%i"
 The particle ID number.	
 .B
-.IP %x
+.IP "%x"
 The x coordinate of the particle.
 .B
-.IP %y
+.IP "%y"
 The y coordinate of the particle.
 .B
-.IP %z
+.IP "%z"
 The z coordinate of the particle.
 .B
-.IP %q
+.IP "%q"
 The position vector of the particle, short for "%x %y %z".
 .B
-.IP %r
+.IP "%r"
 The radius of the particle (only printed if the polydisperse information is
 available).
 
@@ -242,21 +242,21 @@ available).
 Vertex-related entries:
 
 .B
-.IP %w
+.IP "%w"
 The number of vertices in the Voronoi cell.
 .B
-.IP %p
+.IP "%p"
 A list of the vertices of the Voronoi cell in the format (x,y,z), relative to
 the particle center.
 .B
-.IP %P
+.IP "%P"
 A list of the vertices of the Voronoi cell in the format (x,y,z), relative to
 the global coordinate system.
 .B
-.IP %o
+.IP "%o"
 A list of the orders of each vertex.
 .B
-.IP %m
+.IP "%m"
 The maximum radius squared of a vertex position, relative to the particle
 center.
 
@@ -264,41 +264,41 @@ center.
 Edge-related entries:
 
 .B
-.IP %g
+.IP "%g"
 The number of edges of the Voronoi cell.
 .B
-.IP %E
+.IP "%E"
 The total edge distance.
 .B
-.IP %e
+.IP "%e"
 A list of perimeters of each face.
 
 .PP
 Face-related entries:
 
 .B
-.IP %s
+.IP "%s"
 The number of faces of the Voronoi cell.
 .B
-.IP %F
+.IP "%F"
 The total surface area of the Voronoi cell.
 .B
-.IP %A
+.IP "%A"
 A frequency table of the orders of the faces.
 .B
-.IP %a
+.IP "%a"
 A list of the orders of the faces, showing how many edges make up each face.
 .B
-.IP %f
+.IP "%f"
 A list of areas of each face.
 .B
-.IP %t
+.IP "%t"
 A list of bracketed sequences of vertices that make up each face.
 .B
-.IP %l
+.IP "%l"
 A list of normal vectors for each face.
 .B
-.IP %n
+.IP "%n"
 A list of the neighboring particle or wall IDs corresponding to each face. The
 list can contain negative numbers. For the non-periodic case these correspond
 to when the particles have faces created by the edges of the computational
@@ -324,13 +324,13 @@ between them.
 .PP
 Volume-related entries:
 .B
-.IP %v
+.IP "%v"
 The volume of the Voronoi cell.
 .B
-.IP %c
+.IP "%c"
 The centroid of the Voronoi cell, relative to the particle center.
 .B
-.IP %C
+.IP "%C"
 The centroid of the Voronoi cell, in the global coordinate system.
 
 

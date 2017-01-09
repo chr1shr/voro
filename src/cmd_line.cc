@@ -24,7 +24,7 @@ const int max_regions=16777216;
 
 // This message gets displayed if the user requests the help flag
 void help_message() {
-	puts("Voro++ version 0.4.5, by Chris H. Rycroft (UC Berkeley/LBL)\n\n"
+	puts("Voro++ version 0.4.6, by Chris H. Rycroft (UC Berkeley/LBL)\n\n"
 	     "Syntax: voro++ [options] <x_min> <x_max> <y_min>\n"
 	     "               <y_max> <z_min> <z_max> <filename>\n\n"
 	     "By default, the utility reads in the input file of particle IDs and positions,\n"
@@ -111,7 +111,7 @@ void custom_output_message() {
 
 // Ths message is displayed if the user requests version information
 void version_message() {
-	puts("Voro++ version 0.4.5 (July 27th 2012)");
+	puts("Voro++ version 0.4.6 (October 17th 2013)");
 }
 
 // Prints an error message. This is called when the program is unable to make
