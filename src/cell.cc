@@ -2135,7 +2135,7 @@ void voronoicell_base::output_vertex_orders(FILE *fp) {
 /** Returns a vector of the vertex vectors using the local coordinate system.
  * \param[out] v the vector to store the results in. */
 void voronoicell_base::vertices(std::vector<double> &v) {
-	v.resize(p<<2);
+	v.resize(3*p);
 	double *ptsp=pts;
 	for(int i=0;i<3*p;i+=3) {
 		v[i]=*(ptsp++)*0.5;
