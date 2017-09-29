@@ -59,9 +59,9 @@ class wall_torus : public wall {
 			double odis=orad-mjr;
 			double ot=odis*odis+z*z;
 
-			// Unless the particle is within 1% of the major
+			// Unless the particle is within 1% of the minor
 			// radius, then a plane cut is made
-			if(ot>0.01*mnr) {
+			if(ot>0.01*mnr*mnr) {
 				ot=2*mnr/sqrt(ot)-2;
 				z*=ot;
 				odis*=ot/orad;

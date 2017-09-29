@@ -13,7 +13,9 @@ Version 0.5 (...)
 * Fixed a typo in the delete_connection routine in cell.cc that could cause
   segmentation faults in extremely rare cases. Thanks to Francesco Biscani (Max
   Planck institute for Astronomy, Heidelberg) for pointing this out.
-* Incorporated Roger Wesson's fixed to cmd_line.cc and the man page
+* Fixed typo and length scale issue in torus.cc example. Thanks to Eric Lluch
+  for pointing this out.
+* Incorporated Roger Wesson's fix to cmd_line.cc and the man page
 * Cleaned up comments
 * Updated Doxyfile to 1.8.9.1
 
