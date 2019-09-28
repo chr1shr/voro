@@ -1,6 +1,6 @@
 // Simple cell statistics demonstration code
 //
-// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Author   : Chris H. Rycroft (Harvard University / LBL)
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 

@@ -1,6 +1,6 @@
 // Voronoi calculation example code
 //
-// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Author   : Chris H. Rycroft (Harvard University / LBL)
 // Email    : chr@alum.mit.edu
 // Date     : April 14th 2013
 

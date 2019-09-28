@@ -1,5 +1,5 @@
 Voro++, a 3D cell-based Voronoi library (http://math.lbl.gov/voro++/)
-By Chris H. Rycroft (UC Berkeley / Lawrence Berkeley Laboratory)
+By Chris H. Rycroft (Harvard University / Lawrence Berkeley Laboratory)
 ================================================================
 Voro++ is a software library for carrying out three-dimensional computations
 of the Voronoi tessellation. A distinguishing feature of the Voro++ library
@@ -7,8 +7,8 @@ is that it carries out cell-based calculations, computing the Voronoi cell
 for each particle individually, rather than computing the Voronoi
 tessellation as a global network of vertices and edges. It is particularly
 well-suited for applications that rely on cell-based statistics, where
-features of Voronoi cells (eg. volume, centroid, number of faces) can be
-used to analyze a system of particles
+features of Voronoi cells (e.g. volume, centroid, number of faces) can be
+used to analyze a system of particles.
 
 Voro++ comprises of several C++ classes that can be built as a static library
 and linked to. A command-line utility is also provided that can analyze text
@@ -112,7 +112,7 @@ publications:
 
 - Chris H. Rycroft, "Multiscale Modeling in Granular Flow", PhD thesis
   submitted to the Massachusetts Institute of Technology, September 2007.
-  (http://math.berkeley.edu/~chr/publish/phd.html)
+  (http://seas.harvard.edu/~chr/publish/phd.html)
 
 The first reference contains a one-page overview of the library. The second
 reference contains some of the initial images that were made using a very early
@@ -120,8 +120,7 @@ version of this code, to track small changes in packing fraction in a large
 particle simulation. The third reference discusses the use of 3D Voronoi cells,
 and describes the algorithms that were employed in the early version of this
 code. Since the publication of the above references, the algorithms in Voro++
-have been significantly improved, and a paper specifically devoted to the
-current code architecture will be published during 2012.
+have been significantly improved.
 
 
 Copyright Notice
