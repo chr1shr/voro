@@ -452,13 +452,15 @@ void container_periodic_base::region_count() {
 
 /** Clears a container of particles. */
 void container_periodic::clear() {
-	for(int *cop=co;cop<co+nxyz;cop++) *cop=0;
+	for(int *cop=co;cop<co+oxyz;cop++) *cop=0;
+	char *cp=img;while(cp<img+oxyz) *(cp++)=0;	
 }
 
 /** Clears a container of particles, also clearing resetting the maximum radius
  * to zero. */
 void container_periodic_poly::clear() {
-	for(int *cop=co;cop<co+nxyz;cop++) *cop=0;
+	for(int *cop=co;cop<co+oxyz;cop++) *cop=0;
+	char *cp=img;while(cp<img+oxyz) *(cp++)=0;	
 	max_radius=0;
 }
 
