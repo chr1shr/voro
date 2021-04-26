@@ -47,4 +47,5 @@ int main() {
 		fflush(stdout);
 		fprintf(outputFile,"%d %e %e %e\n", id,x,y,z);
 	} while (cl.inc());
+	fclose(outputFile);
 }
