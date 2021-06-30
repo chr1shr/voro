@@ -11,7 +11,7 @@ endif(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CXX_FLAGS)
 ########################################################################
 # User input options                                                   #
 ########################################################################
-option(BUILD_SHARED_LIBS "Build shared libs" ON)
+option(VORO_BUILD_SHARED_LIBS "Build shared libs" ON)
 include(GNUInstallDirs)
 
 ########################################################################
