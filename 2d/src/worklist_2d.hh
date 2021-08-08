@@ -1,8 +1,5 @@
-// Voro++, a 2D and 3D cell-based Voronoi library
-//
-// Author   : Chris H. Rycroft (LBL / UC Berkeley)
-// Email    : chr@alum.mit.edu
-// Date     : August 30th 2011
+// Voro++, a cell-based Voronoi library
+// By Chris H. Rycroft and the Rycroft Group
 
 /** \file worklist_2d.hh
  * \brief Header file for setting constants used in the block worklists that are
@@ -17,8 +14,8 @@
 namespace voro {
 
 /** Each region is divided into a grid of subregions, and a worklist is
-# constructed for each. This parameter sets is set to half the number of
-# subregions that the block is divided into. */
+ * constructed for each. This parameter sets is set to half the number of
+ * subregions that the block is divided into. */
 const int wl_hgrid_2d=4;
 /** The number of subregions that a block is subdivided into, which is twice
 the value of hgrid. */

@@ -14,15 +14,15 @@ double rnd() {return double(rand())/RAND_MAX;}
 int main() {
 	int i=0;double x,y,arg;
 
-	// Initialize the container class to be the unit square, with
-	// non-periodic boundary conditions. Divide it into a 10 by 10 grid, with
-	// an initial memory allocation of 8 particles per grid square.
+    // Initialize the container class to be the unit square, with non-periodic
+    // boundary conditions. Divide it into a 10 by 10 grid, with an initial
+    // memory allocation of 8 particles per grid square.
 	container_2d con(-1,1,-1,1,10,10,false,false,8);
 
-	// Add circular wall object
-	wall_plane_2d *wc[n];
+	// Add a sequence of line walls at evenly distributed angles
+	wall_line *wc[n];
 	for(i=0,arg=0;i<n;i++,arg+=2*pi/n) {
-		wc[i]=new wall_plane_2d(sin(arg),-cos(arg),radius);
+		wc[i]=new wall_line(sin(arg),-cos(arg),radius);
 		con.add_wall(wc[i]);
 	}
 

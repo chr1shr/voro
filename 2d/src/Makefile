@@ -5,7 +5,7 @@
 # Date   : February 27th 2008
 
 # Load the common configuration file
-include ../config.mk
+include ../../config.mk
 
 # List of the common source files
 objs=common.o cell_2d.o container_2d.o v_base_2d.o v_compute_2d.o \
@@ -30,7 +30,7 @@ libvoro++_2d.a: $(objs)
 	ar rs libvoro++_2d.a $^
 
 cq_test: cq_test.cc libvoro++_2d.a
-	$(CXX) -fopenmp $(CFLAGS) -o $@ $^
+	$(CXX) $(CFLAGS) -o $@ $^
 
 %.o: %.cc
 	$(CXX) $(CFLAGS) -c $<

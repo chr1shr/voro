@@ -21,7 +21,7 @@ const int max_regions=16777216;
 
 // This message gets displayed if the user requests the help flag
 void help_message() {
-    puts("Voro++ version 0.4.6, by Chris H. Rycroft (UC Berkeley/LBL)\n\n"
+    puts("Voro++ version 0.4.6, by Chris H. Rycroft\n\n"
          "Syntax: voro++ [options] <x_min> <x_max> <y_min>\n"
          "               <y_max> <z_min> <z_max> <filename>\n\n"
          "By default, the utility reads in the input file of particle IDs and positions,\n"
