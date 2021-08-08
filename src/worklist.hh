@@ -1,8 +1,5 @@
-// Voro++, a 3D cell-based Voronoi library
-//
-// Author   : Chris H. Rycroft (Harvard University / LBL)
-// Email    : chr@alum.mit.edu
-// Date     : August 30th 2011
+// Voro++, a cell-based Voronoi library
+// By Chris H. Rycroft and the Rycroft Group
 
 /** \file worklist.hh
  * \brief Header file for setting constants used in the block worklists that are
