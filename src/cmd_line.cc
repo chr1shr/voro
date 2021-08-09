@@ -15,9 +15,9 @@ enum blocks_mode {
     specified
 };
 
-// A maximum allowed number of regions, to prevent enormous amounts of memory
-// being allocated
-const int max_regions=16777216;
+// A maximum allowed number of regions, to prevent too much memory being
+// allocated
+const int max_regions=1<<28;
 
 // This message gets displayed if the user requests the help flag
 void help_message() {
@@ -26,7 +26,7 @@ void help_message() {
          "               <y_max> <z_min> <z_max> <input_file> [<output_file>]\n\n"
          "By default, the utility reads in the input file of particle IDs and positions,\n"
          "and computes the Voronoi cell for each.\n\n"
-         "If not specified, the output is saved to <input_file.vor>. Using '-' for any\n"
+         "If not specified, the output is saved to \"<input_file>.vor\". Using '-' for any\n"
          "filename will read/write from standard input/output.\n\n"
          "Available options:\n"
          " -c <str>    : Specify a custom output string\n"
@@ -58,8 +58,8 @@ void help_message() {
          "               with radius x4\n"
          " -wp [4]     : Add a plane wall object, with normal (x1,x2,x3),\n"
          "               and displacement x4\n"
-         " -y          : Save POV-Ray particles to <filename_p.pov> and POV-Ray Voronoi\n"
-         "               cells to <filename_v.pov>\n"
+         " -y          : Save POV-Ray particles to \"<input_file>_p.pov\" and POV-Ray\n"
+         "               Voronoi cells to \"<input_file>_v.pov>\"\n"
          " -yp <pfile> : Save only POV-Ray particles to <pfile>\n"
          " -yv <vfile> : Save only POV-Ray Voronoi cells to <vfile>\n");
 }
@@ -72,7 +72,7 @@ void custom_output_message() {
          "string is similar to the standard C printf() function, made up of text with\n"
          "additional control sequences that begin with percentage signs that are expanded\n"
          "to different statistics. See http://math.lbl.gov/voro++/doc/custom.html for more\n"
-         "information. Using a blank custom string switches off all output.\n\n"
+         "information.\n"
          "\nParticle-related:\n"
          "  %i The particle ID number\n"
          "  %x The x coordinate of the particle\n"
@@ -105,7 +105,10 @@ void custom_output_message() {
          "\nVolume-related:\n"
          "  %v The volume of the Voronoi cell\n"
          "  %c The centroid of the Voronoi cell, relative to the particle center\n"
-         "  %C The centroid of the Voronoi cell, in the global coordinate system");
+         "  %C The centroid of the Voronoi cell, in the global coordinate system\n\n"
+         "Using a blank custom string switches off all output. Each output string\n"
+         "for floating point numbers can be modified to begin with \"%.prec\" to\n"
+         "output the numbers to <prec> digits of precision (e.g. \"%.12x\").");
 }
 
 // Ths message is displayed if the user requests version information
@@ -127,10 +130,16 @@ inline bool se(const char* f1,const char* f2) {
 // Opens an extra output file
 inline FILE* open_extra(char *buffer,char **argv,wall_list &wl,int f_output,const char *ext,const char* base_fn,bool &stdout_used) {
     if(f_output>=0) {
+
+        // If no specific filename was given then assemble the default one
         if(f_output==0) {
-            sprintf(buffer,"%s.gnu",base_fn);
+            sprintf(buffer,"%s%s",base_fn,ext);
             return safe_fopen(buffer,"w");
         }
+
+        // If the "-" filename was given, then use standard output. Since only
+        // one output type can use standard output, check to make sure that
+        // standard output isn't already in use.
         if(se(argv[f_output],"-")) {
            if(stdout_used) {
                delete [] buffer;
@@ -361,9 +370,9 @@ int main(int argc,char **argv) {
 
     // Read in the dimensions of the test box, and estimate the number of boxes
     // to divide the region up into
-    double ax=atof(argv[i]),bx=atof(argv[i+1]);
-    double ay=atof(argv[i+2]),by=atof(argv[i+3]);
-    double az=atof(argv[i+4]),bz=atof(argv[i+5]);
+    double ax=atof(argv[i]),bx=atof(argv[i+1]),
+           ay=atof(argv[i+2]),by=atof(argv[i+3]),
+           az=atof(argv[i+4]),bz=atof(argv[i+5]);
 
     // Check that for each coordinate, the minimum value is smaller than the
     // maximum value
@@ -474,7 +483,7 @@ int main(int argc,char **argv) {
     // Open extra files for output
     FILE *gnu_file=open_extra(buffer,argv,wl,gnuplot_output,".gnu",base_fn,stdout_used),
          *povp_file=open_extra(buffer,argv,wl,povp_output,"_p.pov",base_fn,stdout_used),
-         *povv_file=open_extra(buffer,argv,wl,povv_output,"_v.pot",base_fn,stdout_used);
+         *povv_file=open_extra(buffer,argv,wl,povv_output,"_v.pov",base_fn,stdout_used);
     delete [] buffer;
 
     // Set up the output string
