@@ -5,7 +5,7 @@
 # Date   : May 18th 2011 
 
 # Load the common configuration file
-include ../../config.mk
+include ../../../config.mk
 
 # List of executables
 EXECUTABLES=circle polygon

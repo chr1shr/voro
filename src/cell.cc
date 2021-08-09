@@ -2409,38 +2409,87 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
                 // Face-related output
                 case 's': fprintf(fp,"%d",number_of_faces());break;
                 case 'F': fprintf(fp,"%g",surface_area());break;
-                case 'A': {
-                          face_freq_table(vi);
-                          voro_print_vector(vi,fp);
-                      } break;
+                case 'A': face_freq_table(vi);voro_print_vector(vi,fp);break;
                 case 'a': face_orders(vi);voro_print_vector(vi,fp);break;
                 case 'f': face_areas(vd);voro_print_vector(vd,fp);break;
-                case 't': {
-                          face_vertices(vi);
-                          voro_print_face_vertices(vi,fp);
-                      } break;
-                case 'l': normals(vd);
-                      voro_print_positions(vd,fp);
-                      break;
-                case 'n': neighbors(vi);
-                      voro_print_vector(vi,fp);
-                      break;
+                case 't': face_vertices(vi);voro_print_face_vertices(vi,fp);break;
+                case 'l': normals(vd);voro_print_positions(vd,fp);break;
+                case 'n': neighbors(vi);voro_print_vector(vi,fp);break;
 
                 // Volume-related output
                 case 'v': fprintf(fp,"%g",volume());break;
                 case 'c': {
-                          double cx,cy,cz;
-                          centroid(cx,cy,cz);
-                          fprintf(fp,"%g %g %g",cx,cy,cz);
-                      } break;
+                        double cx,cy,cz;
+                        centroid(cx,cy,cz);
+                        fprintf(fp,"%g %g %g",cx,cy,cz);
+                    } break;
                 case 'C': {
-                          double cx,cy,cz;
-                          centroid(cx,cy,cz);
-                          fprintf(fp,"%g %g %g",x+cx,y+cy,z+cz);
+                        double cx,cy,cz;
+                        centroid(cx,cy,cz);
+                        fprintf(fp,"%g %g %g",x+cx,y+cy,z+cz);
+                    } break;
+
+                // Precision is specified
+                case '.': {
+                        fmp++;
+
+                        // Check for first digit of the precision string
+                        int pr;
+                        if(*fmp==0) {fputs("%.",fp);fmp--;break;}
+                        else if(*fmp>='0'&&*fmp<='9') {
+                            pr=static_cast<int>(*fmp-'0');
+                        } else {fputs("%.",fp);putc(*fmp,fp);break;}
+
+                        // Check for subsequent digits of the precision string
+                        fmp++;
+                        while(*fmp>='0'&&*fmp<='9') {
+                            pr=10*pr+static_cast<int>(*fmp-'0');
+                            fmp++;
+                        }
+
+                        switch(*fmp) {
+
+                            // Particle-related output
+                            case 'x': fprintf(fp,"%.*g",pr,x);break;
+                            case 'y': fprintf(fp,"%.*g",pr,y);break;
+                            case 'z': fprintf(fp,"%.*g",pr,z);break;
+                            case 'q': fprintf(fp,"%.*g %.*g %.*g",pr,x,pr,y,pr,z);break;
+                            case 'r': fprintf(fp,"%.*g",pr,r);break;
+
+                            // Edge-related output
+                            case 'E': fprintf(fp,"%.*g",pr,total_edge_distance());break;
+                            case 'e': face_perimeters(vd);voro_print_vector(pr,vd,fp);break;
+
+                            // Face-related output
+                            case 'F': fprintf(fp,"%.*g",pr,surface_area());break;
+                            case 'f': face_areas(vd);voro_print_vector(pr,vd,fp);break;
+                            case 'l': normals(vd);
+                                  voro_print_positions(pr,vd,fp);
+                                  break;
+
+                            // Volume-related output
+                            case 'v': fprintf(fp,"%.*g",pr,volume());break;
+                            case 'c': {
+                                      double cx,cy,cz;
+                                      centroid(cx,cy,cz);
+                                      fprintf(fp,"%.*g %.*g %.*g",pr,cx,pr,cy,pr,cz);
+                                  } break;
+                            case 'C': {
+                                      double cx,cy,cz;
+                                      centroid(cx,cy,cz);
+                                      fprintf(fp,"%.*g %.*g %.*g",pr,x+cx,pr,y+cy,pr,z+cz);
+                                  } break;
+
+                            // End-of-string reached
+                            case 0: fprintf(fp,"%%.%d",pr);fmp--;break;
+
+                            // This is not a valid control sequence
+                            default: fprintf(fp,"%%.%d%c",pr,*fmp);
+                          }
                       } break;
 
                 // End-of-string reached
-                case 0: fmp--;break;
+                case 0: putc('%',fp);fmp--;break;
 
                 // The percent sign is not part of a control sequence
                 default: putc('%',fp);putc(*fmp,fp);

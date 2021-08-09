@@ -34,9 +34,22 @@ void voro_fatal_error(const char *p,int status) {
 void voro_print_positions(std::vector<double> &v,FILE *fp) {
     if(v.size()>0) {
         fprintf(fp,"(%g,%g,%g)",v[0],v[1],v[2]);
-        for(int k=3;(unsigned int) k<v.size();k+=3) {
+        for(int k=3;(unsigned int) k<v.size();k+=3)
             fprintf(fp," (%g,%g,%g)",v[k],v[k+1],v[k+2]);
-        }
+    }
+}
+
+/** \brief Prints a vector of positions.
+ *
+ * Prints a vector of positions as bracketed triplets.
+ * \param[in] pr the precision to print the numbers to.
+ * \param[in] v the vector to print.
+ * \param[in] fp the file stream to print to. */
+void voro_print_positions(int pr,std::vector<double> &v,FILE *fp) {
+    if(v.size()>0) {
+        fprintf(fp,"(%.*g,%.*g,%.*g)",pr,v[0],pr,v[1],pr,v[2]);
+        for(int k=3;(unsigned int) k<v.size();k+=3)
+            fprintf(fp," (%.*g,%.*g,%.*g)",pr,v[k],pr,v[k+1],pr,v[k+2]);
     }
 }
 
@@ -93,6 +106,27 @@ void voro_print_vector(std::vector<double> &v,FILE *fp) {
     } else {
         if(k+2==s) fprintf(fp,"%g %g",v[k],v[k+1]);
         else fprintf(fp,"%g",v[k]);
+    }
+}
+
+/** \brief Prints a vector of doubles.
+ *
+ * Prints a vector of doubles.
+ * \param[in] pr the precision to print the numbers to.
+ * \param[in] v the vector to print.
+ * \param[in] fp the file stream to print to. */
+void voro_print_vector(int pr,std::vector<double> &v,FILE *fp) {
+    int k=0,s=v.size();
+    while(k+4<s) {
+        fprintf(fp,"%.*g %.*g %.*g %.*g ",pr,v[k],pr,v[k+1],pr,v[k+2],pr,v[k+3]);
+        k+=4;
+    }
+    if(k+3<=s) {
+        if(k+4==s) fprintf(fp,"%.*g %.*g %.*g %.*g",pr,v[k],pr,v[k+1],pr,v[k+2],pr,v[k+3]);
+        else fprintf(fp,"%.*g %.*g %.*g",pr,v[k],pr,v[k+1],pr,v[k+2]);
+    } else {
+        if(k+2==s) fprintf(fp,"%.*g %.*g",pr,v[k],pr,v[k+1]);
+        else fprintf(fp,"%.*g",pr,v[k]);
     }
 }
 

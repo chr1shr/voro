@@ -1,19 +1,17 @@
 // Cell cutting region example code
-//
-// Author   : Chris H. Rycroft (LBL / UC Berkeley)
-// Email    : chr@alum.mit.edu
-// Date     : August 30th 2011
+// By Chris H. Rycroft and the Rycroft Group
+
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 #include "voro++_2d.hh"
 using namespace voro;
-
-const double pi=3.1415926535897932384626433832795;
 
 // This constant sets the tolerance in the bisection search algorithm
 const double tolwidth=1e-7;
 
 // This constant determines the density of points to test
-const double phi_step=pi/400;
+const double phi_step=M_PI/400;
 
 int main() {
 	double x,y,r,rmin,rmax;
@@ -33,7 +31,7 @@ int main() {
 	// each vector, carry out a search to find the maximum distance along
 	// that vector that a plane will intersect with cell, and save it to
 	// the output file.
-	for(phi=phi_step*0.5;phi<2*pi;phi+=phi_step) {
+	for(phi=phi_step*0.5;phi<2*M_PI;phi+=phi_step) {
 
 		// Calculate a direction to look along
 		x=cos(phi);
