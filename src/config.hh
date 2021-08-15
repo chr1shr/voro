@@ -1,11 +1,9 @@
-// Voro++, a 3D cell-based Voronoi library
-//
-// Author   : Chris H. Rycroft (Harvard University / LBL)
-// Email    : chr@alum.mit.edu
-// Date     : August 30th 2011
+// Voro++, a cell-based Voronoi library
+// By Chris H. Rycroft and the Rycroft Group
 
 /** \file config.hh
- * \brief Master configuration file for setting various compile-time options. */
+ * \brief Global configuration file for setting various compile-time options.
+ */
 
 #ifndef VOROPP_CONFIG_HH
 #define VOROPP_CONFIG_HH
@@ -62,7 +60,7 @@ const int max_ordering_size=67108864;
 const int max_chunk_size=65536;
 
 /** The chunk size in the pre_container classes. */
-const int pre_container_chunk_size=1024;
+const int pre_container_chunk_size=4096;
 
 #ifndef VOROPP_VERBOSE
 /** Voro++ can print a number of different status and debugging messages to
@@ -92,8 +90,12 @@ const double default_radius=0.5;
 /** The maximum number of shells of periodic images to test over. */
 const int max_unit_voro_shells=10;
 
-/** A guess for the optimal number of particles per block, used to set up the
- * container grid. */
+/** A guess for the optimal number of particles per block in two-dimensional
+ * computations, used to set up the container grid. */
+const double optimal_particles_2d=4.2;
+
+/** A guess for the optimal number of particles per block in three-dimensional
+ * computations, used to set up the container grid. */
 const double optimal_particles=5.6;
 
 /** If this is set to 1, then the code reports any instances of particles being

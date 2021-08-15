@@ -1,7 +1,7 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
-/** \file container.cc
+/** \file container_3d.cc
  * \brief Function implementations for the container and related classes. */
 
 #include "container.hh"
@@ -23,7 +23,7 @@ namespace voro {
  * \param[in] init_mem the initial memory allocation for each block.
  * \param[in] ps_ the number of floating point entries to store for each
  *                particle. */
-container_base::container_base(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
+container_base_3d::container_base_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
         int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem,int ps_)
     : voro_base(nx_,ny_,nz_,(bx_-ax_)/nx_,(by_-ay_)/ny_,(bz_-az_)/nz_),
     ax(ax_), bx(bx_), ay(ay_), by(by_), az(az_), bz(bz_),
@@ -40,7 +40,7 @@ container_base::container_base(double ax_,double bx_,double ay_,double by_,doubl
 }
 
 /** The container destructor frees the dynamically allocated memory. */
-container_base::~container_base() {
+container_base_3d::~container_base_3d() {
     int l;
     for(l=0;l<nxyz;l++) delete [] p[l];
     for(l=0;l<nxyz;l++) delete [] id[l];
@@ -50,7 +50,7 @@ container_base::~container_base() {
     delete [] mem;
 }
 
-/** The class constructor sets up the geometry of container.
+/** The class constructor sets up the geometry of the container.
  * \param[in] (ax_,bx_) the minimum and maximum x coordinates.
  * \param[in] (ay_,by_) the minimum and maximum y coordinates.
  * \param[in] (az_,bz_) the minimum and maximum z coordinates.
@@ -59,9 +59,9 @@ container_base::~container_base() {
  * \param[in] (x_prd_,y_prd_,z_prd_) flags setting whether the container is
  *                                   periodic in each coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block. */
-container::container(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
+container_3d::container_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
     int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem)
-    : container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,x_prd_,y_prd_,z_prd_,init_mem,3),
+    : container_base_3d(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,x_prd_,y_prd_,z_prd_,init_mem,3),
     vc(*this,x_prd_?2*nx_+1:nx_,y_prd_?2*ny_+1:ny_,z_prd_?2*nz_+1:nz_) {}
 
 /** The class constructor sets up the geometry of container.
@@ -73,15 +73,15 @@ container::container(double ax_,double bx_,double ay_,double by_,double az_,doub
  * \param[in] (x_prd_,y_prd_,z_prd_) flags setting whether the container is
  *                                   periodic in each coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block. */
-container_poly::container_poly(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
+container_poly_3d::container_poly_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
     int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem)
-    : container_base(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,x_prd_,y_prd_,z_prd_,init_mem,4),
+    : container_base_3d(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,x_prd_,y_prd_,z_prd_,init_mem,4),
     vc(*this,x_prd_?2*nx_+1:nx_,y_prd_?2*ny_+1:ny_,z_prd_?2*nz_+1:nz_) {ppr=p;}
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
-void container::put(int n,double x,double y,double z) {
+void container_3d::put(int n,double x,double y,double z) {
     int ijk;
     if(put_locate_block(ijk,x,y,z)) {
         id[ijk][co[ijk]]=n;
@@ -94,7 +94,7 @@ void container::put(int n,double x,double y,double z) {
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */
-void container_poly::put(int n,double x,double y,double z,double r) {
+void container_poly_3d::put(int n,double x,double y,double z,double r) {
     int ijk;
     if(put_locate_block(ijk,x,y,z)) {
         id[ijk][co[ijk]]=n;
@@ -109,7 +109,7 @@ void container_poly::put(int n,double x,double y,double z,double r) {
  * \param[in] vo the ordering class in which to record the region.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
-void container::put(particle_order &vo,int n,double x,double y,double z) {
+void container_3d::put(particle_order &vo,int n,double x,double y,double z) {
     int ijk;
     if(put_locate_block(ijk,x,y,z)) {
         id[ijk][co[ijk]]=n;
@@ -125,7 +125,7 @@ void container::put(particle_order &vo,int n,double x,double y,double z) {
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */
-void container_poly::put(particle_order &vo,int n,double x,double y,double z,double r) {
+void container_poly_3d::put(particle_order &vo,int n,double x,double y,double z,double r) {
     int ijk;
     if(put_locate_block(ijk,x,y,z)) {
         id[ijk][co[ijk]]=n;
@@ -145,7 +145,7 @@ void container_poly::put(particle_order &vo,int n,double x,double y,double z,dou
  *                        domain if necessary.
  * \return True if the particle can be successfully placed into the container,
  * false otherwise. */
-bool container_base::put_locate_block(int &ijk,double &x,double &y,double &z) {
+bool container_base_3d::put_locate_block(int &ijk,double &x,double &y,double &z) {
     if(put_remap(ijk,x,y,z)) {
         if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
         return true;
@@ -165,7 +165,7 @@ bool container_base::put_locate_block(int &ijk,double &x,double &y,double &z) {
  *                        domain if necessary.
  * \return True if the particle can be successfully placed into the container,
  * false otherwise. */
-inline bool container_base::put_remap(int &ijk,double &x,double &y,double &z) {
+inline bool container_base_3d::put_remap(int &ijk,double &x,double &y,double &z) {
     int l;
 
     ijk=step_int((x-ax)*xsp);
@@ -194,7 +194,7 @@ inline bool container_base::put_remap(int &ijk,double &x,double &y,double &z) {
  * \param[out] ijk the block index that the vector is within.
  * \return True if the particle is within the container or can be remapped into
  * it, false if it lies outside of the container bounds. */
-inline bool container_base::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk) {
+inline bool container_base_3d::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk) {
     ci=step_int((x-ax)*xsp);
     if(ci<0||ci>=nx) {
         if(x_prd) {ai=step_div(ci,nx);x-=ai*(bx-ax);ci-=ai*nx;}
@@ -228,7 +228,7 @@ inline bool container_base::remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &c
  * \param[out] pid the ID of the particle.
  * \return True if a particle was found. If the container has no particles,
  * then the search will not find a Voronoi cell and false is returned. */
-bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
+bool container_3d::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
     int ai,aj,ak,ci,cj,ck,ijk;
     particle_record w;
     double mrs;
@@ -252,7 +252,7 @@ bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &
         return true;
     }
 
-    // If no particle if found then just return false
+    // If no particle is found then just return false
     return false;
 }
 
@@ -266,7 +266,7 @@ bool container::find_voronoi_cell(double x,double y,double z,double &rx,double &
  * \param[out] pid the ID of the particle.
  * \return True if a particle was found. If the container has no particles,
  * then the search will not find a Voronoi cell and false is returned. */
-bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
+bool container_poly_3d::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
     int ai,aj,ak,ci,cj,ck,ijk;
     particle_record w;
     double mrs;
@@ -296,7 +296,7 @@ bool container_poly::find_voronoi_cell(double x,double y,double z,double &rx,dou
 
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
-void container_base::add_particle_memory(int i) {
+void container_base_3d::add_particle_memory(int i) {
     int l,nmem=mem[i]<<1;
 
     // Carry out a check on the memory allocation size, and print a status
@@ -324,7 +324,7 @@ void container_base::add_particle_memory(int i) {
  * are searched for. If the file cannot be successfully read, then the routine
  * causes a fatal error.
  * \param[in] fp the file handle to read from. */
-void container::import(FILE *fp) {
+void container_3d::import(FILE *fp) {
     int i,j;
     double x,y,z;
     while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z))==4) put(i,x,y,z);
@@ -337,7 +337,7 @@ void container::import(FILE *fp) {
  * successfully read, then the routine causes a fatal error.
  * \param[in,out] vo a reference to an ordering class to use.
  * \param[in] fp the file handle to read from. */
-void container::import(particle_order &vo,FILE *fp) {
+void container_3d::import(particle_order &vo,FILE *fp) {
     int i,j;
     double x,y,z;
     while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z))==4) put(vo,i,x,y,z);
@@ -349,7 +349,7 @@ void container::import(particle_order &vo,FILE *fp) {
  * radius) are searched for. If the file cannot be successfully read, then the
  * routine causes a fatal error.
  * \param[in] fp the file handle to read from. */
-void container_poly::import(FILE *fp) {
+void container_poly_3d::import(FILE *fp) {
     int i,j;
     double x,y,z,r;
     while((j=fscanf(fp,"%d %lg %lg %lg %lg",&i,&x,&y,&z,&r))==5) put(i,x,y,z,r);
@@ -362,7 +362,7 @@ void container_poly::import(FILE *fp) {
  * cannot be successfully read, then the routine causes a fatal error.
  * \param[in,out] vo a reference to an ordering class to use.
  * \param[in] fp the file handle to read from. */
-void container_poly::import(particle_order &vo,FILE *fp) {
+void container_poly_3d::import(particle_order &vo,FILE *fp) {
     int i,j;
     double x,y,z,r;
     while((j=fscanf(fp,"%d %lg %lg %lg %lg",&i,&x,&y,&z,&r))==5) put(vo,i,x,y,z,r);
@@ -371,20 +371,20 @@ void container_poly::import(particle_order &vo,FILE *fp) {
 
 /** Outputs the a list of all the container regions along with the number of
  * particles stored within each. */
-void container_base::region_count() {
+void container_base_3d::region_count() {
     int i,j,k,*cop=co;
     for(k=0;k<nz;k++) for(j=0;j<ny;j++) for(i=0;i<nx;i++)
         printf("Region (%d,%d,%d): %d particles\n",i,j,k,*(cop++));
 }
 
 /** Clears a container of particles. */
-void container::clear() {
+void container_3d::clear() {
     for(int *cop=co;cop<co+nxyz;cop++) *cop=0;
 }
 
 /** Clears a container of particles, also clearing resetting the maximum radius
  * to zero. */
-void container_poly::clear() {
+void container_poly_3d::clear() {
     for(int *cop=co;cop<co+nxyz;cop++) *cop=0;
     max_radius=0;
 }
@@ -392,7 +392,7 @@ void container_poly::clear() {
 /** Computes all the Voronoi cells and saves customized information about them.
  * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
-void container::print_custom(const char *format,FILE *fp) {
+void container_3d::print_custom(const char *format,FILE *fp) {
     c_loop_all vl(*this);
     print_custom(vl,format,fp);
 }
@@ -400,7 +400,7 @@ void container::print_custom(const char *format,FILE *fp) {
 /** Computes all the Voronoi cells and saves customized information about them.
  * \param[in] format the custom output string to use.
  * \param[in] fp a file handle to write to. */
-void container_poly::print_custom(const char *format,FILE *fp) {
+void container_poly_3d::print_custom(const char *format,FILE *fp) {
     c_loop_all vl(*this);
     print_custom(vl,format,fp);
 }
@@ -408,7 +408,7 @@ void container_poly::print_custom(const char *format,FILE *fp) {
 /** Computes all the Voronoi cells and saves customized information about them.
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
-void container::print_custom(const char *format,const char *filename) {
+void container_3d::print_custom(const char *format,const char *filename) {
     FILE *fp=safe_fopen(filename,"w");
     print_custom(format,fp);
     fclose(fp);
@@ -417,7 +417,7 @@ void container::print_custom(const char *format,const char *filename) {
 /** Computes all the Voronoi cells and saves customized information about them
  * \param[in] format the custom output string to use.
  * \param[in] filename the name of the file to write to. */
-void container_poly::print_custom(const char *format,const char *filename) {
+void container_poly_3d::print_custom(const char *format,const char *filename) {
     FILE *fp=safe_fopen(filename,"w");
     print_custom(format,fp);
     fclose(fp);
@@ -427,7 +427,7 @@ void container_poly::print_custom(const char *format,const char *filename) {
  * the output. It is useful for measuring the pure computation time of the
  * Voronoi algorithm, without any additional calculations such as volume
  * evaluation or cell output. */
-void container::compute_all_cells() {
+void container_3d::compute_all_cells() {
     voronoicell c(*this);
     c_loop_all vl(*this);
     if(vl.start()) do compute_cell(c,vl);
@@ -438,7 +438,7 @@ void container::compute_all_cells() {
  * the output. It is useful for measuring the pure computation time of the
  * Voronoi algorithm, without any additional calculations such as volume
  * evaluation or cell output. */
-void container_poly::compute_all_cells() {
+void container_poly_3d::compute_all_cells() {
     voronoicell c(*this);
     c_loop_all vl(*this);
     if(vl.start()) do compute_cell(c,vl);while(vl.inc());
@@ -448,7 +448,7 @@ void container_poly::compute_all_cells() {
  * without walls, the sum of the Voronoi cell volumes should equal the volume
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
-double container::sum_cell_volumes() {
+double container_3d::sum_cell_volumes() {
     voronoicell c(*this);
     double vol=0;
     c_loop_all vl(*this);
@@ -460,7 +460,7 @@ double container::sum_cell_volumes() {
  * without walls, the sum of the Voronoi cell volumes should equal the volume
  * of the container to numerical precision.
  * \return The sum of all of the computed Voronoi volumes. */
-double container_poly::sum_cell_volumes() {
+double container_poly_3d::sum_cell_volumes() {
     voronoicell c(*this);
     double vol=0;
     c_loop_all vl(*this);
@@ -473,14 +473,14 @@ double container_poly::sum_cell_volumes() {
  * \param[in] (x,y,z) the position vector to be tested.
  * \return True if the point is inside the container, false if the point is
  *         outside. */
-bool container_base::point_inside(double x,double y,double z) {
+bool container_base_3d::point_inside(double x,double y,double z) {
     if(x<ax||x>bx||y<ay||y>by||z<az||z>bz) return false;
     return point_inside_walls(x,y,z);
 }
 
 /** Draws an outline of the domain in Gnuplot format.
  * \param[in] fp the file handle to write to. */
-void container_base::draw_domain_gnuplot(FILE *fp) {
+void container_base_3d::draw_domain_gnuplot(FILE *fp) {
     fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",ax,ay,az,bx,ay,az,bx,by,az,ax,by,az);
     fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",ax,by,bz,bx,by,bz,bx,ay,bz,ax,ay,bz);
     fprintf(fp,"%g %g %g\n\n%g %g %g\n%g %g %g\n\n",ax,by,bz,ax,ay,az,ax,ay,bz);
@@ -489,7 +489,7 @@ void container_base::draw_domain_gnuplot(FILE *fp) {
 
 /** Draws an outline of the domain in POV-Ray format.
  * \param[in] fp the file handle to write to. */
-void container_base::draw_domain_pov(FILE *fp) {
+void container_base_3d::draw_domain_pov(FILE *fp) {
     fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
            "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",ax,ay,az,bx,ay,az,ax,by,az,bx,by,az);
     fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
@@ -506,38 +506,6 @@ void container_base::draw_domain_pov(FILE *fp) {
            "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",ax,ay,az,bx,ay,az,ax,by,az,bx,by,az);
     fprintf(fp,"sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
            "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",ax,ay,bz,bx,ay,bz,ax,by,bz,bx,by,bz);
-}
-
-/** The wall_list constructor sets up an array of pointers to wall classes. */
-wall_list::wall_list() : walls(new wall*[init_wall_size]), wep(walls), wel(walls+init_wall_size),
-    current_wall_size(init_wall_size) {}
-
-/** The wall_list destructor frees the array of pointers to the wall classes.
- */
-wall_list::~wall_list() {
-    delete [] walls;
-}
-
-/** Adds all of the walls on another wall_list to this class.
- * \param[in] wl a reference to the wall class. */
-void wall_list::add_wall(wall_list &wl) {
-    for(wall **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
-}
-
-/** Deallocates all of the wall classes pointed to by the wall_list. */
-void wall_list::deallocate() {
-    for(wall **wp=walls;wp<wep;wp++) delete *wp;
-}
-
-/** Increases the memory allocation for the walls array. */
-void wall_list::increase_wall_memory() {
-    current_wall_size<<=1;
-    if(current_wall_size>max_wall_size)
-        voro_fatal_error("Wall memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
-    wall **nwalls=new wall*[current_wall_size],**nwp=nwalls,**wp=walls;
-    while(wp<wep) *(nwp++)=*(wp++);
-    delete [] walls;
-    walls=nwalls;wel=walls+current_wall_size;wep=nwp;
 }
 
 }

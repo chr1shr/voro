@@ -1,24 +1,24 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
-/** \file v_compute.hh
- * \brief Header file for the voro_compute template and related classes. */
+/** \file v_compute_3d.hh
+ * \brief Header file for the voro_compute_3d template and related classes. */
 
-#ifndef VOROPP_V_COMPUTE_HH
-#define VOROPP_V_COMPUTE_HH
+#ifndef VOROPP_V_COMPUTE_3D_HH
+#define VOROPP_V_COMPUTE_3D_HH
 
 #include "config.hh"
-#include "worklist.hh"
-#include "cell.hh"
+#include "worklist_3d.hh"
+#include "cell_3d.hh"
 
 namespace voro {
 
 /** \brief Structure for holding information about a particle.
  *
  * This small structure holds information about a single particle, and is used
- * by several of the routines in the voro_compute template for passing
+ * by several of the routines in the voro_compute_3d template for passing
  * information by reference between functions. */
-struct particle_record {
+struct particle_record_3d {
     /** The index of the block that the particle is within. */
     int ijk;
     /** The number of particle within its block. */
@@ -33,7 +33,7 @@ struct particle_record {
 
 /** \brief Template for carrying out Voronoi cell computations. */
 template <class c_class>
-class voro_compute {
+class voro_compute_3d {
     public:
         /** A reference to the container class on which to carry out Voronoi
          * cell computations. */
@@ -73,16 +73,16 @@ class voro_compute {
         /** An array holding the number of particles within each computational
          * box of the container. */
         int *co;
-        voro_compute(c_class &con_,int hx_,int hy_,int hz_);
+        voro_compute_3d(c_class &con_,int hx_,int hy_,int hz_);
         /** The class destructor frees the dynamically allocated memory for the
          * mask and queue. */
-        ~voro_compute() {
+        ~voro_compute_3d() {
             delete [] qu;
             delete [] mask;
         }
         template<class v_cell>
         bool compute_cell(v_cell &c,int ijk,int s,int ci,int cj,int ck);
-        void find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record &w,double &mrs);
+        void find_voronoi_cell(double x,double y,double z,int ci,int cj,int ck,int ijk,particle_record_3d &w,double &mrs);
     private:
         /** A constant set to boxx*boxx+boxy*boxy+boxz*boxz, which is
          * frequently used in the computation. */
@@ -124,7 +124,7 @@ class voro_compute {
         bool compute_min_radius(int di,int dj,int dk,double fx,double fy,double fz,double mrs);
         inline void add_to_mask(int ei,int ej,int ek,int *&qu_e);
         inline void scan_bits_mask_add(unsigned int q,unsigned int *mijk,int ei,int ej,int ek,int *&qu_e);
-        inline void scan_all(int ijk,double x,double y,double z,int di,int dj,int dk,particle_record &w,double &mrs);
+        inline void scan_all(int ijk,double x,double y,double z,int di,int dj,int dk,particle_record_3d &w,double &mrs);
         void add_list_memory(int*& qu_s,int*& qu_e);
         /** Resets the mask in cases where the mask counter wraps
          * around. */

@@ -165,7 +165,7 @@ template<class c_loop,class c_class>
 void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* out_file,FILE* gnu_file,FILE* povp_file,FILE* povv_file,bool verbose,double &vol,int &vcc,int &tp) {
     int pid,ps=con.ps;double x,y,z,r;
     if(con.contains_neighbor(format)) {
-        voronoicell_neighbor c(con);
+        voronoicell_neighbor_3d c(con);
         if(vl.start()) do if(con.compute_cell(c,vl)) {
             vl.pos(pid,x,y,z,r);
             if(out_file!=NULL) c.output_custom(format,pid,x,y,z,r,out_file);
@@ -182,7 +182,7 @@ void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* out_file,F
             if(verbose) {vol+=c.volume();vcc++;}
         } while(vl.inc());
     } else {
-        voronoicell c(con);
+        voronoicell_3d c(con);
         if(vl.start()) do if(con.compute_cell(c,vl)) {
             vl.pos(pid,x,y,z,r);
             if(out_file!=NULL) c.output_custom(format,pid,x,y,z,r,out_file);
@@ -210,7 +210,7 @@ int main(int argc,char **argv) {
     bool polydisperse=false,x_prd=false,y_prd=false,z_prd=false,
          ordered=false,verbose=false,stdout_used=false;
 
-    pre_container *pcon=NULL;pre_container_poly *pconp=NULL;
+    pre_container_3d *pcon=NULL;pre_container_poly_3d *pconp=NULL;
     wall_list wl;
 
     // If there's one argument, check to see if it's requesting help.
@@ -495,7 +495,7 @@ int main(int argc,char **argv) {
     if(polydisperse) {
         if(ordered) {
             particle_order vo;
-            container_poly con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
+            container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
             con.add_wall(wl);
             if(bm==none) {
                 pconp->setup(vo,con);delete pconp;
@@ -507,7 +507,7 @@ int main(int argc,char **argv) {
             c_loop_order vlo(con,vo);
             cmd_line_output(vlo,con,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
         } else {
-            container_poly con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
+            container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
             con.add_wall(wl);
 
             if(bm==none) {
@@ -523,7 +523,7 @@ int main(int argc,char **argv) {
     } else {
         if(ordered) {
             particle_order vo;
-            container con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
+            container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
             con.add_wall(wl);
             if(bm==none) {
                 pcon->setup(vo,con);delete pcon;
@@ -535,7 +535,7 @@ int main(int argc,char **argv) {
             c_loop_order vlo(con,vo);
             cmd_line_output(vlo,con,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
         } else {
-            container con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
+            container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
             con.add_wall(wl);
             if(bm==none) {
                 pcon->setup(con);delete pcon;

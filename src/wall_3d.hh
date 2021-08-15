@@ -1,21 +1,21 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
-/** \file wall.hh
- * \brief Header file for the derived wall classes. */
+/** \file wall_3d.hh
+ * \brief Header file for the derived three-dimensional wall classes. */
 
-#ifndef VOROPP_WALL_HH
-#define VOROPP_WALL_HH
+#ifndef VOROPP_WALL_3D_HH
+#define VOROPP_WALL_3D_HH
 
-#include "cell.hh"
-#include "container.hh"
+#include "cell_3d.hh"
+#include "container_3d.hh"
 
 namespace voro {
 
 /** \brief A class representing a spherical wall object.
  *
  * This class represents a spherical wall object. */
-struct wall_sphere : public wall {
+struct wall_sphere : public wall_3d {
     public:
         /** Constructs a spherical wall object.
          * \param[in] w_id_ an ID number to associate with the wall for
@@ -27,8 +27,8 @@ struct wall_sphere : public wall {
         bool point_inside(double x,double y,double z);
         template<class v_cell>
         bool cut_cell_base(v_cell &c,double x,double y,double z);
-        bool cut_cell(voronoicell &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
-        bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+        bool cut_cell(voronoicell_3d &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+        bool cut_cell(voronoicell_neighbor_3d &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
     private:
         const int w_id;
         const double xc,yc,zc,rc;
@@ -37,7 +37,7 @@ struct wall_sphere : public wall {
 /** \brief A class representing a plane wall object.
  *
  * This class represents a single plane wall object. */
-struct wall_plane : public wall {
+struct wall_plane : public wall_3d {
     public:
         /** Constructs a plane wall object.
          * \param[in] (xc_,yc_,zc_) a normal vector to the plane.
@@ -49,8 +49,8 @@ struct wall_plane : public wall {
         bool point_inside(double x,double y,double z);
         template<class v_cell>
         bool cut_cell_base(v_cell &c,double x,double y,double z);
-        bool cut_cell(voronoicell &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
-        bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+        bool cut_cell(voronoicell_3d &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+        bool cut_cell(voronoicell_neighbor_3d &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
     private:
         const int w_id;
         const double xc,yc,zc,ac;
@@ -59,7 +59,7 @@ struct wall_plane : public wall {
 /** \brief A class representing a cylindrical wall object.
  *
  * This class represents a open cylinder wall object. */
-struct wall_cylinder : public wall {
+struct wall_cylinder : public wall_3d {
     public:
         /** Constructs a cylinder wall object.
          * \param[in] (xc_,yc_,zc_) a point on the axis of the cylinder.
@@ -74,8 +74,8 @@ struct wall_cylinder : public wall {
         bool point_inside(double x,double y,double z);
         template<class v_cell>
         bool cut_cell_base(v_cell &c,double x,double y,double z);
-        bool cut_cell(voronoicell &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
-        bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+        bool cut_cell(voronoicell_3d &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+        bool cut_cell(voronoicell_neighbor_3d &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
     private:
         const int w_id;
         const double xc,yc,zc,xa,ya,za,asi,rc;
@@ -84,7 +84,7 @@ struct wall_cylinder : public wall {
 /** \brief A class representing a conical wall object.
  *
  * This class represents a cone wall object. */
-struct wall_cone : public wall {
+struct wall_cone : public wall_3d {
     public:
         /** Constructs a cone wall object.
          * \param[in] (xc_,yc_,zc_) the apex of the cone.
@@ -101,8 +101,8 @@ struct wall_cone : public wall {
         bool point_inside(double x,double y,double z);
         template<class v_cell>
         bool cut_cell_base(v_cell &c,double x,double y,double z);
-        bool cut_cell(voronoicell &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
-        bool cut_cell(voronoicell_neighbor &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+        bool cut_cell(voronoicell_3d &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
+        bool cut_cell(voronoicell_neighbor_3d &c,double x,double y,double z) {return cut_cell_base(c,x,y,z);}
     private:
         const int w_id;
         const double xc,yc,zc,xa,ya,za,asi,gra,sang,cang;

@@ -1,15 +1,12 @@
-# Voro++ makefile
-#
-# Author : Chris H. Rycroft (Harvard University / LBL)
-# Email  : chr@alum.mit.edu
-# Date   : August 30th 2011
+# Voro++, a cell-based Voronoi library
+# By Chris H. Rycroft and the Rycroft Group
 
 # Load the common configuration file
 include ../config.mk
 
 # List of the common source files
-objs=cell.o common.o container.o unitcell.o v_compute.o c_loops.o \
-     v_base.o wall.o pre_container.o container_prd.o
+objs=cell_3d.o common.o container_3d.o container_tri.o unitcell.o v_compute_3d.o \
+     c_loops.o v_base_3d.o wall.o wall_3d.o particle_list.o 
 src=$(patsubst %.o,%.cc,$(objs))
 
 # Makefile rules

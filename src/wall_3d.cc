@@ -1,10 +1,11 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
-/** \file wall.cc
- * \brief Function implementations for the derived wall classes. */
+/** \file wall_3d.cc
+ * \brief Function implementations for the derived three-dimensional wall
+ * classes. */
 
-#include "wall.hh"
+#include "wall_3d.hh"
 
 namespace voro {
 
@@ -117,13 +118,13 @@ bool wall_cone::cut_cell_base(v_cell &c,double x,double y,double z) {
 }
 
 // Explicit instantiation
-template bool wall_sphere::cut_cell_base(voronoicell&,double,double,double);
-template bool wall_sphere::cut_cell_base(voronoicell_neighbor&,double,double,double);
-template bool wall_plane::cut_cell_base(voronoicell&,double,double,double);
-template bool wall_plane::cut_cell_base(voronoicell_neighbor&,double,double,double);
-template bool wall_cylinder::cut_cell_base(voronoicell&,double,double,double);
-template bool wall_cylinder::cut_cell_base(voronoicell_neighbor&,double,double,double);
-template bool wall_cone::cut_cell_base(voronoicell&,double,double,double);
-template bool wall_cone::cut_cell_base(voronoicell_neighbor&,double,double,double);
+template bool wall_sphere::cut_cell_base(voronoicell_3d&,double,double,double);
+template bool wall_sphere::cut_cell_base(voronoicell_neighbor_3d&,double,double,double);
+template bool wall_plane::cut_cell_base(voronoicell_3d&,double,double,double);
+template bool wall_plane::cut_cell_base(voronoicell_neighbor_3d&,double,double,double);
+template bool wall_cylinder::cut_cell_base(voronoicell_3d&,double,double,double);
+template bool wall_cylinder::cut_cell_base(voronoicell_neighbor_3d&,double,double,double);
+template bool wall_cone::cut_cell_base(voronoicell_3d&,double,double,double);
+template bool wall_cone::cut_cell_base(voronoicell_neighbor_3d&,double,double,double);
 
 }
