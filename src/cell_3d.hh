@@ -138,8 +138,10 @@ class voronoicell_base {
 		void output_vertex_orders(FILE *fp=stdout);
 		void vertices(std::vector<double> &v);
 		void output_vertices(FILE *fp=stdout);
+		void output_vertices(int pr,FILE *fp=stdout);
 		void vertices(double x,double y,double z,std::vector<double> &v);
 		void output_vertices(double x,double y,double z,FILE *fp=stdout);
+		void output_vertices(int pr,double x,double y,double z,FILE *fp=stdout);
 		void face_areas(std::vector<double> &v);
 		void minkowski(double r,double &ar,double &vo);
 		/** Outputs the areas of the faces.

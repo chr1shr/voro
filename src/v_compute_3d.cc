@@ -398,7 +398,7 @@ bool voro_compute_3d<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int c
 
         // If mrs is bigger than the maximum distance to the block, then we
         // have to test all particles in the block for intersections.
-        // Otherwise, we do additional checks and skip those particles that 
+        // Otherwise, we do additional checks and skip those particles that
         // can't possibly intersect the block.
         if(co[ijk]>0) {
             l=0;x2=x-qx;y2=y-qy;z2=z-qz;

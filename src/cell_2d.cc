@@ -5,7 +5,8 @@
  * \brief Function implementations for the voronoicell_2d class. */
 
 #include "cell_2d.hh"
-#include "cell_nc_2d.hh"
+
+#include <cstring>
 
 namespace voro {
 
@@ -58,9 +59,9 @@ void voronoicell_base_2d::draw_pov(double x,double y,FILE *fp) {
     if(p==0) return;
     int k=0;
     do {
-        fprintf(fp,"sphere{<%g,%g,0>,r}\ncylinder{<%g,%g,0>,<"
-            ,x+0.5*pts[2*k],y+0.5*pts[2*k+1]
-            ,x+0.5*pts[2*k],y+0.5*pts[2*k+1]);
+        fprintf(fp,"sphere{<%g,%g,0>,r}\ncylinder{<%g,%g,0>,<",
+                x+0.5*pts[2*k],y+0.5*pts[2*k+1],
+                x+0.5*pts[2*k],y+0.5*pts[2*k+1]);
         k=ed[2*k];
         fprintf(fp,"%g,%g,0>,r}\n",x+0.5*pts[2*k],y+0.5*pts[2*k+1]);
     } while (k!=0);
@@ -261,6 +262,16 @@ void voronoicell_base_2d::output_vertices(FILE *fp) {
     }
 }
 
+/** Outputs the vertex vectors using the local coordinate system.
+ * \param[in] pr the precision to output the numbers to.
+ * \param[out] fp the file handle to write to. */
+void voronoicell_base_2d::output_vertices(int pr,FILE *fp) {
+    if(p>0) {
+        fprintf(fp,"(%.*g,%.*g)",pr,*pts*0.5,pr,pts[1]*0.5);
+        for(double *ptsp=pts+2;ptsp<pts+2*p;ptsp+=2) fprintf(fp," (%.*g,%.*g)",pr,*ptsp*0.5,pr,ptsp[1]*0.5);
+    }
+}
+
 /** Returns a vector of the vertex vectors in the global coordinate system.
  * \param[out] v the vector to store the results in.
  * \param[in] (x,y,z) the position vector of the particle in the global
@@ -282,6 +293,18 @@ void voronoicell_base_2d::output_vertices(double x,double y,FILE *fp) {
     if(p>0) {
         fprintf(fp,"(%g,%g)",x+*pts*0.5,y+pts[1]*0.5);
         for(double *ptsp=pts+2;ptsp<pts+2*p;ptsp+=2) fprintf(fp," (%g,%g)",x+*ptsp*0.5,y+ptsp[1]*0.5);
+    }
+}
+
+/** Outputs the vertex vectors using the global coordinate system.
+ * \param[in] pr the precision to output the numbers to.
+ * \param[out] fp the file handle to write to.
+ * \param[in] (x,y,z) the position vector of the particle in the global
+ *                    coordinate system. */
+void voronoicell_base_2d::output_vertices(int pr,double x,double y,FILE *fp) {
+    if(p>0) {
+        fprintf(fp,"(%.*g,%.*g)",pr,x+*pts*0.5,pr,y+pts[1]*0.5);
+        for(double *ptsp=pts+2;ptsp<pts+2*p;ptsp+=2) fprintf(fp," (%.*g,%.*g)",pr,x+*ptsp*0.5,pr,y+ptsp[1]*0.5);
     }
 }
 
@@ -435,8 +458,52 @@ void voronoicell_base_2d::output_custom(const char *format,int i,double x,double
                           fprintf(fp,"%g %g",x+cx,y+cy);
                       } break;
 
+                // Precision is specified
+                case '.': {
+                        int pr;
+                        if(voro_read_precision(fp,fmp,pr)) switch(*fmp) {
+
+                            // Particle-related output
+                            case 'x': fprintf(fp,"%.*g",pr,x);break;
+                            case 'y': fprintf(fp,"%.*g",pr,y);break;
+                            case 'q': fprintf(fp,"%.*g %.*g",pr,x,pr,y);break;
+                            case 'r': fprintf(fp,"%g",r);break;
+
+                            // Vertex-related output
+                            case 'p': output_vertices(pr,fp);break;
+                            case 'P': output_vertices(pr,x,y,fp);break;
+                            case 'm': fprintf(fp,"%.*g",pr,0.25*max_radius_squared());break;
+
+                            // Edge-related output
+                            case 'E': fprintf(fp,"%.*g",pr,perimeter());break;
+                            case 'e': edge_lengths(vd);voro_print_vector(pr,vd,fp);break;
+                            case 'l': normals(vd);
+                                  voro_print_positions_2d(pr,vd,fp);
+                                  break;
+
+                            // Area-related output
+                            case 'a': fprintf(fp,"%.*g",pr,area());break;
+                            case 'c': {
+                                      double cx,cy;
+                                      centroid(cx,cy);
+                                      fprintf(fp,"%.*g %.*g",pr,cx,pr,cy);
+                                  } break;
+                            case 'C': {
+                                      double cx,cy;
+                                      centroid(cx,cy);
+                                      fprintf(fp,"%.*g %.*g",pr,x+cx,pr,y+cy);
+                                  } break;
+
+                            // End-of-string reached
+                            case 0: fprintf(fp,"%%.%d",pr);fmp--;break;
+
+                            // This is not a valid control sequence
+                            default: fprintf(fp,"%%.%d%c",pr,*fmp);
+                          }
+                      } break;
+
                 // End-of-string reached
-                case 0: fmp--;break;
+                case 0: putc('%',fp);fmp--;break;
 
                 // The percent sign is not part of a
                 // control sequence
@@ -445,7 +512,7 @@ void voronoicell_base_2d::output_custom(const char *format,int i,double x,double
         } else putc(*fmp,fp);
         fmp++;
     }
-    fputs("\n",fp);
+    putc('\n',fp);
 }
 
 /** Doubles the storage for the vertices, by reallocating the pts and ed
@@ -453,8 +520,7 @@ void voronoicell_base_2d::output_custom(const char *format,int i,double x,double
  * then the routine exits with a fatal error. */
 template<class vc_class>
 void voronoicell_base_2d::add_memory_vertices(vc_class &vc) {
-    double *ppe(pts+2*current_vertices);
-    int *ede(ed+2*current_vertices);
+    int ocv=current_vertices;
 
     // Double the memory allocation and check it is within range
     current_vertices<<=1;
@@ -464,22 +530,22 @@ void voronoicell_base_2d::add_memory_vertices(vc_class &vc) {
 #endif
 
     // Copy the vertex positions
-    double *npts(new double[2*current_vertices]),*npp(npts),*pp(pts);
-    while(pp<ppe) *(npp++)=*(pp++);
+    double *npts=new double[2*current_vertices];
+    memcpy(npts,pts,sizeof(double)*2*ocv);
     delete [] pts;pts=npts;
 
     // Copy the edge table
-    int *ned(new int[2*current_vertices]),*nep(ned),*edp(ed);
-    while(edp<ede) *(nep++)=*(edp++);
+    int *ned=new int[2*current_vertices];
+    memcpy(ned,ed,sizeof(int)*2*ocv);
     delete [] ed;ed=ned;
 
     // Double the neighbor information if necessary
-    vc.n_add_memory_vertices();
+    vc.n_add_memory_vertices(ocv);
 }
 
-inline void voronoicell_neighbor_2d::n_add_memory_vertices() {
-    int *nne=new int[current_vertices],*nee=ne+(current_vertices>>1),*nep=ne,*nnep=nne;
-    while(nep<nee) *(nnep++)=*(nep++);
+inline void voronoicell_neighbor_2d::n_add_memory_vertices(int ocv) {
+    int *nne=new int[current_vertices];
+    memcpy(nne,ne,sizeof(int)*ocv);
     delete [] ne;ne=nne;
 }
 
@@ -499,11 +565,11 @@ void voronoicell_neighbor_2d::init(double xmin,double xmax,double ymin,double ym
  * \param[in] stackp a reference to the current stack pointer. */
 void voronoicell_base_2d::add_memory_ds(int *&stackp) {
     current_delete_size<<=1;
-    if(current_delete_size>max_delete_size) voro_fatal_error("Delete stack 1 memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
+    if(current_delete_size>max_delete_size) voro_fatal_error("Delete stack memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=2
-    fprintf(stderr,"Delete stack 1 memory scaled up to %d\n",current_delete_size);
+    fprintf(stderr,"Delete stack memory scaled up to %d\n",current_delete_size);
 #endif
-    int *dsn(new int[current_delete_size]),*dsnp(dsn),*dsp(ds);
+    int *dsn=new int[current_delete_size],*dsnp=dsn,*dsp=ds;
     while(dsp<stackp) *(dsnp++)=*(dsp++);
     delete [] ds;ds=dsn;stackp=dsnp;
     stacke=ds+current_delete_size;

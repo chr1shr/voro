@@ -1,6 +1,9 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
+/** \file common.cc
+ * \brief Header file for the small helper functions. */
+
 #ifndef VOROPP_COMMON_HH
 #define VOROPP_COMMON_HH
 
@@ -14,6 +17,7 @@ namespace voro {
 
 void check_duplicate(int n,double x,double y,double z,int id,double *qp);
 
+bool voro_read_precision(FILE *fp,char *&fmp,int &pr);
 void voro_fatal_error(const char *p,int status);
 void voro_print_positions(std::vector<double> &v,FILE *fp=stdout);
 void voro_print_positions(int pr,std::vector<double> &v,FILE *fp=stdout);

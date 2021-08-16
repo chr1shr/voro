@@ -466,11 +466,13 @@ void container_base_2d::draw_domain_gnuplot(FILE *fp) {
  * \param[in] fp the file handle to write to. */
 void container_base_2d::draw_domain_pov(FILE *fp) {
     fprintf(fp,"cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
-           "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n",ax,ay,bx,ay,ax,by,bx,by);
-    fprintf(fp,"cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
-           "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n",ax,ay,ax,by,bx,ay,bx,by);
-    fprintf(fp,"sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n"
-           "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",ax,ay,bx,ay,ax,by,bx,by);
+               "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
+               "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
+               "cylinder{<%g,%g,0>,<%g,%g,0>,rr}\n"
+               "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n"
+               "sphere{<%g,%g,0>,rr}\nsphere{<%g,%g,0>,rr}\n",
+               ax,ay,bx,ay,ax,by,bx,by,ax,ay,ax,by,
+               bx,ay,bx,by,ax,ay,bx,ay,ax,by,bx,by);
 }
 
 /** The wall_list constructor sets up an array of pointers to wall classes. */

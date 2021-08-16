@@ -481,31 +481,43 @@ bool container_base_3d::point_inside(double x,double y,double z) {
 /** Draws an outline of the domain in Gnuplot format.
  * \param[in] fp the file handle to write to. */
 void container_base_3d::draw_domain_gnuplot(FILE *fp) {
-    fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",ax,ay,az,bx,ay,az,bx,by,az,ax,by,az);
-    fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n",ax,by,bz,bx,by,bz,bx,ay,bz,ax,ay,bz);
-    fprintf(fp,"%g %g %g\n\n%g %g %g\n%g %g %g\n\n",ax,by,bz,ax,ay,az,ax,ay,bz);
-    fprintf(fp,"%g %g %g\n%g %g %g\n\n%g %g %g\n%g %g %g\n\n",bx,ay,az,bx,ay,bz,bx,by,az,bx,by,bz);
+    fprintf(fp,"%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n"
+               "%g %g %g\n%g %g %g\n%g %g %g\n%g %g %g\n"
+               "%g %g %g\n\n%g %g %g\n%g %g %g\n\n"
+               "%g %g %g\n%g %g %g\n\n%g %g %g\n%g %g %g\n\n",
+               ax,ay,az,bx,ay,az,bx,by,az,ax,by,az,
+               ax,by,bz,bx,by,bz,bx,ay,bz,ax,ay,bz,
+               ax,by,bz,ax,ay,az,ax,ay,bz,
+               bx,ay,az,bx,ay,bz,bx,by,az,bx,by,bz);
 }
 
 /** Draws an outline of the domain in POV-Ray format.
  * \param[in] fp the file handle to write to. */
 void container_base_3d::draw_domain_pov(FILE *fp) {
     fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
-           "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",ax,ay,az,bx,ay,az,ax,by,az,bx,by,az);
-    fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
-           "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",ax,by,bz,bx,by,bz,ax,ay,bz,bx,ay,bz);
-    fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
-           "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",ax,ay,az,ax,by,az,bx,ay,az,bx,by,az);
-    fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
-           "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",bx,ay,bz,bx,by,bz,ax,ay,bz,ax,by,bz);
-    fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
-           "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",ax,ay,az,ax,ay,bz,bx,ay,az,bx,ay,bz);
-    fprintf(fp,"cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
-           "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n",bx,by,az,bx,by,bz,ax,by,az,ax,by,bz);
-    fprintf(fp,"sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
-           "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",ax,ay,az,bx,ay,az,ax,by,az,bx,by,az);
-    fprintf(fp,"sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
-           "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n",ax,ay,bz,bx,ay,bz,ax,by,bz,bx,by,bz);
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "cylinder{<%g,%g,%g>,<%g,%g,%g>,rr}\n"
+               "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
+               "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
+               "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
+               "sphere{<%g,%g,%g>,rr}\nsphere{<%g,%g,%g>,rr}\n"
+               ax,ay,az,bx,ay,az,ax,by,az,bx,by,az,
+               ax,by,bz,bx,by,bz,ax,ay,bz,bx,ay,bz,
+               ax,ay,az,ax,by,az,bx,ay,az,bx,by,az,
+               bx,ay,bz,bx,by,bz,ax,ay,bz,ax,by,bz,
+               ax,ay,az,ax,ay,bz,bx,ay,az,bx,ay,bz,
+               bx,by,az,bx,by,bz,ax,by,az,ax,by,bz,
+               ax,ay,az,bx,ay,az,ax,by,az,bx,by,az,
+               ax,ay,bz,bx,ay,bz,ax,by,bz,bx,by,bz);
 }
 
 }

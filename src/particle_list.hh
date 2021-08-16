@@ -1,8 +1,8 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
-/** \file pre_container.hh
- * \brief Header file for the pre_container and related classes. */
+/** \file particle_list.hh
+ * \brief Header file for the particle_list_base and related classes. */
 
 #ifndef VOROPP_PARTICLE_LIST_HH
 #define VOROPP_PARTICLE_LIST_HH
@@ -84,9 +84,8 @@ class particle_list2 : public particle_list_base {
             fclose(fp);
         }
         void setup(container_2d &con);
-        void setup(particle_order &po,container_2d &con);
+        void setup(particle_order &po,con_class &con);
 };
-
 
 /** \brief A class for storing an arbitrary number of particles with three
  * floating point number records.

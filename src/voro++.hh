@@ -1,22 +1,19 @@
-// Voro++, a 3D cell-based Voronoi library
-//
-// Author   : Chris H. Rycroft (Harvard University / LBL)
-// Email    : chr@alum.mit.edu
-// Date     : August 30th 2011
+// Voro++, a cell-based Voronoi library
+// By Chris H. Rycroft and the Rycroft Group
 
 /** \file voro++.hh
  * \brief A file that loads all of the Voro++ header files. */
 
 /** \mainpage Voro++ class reference manual
  * \section intro Introduction
- * Voro++ is a software library for carrying out three-dimensional computations
- * of the Voronoi tessellation. A distinguishing feature of the Voro++ library
- * is that it carries out cell-based calculations, computing the Voronoi cell
- * for each particle individually, rather than computing the Voronoi
- * tessellation as a global network of vertices and edges. It is particularly
- * well-suited for applications that rely on cell-based statistics, where
- * features of Voronoi cells (eg. volume, centroid, number of faces) can be
- * used to analyze a system of particles.
+ * Voro++ is a software library for computing the Voronoi tessellation. A
+ * distinguishing feature of the Voro++ library is that it carries out
+ * cell-based calculations, computing the Voronoi cell for each particle
+ * individually, rather than computing the Voronoi tessellation as a global
+ * network of vertices and edges. It is particularly well-suited for
+ * applications that rely on cell-based statistics, where features of Voronoi
+ * cells (eg. volume, centroid, number of faces) can be used to analyze a
+ * system of particles.
  *
  * Voro++ is written in C++ and can be built as a static library that can be
  * linked to. This manual provides a reference for every function in the class
@@ -319,15 +316,23 @@
 
 #include "config.hh"
 #include "common.hh"
-#include "cell.hh"
-#include "v_base.hh"
+#include "cell_2d.hh"
+#include "cell_3d.hh"
+#include "config.hh"
+#include "container_2d.hh"
+#include "container_3d.hh"
+#include "container_tri.hh"
+#include "particle_list.hh"
 #include "rad_option.hh"
-#include "container.hh"
 #include "unitcell.hh"
-#include "container_prd.hh"
-#include "pre_container.hh"
-#include "v_compute.hh"
-#include "c_loops.hh"
+#include "v_base.hh"
+#include "v_base_2d.hh"
+#include "v_compute_2d.hh"
+#include "v_compute_3d.hh"
 #include "wall.hh"
+#include "wall_2d.hh"
+#include "wall_3d.hh"
+#include "worklist_2d.hh"
+#include "worklist_3d.hh"
 
 #endif

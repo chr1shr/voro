@@ -31,10 +31,37 @@ void voro_fatal_error(const char *p,int status) {
  * Prints a vector of positions as bracketed triplets.
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
-void voro_print_positions(std::vector<double> &v,FILE *fp) {
+void voro_print_positions_2d(std::vector<double> &v,FILE *fp) {
+    if(v.size()>0) {
+        fprintf(fp,"(%g,%g)",v[0],v[1]);
+        for(unsigned int k=2;k<v.size();k+=2)
+            fprintf(fp," (%g,%g)",v[k],v[k+1]);
+    }
+}
+
+/** \brief Prints a vector of positions.
+ *
+ * Prints a vector of positions as bracketed triplets.
+ * \param[in] pr the precision to print the numbers to.
+ * \param[in] v the vector to print.
+ * \param[in] fp the file stream to print to. */
+void voro_print_positions_2d(int pr,std::vector<double> &v,FILE *fp) {
+    if(v.size()>0) {
+        fprintf(fp,"(%.*g,%.*g)",pr,v[0],pr,v[1]);
+        for(unsigned int k=2;k<v.size();k+=2)
+            fprintf(fp," (%.*g,%.*g)",pr,v[k],pr,v[k+1]);
+    }
+}
+
+/** \brief Prints a vector of positions.
+ *
+ * Prints a vector of positions as bracketed triplets.
+ * \param[in] v the vector to print.
+ * \param[in] fp the file stream to print to. */
+void voro_print_positions_3d(std::vector<double> &v,FILE *fp) {
     if(v.size()>0) {
         fprintf(fp,"(%g,%g,%g)",v[0],v[1],v[2]);
-        for(int k=3;(unsigned int) k<v.size();k+=3)
+        for(unsigned int k=3;k<v.size();k+=3)
             fprintf(fp," (%g,%g,%g)",v[k],v[k+1],v[k+2]);
     }
 }
@@ -45,10 +72,10 @@ void voro_print_positions(std::vector<double> &v,FILE *fp) {
  * \param[in] pr the precision to print the numbers to.
  * \param[in] v the vector to print.
  * \param[in] fp the file stream to print to. */
-void voro_print_positions(int pr,std::vector<double> &v,FILE *fp) {
+void voro_print_positions_3d(int pr,std::vector<double> &v,FILE *fp) {
     if(v.size()>0) {
         fprintf(fp,"(%.*g,%.*g,%.*g)",pr,v[0],pr,v[1],pr,v[2]);
-        for(int k=3;(unsigned int) k<v.size();k+=3)
+        for(unsigned int k=3;k<v.size();k+=3)
             fprintf(fp," (%.*g,%.*g,%.*g)",pr,v[k],pr,v[k+1],pr,v[k+2]);
     }
 }
@@ -163,6 +190,34 @@ void voro_print_face_vertices(std::vector<int> &v,FILE *fp) {
                 fputs(")",fp);
             }
         }
+    }
+}
+
+/** \brief Reads the precision from a custom output format string.
+ *
+ * The 2D and 3D Voronoi cell classes can output custom information
+ * about a Voronoi cell to varying precision. This common function
+ * reads the precision from an output string.
+ * \param[in] fp the file handle to write to.
+ * \param[in,out] fmp a pointer to the position in the output string before the
+ *                    numerical precision value; on exit, this is updated to
+ *                    to the position after the numerical value.
+ * \param[out] pr the precision that was read.
+ * \return True if the precision was successfully read, false otherwise. */
+void voro_read_precision(FILE *fp,char *&fmp,int &pr) {
+    fmp++;
+
+    // Check for first digit of the precision string
+    if(*fmp==0) {fputs("%.",fp);fmp--;break;}
+    else if(*fmp>='0'&&*fmp<='9') {
+        pr=static_cast<int>(*fmp-'0');
+    } else {fputs("%.",fp);putc(*fmp,fp);break;}
+
+    // Check for subsequent digits of the precision string
+    fmp++;
+    while(*fmp>='0'&&*fmp<='9') {
+        pr=10*pr+static_cast<int>(*fmp-'0');
+        fmp++;
     }
 }
 

@@ -2431,23 +2431,9 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
 
                 // Precision is specified
                 case '.': {
-                        fmp++;
 
-                        // Check for first digit of the precision string
                         int pr;
-                        if(*fmp==0) {fputs("%.",fp);fmp--;break;}
-                        else if(*fmp>='0'&&*fmp<='9') {
-                            pr=static_cast<int>(*fmp-'0');
-                        } else {fputs("%.",fp);putc(*fmp,fp);break;}
-
-                        // Check for subsequent digits of the precision string
-                        fmp++;
-                        while(*fmp>='0'&&*fmp<='9') {
-                            pr=10*pr+static_cast<int>(*fmp-'0');
-                            fmp++;
-                        }
-
-                        switch(*fmp) {
+                        if(voro_read_precision(fp,fmp,pr)) switch(*fmp) {
 
                             // Particle-related output
                             case 'x': fprintf(fp,"%.*g",pr,x);break;
@@ -2455,6 +2441,11 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
                             case 'z': fprintf(fp,"%.*g",pr,z);break;
                             case 'q': fprintf(fp,"%.*g %.*g %.*g",pr,x,pr,y,pr,z);break;
                             case 'r': fprintf(fp,"%.*g",pr,r);break;
+
+                            // Vertex-related output
+                            case 'p': output_vertices(pr,fp);break;
+                            case 'P': output_vertices(pr,x,y,z,fp);break;
+                            case 'm': fprintf(fp,"%.*g",pr,0.25*max_radius_squared());break;
 
                             // Edge-related output
                             case 'E': fprintf(fp,"%.*g",pr,total_edge_distance());break;
@@ -2464,7 +2455,7 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
                             case 'F': fprintf(fp,"%.*g",pr,surface_area());break;
                             case 'f': face_areas(vd);voro_print_vector(pr,vd,fp);break;
                             case 'l': normals(vd);
-                                  voro_print_positions(pr,vd,fp);
+                                  voro_print_positions_3d(pr,vd,fp);
                                   break;
 
                             // Volume-related output
@@ -2497,7 +2488,7 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
         } else putc(*fmp,fp);
         fmp++;
     }
-    fputs("\n",fp);
+    putc('\n',fp);
 }
 
 /** This initializes the class to be a rectangular box. It calls the base class

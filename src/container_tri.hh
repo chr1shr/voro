@@ -21,7 +21,7 @@
 
 namespace voro {
 
-/** \brief Class for representing a particle system in a 3D triclinic domain. 
+/** \brief Class for representing a particle system in a 3D triclinic domain.
  *
  * This class represents a particle system in a three-dimensional triclinic
  * domain. The domain is defined by three periodicity vectors (bx,0,0),

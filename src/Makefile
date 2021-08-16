@@ -5,8 +5,9 @@
 include ../config.mk
 
 # List of the common source files
-objs=cell_3d.o common.o container_3d.o container_tri.o unitcell.o v_compute_3d.o \
-     c_loops.o v_base_3d.o wall.o wall_3d.o particle_list.o 
+objs=cell_2d.o cell_3d.o common.o container_2d.o container_3d.o \
+	 container_tri.o particle_list.o unitcell.o v_base_2d.o v_base_3d.o \
+     v_compute_2d.o v_compute_3d.o wall.o wall_2d.o wall_3d.o
 src=$(patsubst %.o,%.cc,$(objs))
 
 # Makefile rules

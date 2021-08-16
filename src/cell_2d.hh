@@ -93,8 +93,10 @@ class voronoicell_base_2d {
         double area();
         void vertices(vector<double> &v);
         void output_vertices(FILE *fp=stdout);
+        void output_vertices(int pr,FILE *fp=stdout);
         void vertices(double x,double y,vector<double> &v);
         void output_vertices(double x,double y,FILE *fp=stdout);
+        void output_vertices(int pr,double x,double y,FILE *fp=stdout);
         void edge_lengths(vector<double> &vd);
         void normals(vector<double> &vd);
         void centroid(double &cx,double &cy);
@@ -140,7 +142,7 @@ class voronoicell_2d : public voronoicell_base_2d {
             init_base(xmin,xmax,ymin,ymax);
         }
     private:
-        inline void n_add_memory_vertices() {}
+        inline void n_add_memory_vertices(int ocv) {}
         inline void n_copy(int a,int b) {}
         inline void n_set(int a,int id) {}
         friend class voronoicell_base_2d;
@@ -169,7 +171,7 @@ class voronoicell_neighbor_2d : public voronoicell_base_2d {
         void init(double xmin,double xmax,double ymin,double ymax);
         virtual void neighbors(vector<int> &v);
     private:
-        inline void n_add_memory_vertices();
+        inline void n_add_memory_vertices(int ocv);
         inline void n_copy(int a,int b) {ne[a]=ne[b];}
         inline void n_set(int a,int id) {ne[a]=id;}
         friend class voronoicell_base_2d;
