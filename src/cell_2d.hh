@@ -124,6 +124,10 @@ class voronoicell_base_2d {
 class voronoicell_2d : public voronoicell_base_2d {
     public:
         using voronoicell_base_2d::nplane;
+        voronoicell_2d() : voronoicell_base_2d(default_length*default_length) {}
+        voronoicell_2d(double max_len_sq_) : voronoicell_base_2d(max_len_sq_) {}
+        template<class c_class>
+        voronoicell_2d(c_class &con) : voronoicell_base_2d(con.max_len_sq) {}
         inline bool nplane(double x,double y,double rs,int p_id) {
             return nplane(*this,x,y,rs,0);
         }
@@ -151,8 +155,17 @@ class voronoicell_2d : public voronoicell_base_2d {
 class voronoicell_neighbor_2d : public voronoicell_base_2d {
     public:
         using voronoicell_base_2d::nplane;
+        voronoicell_neighbor_2d() :
+            voronoicell_base_2d(default_length*default_length),
+            ne(new int[init_vertices]) {}
+        voronoicell_neighbor_2d(double max_len_sq_) :
+            voronoicell_base_2d(max_len_sq_),
+            ne(new int[init_vertices]) {}
+        template<class c_class>
+        voronoicell_neighbor_2d(c_class &con) :
+            voronoicell_base_2d(con.max_len_sq),
+            ne(new int[init_vertices]) {}
         int *ne;
-        voronoicell_neighbor_2d() : ne(new int[init_vertices]) {}
         ~voronoicell_neighbor_2d() {delete [] ne;}
         inline bool nplane(double x,double y,double rs,int p_id) {
             return nplane(*this,x,y,rs,p_id);

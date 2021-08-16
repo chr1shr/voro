@@ -11,10 +11,11 @@
 namespace voro {
 
 /** Constructs a 2D Voronoi cell and sets up the initial memory. */
-voronoicell_base_2d::voronoicell_base_2d() :
+voronoicell_base_2d::voronoicell_base_2d(double max_len_sq) :
     current_vertices(init_vertices), current_delete_size(init_delete_size),
-    ed(new int[2*current_vertices]), pts(new double[2*current_vertices]),
-    ds(new int[current_delete_size]), stacke(ds+current_delete_size) {
+    tol(tolerance*max_len_sq), ed(new int[2*current_vertices]),
+    pts(new double[2*current_vertices]), ds(new int[current_delete_size]),
+    stacke(ds+current_delete_size) {
 }
 
 /** The voronoicell_2d destructor deallocates all of the dynamic memory. */
@@ -96,18 +97,18 @@ bool voronoicell_base_2d::plane_intersects(double x,double y,double rsq) {
     // is one. If one can't be found, then the cell is not cut by this plane
     // and the routine immediately returns true.
     u=pos(x,y,rsq,up);
-    if(u<tolerance) {
+    if(u<tol) {
         up2=ed[2*up];u2=pos(x,y,rsq,up2);
         up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
         if(u2>u3) {
-            while(u2<tolerance) {
+            while(u2<tol) {
                 up2=ed[2*up2];
                 u2=pos(x,y,rsq,up2);
                 if(up2==up3) return false;
             }
             up=up2;u=u2;
         } else {
-            while(u3<tolerance) {
+            while(u3<tol) {
                 up3=ed[2*up3+1];
                 u3=pos(x,y,rsq,up3);
                 if(up2==up3) return false;
@@ -133,18 +134,18 @@ bool voronoicell_base_2d::nplane(vc_class &vc,double x,double y,double rsq,int p
     // is one. If one can't be found, then the cell is not cut by this plane
     // and the routine immediately returns true.
     u=pos(x,y,rsq,up);
-    if(u<tolerance) {
+    if(u<tol) {
         up2=ed[2*up];u2=pos(x,y,rsq,up2);
         up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
         if(u2>u3) {
-            while(u2<tolerance) {
+            while(u2<tol) {
                 up2=ed[2*up2];
                 u2=pos(x,y,rsq,up2);
                 if(up2==up3) return true;
             }
             up=up2;u=u2;
         } else {
-            while(u3<tolerance) {
+            while(u3<tol) {
                 up3=ed[2*up3+1];
                 u3=pos(x,y,rsq,up3);
                 if(up2==up3) return true;
@@ -166,7 +167,7 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
     *(stackp++)=up;
     l=u;up2=ed[2*up];
     u2=pos(x,y,rsq,up2);
-    while(u2>tolerance) {
+    while(u2>tol) {
         if(stackp==stacke) add_memory_ds(stackp);
         *(stackp++)=up2;
         up2=ed[2*up2];
@@ -178,7 +179,7 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
     // Consider the first point that was found in the counter-clockwise
     // direction that was not inside the cutting plane. If it lies on the
     // cutting plane then do nothing. Otherwise, introduce a new vertex.
-    if(u2>-tolerance) cp=up2;
+    if(u2>-tol) cp=up2;
     else {
         if(p==current_vertices) add_memory_vertices(vc);
         lp=ed[2*up2+1];
@@ -193,7 +194,7 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
 
     // Search clockwise for additional points that need to be deleted
     l=u;up3=ed[2*up+1];u3=pos(x,y,rsq,up3);
-    while(u3>tolerance) {
+    while(u3>tol) {
         if(stackp==stacke) add_memory_ds(stackp);
         *(stackp++)=up3;
         up3=ed[2*up3+1];
@@ -205,7 +206,7 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
     // Either adjust the existing vertex or create new one, and connect it with
     // the vertex found on the previous search in the counter-clockwise
     // direction
-    if(u3>tolerance) {
+    if(u3>tol) {
         ed[2*cp+1]=up3;
         ed[2*up3]=cp;
         vc.n_set(up3,p_id);
@@ -349,7 +350,7 @@ void voronoicell_base_2d::normals(vector<double> &vd) {
         dx=pts[2*k]-pts[2*l];
         dy=pts[2*k+1]-pts[2*l+1];
         nor=dx*dx+dy*dy;
-        if(nor>tolerance_sq) {
+        if(nor>tol) {
             nor=1/sqrt(nor);
             vd[i++]=dy*nor;
             vd[i++]=-dx*nor;
