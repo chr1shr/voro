@@ -2,9 +2,9 @@
 // By Chris H. Rycroft and the Rycroft Group
 
 /** \file container_3d.cc
- * \brief Function implementations for the container and related classes. */
+ * \brief Function implementations for the container_3d and related classes. */
 
-#include "container.hh"
+#include "container_3d.hh"
 
 namespace voro {
 

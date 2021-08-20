@@ -397,9 +397,11 @@ void voronoicell_base_2d::centroid(double &cx,double &cy) {
         dx1=dx2;dy1=dy2;
         k=ed[2*k];
     }
-    tarea=third/tarea;
-    cx=0.5*(x+cx*tarea);
-    cy=0.5*(y+cy*tarea);
+    if(tarea>tol) {
+        tarea=third/tarea;
+        cx=0.5*(x+cx*tarea);
+        cy=0.5*(y+cy*tarea);
+    } else cx=cy=0;
 }
 
 /** Computes the Voronoi cells for all particles in the container, and for each
@@ -583,11 +585,5 @@ template bool voronoicell_base_2d::nplane_cut(voronoicell_2d&,double,double,doub
 template bool voronoicell_base_2d::nplane_cut(voronoicell_neighbor_2d&,double,double,double,int,double,int);
 template void voronoicell_base_2d::add_memory_vertices(voronoicell_2d&);
 template void voronoicell_base_2d::add_memory_vertices(voronoicell_neighbor_2d&);
-template bool voronoicell_base_2d::nplane(voronoicell_nonconvex_2d&,double,double,double,int);
-template bool voronoicell_base_2d::nplane(voronoicell_nonconvex_neighbor_2d&,double,double,double,int);
-template bool voronoicell_base_2d::nplane_cut(voronoicell_nonconvex_2d&,double,double,double,int,double,int);
-template bool voronoicell_base_2d::nplane_cut(voronoicell_nonconvex_neighbor_2d&,double,double,double,int,double,int);
-template void voronoicell_base_2d::add_memory_vertices(voronoicell_nonconvex_2d&);
-template void voronoicell_base_2d::add_memory_vertices(voronoicell_nonconvex_neighbor_2d&);
 
 }

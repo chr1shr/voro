@@ -1,15 +1,15 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
-/** \file cell.cc
- * \brief Function implementations for the voronoicell and related classes. */
+/** \file cell_3d.cc
+ * \brief Function implementations for the voronoicell_3d and related classes. */
 
 #include <cmath>
 #include <cstring>
 
 #include "config.hh"
 #include "common.hh"
-#include "cell.hh"
+#include "cell_3d.hh"
 
 namespace voro {
 
@@ -2413,7 +2413,7 @@ void voronoicell_base::output_custom(const char *format,int i,double x,double y,
                 case 'a': face_orders(vi);voro_print_vector(vi,fp);break;
                 case 'f': face_areas(vd);voro_print_vector(vd,fp);break;
                 case 't': face_vertices(vi);voro_print_face_vertices(vi,fp);break;
-                case 'l': normals(vd);voro_print_positions(vd,fp);break;
+                case 'l': normals(vd);voro_print_positions_3d(vd,fp);break;
                 case 'n': neighbors(vi);voro_print_vector(vi,fp);break;
 
                 // Volume-related output

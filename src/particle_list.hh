@@ -10,7 +10,7 @@
 #include <cstdio>
 
 #include "c_loops.hh"
-#include "container.hh"
+#include "container_3d.hh"
 
 namespace voro {
 

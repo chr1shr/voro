@@ -204,14 +204,14 @@ void voro_print_face_vertices(std::vector<int> &v,FILE *fp) {
  *                    to the position after the numerical value.
  * \param[out] pr the precision that was read.
  * \return True if the precision was successfully read, false otherwise. */
-void voro_read_precision(FILE *fp,char *&fmp,int &pr) {
+bool voro_read_precision(FILE *fp,char *&fmp,int &pr) {
     fmp++;
 
     // Check for first digit of the precision string
-    if(*fmp==0) {fputs("%.",fp);fmp--;break;}
+    if(*fmp==0) {fputs("%.",fp);fmp--;return false;}
     else if(*fmp>='0'&&*fmp<='9') {
         pr=static_cast<int>(*fmp-'0');
-    } else {fputs("%.",fp);putc(*fmp,fp);break;}
+    } else {fputs("%.",fp);putc(*fmp,fp);return false;}
 
     // Check for subsequent digits of the precision string
     fmp++;
@@ -219,6 +219,7 @@ void voro_read_precision(FILE *fp,char *&fmp,int &pr) {
         pr=10*pr+static_cast<int>(*fmp-'0');
         fmp++;
     }
+    return true;
 }
 
 }

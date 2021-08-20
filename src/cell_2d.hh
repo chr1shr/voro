@@ -9,9 +9,7 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
 #include <vector>
-using namespace std;
 
 #include "common.hh"
 #include "config.hh"
@@ -19,7 +17,7 @@ using namespace std;
 namespace voro {
 
 /** \brief A class encapsulating all the routines for storing and calculating a
- * single Voronoi cell. */
+ * single two-dimensional Voronoi cell. */
 class voronoicell_base_2d {
     public:
         /** This holds the current size of the ed and pts arrays. If more
@@ -30,13 +28,16 @@ class voronoicell_base_2d {
         int current_delete_size;
         /** The total nuber of vertices in the current cell. */
         int p;
+        /** A tolerance (specified as a squared length) used to identify when a
+         * vertex should be treated as being exactly on a cutting plane. */
+		const double tol;
         /** An array with size 2*current_vertices holding information about
          * edge connections between vertices.*/
         int *ed;
         /** An array with size 2*current_vertices for holding the positions of
          * the vertices. */
         double *pts;
-        voronoicell_base_2d();
+        voronoicell_base_2d(double max_len_sq);
         ~voronoicell_base_2d();
         void init_base(double xmin,double xmax,double ymin,double ymax);
         void draw_gnuplot(double x,double y,FILE *fp=stdout);
@@ -91,16 +92,16 @@ class voronoicell_base_2d {
         double max_radius_squared();
         double perimeter();
         double area();
-        void vertices(vector<double> &v);
+        void vertices(std::vector<double> &v);
         void output_vertices(FILE *fp=stdout);
         void output_vertices(int pr,FILE *fp=stdout);
-        void vertices(double x,double y,vector<double> &v);
+        void vertices(double x,double y,std::vector<double> &v);
         void output_vertices(double x,double y,FILE *fp=stdout);
         void output_vertices(int pr,double x,double y,FILE *fp=stdout);
-        void edge_lengths(vector<double> &vd);
-        void normals(vector<double> &vd);
+        void edge_lengths(std::vector<double> &vd);
+        void normals(std::vector<double> &vd);
         void centroid(double &cx,double &cy);
-        virtual void neighbors(vector<int> &v) {v.clear();}
+        virtual void neighbors(std::vector<int> &v) {v.clear();}
     protected:
         /** Computes the distance of a Voronoi cell vertex to a plane.
          * \param[in] (x,y) the normal vector to the plane.
@@ -182,7 +183,7 @@ class voronoicell_neighbor_2d : public voronoicell_base_2d {
             return nplane(*this,x,y,rs,0);
         }
         void init(double xmin,double xmax,double ymin,double ymax);
-        virtual void neighbors(vector<int> &v);
+        virtual void neighbors(std::vector<int> &v);
     private:
         inline void n_add_memory_vertices(int ocv);
         inline void n_copy(int a,int b) {ne[a]=ne[b];}

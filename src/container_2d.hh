@@ -11,7 +11,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
-using namespace std;
 
 #include "config.hh"
 #include "common.hh"
