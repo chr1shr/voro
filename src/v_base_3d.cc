@@ -1,10 +1,10 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
-/** \file v_base.cc
- * \brief Function implementations for the base Voronoi container class. */
+/** \file v_base_3d.cc
+ * \brief Function implementations for the base 3D Voronoi container class. */
 
-#include "v_base.hh"
+#include "v_base_3d.hh"
 #include "config.hh"
 
 namespace voro {
@@ -17,7 +17,7 @@ namespace voro {
  * of \f$r_n\f$ is calculated first, as the minimum distance to any block in
  * the shell surrounding the worklist. The \f$r_i\f$ are then computed in
  * reverse order by considering the distance to \f$w_{i+1}\f$. */
-voro_base::voro_base(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_) :
+voro_base_3d::voro_base_3d(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_) :
     nx(nx_), ny(ny_), nz(nz_), nxy(nx_*ny_), nxyz(nxy*nz_), boxx(boxx_), boxy(boxy_), boxz(boxz_),
     xsp(1/boxx_), ysp(1/boxy_), zsp(1/boxz_), mrad(new double[wl_hgridcu*wl_seq_length]) {
     const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
@@ -65,8 +65,8 @@ voro_base::voro_base(int nx_,int ny_,int nz_,double boxx_,double boxy_,double bo
     }
 }
 
-/** Computes the minimum distance from a subregion to a given block. If this distance
- * is smaller than the value of minr, then it passes
+/** Computes the minimum distance from a subregion to a given block. If this
+ * distance is smaller than the value of minr, then it passes
  * \param[in,out] minr a pointer to the current minimum distance. If the distance
  *                     computed in this function is smaller, then this distance is
  *                     set to the new one.
@@ -75,7 +75,7 @@ voro_base::voro_base(int nx_,int ny_,int nz_,double boxx_,double boxy_,double bo
  * \param[out] (xhi,yhi,zhi) the upper coordinates of the subregion being
  *                           considered.
  * \param[in] (ti,tj,tk) the coordinates of the block. */
-void voro_base::compute_minimum(double &minr,double &xlo,double &xhi,double &ylo,double &yhi,double &zlo,double &zhi,int ti,int tj,int tk) {
+void voro_base_3d::compute_minimum(double &minr,double &xlo,double &xhi,double &ylo,double &yhi,double &zlo,double &zhi,int ti,int tj,int tk) {
     double radsq,temp;
     if(ti>0) {temp=boxx*ti-xhi;radsq=temp*temp;}
     else if(ti<0) {temp=xlo-boxx*(1+ti);radsq=temp*temp;}
@@ -90,26 +90,6 @@ void voro_base::compute_minimum(double &minr,double &xlo,double &xhi,double &ylo
     if(radsq<minr) minr=radsq;
 }
 
-/** Checks to see whether "%n" appears in a format sequence to determine
- * whether neighbor information is required or not.
- * \param[in] format the format string to check.
- * \return True if a "%n" is found, false otherwise. */
-bool voro_base::contains_neighbor(const char *format) {
-    char *fmp=(const_cast<char*>(format));
-
-    // Check to see if "%n" appears in the format sequence
-    while(*fmp!=0) {
-        if(*fmp=='%') {
-            fmp++;
-            if(*fmp=='n') return true;
-            else if(*fmp==0) return false;
-        }
-        fmp++;
-    }
-
-    return false;
-}
-
-#include "v_base_wl.cc"
+#include "v_base_wl_3d.cc"
 
 }

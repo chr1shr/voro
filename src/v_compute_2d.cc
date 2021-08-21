@@ -5,10 +5,9 @@
  * \brief Function implementantions for the 2D voro_compute class. */
 
 #include "worklist_2d.hh"
-#include "v_compute_2d.hh"
 #include "rad_option.hh"
+#include "v_compute_2d.hh"
 #include "container_2d.hh"
-#include "ctr_boundary_2d.hh"
 
 namespace voro {
 

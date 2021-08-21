@@ -7,6 +7,7 @@
 #ifndef VOROPP_CELL_3D_HH
 #define VOROPP_CELL_3D_HH
 
+#include <cstdio>
 #include <vector>
 
 #include "config.hh"

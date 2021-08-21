@@ -17,53 +17,6 @@ container_base_3d::iterator::iterator(int* co_) : co(co_) {
     ptr.set(ijk,0);
 }
 
-/** Initializes the iterator.
- * \param[in] co_ a pointer to the particle count array.
- * \param[in] ptr_ information on the particle to point to. */
-container_base_3d::iterator::iterator(int* co_,c_info ptr_)
-    : ptr(ptr_), co(co_) {}
-
-/** Initializes the iterator as a copy of another.
- * \param[in] ci a reference to an existing iterator. */
-container_base_3d::iterator::iterator(const iterator& ci) : ptr(ci.ptr),
-    co(ci.co) {}
-
-/** Sets the iterator to equal another.
- * \param[in] other the iterator to copy. */
-container_base_3d::iterator& container_base_3d::iterator::operator=(iterator other){
-    co=other.co;
-    ptr=other.ptr;
-    return *this;
-}
-
-/** Evaluates if this iterator is equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if they are equal, false otherwise. */
-bool container_base_3d::iterator::operator==(const iterator& rhs) const {
-    return ptr.ijk==rhs.ptr.ijk&&ptr.q==rhs.ptr.q;
-    // XXX CHR - I guess we don't check the co pointers are equal? That's
-    // probably fine, and is likely more efficient. I presume that for these
-    // comparisons, you can assume the iterators are declared for the same
-    // container.
-}
-
-/** Evaluates if this iterator is not equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if they aren't equal, false if they are. */
-bool container_base_3d::iterator::operator!=(const iterator& rhs) const {
-    return ptr.ijk!=rhs.ptr.ijk||ptr.q!=rhs.ptr.q;
-}
-
-/** Dereferences the iterator as an rvalue. */
-c_info& container_base_3d::iterator::operator*() {
-    return ptr;
-}
-
-/** Dereferences the iterator as an rvalue. */
-c_info* container_base_3d::iterator::operator->() {
-    return &ptr;
-}
-
 /** Increments the iterator by one element. */
 container_base_3d::iterator& container_base_3d::iterator::operator++() {
     int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
@@ -84,7 +37,7 @@ container_base_3d::iterator& container_base_3d::iterator::operator++() {
 container_base_3d::iterator container_base_3d::iterator::operator++(int) {
     iterator tmp(*this);
     int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
-    while(diff>=0){
+    while(diff>=0) {
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
@@ -99,7 +52,7 @@ container_base_3d::iterator& container_base_3d::iterator::operator--() {
     int q_=ptr.q; int ijk_=ptr.ijk;
     int n=1;
     int diff=q_-n;
-    while(diff<0){
+    while(diff<0) {
         n=n-q_-1;
         ijk_--;
         q_=co[ijk_]-1;
@@ -115,7 +68,7 @@ container_base_3d::iterator container_base_3d::iterator::operator--(int) {
     int q_=ptr.q; int ijk_=ptr.ijk;
     int n=1;
     int diff=q_-n;
-    while(diff<0){
+    while(diff<0) {
         n=n-q_-1;
         ijk_--;
         q_=co[ijk_]-1;
@@ -129,8 +82,8 @@ container_base_3d::iterator container_base_3d::iterator::operator--(int) {
  * \param[in] rhs a reference to another iterator. */
 container_base_3d::iterator::difference_type container_base_3d::iterator::operator-(const iterator& rhs) const {
     difference_type diff=0;
-    if(ptr.ijk==rhs.ptr.ijk){
-        if(ptr.q==rhs.ptr.q){ // XXX CHR - simplify these six lines to just diff=pts.q-rhs.ptr.q ?
+    if(ptr.ijk==rhs.ptr.ijk) {
+        if(ptr.q==rhs.ptr.q) { // XXX CHR - simplify these six lines to just diff=pts.q-rhs.ptr.q ?
             diff=0;
         }
         else{
@@ -141,12 +94,12 @@ container_base_3d::iterator::difference_type container_base_3d::iterator::operat
         int ijk_small=rhs.ptr.ijk;int q_small=rhs.ptr.q;
         int ijk_big=ptr.ijk;int q_big=ptr.q;
         bool negative=false;
-        if(ptr.ijk < rhs.ptr.ijk){
+        if(ptr.ijk < rhs.ptr.ijk) {
             negative=true;
             ijk_small=ptr.ijk;q_small=ptr.q;
             ijk_big=rhs.ptr.ijk;q_big=rhs.ptr.q;
         }
-        for(int ijk_diff=ijk_small+1;ijk_diff<ijk_big; ijk_diff++){
+        for(int ijk_diff=ijk_small+1;ijk_diff<ijk_big; ijk_diff++) {
             diff+=co[ijk_diff];
         }
         diff=diff+q_big+(co[ijk_small]-q_small);
@@ -155,56 +108,11 @@ container_base_3d::iterator::difference_type container_base_3d::iterator::operat
     return diff;
 }
 
-/** Calculates a new iterator by adding elements.
- * \param[in] incre the number of elements to increment by. */
-container_base_3d::iterator container_base_3d::iterator::operator+(const difference_type& incre) const {
-    iterator tmp(*this);
-    tmp+=incre;
-    return tmp;
-}
-
-/** Calculates a new iterator by subtracting elements.
- * \param[in] decre the number of elements to decrement by. */
-container_base_3d::iterator container_base_3d::iterator::operator-(const difference_type& decre) const {
-    iterator tmp(*this);
-    tmp-=decre;
-    return tmp;
-}
-
-/** Evaluates if this iterator is greater than another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is greater, false otherwise. */
-bool container_base_3d::iterator::operator>(const iterator& rhs) const {
-    return ptr.ijk>rhs.ptr.ijk||(ptr.ijk==rhs.ptr.ijk&&ptr.q>rhs.ptr.q);
-}
-
-/** Evaluates if this iterator is less than another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is less, false otherwise. */
-bool container_base_3d::iterator::operator<(const iterator& rhs) const {
-    return ptr.ijk<rhs.ptr.ijk||(ptr.ijk==rhs.ptr.ijk&&ptr.q<rhs.ptr.q);
-}
-
-/** Evaluates if this iterator is greater than or equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is greater or equal, false otherwise. */
-bool container_base_3d::iterator::operator>=(const iterator& rhs) const {
-    return ptr.ijk>rhs.ptr.ijk||(ptr.ijk==rhs.ptr.ijk&&ptr.q>=rhs.ptr.q);
-}
-
-/** Evaluates if this iterator is less than or equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is less or equal, false otherwise. */
-bool container_base_3d::iterator::operator<=(const iterator& rhs) const {
-    return ptr.ijk<rhs.ptr.ijk||(ptr.ijk==rhs.ptr.ijk&&ptr.q<=rhs.ptr.q);
-    else{return false;}
-}
-
 /** Increments the iterator.
  * \param[in] incre the number of elements to increment by. */
 container_base_3d::iterator& container_base_3d::iterator::operator+=(const difference_type& incre) {
     int q_=ptr.q,ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
-    while(diff>=0){
+    while(diff>=0) {
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
@@ -218,7 +126,7 @@ container_base_3d::iterator& container_base_3d::iterator::operator+=(const diffe
  * \param[in] decre the number of elements to decrement by. */
 container_base_3d::iterator& container_base_3d::iterator::operator-=(const difference_type& decre) {
     int q_=ptr.q,ijk_=ptr.ijk,n=decre,diff=q_-n;
-    while(diff<0){
+    while(diff<0) {
         n=n-q_-1;
         ijk_--;
         q_=co[ijk_]-1;
@@ -237,7 +145,7 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
     // array lookups that it not necessary: writing something like a[-2] is
     // fine, and means *(a-2). Do we need to take into account if incre is
     // negative?
-    while(diff>=0){
+    while(diff>=0) {
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
@@ -245,6 +153,29 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
     }
     ci.set(ijk_,q_+n);
     return ci; // XXX CHR - can probably be simplified to "return c_info(ijk_,q_+n);"
+}
+
+/** Returns an iterator pointing to the first particle in the container.
+ * \return The iterator. */
+container_base_3d::iterator container_base_3d::begin() {return iterator(co);}
+
+/** Returns an iterator pointing past the last particle in the container.
+ * \return The iterator. */
+container_base_3d::iterator container_base_3d::end() {
+    c_info ci;
+    //find the last particle to point to
+    int ijk_=nxyz-1;
+    while(co[ijk_]==0) {
+        ijk_--;
+    }
+    int q_=co[ijk_];  //1 over the end of the particles
+    ci.set(ijk_,q_);
+    return iterator(co, ci);
+
+    // XXX CHR - here you are scanning backward through the blocks to put
+    // "end()" after the last particle, at (ijk,q+1). But if there are n
+    // blocks, then couldn't we just put "end()" at (n,0)? That wouldn't
+    // require a scan. (Same issue for iterator_subset below.)
 }
 
 //swappable??
@@ -262,7 +193,7 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
  *                        blocks that overlap the given sphere. If it is true,
  *                        the particle will only loop over the particles which
  *                        actually lie within the sphere. */
-void subset_info::setup_sphere(double vx,double vy,double vz,double r,bool bounds_test) {
+void subset_info_3d::setup_sphere(double vx,double vy,double vz,double r,bool bounds_test) {
     if(bounds_test) {mode=sphere;v0=vx;v1=vy;v2=vz;v3=r*r;} else mode=no_check;
     ai=step_int((vx-ax-r)*xsp);
     bi=step_int((vx-ax+r)*xsp);
@@ -282,7 +213,7 @@ void subset_info::setup_sphere(double vx,double vy,double vz,double r,bool bound
  *                        blocks that overlap the given box. If it is true, the
  *                        particle will only loop over the particles which
  *                        actually lie within the box. */
-void subset_info::setup_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test) {
+void subset_info_3d::setup_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test) {
     if(bounds_test) {mode=box;v0=xmin;v1=xmax;v2=ymin;v3=ymax;v4=zmin;v5=zmax;} else mode=no_check;
     ai=step_int((xmin-ax)*xsp);
     bi=step_int((xmax-ax)*xsp);
@@ -293,22 +224,8 @@ void subset_info::setup_box(double xmin,double xmax,double ymin,double ymax,doub
     setup_common();
 }
 
-/** Sets up the class constants to loop over all particles in a rectangular
- * subgrid of blocks.
- * \param[in] (ai_,bi_) the subgrid range in the x direction, inclusive of both
- *                      ends.
- * \param[in] (aj_,bj_) the subgrid range in the y direction, inclusive of both
- *                      ends.
- * \param[in] (ak_,bk_) the subgrid range in the z direction, inclusive of both
- *                      ends. */
-void subset_info::setup_intbox(int ai_,int bi_,int aj_,int bj_,int ak_,int bk_) {
-    ai=ai_;bi=bi_;aj=aj_;bj=bj_;ak=ak_;bk=bk_;
-    mode=no_check;
-    setup_common();
-}
-
 /** Sets up all of the common constants used for the loop. */
-void subset_info::setup_common() {
+void subset_info_3d::setup_common() {
 
     // For any non-periodic directions, truncate the block ranges so that they
     // lie within the container grid
@@ -343,7 +260,7 @@ void subset_info::setup_common() {
 
     // Set (ddi,ddj,ddk) to be the final block in the main container grid to
     // consider, and set (aapx,aapy,aapz) to be the periodic displacement
-    // vector to apply for this final block.
+    // vector to apply for this final block
     ddi=step_mod(bi,nx);
     ddj=step_mod(bj,ny);
     ddk=step_mod(bk,nz);
@@ -352,14 +269,19 @@ void subset_info::setup_common() {
     aapz=step_div(bk,nz)*sz;
 }
 
+// XXX CHR - I don't think it is necessary to append "_iter" to the end of
+// function/variable names. If functions/variables in two different classes
+// represent the same thing, then it is fine (and likely preferable) for them
+// to have the same name. C++ name scoping avoids potential clashes.
+
 /** Moves to the previous block, updating all of the required vectors and
  * indices.
  * \param[in,out] ijk_ the index of the block.
  * \param[in,out] (i_,j_,k_) the block coordinates.
  * \param[in,out] (ci_,cj_,ck_) the block coordinates in the primary grid.
  * \param[in,out] (px_,py_,pz_) the periodicity vector. */
-void subset_info::previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_,int &cj_,int &ck_,double &px_,double &py_,double &pz_) {
-    if(i_>ai){
+void subset_info_3d::previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_,int &cj_,int &ck_,double &px_,double &py_,double &pz_) {
+    if(i_>ai) {
         i_--;
         if(ci_>0) {ci_--;ijk_--;} else {ci_=nx-1;ijk_+=nx-1;px_-=sx;}
     } else if(j_>aj) {
@@ -378,7 +300,7 @@ void subset_info::previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_
  * \param[in] q_ the index of the particle in the current block.
  * \param[in] (px_,py_,pz_) the periodicity vector.
  * \return True if the point is out of bounds, false otherwise. */
-bool subset_info::out_of_bounds(int ijk_,int q_,double px_,double py_,double pz_){
+bool subset_info_3d::out_of_bounds(int ijk_,int q_,double px_,double py_,double pz_) {
     double *pp=p[ijk_]+ps*q_;
     if(mode==sphere) {
             double fx=*pp+px_-v0,fy=pp[1]+py_-v1,fz=pp[2]+pz_-v2;
@@ -389,18 +311,13 @@ bool subset_info::out_of_bounds(int ijk_,int q_,double px_,double py_,double pz_
     f=pp[2]+pz_;return f<v4||f>v5;
 }
 
-/** Computes whether the current point is out of bounds, relative to the
- * current loop setup.
- * \param[in] ijk_ the current block.
- * \param[in] q_ the index of the particle in the current block.
- * \return True if the point is out of bounds, false otherwise. */
-bool container_base_3d::iterator_subset::out_of_bounds_iter(int ijk_, int q_) const {
-    return cl_iter->out_of_bounds(ijk_,q_,px,py,pz);
-}
-
 /** Moves to the next block, updating all of the required vectors and indices.
  * \param[in,out] ijk_ the index of the block. */
 void container_base_3d::iterator_subset::next_block_iter(int &ijk_) {
+    // XXX CHR - it's not clear to me that this function needs to take ijk_ as
+    // an argument. It already has access to ijk - it is ptr.ijk. You could
+    // even write "int &ijk=ptr.ijk;" at the start to make a shorthand to this
+    // variable.
     if(i<cl_iter->bi) {
         i++;
         if(ci<cl_iter->nx-1) {ci++;ijk_++;}
@@ -421,17 +338,17 @@ void container_base_3d::iterator_subset::next_block_iter(int &ijk_) {
 void container_base_3d::iterator_subset::previous_block_iter(int &ijk_) {
     cl_iter->previous_block_iter(ijk_,i,j,k,ci,cj,ck,px,py,pz);
     // XXX CHR - why is the previous_block_iter routine done within
-    // subset_info, but the next_block_iter routine is done within the iterator
+    // subset_info_3d, but the next_block_iter routine is done within the iterator
     // itself? I think the next_block_iter approach is probably better, since
     // it can operate on its own data (i, j, k, etc.) rather than having to pass
-    // all of them by reference to subset_info.
+    // all of them by reference to subset_info_3d.
 }
 
 /** Initializes the iterator, setting it to point at the first particle in the
  * container.
  * \param[in] si_ a pointer to the information about the particle subset to
  *                consider. */
-container_base_3d::iterator_subset::iterator_subset(subset_info* si_)
+container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_)
     : cl_iter(si_), k(cl_iter->ak), j(cl_iter->aj), i(cl_iter->ai) {
 
     ci=cl_iter->step_mod(i,cl_iter->nx);
@@ -445,7 +362,9 @@ container_base_3d::iterator_subset::iterator_subset(subset_info* si_)
     int ijk_=ci+cl_iter->nx*(cj+cl_iter->ny*ck);
     int q_=0;
 
-    while(cl_iter->co[ijk_]==0){
+    while(cl_iter->co[ijk_]==0) {
+        // XXX CHR - need to catch case when container is empty and ijk goes
+        // out of range? (Same issue as for previous class.)
         next_block_iter(ijk_);
     }
     while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
@@ -463,8 +382,8 @@ container_base_3d::iterator_subset::iterator_subset(subset_info* si_)
  *                consider.
  * \param[in] (ptr_,i_,j_,k_) information about the particle for the iterator
  *                            to point to. */
-container_base_3d::iterator_subset::iterator_subset(subset_info* si_,c_info ptr_,int i_,int j_,int k_)
-    : cl_iter(si_), ptr(ptr_), i(_i), j(_j), k(_k) {
+container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_,c_info ptr_,int i_,int j_,int k_)
+    : cl_iter(si_), ptr(ptr_), i(i_), j(j_), k(k_) {
     ci=cl_iter->step_mod(i,cl_iter->nx);
     cj=cl_iter->step_mod(j,cl_iter->ny);
     ck=cl_iter->step_mod(k,cl_iter->nz);
@@ -490,34 +409,18 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
     return *this;
 }
 
-/** Evaluates if this iterator is equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if they are equal, false otherwise. */
-bool container_base_3d::iterator_subset::operator==(const iterator_subset& rhs) const {
-    return ptr.ijk==rhs.ptr.ijk&&ptr.q==rhs.ptr.q&&i==rhs.i&&j==rhs.j&&k==rhs.k;
-    // XXX CHR - Is it necessary to check ijk? Also, in the >= and <=
-    // comparisons later, ijk is not checked.
-}
-
-/** Evaluates if this iterator is not equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if they aren't equal, false if they are. */
-bool container_base_3d::iterator_subset::operator!=(const iterator_subset& rhs) const {
-    return ptr.ijk!=rhs.ptr.ijk||ptr.q!=rhs.ptr.q||i!=rhs.i||j!=rhs.j||k!=rhs.k;
-}
-
 /** Increments the iterator by one element. */
 container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator++() {
     int q_=ptr.q,ijk_=ptr.ijk,n=1;
-    while(n>0){
+    while(n>0) {
         q_++;
-        while(q_>=cl_iter->co[ijk_]){
+        while(q_>=cl_iter->co[ijk_]) {
             q_=0;
             next_block_iter(ijk_);
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)){
+        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
             q_++;
-            while(q_>=cl_iter->co[ijk_]){
+            while(q_>=cl_iter->co[ijk_]) {
                 q_=0;
                 next_block_iter(ijk_);
             }
@@ -532,15 +435,15 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
 container_base_3d::iterator_subset container_base_3d::iterator_subset::operator++(int) {
     iterator_subset tmp=*this;
     int q_=ptr.q,ijk_=ptr.ijk,n=1;
-    while(n>0){
+    while(n>0) {
         q_++;
-        while(q_>=cl_iter->co[ijk_]){
+        while(q_>=cl_iter->co[ijk_]) {
             q_=0;
             next_block_iter(ijk_);
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)){
+        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
             q_++;
-            while(q_>=cl_iter->co[ijk_]){
+            while(q_>=cl_iter->co[ijk_]) {
                 q_=0;
                 next_block_iter(ijk_);
             }
@@ -554,15 +457,15 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator+
 /** Decrements the iterator by one element. */
 container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator--() {
     int q_=ptr.q,ijk_=ptr.ijk,n=1;
-    while(n>0){
+    while(n>0) {
         q_--;
-        while(q_<0){
+        while(q_<0) {
             previous_block_iter(ijk_);
             q_=cl_iter->co[ijk_]-1;
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)){
+        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
             q_--;
-            while(q_<0){
+            while(q_<0) {
                 previous_block_iter(ijk_);
                 q_=cl_iter->co[ijk_]-1;
             }
@@ -579,15 +482,15 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
 container_base_3d::iterator_subset container_base_3d::iterator_subset::operator--(int) {
     iterator_subset tmp=*this;
     int q_=ptr.q,ijk_=ptr.ijk,n=1;
-    while(n>0){
+    while(n>0) {
         q_--;
-        while(q_<0){
+        while(q_<0) {
             previous_block_iter(ijk_);
             q_=cl_iter->co[ijk_]-1;
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)){
+        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
             q_--;
-            while(q_<0){
+            while(q_<0) {
                 previous_block_iter(ijk_);
                 q_=cl_iter->co[ijk_]-1;
             }
@@ -603,16 +506,16 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-
  * \return The difference. */
 container_base_3d::iterator_subset::difference_type container_base_3d::iterator_subset::operator-(const iterator_subset& rhs) const {
     difference_type diff=0;
-    if(*this==rhs){
+    if(*this==rhs) {
         diff=0;
     }
-    else if(*this<rhs){
+    else if(*this<rhs) {
         // XXX CHR - This is a fairly expensive way to compute the difference.
         // You make a copy of the current iterator, and then you step
         // individually through each particle. I guess, though, that with the
         // out_of_bounds routine, it is difficult to avoid this.
         iterator_subset tmp(*this);
-        while(tmp!=rhs){
+        while(tmp!=rhs) {
             tmp++;
             diff++;  // XXX CHR - change to diff--
         }
@@ -620,7 +523,7 @@ container_base_3d::iterator_subset::difference_type container_base_3d::iterator_
     }
     else {
         iterator_subset tmp(*this);
-        while(tmp!=rhs){
+        while(tmp!=rhs) {
             tmp--;
             diff++;
         }
@@ -628,63 +531,19 @@ container_base_3d::iterator_subset::difference_type container_base_3d::iterator_
     return diff;
 }
 
-/** Calculates a new iterator by adding elements.
- * \param[in] incre the number of elements to increment by. */
-container_base_3d::iterator_subset container_base_3d::iterator_subset::operator+(const difference_type& incre) const {
-    iterator_subset tmp=*this;
-    tmp+=incre;
-    return tmp;
-}
-
-/** Calculates a new iterator by subtracting elements.
- * \param[in] decre the number of elements to decrement by. */
-container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-(const difference_type& decre) const {
-    iterator_subset tmp=*this;
-    tmp-=decre;
-    return tmp;
-}
-
-/** Evaluates if this iterator is greater than another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is greater, false otherwise. */
-bool container_base_3d::iterator_subset::operator>(const iterator_subset& rhs) const {
-    return k>rhs.k||(k==rhs.k&&(j>rhs.j||(j==rhs.j&&(i>rhs.i||(i==rhs.i&&ptr.q>rhs.ptr.q)))));
-}
-
-/** Evaluates if this iterator is less than another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is less, false otherwise. */
-bool container_base_3d::iterator_subset::operator<(const iterator_subset& rhs) const {
-    return k<rhs.k||(k==rhs.k&&(j<rhs.j||(j==rhs.j&&(i<rhs.i||(i==rhs.i&&ptr.q<rhs.ptr.q)))));
-}
-
-/** Evaluates if this iterator is greater than or equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is greater or equal, false otherwise. */
-bool container_base_3d::iterator_subset::operator>=(const iterator_subset& rhs) const {
-    return k>rhs.k||(k==rhs.k&&(j>rhs.j||(j==rhs.j&&(i>rhs.i||(i==rhs.i&&ptr.q>=rhs.ptr.q)))));
-}
-
-/** Evaluates if this iterator is less than or equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is less or equal, false otherwise. */
-bool container_base_3d::iterator_subset::operator<=(const iterator_subset& rhs) const {
-    return k<rhs.k||(k==rhs.k&&(j<rhs.j||(j==rhs.j&&(i<rhs.i||(i==rhs.i&&ptr.q<=rhs.ptr.q)))));
-}
-
 /** Increments the iterator.
  * \param[in] incre the number of elements to increment by. */
 container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator+=(const difference_type& incre) {
     int q_=ptr.q,ijk_=ptr.ijk,n=incre;
-    while(n>0){
+    while(n>0) {
         q_++;
-        while(q_>=cl_iter->co[ijk_]){
+        while(q_>=cl_iter->co[ijk_]) {
             q_=0;
             next_block_iter(ijk_);
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)){
+        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
             q_++;
-            while(q_>=cl_iter->co[ijk_]){
+            while(q_>=cl_iter->co[ijk_]) {
                 q_=0;
                 next_block_iter(ijk_);
             }
@@ -699,15 +558,15 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
  * \param[in] decre the number of elements to decrement by. */
 container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator-=(const difference_type& decre) {
     int q_=ptr.q,ijk_=ptr.ijk,n=decre;
-    while(n>0){
+    while(n>0) {
         q_--;
-        while(q_<0){
+        while(q_<0) {
             previous_block_iter(ijk_);
             q_=cl_iter->co[ijk_]-1;
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)){
+        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
             q_--;
-            while(q_<0){
+            while(q_<0) {
                 previous_block_iter(ijk_);
                 q_=cl_iter->co[ijk_]-1;
             }
@@ -722,17 +581,17 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
  * \param[in] incre the number of elements to offset by. */
 c_info& container_base_3d::iterator_subset::operator[](const difference_type& incre) const {
     c_info ci;
-    iterator_subset tmp=*this;
+    iterator_subset tmp(*this);
     int q_=ptr.q,ijk_=ptr.ijk,n=incre;
-    while(n>0){
+    while(n>0) {
         q_++;
-        while(q_>=cl_iter->co[ijk_]){
+        while(q_>=cl_iter->co[ijk_]) {
             q_=0;
             tmp.next_block_iter(ijk_);
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)){
+        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
             q_++;
-            while(q_>=cl_iter->co[ijk_]){
+            while(q_>=cl_iter->co[ijk_]) {
                 q_=0;
                 tmp.next_block_iter(ijk_);
             }
@@ -743,42 +602,42 @@ c_info& container_base_3d::iterator_subset::operator[](const difference_type& in
     return ci;
 }
 
-/** Initializes the iterator.
- * \param[in] vo_ a reference to the particle_order class to follow. */
-container_base_3d::iterator_order::iterator_order(particle_order& vo_)
-    : cp_iter(vo_.o), ptr_n(0) {
-    ptr.set(cp_iter[0],cp_iter[1]);
+/** Returns an iterator pointing to the first particle in the container.
+ * \return The iterator. */
+container_base_3d::iterator_subset container_base_3d::begin(subset_info_3d& si) {
+    return iterator_subset(&si);
 }
 
-/** Initializes the iterator as a copy of another.
- * \param[in] other a reference to an existing iterator. */
-container_base_3d::iterator_order& container_base_3d::iterator_order::operator=(iterator_order other) {
-    cp_iter=other.cp_iter;
-    ptr_n=other.ptr_n;
-    ptr=other.ptr;
-    return *this;
-}
+/** Returns an iterator pointing past the last particle in the container.
+ * \return The iterator. */
+container_base_3d::iterator_subset container_base_3d::end(subset_info_3d& si) {
+    c_info cinfo;
+    //find the last particle to point to
+    int i_=si.bi,j_=si.bj,k_=si.bk,
+        ci_=si.ddi,cj_=si.ddj,ck_=si.ddk,
+        ijk_=si.ddi+si.nx*(si.ddj+si.ny*si.ddk),
+        q_=si.co[ijk_]-1;
+    double px_=si.aapx,py_=si.aapy,pz_=si.aapz;
 
-/** Evaluates if this iterator is equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if they are equal, false otherwise. */
-bool container_base_3d::iterator_order::operator==(const iterator_order& rhs) const {
-    return ptr_n==rhs.ptr_n;
-}
-
-/** Evaluates if this iterator is not equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if they aren't equal, false if they are. */
-bool container_base_3d::iterator_order::operator!=(const iterator_order& rhs) const {
-    return ptr_n!=rhs.ptr_n;
+    while(q_<0) {
+        si.previous_block_iter(ijk_,i_,j_,k_,ci_,cj_,ck_,px_,py_,pz_);
+        q_=si.co[ijk_]-1;
+    }
+    while(si.mode!=no_check&&si.out_of_bounds(ijk_,q_,px_,py_,pz_)) {
+        q_--;
+        while(q_<0) {
+            si.previous_block_iter(ijk_,i_,j_,k_,ci_,cj_,ck_,px_,py_,pz_);
+            q_=si.co[ijk_]-1;
+        }
+    }
+    cinfo.set(ijk_,q_+1);
+    return iterator_subset(&si,cinfo,i_,j_,k_);
 }
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator++() {
     ptr_n++;
-    int ijk_=cp_iter[2*ptr_n];
-    int q_=cp_iter[2*ptr_n+1];
-    ptr.set(ijk_,q_);
+    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
     return *this;
 }
 
@@ -786,18 +645,14 @@ container_base_3d::iterator_order& container_base_3d::iterator_order::operator++
 container_base_3d::iterator_order container_base_3d::iterator_order::operator++(int) {
     iterator_order tmp(*this);
     ptr_n++;
-    int ijk_=cp_iter[2*ptr_n];
-    int q_=cp_iter[2*ptr_n+1];
-    ptr.set(ijk_,q_);
+    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
     return tmp;
 }
 
 /** Decrements the iterator by one element. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator--() {
     ptr_n--;
-    int ijk_=cp_iter[2*ptr_n];
-    int q_=cp_iter[2*ptr_n+1];
-    ptr.set(ijk_,q_);
+    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
     return *this;
 }
 
@@ -805,9 +660,7 @@ container_base_3d::iterator_order& container_base_3d::iterator_order::operator--
 container_base_3d::iterator_order container_base_3d::iterator_order::operator--(int) {
     iterator_order tmp(*this);
     ptr_n--;
-    int ijk_=cp_iter[2*ptr_n];
-    int q_=cp_iter[2*ptr_n+1];
-    ptr.set(ijk_,q_);
+    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
     return tmp;
 }
 
@@ -818,57 +671,11 @@ container_base_3d::iterator_order::difference_type container_base_3d::iterator_o
     return diff;
 }
 
-/** Calculates a new iterator by adding elements.
- * \param[in] incre the number of elements to increment by. */
-container_base_3d::iterator_order container_base_3d::iterator_order::operator+(const difference_type& incre) const {
-    iterator_order tmp(*this);
-    tmp+=incre;
-    return tmp;
-}
-
-/** Calculates a new iterator by subtracting elements.
- * \param[in] incre the number of elements to increment by. */
-container_base_3d::iterator_order container_base_3d::iterator_order::operator-(const difference_type& decre) const {
-    iterator_order tmp(*this);
-    tmp-=decre;
-    return tmp;
-}
-
-/** Evaluates if this iterator is greater than another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is greater, false otherwise. */
-bool container_base_3d::iterator_order::operator>(const iterator_order& rhs) const {
-    return ptr_n>rhs.ptr_n;
-}
-
-/** Evaluates if this iterator is less than another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is less, false otherwise. */
-bool container_base_3d::iterator_order::operator<(const iterator_order& rhs) const {
-    return ptr_n<rhs.ptr_n;
-}
-
-/** Evaluates if this iterator is greater than or equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is greater or equal, false otherwise. */
-bool container_base_3d::iterator_order::operator>=(const iterator_order& rhs) const {
-    return ptr_n>=rhs.ptr_n;
-}
-
-/** Evaluates if this iterator is less than or equal to another.
- * \param[in] rhs a reference to another iterator.
- * \return True if it is less or equal, false otherwise. */
-bool container_base_3d::iterator_order::operator<=(const iterator_order& rhs) const {
-    return ptr_n<=rhs.ptr_n;
-}
-
 /** Increments the iterator.
  * \param[in] incre the number of elements to increment by. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator+=(const difference_type& incre) {
     ptr_n+=incre;
-    int ijk_=cp_iter[2*ptr_n];
-    int q_=cp_iter[2*ptr_n+1];
-    ptr.set(ijk_,q_);
+    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
     return *this;
 }
 
@@ -876,76 +683,15 @@ container_base_3d::iterator_order& container_base_3d::iterator_order::operator+=
  * \param[in] decre the number of elements to decrement by. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator-=(const difference_type& decre) {
     ptr_n-=decre;
-    int ijk_=cp_iter[2*ptr_n];
-    int q_=cp_iter[2*ptr_n+1];
-    ptr.set(ijk_,q_);
+    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
     return *this;
 }
 
 /* Dereferences the iterator.
  * \param[in] incre the number of elements to offset by. */
 c_info& container_base_3d::iterator_order::operator[](const difference_type& incre) const {
-    c_info ci;
     int ci_n=ptr_n+incre;
-    int ijk_=cp_iter[2*ci_n];
-    int q_=cp_iter[2*ci_n+1];
-    ci.set(ijk_,q_);
-    return ci;
-}
-
-/** Returns an iterator pointing to the first particle in the container.
- * \return The iterator. */
-container_base_3d::iterator container_base_3d::begin(){return iterator(co);}
-
-/** Returns an iterator pointing past the last particle in the container.
- * \return The iterator. */
-container_base_3d::iterator container_base_3d::end() {
-    c_info ci;
-    //find the last particle to point to
-    int ijk_=nxyz-1;
-    while(co[ijk_]==0){
-        ijk_--;
-    }
-    int q_=co[ijk_];  //1 over the end of the particles
-    ci.set(ijk_,q_);
-    return iterator(co, ci);
-
-    // XXX CHR - here you are scanning backward through the blocks to put
-    // "end()" after the last particle, at (ijk,q+1). But if there are n
-    // blocks, then couldn't we just put "end()" at (n,0)? That wouldn't
-    // require a scan. (Same issue for iterator_subset below.)
-}
-
-/** Returns an iterator pointing to the first particle in the container.
- * \return The iterator. */
-container_base_3d::iterator_subset container_base_3d::begin(subset_info& si) {
-    return iterator_subset(&si);
-}
-
-/** Returns an iterator pointing past the last particle in the container.
- * \return The iterator. */
-container_base_3d::iterator_subset container_base_3d::end(subset_info& si) {
-    c_info cinfo;
-    //find the last particle to point to
-    int i_=si.bi,j_=si.bj,k_=si.bk;
-    int ci_=si.ddi,cj_=si.ddj,ck_=si.ddk;
-    int ijk_=si.ddi+si.nx*(si.ddj+si.ny*si.ddk);
-    int q_=si.co[ijk_]-1;
-    double px_=si.aapx,py_=si.aapy,pz_=si.aapz;
-
-    while(q_<0){
-        si.previous_block_iter(ijk_,i_,j_,k_,ci_,cj_,ck_,px_,py_,pz_);
-        q_=si.co[ijk_]-1;
-    }
-    while(si.mode!=no_check&&si.out_of_bounds(ijk_,q_,px_,py_,pz_)){
-        q_--;
-        while(q_<0){
-            si.previous_block_iter(ijk_,i_,j_,k_,ci_,cj_,ck_,px_,py_,pz_);
-            q_=si.co[ijk_]-1;
-        }
-    }
-    cinfo.set(ijk_,q_+1);
-    return iterator_subset(&si,cinfo,i_,j_,k_);
+    return c_info(cp_iter[2*ci_n],cp_iter[2*ci_n+1]);
 }
 
 /** Returns an iterator pointing to the first particle in the container.

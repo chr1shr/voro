@@ -193,6 +193,28 @@ void voro_print_face_vertices(std::vector<int> &v,FILE *fp) {
     }
 }
 
+/** \brief Checks whether neighbor information is in a format string.
+ *
+ * Checks to see whether "%n" appears in a format sequence to determine
+ * whether neighbor information is required or not.
+ * \param[in] format the format string to check.
+ * \return True if a "%n" is found, false otherwise. */
+bool voro_contains_neighbor(const char *format) {
+    char *fmp=(const_cast<char*>(format));
+
+    // Check to see if "%n" appears in the format sequence
+    while(*fmp!=0) {
+        if(*fmp=='%') {
+            fmp++;
+            if(*fmp=='n') return true;
+            else if(*fmp==0) return false;
+        }
+        fmp++;
+    }
+
+    return false;
+}
+
 /** \brief Reads the precision from a custom output format string.
  *
  * The 2D and 3D Voronoi cell classes can output custom information

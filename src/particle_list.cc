@@ -9,7 +9,8 @@
 
 #include "config.hh"
 #include "particle_list.hh"
-#include "container.hh"
+#include "container_2d.hh"
+#include "container_3d.hh"
 #include "container_tri.hh"
 
 namespace voro {

@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "config.hh"
-#include "cell.hh"
+#include "cell_3d.hh"
 
 namespace voro {
 
@@ -38,7 +38,7 @@ class unitcell {
         const double bz;
         /** The computed unit Voronoi cell corresponding the given 3D
          * non-rectangular periodic domain geometry. */
-        voronoicell unit_voro;
+        voronoicell_3d unit_voro;
         unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_);
         /** Draws an outline of the domain in Gnuplot format.
          * \param[in] filename the filename to write to. */

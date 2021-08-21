@@ -1,18 +1,41 @@
-cell.o: cell.cc config.hh common.hh cell.hh
+cell_2d.o: cell_2d.cc cell_2d.hh common.hh config.hh
+cell_3d.o: cell_3d.cc config.hh common.hh cell_3d.hh
 common.o: common.cc common.hh config.hh
-container.o: container.cc container.hh config.hh common.hh v_base.hh \
-  worklist.hh cell.hh c_loops.hh v_compute.hh rad_option.hh
-unitcell.o: unitcell.cc unitcell.hh config.hh cell.hh common.hh
-v_compute.o: v_compute.cc worklist.hh v_compute.hh config.hh cell.hh \
-  common.hh rad_option.hh container.hh v_base.hh c_loops.hh \
-  container_prd.hh unitcell.hh
-c_loops.o: c_loops.cc c_loops.hh config.hh
-v_base.o: v_base.cc v_base.hh worklist.hh config.hh v_base_wl.cc
-wall.o: wall.cc wall.hh cell.hh config.hh common.hh container.hh \
-  v_base.hh worklist.hh c_loops.hh v_compute.hh rad_option.hh
-pre_container.o: pre_container.cc config.hh pre_container.hh c_loops.hh \
-  container.hh common.hh v_base.hh worklist.hh cell.hh v_compute.hh \
-  rad_option.hh
-container_prd.o: container_prd.cc container_prd.hh config.hh common.hh \
-  v_base.hh worklist.hh cell.hh c_loops.hh v_compute.hh unitcell.hh \
-  rad_option.hh
+container_2d.o: container_2d.cc container_2d.hh config.hh common.hh \
+  rad_option.hh cell_2d.hh v_base_2d.hh worklist_2d.hh v_compute_2d.hh \
+  wall.hh cell_3d.hh
+container_3d.o: container_3d.cc container_3d.hh config.hh common.hh \
+  rad_option.hh cell_3d.hh v_base_3d.hh worklist_3d.hh v_compute_3d.hh \
+  wall.hh cell_2d.hh
+container_tri.o: container_tri.cc container_tri.hh config.hh common.hh \
+  rad_option.hh cell_3d.hh v_base_3d.hh worklist_3d.hh v_compute_3d.hh \
+  unitcell.hh
+iter_2d.o: iter_2d.cc iter_2d.hh container_2d.hh config.hh common.hh \
+  rad_option.hh cell_2d.hh v_base_2d.hh worklist_2d.hh v_compute_2d.hh \
+  wall.hh cell_3d.hh c_info.hh
+iter_3d.o: iter_3d.cc iter_3d.hh container_3d.hh config.hh common.hh \
+  rad_option.hh cell_3d.hh v_base_3d.hh worklist_3d.hh v_compute_3d.hh \
+  wall.hh cell_2d.hh c_info.hh
+particle_list.o: particle_list.cc config.hh particle_list.hh c_loops.hh \
+  container_3d.hh common.hh rad_option.hh cell_3d.hh v_base_3d.hh \
+  worklist_3d.hh v_compute_3d.hh wall.hh cell_2d.hh container_2d.hh \
+  v_base_2d.hh worklist_2d.hh v_compute_2d.hh container_tri.hh \
+  unitcell.hh
+unitcell.o: unitcell.cc unitcell.hh config.hh cell_3d.hh common.hh
+v_base_2d.o: v_base_2d.cc v_base_2d.hh worklist_2d.hh config.hh \
+  v_base_wl_2d.cc
+v_base_3d.o: v_base_3d.cc v_base_3d.hh worklist_3d.hh config.hh \
+  v_base_wl_3d.cc
+v_compute_2d.o: v_compute_2d.cc worklist_2d.hh rad_option.hh \
+  v_compute_2d.hh config.hh cell_2d.hh common.hh container_2d.hh \
+  v_base_2d.hh wall.hh cell_3d.hh
+v_compute_3d.o: v_compute_3d.cc worklist_3d.hh v_compute_3d.hh config.hh \
+  cell_3d.hh common.hh rad_option.hh container_3d.hh v_base_3d.hh \
+  wall.hh cell_2d.hh container_tri.hh unitcell.hh
+wall.o: wall.cc config.hh wall.hh cell_2d.hh common.hh cell_3d.hh
+wall_2d.o: wall_2d.cc wall_2d.hh cell_2d.hh common.hh config.hh \
+  container_2d.hh rad_option.hh v_base_2d.hh worklist_2d.hh \
+  v_compute_2d.hh wall.hh cell_3d.hh
+wall_3d.o: wall_3d.cc wall_3d.hh cell_3d.hh config.hh common.hh \
+  container_3d.hh rad_option.hh v_base_3d.hh worklist_3d.hh \
+  v_compute_3d.hh wall.hh cell_2d.hh

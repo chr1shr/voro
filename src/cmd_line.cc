@@ -164,7 +164,7 @@ inline void fclosec(FILE *fp) {
 template<class c_loop,class c_class>
 void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* out_file,FILE* gnu_file,FILE* povp_file,FILE* povv_file,bool verbose,double &vol,int &vcc,int &tp) {
     int pid,ps=con.ps;double x,y,z,r;
-    if(con.contains_neighbor(format)) {
+    if(voro_contains_neighbor(format)) {
         voronoicell_neighbor_3d c(con);
         if(vl.start()) do if(con.compute_cell(c,vl)) {
             vl.pos(pid,x,y,z,r);

@@ -2,17 +2,16 @@
 // By Chris H. Rycroft and the Rycroft Group
 
 /** \file cell_2d.hh
- * \brief Header file for the voronoicell_2d class. */
+ * \brief Header file for the voronoicell_2d and related classes. */
 
 #ifndef VOROPP_CELL_2D_HH
 #define VOROPP_CELL_2D_HH
 
 #include <cstdio>
-#include <cstdlib>
 #include <vector>
 
-#include "common.hh"
 #include "config.hh"
+#include "common.hh"
 
 namespace voro {
 

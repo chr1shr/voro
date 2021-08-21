@@ -42,7 +42,6 @@ class voro_base_2d {
          * construction, by the initialize_radii() routine. */
         double *mrad;
         static const unsigned int wl[wl_seq_length_2d*wl_hgridsq_2d];
-        bool contains_neighbor(const char* format);
         voro_base_2d(int nx_,int ny_,double boxx_,double boxy_);
         ~voro_base_2d() {delete [] mrad;}
     protected:

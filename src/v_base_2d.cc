@@ -83,25 +83,6 @@ void voro_base_2d::compute_minimum(double &minr,double &xlo,double &xhi,double &
     if(radsq<minr) minr=radsq;
 }
 
-/** Checks to see whether "%n" appears in a format sequence to determine
- * whether neighbor information is required or not.
- * \param[in] format the format string to check.
- * \return True if a "%n" is found, false otherwise. */
-bool voro_base_2d::contains_neighbor(const char *format) {
-    char *fmp=(const_cast<char*>(format));
-
-    // Check to see if "%n" appears in the format sequence
-    while(*fmp!=0) {
-        if(*fmp=='%') {
-            fmp++;
-            if(*fmp=='n') return true;
-            else if(*fmp==0) return false;
-        }
-        fmp++;
-    }
-
-    return false;
-}
-
 #include "v_base_wl_2d.cc"
+
 }

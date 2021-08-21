@@ -2,7 +2,7 @@
 // By Chris H. Rycroft and the Rycroft Group
 
 /** \file container_3d.hh
- * \brief Header file for the container_base and related classes. */
+ * \brief Header file for the container_base_3d and related classes. */
 
 #ifndef VOROPP_CONTAINER_3D_HH
 #define VOROPP_CONTAINER_3D_HH
@@ -12,11 +12,10 @@
 
 #include "config.hh"
 #include "common.hh"
-#include "v_base.hh"
-#include "cell.hh"
-#include "c_loops.hh"
-#include "v_compute.hh"
 #include "rad_option.hh"
+#include "cell_3d.hh"
+#include "v_base_3d.hh"
+#include "v_compute_3d.hh"
 #include "wall.hh"
 
 namespace voro {
@@ -343,7 +342,7 @@ class container_3d : public container_base_3d, public radius_mono {
         template<class c_loop>
         void print_custom(c_loop &vl,const char *format,FILE *fp) {
             int ijk,q;double *pp;
-            if(contains_neighbor(format)) {
+            if(voro_contains_neighbor(format)) {
                 voronoicell_neighbor c(*this);
                 if(vl.start()) do if(compute_cell(c,vl)) {
                     ijk=vl.ijk;q=vl.q;pp=p[ijk]+ps*q;
@@ -557,7 +556,7 @@ class container_poly : public container_base, public radius_poly {
         template<class c_loop>
         void print_custom(c_loop &vl,const char *format,FILE *fp) {
             int ijk,q;double *pp;
-            if(contains_neighbor(format)) {
+            if(voro_contains_neighbor(format)) {
                 voronoicell_neighbor c(*this);
                 if(vl.start()) do if(compute_cell(c,vl)) {
                     ijk=vl.ijk;q=vl.q;pp=p[ijk]+ps*q;

@@ -12,12 +12,11 @@
 
 #include "config.hh"
 #include "common.hh"
-#include "v_base.hh"
-#include "cell.hh"
-#include "c_loops.hh"
-#include "v_compute.hh"
-#include "unitcell.hh"
 #include "rad_option.hh"
+#include "cell_3d.hh"
+#include "v_base_3d.hh"
+#include "v_compute_3d.hh"
+#include "unitcell.hh"
 
 namespace voro {
 
@@ -339,7 +338,7 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
         template<class c_loop>
         void print_custom(c_loop &vl,const char *format,FILE *fp) {
             int ijk,q;double *pp;
-            if(contains_neighbor(format)) {
+            if(voro_contains_neighbor(format)) {
                 voronoicell_neighbor c(*this);
                 if(vl.start()) do if(compute_cell(c,vl)) {
                     ijk=vl.ijk;q=vl.q;pp=p[ijk]+ps*q;
@@ -539,7 +538,7 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
         /** Computes all Voronoi cells and saves the output in POV-Ray format.
          * \param[in] filename the name of the file to write to. */
         inline void draw_cells_pov(const char *filename) {
-            FILE *fp(safe_fopen(filename,"w"));
+            FILE *fp=safe_fopen(filename,"w");
             draw_cells_pov(fp);
             fclose(fp);
         }
@@ -551,7 +550,7 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
         template<class c_loop>
         void print_custom(c_loop &vl,const char *format,FILE *fp) {
             int ijk,q;double *pp;
-            if(contains_neighbor(format)) {
+            if(voro_contains_neighbor(format)) {
                 voronoicell_neighbor c(*this);
                 if(vl.start()) do if(compute_cell(c,vl)) {
                     ijk=vl.ijk;q=vl.q;pp=p[ijk]+ps*q;

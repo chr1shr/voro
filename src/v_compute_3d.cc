@@ -4,11 +4,11 @@
 /** \file v_compute_3d.cc
  * \brief Function implementantions for the voro_compute_3d template. */
 
-#include "worklist.hh"
-#include "v_compute.hh"
+#include "worklist_3d.hh"
+#include "v_compute_3d.hh"
 #include "rad_option.hh"
-#include "container.hh"
-#include "container_prd.hh"
+#include "container_3d.hh"
+#include "container_tri.hh"
 
 namespace voro {
 

@@ -1,26 +1,26 @@
 // Voro++, a cell-based Voronoi library
 // By Chris H. Rycroft and the Rycroft Group
 
-/** \file v_base.hh
+/** \file v_base_3d.hh
  * \brief Header file for the base Voronoi container class. */
 
-#ifndef VOROPP_V_BASE_HH
-#define VOROPP_V_BASE_HH
+#ifndef VOROPP_V_BASE_3D_HH
+#define VOROPP_V_BASE_3D_HH
 
-#include "worklist.hh"
+#include "worklist_3d.hh"
 
 namespace voro {
 
-/** \brief Class containing data structures common across all particle
+/** \brief Class containing data structures common across all 3D particle
  * container classes.
  *
  * This class contains constants and data structures that are common across all
- * particle container classes. It contains constants setting the size of the
+ * 3D particle container classes. It contains constants setting the size of the
  * underlying subgrid of blocks that forms the basis of the Voronoi cell
  * computations. It also constructs bound tables that are used in the Voronoi
  * cell computation, and contains a number of routines that are common across
  * all container classes. */
-class voro_base {
+class voro_base_3d {
     public:
         /** The number of blocks in the x direction. */
         const int nx;
@@ -52,9 +52,8 @@ class voro_base {
         double *mrad;
         /** The pre-computed block worklists. */
         static const unsigned int wl[wl_seq_length*wl_hgridcu];
-        bool contains_neighbor(const char* format);
-        voro_base(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_);
-        ~voro_base() {delete [] mrad;}
+        voro_base_3d(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_);
+        ~voro_base_3d() {delete [] mrad;}
     protected:
         /** A custom int function that returns consistent stepping for negative
          * numbers, so that (-1.5, -0.5, 0.5, 1.5) maps to (-2,-1,0,1).

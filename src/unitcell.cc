@@ -8,7 +8,7 @@
 #include <queue>
 
 #include "unitcell.hh"
-#include "cell.hh"
+#include "cell_3d.hh"
 
 namespace voro {
 
@@ -96,7 +96,7 @@ inline void unitcell::unit_voro_apply(int i,int j,int k) {
  * \return True if they intersect, false otherwise. */
 bool unitcell::intersects_image(double dx,double dy,double dz,double &vol) {
     const double bxinv=1/bx,byinv=1/by,bzinv=1/bz,ivol=bxinv*byinv*bzinv;
-    voronoicell c;
+    voronoicell_3d c;
     c=unit_voro;
     dx*=2;dy*=2;dz*=2;
     if(!c.plane(0,0,bzinv,dz+1)) return false;
