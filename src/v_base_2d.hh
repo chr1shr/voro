@@ -11,7 +11,8 @@
 
 namespace voro {
 
-/** \brief Class containing data structures common across all particle container classes.
+/** \brief Class containing data structures common across all particle
+ * container classes.
  *
  * This class contains constants and data structures that are common across all
  * particle container classes. It contains constants setting the size of the
@@ -25,9 +26,8 @@ class voro_base_2d {
         const int nx;
         /** The number of blocks in the y direction. */
         const int ny;
-        /** A constant, set to the value of nx multiplied by ny, which
-         * is used in the routines that step through blocks in
-         * sequence. */
+        /** A constant, set to the value of nx multiplied by ny, which is used
+         * in the routines that step through blocks in sequence. */
         const int nxy;
         /** The size of a computational block in the x direction. */
         const double boxx;
@@ -38,29 +38,28 @@ class voro_base_2d {
         /** The inverse box length in the y direction. */
         const double ysp;
         /** An array to hold the minimum distances associated with the
-         * worklists. This array is initialized during container
-         * construction, by the initialize_radii() routine. */
+         * worklists. This array is initialized during container construction,
+         * by the initialize_radii() routine. */
         double *mrad;
         static const unsigned int wl[wl_seq_length_2d*wl_hgridsq_2d];
         voro_base_2d(int nx_,int ny_,double boxx_,double boxy_);
         ~voro_base_2d() {delete [] mrad;}
     protected:
-        /** A custom int function that returns consistent stepping
-         * for negative numbers, so that (-1.5, -0.5, 0.5, 1.5) maps
-         * to (-2,-1,0,1).
+        /** A custom int function that returns consistent stepping for negative
+         * numbers, so that (-1.5, -0.5, 0.5, 1.5) maps to (-2,-1,0,1).
          * \param[in] a the number to consider.
          * \return The value of the custom int operation. */
         inline int step_int(double a) {return a<0?int(a)-1:int(a);}
-        /** A custom modulo function that returns consistent stepping
-         * for negative numbers. For example, (-2,-1,0,1,2) step_mod 2
-         * is (0,1,0,1,0).
+        /** A custom modulo function that returns consistent stepping for
+         * negative numbers. For example, (-2,-1,0,1,2) step_mod 2 is
+         * (0,1,0,1,0).
          * \param[in] (a,b) the input integers.
          * \return The value of a modulo b, consistent for negative
          * numbers. */
         inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
-        /** A custom integer division function that returns consistent
-         * stepping for negative numbers. For example, (-2,-1,0,1,2)
-         * step_div 2 is (-1,-1,0,0,1).
+        /** A custom integer division function that returns consistent stepping
+         * for negative numbers. For example, (-2,-1,0,1,2) step_div 2 is
+         * (-1,-1,0,0,1).
          * \param[in] (a,b) the input integers.
          * \return The value of a div b, consistent for negative
          * numbers. */
