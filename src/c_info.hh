@@ -20,9 +20,9 @@ struct c_info {
     // XXX CHR - I've added a constructor here, which should simplify some of
     // the code you wrote. Rather than writing "c_info ci;ci.set(ijk,q);return
     // ci;" you can write "return c_info(ijk,q);".
-    c_info(int ijk_,int q_) ijk(ijk_), q(q_) {}
-    inline void set(int ijk_,int q_){
-        ijk=ijk_; q=q_;
+    c_info(int ijk_,int q_) : ijk(ijk_), q(q_) {}
+    inline void set(int ijk_,int q_) {
+        ijk=ijk_;q=q_;
     }
 };
 

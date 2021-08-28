@@ -13,6 +13,7 @@
 #include "config.hh"
 #include "common.hh"
 #include "rad_option.hh"
+#include "particle_order.hh"
 #include "cell_3d.hh"
 #include "v_base_3d.hh"
 #include "v_compute_3d.hh"

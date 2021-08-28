@@ -7,6 +7,7 @@
 #ifndef VOROPP_ITER_3D_HH
 #define VOROPP_ITER_3D_HH
 
+#include "particle_order.hh"
 #include "container_3d.hh"
 #include "c_info.hh"
 

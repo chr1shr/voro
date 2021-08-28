@@ -3,34 +3,33 @@
 
 #include "iter_2d.hh"
 
-//default-constructible??
-container_base_2d::iterator::iterator() : co_iter(0) {}
+namespace voro {
 
 /** Initializes the iterator, setting it to point at the first particle in the
  * container.
  * \param[in] co_ a pointer to the particle count array. */
-container_base_2d::iterator::iterator(int* _co) : co_iter(_co) {
-    int ijk_=0;
-    while(co_iter[ijk_]==0) ijk_++;
-    ptr.set(ijk_,0);
+container_base_2d::iterator::iterator(int* co_) : co(co_) {
+    int ij=0;
+    while(co[ij]==0) ij++;
+    ptr.set(ij,0);
 }
 
 /** Sets the iterator to equal another.
  * \param[in] other the iterator to copy. */
 container_base_2d::iterator& container_base_2d::iterator::operator=(iterator other) {
-    co_iter=other.co_iter;
+    co=other.co;
     ptr=other.ptr;
     return *this;
 }
 
 /** Increments the iterator by one element. */
 container_base_2d::iterator& container_base_2d::iterator::operator++() {
-    int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co_iter[ijk_];
+    int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
     while(diff>=0) {
-        n=n-co_iter[ijk_]+q_;
+        n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
-        diff=q_+n-co_iter[ijk_];
+        diff=q_+n-co[ijk_];
     }
     ptr.set(ijk_,q_+n);
     return *this;
@@ -39,12 +38,12 @@ container_base_2d::iterator& container_base_2d::iterator::operator++() {
 /** Increments the iterator by one element. */
 container_base_2d::iterator container_base_2d::iterator::operator++(int) {
     iterator tmp(*this);
-    int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co_iter[ijk_];
+    int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
     while(diff>=0) {
-        n=n-co_iter[ijk_]+q_;
+        n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
-        diff=q_+n-co_iter[ijk_];
+        diff=q_+n-co[ijk_];
     }
     ptr.set(ijk_,q_+n);
     return tmp;
@@ -56,7 +55,7 @@ container_base_2d::iterator& container_base_2d::iterator::operator--() {
     while(diff<0) {
         n=n-q_-1;
         ijk_--;
-        q_=co_iter[ijk_]-1;
+        q_=co[ijk_]-1;
         diff=q_-n;
     }
     ptr.set(ijk_,q_-n);
@@ -70,7 +69,7 @@ container_base_2d::iterator container_base_2d::iterator::operator--(int) {
     while(diff<0) {
         n=n-q_-1;
         ijk_--;
-        q_=co_iter[ijk_]-1;
+        q_=co[ijk_]-1;
         diff=q_-n;
     }
     ptr.set(ijk_,q_-n);
@@ -98,9 +97,9 @@ container_base_2d::iterator::difference_type container_base_2d::iterator::operat
             ijk_big=rhs.ptr.ijk;q_big=rhs.ptr.q;
         }
         for(int ijk_diff=ijk_small+1;ijk_diff<ijk_big;ijk_diff++) {
-            diff+=co_iter[ijk_diff];
+            diff+=co[ijk_diff];
         }
-        diff=diff+q_big+(co_iter[ijk_small]-q_small);
+        diff=diff+q_big+(co[ijk_small]-q_small);
         if(negative) {diff=-diff;}
     }
     return diff;
@@ -110,12 +109,12 @@ container_base_2d::iterator::difference_type container_base_2d::iterator::operat
  * \param[in] incre the number of elements to increment by. */
 container_base_2d::iterator& container_base_2d::iterator::operator+=(const difference_type& incre) {
     int q_=ptr.q,ijk_=ptr.ijk,
-        n=incre,diff=q_+n-co_iter[ijk_];
+        n=incre,diff=q_+n-co[ijk_];
     while(diff>=0) {
-        n=n-co_iter[ijk_]+q_;
+        n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
-        diff=q_+n-co_iter[ijk_];
+        diff=q_+n-co[ijk_];
     }
     ptr.set(ijk_,q_+n);
     return *this;
@@ -128,7 +127,7 @@ container_base_2d::iterator& container_base_2d::iterator::operator-=(const diffe
     while(diff<0) {
         n=n-q_-1;
         ijk_--;
-        q_=co_iter[ijk_]-1;
+        q_=co[ijk_]-1;
         diff=q_-n;
     }
     ptr.set(ijk_,q_-n);
@@ -139,12 +138,12 @@ container_base_2d::iterator& container_base_2d::iterator::operator-=(const diffe
  * \param[in] incre the number of elements to offset by. */
 c_info& container_base_2d::iterator::operator[](const difference_type& incre) const {
     c_info ci;
-    int q_=ptr.q,ijk_=ptr.ijk,n=incre,diff=q_+n-co_iter[ijk_];
+    int q_=ptr.q,ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
     while(diff>=0) {
-        n=n-co_iter[ijk_]+q_;
+        n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
-        diff=q_+n-co_iter[ijk_];
+        diff=q_+n-co[ijk_];
     }
     ci.set(ijk_,q_+n);
     return ci;
@@ -178,7 +177,7 @@ container_base_2d::iterator container_base_2d::end() {
  *                        blocks that overlap the given circle. If it is true,
  *                        the particle will only loop over the particles which
  *                        actually lie within the circle. */
-void subset_info::setup_circle(double vx,double vy,double r,bool bounds_test) {
+void subset_info_2d::setup_circle(double vx,double vy,double r,bool bounds_test) {
     if(bounds_test) {mode=circle;v0=vx;v1=vy;v2=r*r;} else mode=no_check;
     ai=step_int((vx-ax-r)*xsp);
     bi=step_int((vx-ax+r)*xsp);
@@ -195,8 +194,8 @@ void subset_info::setup_circle(double vx,double vy,double r,bool bounds_test) {
  *                        blocks that overlap the given box. If it is true, the
  *                        particle will only loop over the particles which
  *                        actually lie within the box. */
-void subset_info::setup_box(double xmin,double xmax,double ymin,double ymax,bool bounds_test) {
-    if(bounds_test) {mode=rectangle;v0=xmin;v1=xmax;v2=ymin;v3=ymax;} else mode=no_check;
+void subset_info_2d::setup_box(double xmin,double xmax,double ymin,double ymax,bool bounds_test) {
+    if(bounds_test) {mode=box;v0=xmin;v1=xmax;v2=ymin;v3=ymax;} else mode=no_check;
     ai=step_int((xmin-ax)*xsp);
     bi=step_int((xmax-ax)*xsp);
     aj=step_int((ymin-ay)*ysp);
@@ -204,14 +203,8 @@ void subset_info::setup_box(double xmin,double xmax,double ymin,double ymax,bool
     setup_common();
 }
 
-void subset_info::setup_intbox(int ai_,int bi_,int aj_,int bj_) {
-    ai=ai_;bi=bi_;aj=aj_;bj=bj_;
-    mode=no_check;
-    setup_common();
-}
-
 /** Sets up all of the common constants used for the loop. */
-void subset_info::setup_common() {
+void subset_info_2d::setup_common() {
 
     // For any non-periodic directions, truncate the block ranges so that they
     // lie within the container grid
@@ -268,7 +261,7 @@ void container_base_2d::iterator_subset::previous_block_iter(int &ijk_) {
  * \param[in,out] (i_,j_) the block coordinates.
  * \param[in,out] (ci_,cj_) the block coordinates in the primary grid.
  * \param[in,out] (px_,py_) the periodicity vector. */
-void subset_info::previous_block_iter(int &ijk_,int &i_,int &j_,int &ci_,int &cj_,double &px_,double &py_) {
+void subset_info_2d::previous_block_iter(int &ijk_,int &i_,int &j_,int &ci_,int &cj_,double &px_,double &py_) {
     if(i_>ai) {
         i_--;
         if(ci_>0) {ci_--;ijk_--;} else {ci_=nx-1;ijk_+=nx-1;px_-=sx;}
@@ -283,7 +276,7 @@ void subset_info::previous_block_iter(int &ijk_,int &i_,int &j_,int &ci_,int &cj
  * \param[in] q_ the index of the particle in the current block.
  * \param[in] (px_,py_,) the periodicity vector.
  * \return True if the point is out of bounds, false otherwise. */
-bool subset_info::out_of_bounds(int ijk_,int q_,double px_,double py_) {
+bool subset_info_2d::out_of_bounds(int ijk_,int q_,double px_,double py_) {
     double *pp=p[ijk_]+ps*q_;
     if(mode==circle) {
         double fx=*pp+px_-v0,fy=pp[1]+py_-v1;
@@ -297,8 +290,8 @@ bool subset_info::out_of_bounds(int ijk_,int q_,double px_,double py_) {
  * container.
  * \param[in] si_ a pointer to the information about the particle subset to
  *                consider. */
-container_base_2d::iterator_subset::iterator_subset(subset_info* _si) :
-    cl_iter(_si), j(cl_iter->aj), i(cl_iter->ai) {
+container_base_2d::iterator_subset::iterator_subset(subset_info_2d* _si) :
+    cl_iter(_si), i(cl_iter->ai), j(cl_iter->aj) {
 
     ci=cl_iter->step_mod(i,cl_iter->nx);
     cj=cl_iter->step_mod(j,cl_iter->ny);
@@ -328,8 +321,8 @@ container_base_2d::iterator_subset::iterator_subset(subset_info* _si) :
  *                consider.
  * \param[in] (ptr_,i_,j_) information about the particle for the iterator
  *                         to point to. */
-container_base_2d::iterator_subset::iterator_subset(subset_info* si_,c_info ptr_,int i_,int j_)
-  : cl_iter(si_), ptr(ptr_), i(i_), j(j_) {
+container_base_2d::iterator_subset::iterator_subset(subset_info_2d* si_,c_info ptr_,int i_,int j_)
+  : ptr(ptr_), cl_iter(si_), i(i_), j(j_) {
     ci=cl_iter->step_mod(i,cl_iter->nx);
     cj=cl_iter->step_mod(j,cl_iter->ny);
     px=cl_iter->step_div(i,cl_iter->nx)*cl_iter->sx;
@@ -398,7 +391,7 @@ container_base_2d::iterator_subset container_base_2d::iterator_subset::operator+
 
 /** Decrements the iterator by one element. */
 container_base_2d::iterator_subset& container_base_2d::iterator_subset::operator--() {
-    int q_=ptr.q,ptr.ijk,n=1;
+    int q_=ptr.q,ijk_=ptr.ijk,n=1;
     while(n>0) {
         q_--;
         while(q_<0) {
@@ -444,21 +437,18 @@ container_base_2d::iterator_subset container_base_2d::iterator_subset::operator-
 /** Calculates the difference in the number of elements between two iterators.
  * \param[in] rhs the other iterator to compare to.
  * \return The difference. */
-container_base_2d::iterator_subset::difference_type container_base_2d::iterator_subset::operator-(const iterator_subset& rhs) const
-{
+container_base_2d::iterator_subset::difference_type container_base_2d::iterator_subset::operator-(const iterator_subset& rhs) const {
     difference_type diff=0;
     if(*this==rhs) {
         diff=0;
-    }
-    else if(*this<rhs) {
+    } else if(*this<rhs) {
         iterator_subset tmp(*this);
         while(tmp!=rhs) {
             tmp++;
             diff++;
         }
         diff=-diff;
-    }
-    else { //*this>rhs
+    } else { //*this>rhs
         iterator_subset tmp(*this);
         while(tmp!=rhs) {
             tmp--;
@@ -541,13 +531,13 @@ c_info& container_base_2d::iterator_subset::operator[](const difference_type& in
 
 /** Returns an iterator pointing to the first particle in the container.
  * \return The iterator. */
-container_base_2d::iterator_subset container_base_2d::begin(subset_info& si) {
+container_base_2d::iterator_subset container_base_2d::begin(subset_info_2d& si) {
     return iterator_subset(&si);
 }
 
 /** Returns an iterator pointing past the last particle in the container.
  * \return The iterator. */
-container_base_2d::iterator_subset container_base_2d::end(subset_info& si) {
+container_base_2d::iterator_subset container_base_2d::end(subset_info_2d& si) {
     c_info cinfo;
     //find the last particle to point to
     int i_=si.bi,j_=si.bj,
@@ -560,7 +550,7 @@ container_base_2d::iterator_subset container_base_2d::end(subset_info& si) {
         si.previous_block_iter(ijk_,i_,j_,ci_,cj_,px_,py_);
         q_=si.co[ijk_]-1;
     }
-    while(si.mode!=no_check&&si.out_of_bounds_2(ijk_,q_,px_,py_)) {
+    while(si.mode!=no_check&&si.out_of_bounds(ijk_,q_,px_,py_)) {
         q_--;
         while(q_<0) {
             si.previous_block_iter(ijk_,i_,j_,ci_,cj_,px_,py_);
@@ -636,12 +626,13 @@ container_base_2d::iterator_order container_base_2d::begin(particle_order &vo) {
 
 /** Returns an iterator pointing past the last particle in the container.
  * \return The iterator. */
-container_base_2d::iterator_order container_base_2d::end(particle_order &vo)
-{    //vo, ptr, n
+container_base_2d::iterator_order container_base_2d::end(particle_order &vo) {    //vo, ptr, n
     int ptr_n_=0.5*(vo.op-vo.o);//1-over-the-last-particle, eg. if 0,1,2,3,4 particle, here, ptr_n=5
     c_info ci;
     int ijk_=-1;//dummy
     int q_=-1;//dummy
     ci.set(ijk_,q_);
     return iterator_order(vo, ci, ptr_n_);
+}
+
 }

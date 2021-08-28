@@ -5,6 +5,7 @@
  * \brief Function implementations for the container_2d and related classes. */
 
 #include "container_2d.hh"
+#include "iter_2d.hh"
 
 namespace voro {
 
@@ -278,7 +279,7 @@ void container_base_2d::add_particle_memory(int i) {
 
     // Carry out a check on the memory allocation size, and print a status
     // message if requested
-    if(nmem>max_particle_memory_2d)
+    if(nmem>max_particle_memory)
         voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
     fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
@@ -366,86 +367,6 @@ void container_poly_2d::clear() {
     max_radius=0;
 }
 
-/** Computes all the Voronoi cells and saves customized information about them.
- * \param[in] format the custom output string to use.
- * \param[in] fp a file handle to write to. */
-void container_2d::print_custom(const char *format,FILE *fp) {
-    c_loop_all_2d vl(*this);
-    print_custom(vl,format,fp);
-}
-
-/** Computes all the Voronoi cells and saves customized
- * information about them.
- * \param[in] format the custom output string to use.
- * \param[in] fp a file handle to write to. */
-void container_poly_2d::print_custom(const char *format,FILE *fp) {
-    c_loop_all_2d vl(*this);
-    print_custom(vl,format,fp);
-}
-
-/** Computes all the Voronoi cells and saves customized information about them.
- * \param[in] format the custom output string to use.
- * \param[in] filename the name of the file to write to. */
-void container_2d::print_custom(const char *format,const char *filename) {
-    FILE *fp=safe_fopen(filename,"w");
-    print_custom(format,fp);
-    fclose(fp);
-}
-
-/** Computes all the Voronoi cells and saves customized information about them.
- * \param[in] format the custom output string to use.
- * \param[in] filename the name of the file to write to. */
-void container_poly_2d::print_custom(const char *format,const char *filename) {
-    FILE *fp=safe_fopen(filename,"w");
-    print_custom(format,fp);
-    fclose(fp);
-}
-
-/** Computes all of the Voronoi cells in the container, but does nothing with
- * the output. It is useful for measuring the pure computation time of the
- * Voronoi algorithm, without any additional calculations such as volume
- * evaluation or cell output. */
-void container_2d::compute_all_cells() {
-    voronoicell_2d c;
-    c_loop_all_2d vl(*this);
-    if(vl.start()) do compute_cell(c,vl);
-    while(vl.inc());
-}
-
-/** Computes all of the Voronoi cells in the container, but does nothing with
- * the output. It is useful for measuring the pure computation time of the
- * Voronoi algorithm, without any additional calculations such as volume
- * evaluation or cell output. */
-void container_poly_2d::compute_all_cells() {
-    voronoicell_2d c;
-    c_loop_all_2d vl(*this);
-    if(vl.start()) do compute_cell(c,vl);while(vl.inc());
-}
-
-/** Calculates all of the Voronoi cells and sums their volumes. In most cases
- * without walls, the sum of the Voronoi cell volumes should equal the volume
- * of the container to numerical precision.
- * \return The sum of all of the computed Voronoi volumes. */
-double container_2d::sum_cell_areas() {
-    voronoicell_2d c;
-    double area=0;
-    c_loop_all_2d vl(*this);
-    if(vl.start()) do if(compute_cell(c,vl)) area+=c.area();while(vl.inc());
-    return area;
-}
-
-/** Calculates all of the Voronoi cells and sums their volumes. In most cases
- * without walls, the sum of the Voronoi cell volumes should equal the volume
- * of the container to numerical precision.
- * \return The sum of all of the computed Voronoi volumes. */
-double container_poly_2d::sum_cell_areas() {
-    voronoicell_2d c;
-    double area=0;
-    c_loop_all_2d vl(*this);
-    if(vl.start()) do if(compute_cell(c,vl)) area+=c.area();while(vl.inc());
-    return area;
-}
-
 /** This function tests to see if a given vector lies within the container
  * bounds and any walls.
  * \param[in] (x,y) the position vector to be tested.
@@ -475,36 +396,174 @@ void container_base_2d::draw_domain_pov(FILE *fp) {
                bx,ay,bx,by,ax,ay,bx,ay,ax,by,bx,by);
 }
 
-/** The wall_list constructor sets up an array of pointers to wall classes. */
-wall_list_2d::wall_list_2d() : walls(new wall_2d*[init_wall_size]), wep(walls), wel(walls+init_wall_size),
-    current_wall_size(init_wall_size) {}
-
-/** The wall_list destructor frees the array of pointers to the wall classes.
- */
-wall_list_2d::~wall_list_2d() {
-    delete [] walls;
+/** Dumps particle IDs and positions to a file.
+ * \param[in] fp a file handle to write to. */
+void container_2d::draw_particles(FILE *fp) {
+    for(iterator cli=begin();cli<end();cli++) {
+        int ij=cli->ijk,q=cli->q;
+        double *pp=p[ij]+2*q;
+        fprintf(fp,"%d %g %g\n",id[ij][q],*pp,pp[1]);
+    }
 }
 
-/** Adds all of the walls on another wall_list to this class.
- * \param[in] wl a reference to the wall class. */
-void wall_list_2d::add_wall(wall_list_2d &wl) {
-    for(wall_2d **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
+/** Dumps particle positions in POV-Ray format.
+ * \param[in] fp a file handle to write to. */
+void container_2d::draw_particles_pov(FILE *fp) {
+    for(iterator cli=begin();cli<end();cli++) {
+        int ij=(*cli).ijk,q=(*cli).q;
+        double *pp=p[(*cli).ijk]+2*(*cli).q;
+        fprintf(fp,"// id %d\nsphere{<%g,%g,0>,s}\n",id[ij][q],*pp,pp[1]);
+    }
 }
 
-/** Deallocates all of the wall classes pointed to by the wall_list. */
-void wall_list_2d::deallocate() {
-    for(wall_2d **wp=walls;wp<wep;wp++) delete *wp;
+/** Computes Voronoi cells and saves the output in Gnuplot format.
+ * \param[in] fp a file handle to write to. */
+void container_2d::draw_cells_gnuplot(FILE *fp) {
+    voronoicell_2d c;
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+        double *pp=p[cli->ijk]+2*cli->q;
+        c.draw_gnuplot(*pp,pp[1],fp);;
+    }
 }
 
-/** Increases the memory allocation for the walls array. */
-void wall_list_2d::increase_wall_memory() {
-    current_wall_size<<=1;
-    if(current_wall_size>max_wall_size)
-        voro_fatal_error("Wall memory allocation exceeded absolute maximum",VOROPP_MEMORY_ERROR);
-    wall_2d **nwalls=new wall_2d*[current_wall_size],**nwp=nwalls,**wp=walls;
-    while(wp<wep) *(nwp++)=*(wp++);
-    delete [] walls;
-    walls=nwalls;wel=walls+current_wall_size;wep=nwp;
+/** Computes Voronoi cells and saves the output in POV-Ray format.
+ * \param[in] fp a file handle to write to. */
+void container_2d::draw_cells_pov(FILE *fp) {
+    voronoicell_2d c;
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+        int ij=cli->ijk,q=cli->q;
+        double *pp=p[ij]+2*q;
+        fprintf(fp,"// cell %d\n",id[ij][q]);
+        c.draw_pov(*pp,pp[1],fp);;
+    }
+}
+
+/** Computes the Voronoi cells and saves customized information about them.
+ * \param[in] format the custom output string to use.
+ * \param[in] fp a file handle to write to. */
+void container_2d::print_custom(const char *format,FILE *fp) {
+    int ij,q;double *pp;
+    if(voro_contains_neighbor(format)) {
+        voronoicell_neighbor_2d c;
+        for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+            ij=cli->ijk;q=cli->q;
+            pp=p[ij]+2*q;
+            c.output_custom(format,id[ij][q],*pp,pp[1],default_radius,fp);
+        }
+    } else {
+        voronoicell_2d c;
+        for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+            ij=cli->ijk;q=cli->q;
+            pp=p[ij]+2*q;
+            c.output_custom(format,id[ij][q],*pp,pp[1],default_radius,fp);
+        }
+    }
+}
+
+/** Computes all of the Voronoi cells in the container, but does nothing with
+ * the output. It is useful for measuring the pure computation time of the
+ * Voronoi algorithm, without any additional calculations such as volume
+ * evaluation or cell output. */
+void container_2d::compute_all_cells() {
+    voronoicell_2d c;
+    for(iterator cli=begin();cli<end();cli++) compute_cell(c,cli);
+}
+
+/** Calculates all of the Voronoi cells and sums their volumes. In most cases
+ * without walls, the sum of the Voronoi cell volumes should equal the volume
+ * of the container to numerical precision.
+ * \return The sum of all of the computed Voronoi volumes. */
+double container_2d::sum_cell_areas() {
+    voronoicell_2d c;
+    double area=0;
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) area+=c.area();
+    return area;
+}
+
+/** Dumps particle IDs and positions to a file.
+ * \param[in] fp a file handle to write to. */
+void container_poly_2d::draw_particles(FILE *fp) {
+    for(iterator cli=begin();cli<end();cli++) {
+        int ij=cli->ijk,q=cli->q;
+        double *pp=p[ij]+3*q;
+        fprintf(fp,"%d %g %g %g\n",id[ij][q],*pp,pp[1],pp[2]);
+    }
+}
+
+/** Dumps particle positions in POV-Ray format.
+ * \param[in] fp a file handle to write to. */
+void container_poly_2d::draw_particles_pov(FILE *fp) {
+    for(iterator cli=begin();cli<end();cli++) {
+        int ij=cli->ijk,q=cli->q;
+        double *pp=p[ij]+3*q;
+        fprintf(fp,"// id %d\nsphere{<%g,%g,0>,%g}\n",id[ij][q],*pp,pp[1],pp[2]);
+    }
+}
+
+/** Computes Voronoi cells and saves the output in Gnuplot format.
+ * \param[in] fp a file handle to write to. */
+void container_poly_2d::draw_cells_gnuplot(FILE *fp) {
+    voronoicell_2d c;
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+        double *pp=p[cli->ijk]+3*cli->q;
+        c.draw_gnuplot(*pp,pp[1],fp);;
+    }
+}
+
+/** Computes all Voronoi cells and saves the output in POV-Ray format.
+ * \param[in] fp a file handle to write to. */
+void container_poly_2d::draw_cells_pov(FILE *fp) {
+    voronoicell_2d c;
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+        int ij=cli->ijk,q=cli->q;
+        double *pp=p[ij]+3*q;
+        fprintf(fp,"// cell %d\n",id[ij][q]);
+        c.draw_pov(*pp,pp[1],fp);
+    }
+}
+
+/** Computes the Voronoi cells and saves customized information about
+ * them.
+ * \param[in] cli the iterator class to use.
+ * \param[in] format the custom output string to use.
+ * \param[in] fp a file handle to write to. */
+void container_poly_2d::print_custom(const char *format,FILE *fp) {
+    int ij,q;double *pp;
+    if(voro_contains_neighbor(format)) {
+        voronoicell_neighbor_2d c;
+        for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+            ij=cli->ijk;q=cli->q;
+            pp=p[ij]+3*q;
+            c.output_custom(format,id[ij][q],*pp,pp[1],pp[2],fp);
+        }
+    } else {
+        voronoicell_2d c;
+        for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+            ij=cli->ijk;q=cli->q;
+            pp=p[ij]+3*q;
+            c.output_custom(format,id[ij][q],*pp,pp[1],pp[2],fp);
+        }
+    }
+}
+
+/** Computes all of the Voronoi cells in the container, but does nothing with
+ * the output. It is useful for measuring the pure computation time of the
+ * Voronoi algorithm, without any additional calculations such as volume
+ * evaluation or cell output. */
+void container_poly_2d::compute_all_cells() {
+    voronoicell_2d c;
+    for(iterator cli=begin();cli<end();cli++) compute_cell(c,cli);
+}
+
+/** Calculates all of the Voronoi cells and sums their volumes. In most cases
+ * without walls, the sum of the Voronoi cell volumes should equal the volume
+ * of the container to numerical precision.
+ * \return The sum of all of the computed Voronoi volumes. */
+double container_poly_2d::sum_cell_areas() {
+    voronoicell_2d c;
+    double area=0;
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) area+=c.area();
+    return area;
 }
 
 }

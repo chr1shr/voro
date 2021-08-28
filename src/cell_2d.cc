@@ -6,6 +6,7 @@
 
 #include "cell_2d.hh"
 
+#include <cmath>
 #include <cstring>
 
 namespace voro {
@@ -245,7 +246,7 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
 
 /** Returns a vector of the vertex vectors using the local coordinate system.
  * \param[out] v the vector to store the results in. */
-void voronoicell_base_2d::vertices(vector<double> &v) {
+void voronoicell_base_2d::vertices(std::vector<double> &v) {
     v.resize(2*p);
     double *ptsp=pts;
     for(int i=0;i<2*p;i+=2) {
@@ -277,7 +278,7 @@ void voronoicell_base_2d::output_vertices(int pr,FILE *fp) {
  * \param[out] v the vector to store the results in.
  * \param[in] (x,y,z) the position vector of the particle in the global
  *                    coordinate system. */
-void voronoicell_base_2d::vertices(double x,double y,vector<double> &v) {
+void voronoicell_base_2d::vertices(double x,double y,std::vector<double> &v) {
     v.resize(2*p);
     double *ptsp=pts;
     for(int i=0;i<2*p;i+=2) {
@@ -326,7 +327,7 @@ double voronoicell_base_2d::perimeter() {
 
 /** Calculates the perimeter of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
-void voronoicell_base_2d::edge_lengths(vector<double> &vd) {
+void voronoicell_base_2d::edge_lengths(std::vector<double> &vd) {
     if(p==0) {vd.clear();return;}
     vd.resize(p);
     int i=0,k=0,l;double dx,dy;
@@ -341,7 +342,7 @@ void voronoicell_base_2d::edge_lengths(vector<double> &vd) {
 
 /** Calculates the perimeter of the Voronoi cell.
  * \return A floating point number holding the calculated distance. */
-void voronoicell_base_2d::normals(vector<double> &vd) {
+void voronoicell_base_2d::normals(std::vector<double> &vd) {
     if(p==0) {vd.clear();return;}
     vd.resize(2*p);
     int i=0,k=0,l;double dx,dy,nor;
@@ -417,8 +418,8 @@ void voronoicell_base_2d::centroid(double &cx,double &cy) {
  * \param[in] fp the file handle to write to. */
 void voronoicell_base_2d::output_custom(const char *format,int i,double x,double y,double r,FILE *fp) {
     char *fmp(const_cast<char*>(format));
-    vector<int> vi;
-    vector<double> vd;
+    std::vector<int> vi;
+    std::vector<double> vd;
     while(*fmp!=0) {
         if(*fmp=='%') {
             fmp++;
@@ -552,7 +553,7 @@ inline void voronoicell_neighbor_2d::n_add_memory_vertices(int ocv) {
     delete [] ne;ne=nne;
 }
 
-void voronoicell_neighbor_2d::neighbors(vector<int> &v) {
+void voronoicell_neighbor_2d::neighbors(std::vector<int> &v) {
     v.resize(p);
     for(int i=0;i<p;i++) v[i]=ne[i];
 }

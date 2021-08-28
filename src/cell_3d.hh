@@ -28,7 +28,7 @@ namespace voro {
  * This class is not intended for direct use, but forms the base of the
  * voronoicell and voronoicell_neighbor classes, which extend it based on
  * whether neighboring particle ID information needs to be tracked. */
-class voronoicell_base {
+class voronoicell_base_3d {
     public:
         /** This holds the current size of the arrays ed and nu, which
          * hold the vertex information. If more vertices are created
@@ -94,8 +94,8 @@ class voronoicell_base {
         /** A tolerance (specified as a squared length) used to determine when
          * the cell cannot possibly intersect a cutting plane. */
         const double big_tol;
-        voronoicell_base(double max_len_sq);
-        ~voronoicell_base();
+        voronoicell_base_3d(double max_len_sq);
+        ~voronoicell_base_3d();
         void init_base(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
         void init_octahedron_base(double l);
         void init_tetrahedron_base(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3);
@@ -251,8 +251,8 @@ class voronoicell_base {
         int **mep;
         inline void reset_edges();
         template<class vc_class>
-        void check_memory_for_copy(vc_class &vc,voronoicell_base* vb);
-        void copy(voronoicell_base* vb);
+        void check_memory_for_copy(vc_class &vc,voronoicell_base_3d* vb);
+        void copy(voronoicell_base_3d* vb);
     private:
         /** This is the delete stack, used to store the vertices which
          * are going to be deleted during the plane cutting procedure.
@@ -311,28 +311,28 @@ class voronoicell_base {
         unsigned int m_calc(int n,double &ans);
         inline void flip(int tp) {ed[tp][nu[tp]<<1]=-1-ed[tp][nu[tp]<<1];}
         int check_marginal(int n,double &ans);
-        friend class voronoicell;
-        friend class voronoicell_neighbor;
+        friend class voronoicell_3d;
+        friend class voronoicell_neighbor_3d;
 };
 
-/** \brief Extension of the voronoicell_base class to represent a Voronoi
+/** \brief Extension of the voronoicell_base_3d class to represent a 3D Voronoi
  * cell without neighbor information.
  *
- * This class is an extension of the voronoicell_base class, in cases when
- * is not necessary to track the IDs of neighboring particles associated
- * with each face of the Voronoi cell. */
-class voronoicell : public voronoicell_base {
+ * This class is an extension of the voronoicell_base_3d class, in cases when
+ * is not necessary to track the IDs of neighboring particles associated with
+ * each face of the Voronoi cell. */
+class voronoicell_3d : public voronoicell_base_3d {
     public:
-        using voronoicell_base::nplane;
-        voronoicell() : voronoicell_base(default_length*default_length) {}
-        voronoicell(double max_len_sq_) : voronoicell_base(max_len_sq_) {}
+        using voronoicell_base_3d::nplane;
+        voronoicell_3d() : voronoicell_base_3d(default_length*default_length) {}
+        voronoicell_3d(double max_len_sq_) : voronoicell_base_3d(max_len_sq_) {}
         template<class c_class>
-        voronoicell(c_class &con) : voronoicell_base(con.max_len_sq) {}
+        voronoicell_3d(c_class &con) : voronoicell_base_3d(con.max_len_sq) {}
         /** Copies the information from another voronoicell class into
          * this class, extending memory allocation if necessary.
          * \param[in] c the class to copy. */
-        inline void operator=(voronoicell &c) {
-            voronoicell_base* vb((voronoicell_base*) &c);
+        inline void operator=(voronoicell_3d &c) {
+            voronoicell_base_3d* vb((voronoicell_base_3d*) &c);
             check_memory_for_copy(*this,vb);copy(vb);
         }
         /** Cuts a Voronoi cell using by the plane corresponding to the
@@ -419,19 +419,19 @@ class voronoicell : public voronoicell_base {
         inline void n_copy_to_aux1(int i,int m) {};
         inline void n_set_to_aux1_offset(int k,int m) {};
         inline void n_neighbors(std::vector<int> &v) {v.clear();};
-        friend class voronoicell_base;
+        friend class voronoicell_base_3d;
 };
 
-/** \brief Extension of the voronoicell_base class to represent a Voronoi cell
- * with neighbor information.
+/** \brief Extension of the voronoicell_base_3d class to represent a 3D Voronoi
+ * cell with neighbor information.
  *
- * This class is an extension of the voronoicell_base class, in cases when the
- * IDs of neighboring particles associated with each face of the Voronoi cell.
- * It contains additional data structures mne and ne for storing this
+ * This class is an extension of the voronoicell_base_3d class, in cases when
+ * the IDs of neighboring particles associated with each face of the Voronoi
+ * cell. It contains additional data structures mne and ne for storing this
  * information. */
-class voronoicell_neighbor : public voronoicell_base {
+class voronoicell_neighbor_3d : public voronoicell_base_3d {
     public:
-        using voronoicell_base::nplane;
+        using voronoicell_base_3d::nplane;
         /** This two dimensional array holds the neighbor information
          * associated with each vertex. mne[p] is a one dimensional
          * array which holds all of the neighbor information for
@@ -444,19 +444,19 @@ class voronoicell_neighbor : public voronoicell_base {
          * i. It is set to the ID number of the plane that made the
          * face that is clockwise from the jth edge. */
         int **ne;
-        voronoicell_neighbor() : voronoicell_base(default_length*default_length) {
+        voronoicell_neighbor_3d() : voronoicell_base_3d(default_length*default_length) {
             memory_setup();
         }
-        voronoicell_neighbor(double max_len_sq_) : voronoicell_base(max_len_sq_) {
+        voronoicell_neighbor_3d(double max_len_sq_) : voronoicell_base_3d(max_len_sq_) {
             memory_setup();
         }
         template<class c_class>
-        voronoicell_neighbor(c_class &con) : voronoicell_base(con.max_len_sq) {
+        voronoicell_neighbor_3d(c_class &con) : voronoicell_base_3d(con.max_len_sq) {
             memory_setup();
         }
-        ~voronoicell_neighbor();
-        void operator=(voronoicell &c);
-        void operator=(voronoicell_neighbor &c);
+        ~voronoicell_neighbor_3d();
+        void operator=(voronoicell_3d &c);
+        void operator=(voronoicell_neighbor_3d &c);
         /** Cuts the Voronoi cell by a particle whose center is at a
          * separation of (x,y,z) from the cell center. The value of rsq
          * should be initially set to \f$x^2+y^2+z^2\f$.
@@ -545,7 +545,7 @@ class voronoicell_neighbor : public voronoicell_base {
         inline void n_switch_to_aux1(int i) {delete [] mne[i];mne[i]=paux1;}
         inline void n_copy_to_aux1(int i,int m) {paux1[m]=mne[i][m];}
         inline void n_set_to_aux1_offset(int k,int m) {ne[k]=paux1+m;}
-        friend class voronoicell_base;
+        friend class voronoicell_base_3d;
 };
 
 }

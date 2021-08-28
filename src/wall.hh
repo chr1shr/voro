@@ -119,20 +119,20 @@ class wall_list_3d {
         ~wall_list_3d();
         /** Adds a wall to the list.
          * \param[in] w the wall to add. */
-        inline void add_wall(wall *w) {
+        inline void add_wall(wall_3d *w) {
             if(wep==wel) increase_wall_memory();
             *(wep++)=w;
         }
         /** Adds a wall to the list.
          * \param[in] w a reference to the wall to add. */
-        inline void add_wall(wall &w) {add_wall(&w);}
-        void add_wall(wall_list &wl);
+        inline void add_wall(wall_3d &w) {add_wall(&w);}
+        void add_wall(wall_list_3d &wl);
         /** Determines whether a given position is inside all of the walls on
          * the list.
          * \param[in] (x,y,z) the position to test.
          * \return True if it is inside, false if it is outside. */
         inline bool point_inside_walls(double x,double y,double z) {
-            for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->point_inside(x,y,z))) return false;
+            for(wall_3d **wp=walls;wp<wep;wp++) if(!((*wp)->point_inside(x,y,z))) return false;
             return true;
         }
         /** Cuts a Voronoi cell by all of the walls currently on the list.
@@ -142,7 +142,7 @@ class wall_list_3d {
          */
         template<class c_class>
         bool apply_walls(c_class &c,double x,double y,double z) {
-            for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->cut_cell(c,x,y,z))) return false;
+            for(wall_3d **wp=walls;wp<wep;wp++) if(!((*wp)->cut_cell(c,x,y,z))) return false;
             return true;
         }
         void deallocate();
@@ -150,9 +150,11 @@ class wall_list_3d {
         void increase_wall_memory();
         /** A pointer to the limit of the walls array, used to determine when
          * array is full. */
-        wall **wel;
+        wall_3d **wel;
         /** The current amount of memory allocated for walls. */
         int current_wall_size;
 };
+
+}
 
 #endif

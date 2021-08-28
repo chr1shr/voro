@@ -7,8 +7,18 @@
 #ifndef VOROPP_ITER_2D_HH
 #define VOROPP_ITER_2D_HH
 
+#include "particle_order.hh"
 #include "container_2d.hh"
 #include "c_info.hh"
+
+namespace voro {
+
+/** The types of geometrical region to loop over. */
+enum subset_mode {
+    circle,
+    box,
+    no_check
+};
 
 class container_base_2d::iterator : public std::iterator<std::random_access_iterator_tag,c_info,int> {
     public:
@@ -16,18 +26,16 @@ class container_base_2d::iterator : public std::iterator<std::random_access_iter
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
         c_info ptr;
-        int* co_iter;
-        iterator() : co_iter(0) {}
-        iterator(int* _co);
+        int* co;
+        iterator() : co(NULL) {}
+        iterator(int* co_);
         /** Initializes the iterator.
          * \param[in] co_ a pointer to the particle count array.
          * \param[in] ptr_ information on the particle to point to. */
-        iterator(int* co_,c_info ptr_)
-            : ptr(_ptr), co_iter(_co) {}
+        iterator(int* co_,c_info ptr_) : ptr(ptr_), co(co_) {}
         /** Initializes the iterator as a copy of another.
          * \param[in] ci a reference to an existing iterator. */
-        iterator(const iterator& ci)
-            : ptr(ci.ptr), co(ci.co) {}
+        iterator(const iterator& ci) : ptr(ci.ptr), co(ci.co) {}
         iterator& operator=(iterator other);
         /** Evaluates if this iterator is equal to another.
          * \param[in] rhs a reference to another iterator.
@@ -94,14 +102,8 @@ class container_base_2d::iterator : public std::iterator<std::random_access_iter
 
 class subset_info_2d {
     public:
-        /** The types of geometrical region to loop over. */
-        enum subset_mode {
-            circle,
-            box,
-            no_check
-        };
         template<class c_class_2d>
-        subset_info(c_class_2d& con): nx(con.nx), ny(con.ny), nxy(con.nxy),
+        subset_info_2d(c_class_2d &con): nx(con.nx), ny(con.ny), nxy(con.nxy),
             ps(con.ps), p(con.p), id(con.id), co(con.co), ax(con.ax),
             ay(con.ay), sx(con.bx-ax), sy(con.by-ay), xsp(con.xsp),
             ysp(con.ysp), x_prd(con.x_prd), y_prd(con.y_prd) {}
@@ -122,7 +124,7 @@ class subset_info_2d {
          *                      of both ends.
          * \param[in] (aj_,bj_) the subgrid range in the y direction, inclusive
          *                      of both ends. */
-        void setup_intbox(int ai_,int bi_,int aj_,int bj_) {
+        inline void setup_intbox(int ai_,int bi_,int aj_,int bj_) {
             ai=ai_;bi=bi_;aj=aj_;bj=bj_;
             mode=no_check;
             setup_common();
@@ -151,9 +153,9 @@ class container_base_2d::iterator_subset : public std::iterator<std::random_acce
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
         c_info ptr;
-        subset_info* cl_iter;
+        subset_info_2d* cl_iter;
+        int i,j,ci,cj;
         double px,py;
-        int ci,cj,i,j;
         /** Computes whether the current point is out of bounds, relative to
          * the current loop setup.
          * \param[in] ijk_ the current block.
@@ -165,8 +167,8 @@ class container_base_2d::iterator_subset : public std::iterator<std::random_acce
         void next_block_iter(int &ijk_);
         void previous_block_iter(int &ijk_);
         iterator_subset() : cl_iter(0) {};
-        iterator_subset(subset_info* si_);
-        iterator_subset(subset_info* si_,c_info ptr_,int i_,int j_);
+        iterator_subset(subset_info_2d* si_);
+        iterator_subset(subset_info_2d* si_,c_info ptr_,int i_,int j_);
         /** Initializes the iterator to be a copy of another.
          * \param[in] ci_ a reference to an existing iterator. */
         iterator_subset(const iterator_subset& ci_) : ptr(ci_.ptr),
@@ -194,16 +196,19 @@ class container_base_2d::iterator_subset : public std::iterator<std::random_acce
         iterator_subset& operator--();
         iterator_subset operator--(int);
         difference_type operator-(const iterator_subset& rhs) const;
+        iterator_subset& operator+=(const difference_type& incre);
+        iterator_subset& operator-=(const difference_type& decre);
+        c_info& operator[](const difference_type& incre) const;
         /** Calculates a new iterator by adding elements.
          * \param[in] incre the number of elements to increment by. */
         inline iterator_subset operator+(const difference_type& incre) const {
-            iterator tmp(*this);
+            iterator_subset tmp(*this);
             return tmp+=incre;
         }
         /** Calculates a new iterator by subtracting elements.
          * \param[in] decre the number of elements to decrement by. */
         inline iterator_subset operator-(const difference_type& decre) const {
-            iterator tmp(*this);
+            iterator_subset tmp(*this);
             return tmp-=decre;
         }
         /** Evaluates if this iterator is greater than another.
@@ -230,9 +235,6 @@ class container_base_2d::iterator_subset : public std::iterator<std::random_acce
         inline bool operator<=(const iterator_subset& rhs) const {
             return j<rhs.j||(j==rhs.j&&(i<rhs.i||(i==rhs.i&&ptr.q<=rhs.ptr.q)));
         }
-        iterator_subset& operator+=(const difference_type& incre);
-        iterator_subset& operator-=(const difference_type& decre);
-        c_info& operator[](const difference_type& incre) const;
         friend class container_base_2d;
 };
 
@@ -331,5 +333,7 @@ class container_base_2d::iterator_order : public std::iterator<std::random_acces
         c_info& operator[](const difference_type& incre) const;
         friend class container_base_2d;
 };
+
+}
 
 #endif
