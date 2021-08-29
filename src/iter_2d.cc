@@ -617,7 +617,8 @@ container_base_2d::iterator_order& container_base_2d::iterator_order::operator-=
  * \param[in] incre the number of elements to offset by. */
 c_info& container_base_2d::iterator_order::operator[](const difference_type& incre) const {
     int ci_n=ptr_n+incre;
-    return c_info(cp_iter[2*ci_n],cp_iter[2*ci_n+1]);
+    c_info ci(cp_iter[2*ci_n],cp_iter[2*ci_n+1]);
+    return ci;
 }
 
 /** Returns an iterator pointing to the first particle in the container.

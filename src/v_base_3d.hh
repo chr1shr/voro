@@ -51,7 +51,7 @@ class voro_base_3d {
          * by the initialize_radii() routine. */
         double *mrad;
         /** The pre-computed block worklists. */
-        static const unsigned int wl[wl_seq_length*wl_hgridcu];
+        static const unsigned int wl[wl_seq_length_3d*wl_hgridcu_3d];
         voro_base_3d(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_);
         ~voro_base_3d() {delete [] mrad;}
     protected:

@@ -281,19 +281,6 @@ class container_2d : public container_base_2d, public radius_mono {
             fclose(fp);
         }
         bool find_voronoi_cell(double x,double y,double &rx,double &ry,int &pid);
-        /** Computes the Voronoi cell for a particle currently being referenced
-         * by a loop class.
-         * \param[out] c a Voronoi cell class in which to store the computed
-         *               cell.
-         * \param[in] cli the iterator class to use.
-         * \return True if the cell was computed. If the cell cannot be
-         * computed, if it is removed entirely by a wall or boundary condition,
-         * then the routine returns false. */
-        template<class v_cell_2d,class c_iter_2d>
-        inline bool compute_cell(v_cell_2d &c,c_iter_2d &cli) {
-            int ij=cli->ijk;
-            return vc.compute_cell(c,ij,cli->q,ij%nx,ij/nx);
-        }
         /** Computes the Voronoi cell for given particle.
          * \param[out] c a Voronoi cell class in which to store the computed
          *               cell.
@@ -304,8 +291,19 @@ class container_2d : public container_base_2d, public radius_mono {
          * then the routine returns false. */
         template<class v_cell_2d>
         inline bool compute_cell(v_cell_2d &c,int ij,int q) {
-            int j=ij/nx,i=ij-j*nx;
-            return vc.compute_cell(c,ij,q,i,j);
+            return vc.compute_cell(c,ij,q,ij%nx,ij/nx);
+        }
+        /** Computes the Voronoi cell for a particle currently being referenced
+         * by a loop class.
+         * \param[out] c a Voronoi cell class in which to store the computed
+         *               cell.
+         * \param[in] cli the iterator class to use.
+         * \return True if the cell was computed. If the cell cannot be
+         * computed, if it is removed entirely by a wall or boundary condition,
+         * then the routine returns false. */
+        template<class v_cell_2d,class c_iter_2d>
+        inline bool compute_cell(v_cell_2d &c,c_iter_2d &cli) {
+            return compute_cell(c,cli->ijk,cli->q);
         }
     private:
         voro_compute_2d<container_2d> vc;
@@ -395,19 +393,6 @@ class container_poly_2d : public container_base_2d, public radius_poly {
             print_custom(format,fp);
             fclose(fp);
         }
-        /** Computes the Voronoi cell for a particle currently being referenced
-         * by a loop class.
-         * \param[out] c a Voronoi cell class in which to store the computed
-         *               cell.
-         * \param[in] vl the loop class to use.
-         * \return True if the cell was computed. If the cell cannot be
-         * computed, if it is removed entirely by a wall or boundary condition,
-         * then the routine returns false. */
-        template<class v_cell_2d,class c_iter_2d>
-        inline bool compute_cell(v_cell_2d &c,c_iter_2d &cli) {
-            int ij=cli->ijk;
-            return vc.compute_cell(c,ij,cli->q,ij%nx,ij/nx);
-        }
         /** Computes the Voronoi cell for given particle.
          * \param[out] c a Voronoi cell class in which to store the computed
          *               cell.
@@ -418,8 +403,19 @@ class container_poly_2d : public container_base_2d, public radius_poly {
          * then the routine returns false. */
         template<class v_cell_2d>
         inline bool compute_cell(v_cell_2d &c,int ij,int q) {
-            int j=ij/nx,i=ij-j*nx;
-            return vc.compute_cell(c,ij,q,i,j);
+            return vc.compute_cell(c,ij,q,ij%nx,ij/nx);
+        }
+        /** Computes the Voronoi cell for a particle currently being referenced
+         * by a loop class.
+         * \param[out] c a Voronoi cell class in which to store the computed
+         *               cell.
+         * \param[in] vl the loop class to use.
+         * \return True if the cell was computed. If the cell cannot be
+         * computed, if it is removed entirely by a wall or boundary condition,
+         * then the routine returns false. */
+        template<class v_cell_2d,class c_iter_2d>
+        inline bool compute_cell(v_cell_2d &c,c_iter_2d &cli) {
+            return compute_cell(c,cli->ijk,cli->q);
         }
         bool find_voronoi_cell(double x,double y,double &rx,double &ry,int &pid);
     private:

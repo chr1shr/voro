@@ -13,6 +13,14 @@
 
 namespace voro {
 
+/** The types of geometrical region to loop over. */
+enum subset_mode {
+    sphere,
+    circle,
+    box,
+    no_check
+};
+
 struct c_info {
     int ijk;
     int q;

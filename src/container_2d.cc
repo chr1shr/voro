@@ -411,7 +411,7 @@ void container_2d::draw_particles(FILE *fp) {
 void container_2d::draw_particles_pov(FILE *fp) {
     for(iterator cli=begin();cli<end();cli++) {
         int ij=cli->ijk,q=cli->q;
-        double *pp=p[ijk]+2*q;
+        double *pp=p[ij]+2*q;
         fprintf(fp,"// id %d\nsphere{<%g,%g,0>,s}\n",id[ij][q],*pp,pp[1]);
     }
 }

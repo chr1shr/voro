@@ -461,86 +461,6 @@ void container_triclinic_poly::clear() {
     max_radius=0;
 }
 
-/** Computes all the Voronoi cells and saves customized information about them.
- * \param[in] format the custom output string to use.
- * \param[in] fp a file handle to write to. */
-void container_triclinic::print_custom(const char *format,FILE *fp) {
-    c_loop_all_periodic vl(*this);
-    print_custom(vl,format,fp);
-}
-
-/** Computes all the Voronoi cells and saves customized
- * information about them.
- * \param[in] format the custom output string to use.
- * \param[in] fp a file handle to write to. */
-void container_triclinic_poly::print_custom(const char *format,FILE *fp) {
-    c_loop_all_periodic vl(*this);
-    print_custom(vl,format,fp);
-}
-
-/** Computes all the Voronoi cells and saves customized information about them.
- * \param[in] format the custom output string to use.
- * \param[in] filename the name of the file to write to. */
-void container_triclinic::print_custom(const char *format,const char *filename) {
-    FILE *fp=safe_fopen(filename,"w");
-    print_custom(format,fp);
-    fclose(fp);
-}
-
-/** Computes all the Voronoi cells and saves customized information about them
- * \param[in] format the custom output string to use.
- * \param[in] filename the name of the file to write to. */
-void container_triclinic_poly::print_custom(const char *format,const char *filename) {
-    FILE *fp=safe_fopen(filename,"w");
-    print_custom(format,fp);
-    fclose(fp);
-}
-
-/** Computes all of the Voronoi cells in the container, but does nothing with
- * the output. It is useful for measuring the pure computation time of the
- * Voronoi algorithm, without any additional calculations such as volume
- * evaluation or cell output. */
-void container_triclinic::compute_all_cells() {
-    voronoicell c(*this);
-    c_loop_all_periodic vl(*this);
-    if(vl.start()) do compute_cell(c,vl);
-    while(vl.inc());
-}
-
-/** Computes all of the Voronoi cells in the container, but does nothing with
- * the output. It is useful for measuring the pure computation time of the
- * Voronoi algorithm, without any additional calculations such as
- * volume evaluation or cell output. */
-void container_triclinic_poly::compute_all_cells() {
-    voronoicell c(*this);
-    c_loop_all_periodic vl(*this);
-    if(vl.start()) do compute_cell(c,vl);while(vl.inc());
-}
-
-/** Calculates all of the Voronoi cells and sums their volumes. In most cases
- * without walls, the sum of the Voronoi cell volumes should equal the volume
- * of the container to numerical precision.
- * \return The sum of all of the computed Voronoi volumes. */
-double container_triclinic::sum_cell_volumes() {
-    voronoicell c(*this);
-    double vol=0;
-    c_loop_all_periodic vl(*this);
-    if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
-    return vol;
-}
-
-/** Calculates all of the Voronoi cells and sums their volumes. In most cases
- * without walls, the sum of the Voronoi cell volumes should equal the volume
- * of the container to numerical precision.
- * \return The sum of all of the computed Voronoi volumes. */
-double container_triclinic_poly::sum_cell_volumes() {
-    voronoicell c(*this);
-    double vol=0;
-    c_loop_all_periodic vl(*this);
-    if(vl.start()) do if(compute_cell(c,vl)) vol+=c.volume();while(vl.inc());
-    return vol;
-}
-
 /** This routine creates all periodic images of the particles. It is meant for
  * diagnostic purposes only, since usually periodic images are dynamically
  * created in when they are referenced. */
@@ -767,6 +687,182 @@ void container_triclinic_base::put_image(int reg,int fijk,int l,double dx,double
     *p1=*p2+dz;
     if(ps==4) *(++p1)=*(++p2);
     id[reg][co[reg]++]=id[fijk][l];
+}
+
+/** Dumps particle IDs and positions to a file.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic::draw_particles(FILE *fp) {
+    for(iterator cli=begin();cli<end();cli++) {
+        int ijk=cli->ijk,q=cli->q;
+        double *pp=p[ijk]+3*q;
+        fprintf(fp,"%d %g %g %g\n",id[ijk][q],*pp,pp[1],pp[2]);
+    }
+}
+
+/** Dumps particle positions in POV-Ray format.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic::draw_particles_pov(FILE *fp) {
+    double *pp;
+    for(iterator cli=begin();cli<end();cli++) {
+        int ijk=cli->ijk,q=cli->q;
+        double *pp=p[ijk]+3*q;
+        fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,s}\n",
+                id[ijk][q],*pp,pp[1],pp[2]);
+    }
+}
+
+/** Computes Voronoi cells and saves the output in Gnuplot format.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic::draw_cells_gnuplot(FILE *fp) {
+    voronoicell_3d c(*this);
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+        double *pp=p[cli->ijk]+3*cli->q;
+        c.draw_gnuplot(*pp,pp[1],pp[2],fp);
+    }
+}
+
+/** Computes all Voronoi cells and saves the output in POV-Ray format.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic::draw_cells_pov(FILE *fp) {
+    voronoicell_3d c(*this);
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+        int ijk=cli->ijk,q=cli->q;
+        double *pp=p[ijk]+3*q;
+        fprintf(fp,"// cell %d\n",id[ijk][q]);
+        c.draw_pov(*pp,pp[1],pp[2],fp);
+    }
+}
+
+/** Computes the Voronoi cells and saves customized information about
+ * them.
+ * \param[in] vl the loop class to use.
+ * \param[in] format the custom output string to use.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic::print_custom(const char *format,FILE *fp) {
+    int ij,q;double *pp;
+    if(voro_contains_neighbor(format)) {
+        voronoicell_neighbor_3d c(*this);
+        for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+            ij=cli->ijk;q=cli->q;
+            pp=p[ij]+3*q;
+            c.output_custom(format,id[ij][q],*pp,pp[1],pp[2],default_radius,fp);
+        }
+    } else {
+        voronoicell_3d c(*this);
+        for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+            ij=cli->ijk;q=cli->q;
+            pp=p[ij]+3*q;
+            c.output_custom(format,id[ij][q],*pp,pp[1],pp[2],default_radius,fp);
+        }
+    }
+}
+
+/** Computes all of the Voronoi cells in the container, but does nothing with
+ * the output. It is useful for measuring the pure computation time of the
+ * Voronoi algorithm, without any additional calculations such as volume
+ * evaluation or cell output. */
+void container_triclinic::compute_all_cells() {
+    voronoicell_3d c(*this);
+    for(iterator cli=begin();cli<end();cli++) compute_cell(c,cli);
+}
+
+/** Calculates all of the Voronoi cells and sums their volumes. In most cases
+ * without walls, the sum of the Voronoi cell volumes should equal the volume
+ * of the container to numerical precision.
+ * \return The sum of all of the computed Voronoi volumes. */
+double container_triclinic::sum_cell_volumes() {
+    voronoicell_3d c(*this);
+    double vol=0;
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) vol+=c.volume();
+    return vol;
+}
+
+/** Dumps particle IDs and positions to a file.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic_poly::draw_particles(FILE *fp) {
+    for(iterator cli=begin();cli<end();cli++) {
+        int ijk=cli->ijk,q=cli->q;
+        double *pp=p[ijk]+4*q;
+        fprintf(fp,"%d %g %g %g %g\n",id[ijk][q],*pp,pp[1],pp[2],pp[3]);
+    }
+}
+
+/** Dumps particle positions in POV-Ray format.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic_poly::draw_particles_pov(FILE *fp) {
+    double *pp;
+    for(iterator cli=begin();cli<end();cli++) {
+        int ijk=cli->ijk,q=cli->q;
+        double *pp=p[ijk]+3*q;
+        fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,%g}\n",
+                id[ijk][q],*pp,pp[1],pp[2],pp[3]);
+    }
+}
+
+/** Computes Voronoi cells and saves the output in Gnuplot format.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic_poly::draw_cells_gnuplot(FILE *fp) {
+    voronoicell_3d c(*this);
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+        double *pp=p[cli->ijk]+4*cli->q;
+        c.draw_gnuplot(*pp,pp[1],pp[2],fp);
+    }
+}
+
+/** Computes all Voronoi cells and saves the output in POV-Ray format.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic_poly::draw_cells_pov(FILE *fp) {
+    voronoicell_3d c(*this);
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+        int ijk=cli->ijk,q=cli->q;
+        double *pp=p[ijk]+4*q;
+        fprintf(fp,"// cell %d\n",id[ijk][q]);
+        c.draw_pov(*pp,pp[1],pp[2],fp);
+    }
+}
+
+/** Computes the Voronoi cells and saves customized information about
+ * them.
+ * \param[in] vl the loop class to use.
+ * \param[in] format the custom output string to use.
+ * \param[in] fp a file handle to write to. */
+void container_triclinic_poly::print_custom(const char *format,FILE *fp) {
+    int ij,q;double *pp;
+    if(voro_contains_neighbor(format)) {
+        voronoicell_neighbor_3d c(*this);
+        for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+            ij=cli->ijk;q=cli->q;
+            pp=p[ij]+4*q;
+            c.output_custom(format,id[ij][q],*pp,pp[1],pp[2],pp[3],fp);
+        }
+    } else {
+        voronoicell_3d c(*this);
+        for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
+            ij=cli->ijk;q=cli->q;
+            pp=p[ij]+4*q;
+            c.output_custom(format,id[ij][q],*pp,pp[1],pp[2],pp[3],fp);
+        }
+    }
+}
+
+/** Computes all of the Voronoi cells in the container, but does nothing with
+ * the output. It is useful for measuring the pure computation time of the
+ * Voronoi algorithm, without any additional calculations such as volume
+ * evaluation or cell output. */
+void container_triclinic_poly::compute_all_cells() {
+    voronoicell_3d c(*this);
+    for(iterator cli=begin();cli<end();cli++) compute_cell(c,cli);
+}
+
+/** Calculates all of the Voronoi cells and sums their volumes. In most cases
+ * without walls, the sum of the Voronoi cell volumes should equal the volume
+ * of the container to numerical precision.
+ * \return The sum of all of the computed Voronoi volumes. */
+double container_triclinic_poly::sum_cell_volumes() {
+    voronoicell_3d c(*this);
+    double vol=0;
+    for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) vol+=c.volume();
+    return vol;
 }
 
 }

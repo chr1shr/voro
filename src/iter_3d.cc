@@ -352,7 +352,7 @@ void container_base_3d::iterator_subset::previous_block_iter(int &ijk_) {
  * \param[in] si_ a pointer to the information about the particle subset to
  *                consider. */
 container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_)
-    : cl_iter(si_), k(cl_iter->ak), j(cl_iter->aj), i(cl_iter->ai) {
+    : cl_iter(si_), i(cl_iter->ai), j(cl_iter->aj), k(cl_iter->ak) {
 
     ci=cl_iter->step_mod(i,cl_iter->nx);
     cj=cl_iter->step_mod(j,cl_iter->ny);
@@ -386,7 +386,7 @@ container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_)
  * \param[in] (ptr_,i_,j_,k_) information about the particle for the iterator
  *                            to point to. */
 container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_,c_info ptr_,int i_,int j_,int k_)
-    : cl_iter(si_), ptr(ptr_), i(i_), j(j_), k(k_) {
+    : ptr(ptr_), cl_iter(si_), i(i_), j(j_), k(k_) {
     ci=cl_iter->step_mod(i,cl_iter->nx);
     cj=cl_iter->step_mod(j,cl_iter->ny);
     ck=cl_iter->step_mod(k,cl_iter->nz);
@@ -694,7 +694,8 @@ container_base_3d::iterator_order& container_base_3d::iterator_order::operator-=
  * \param[in] incre the number of elements to offset by. */
 c_info& container_base_3d::iterator_order::operator[](const difference_type& incre) const {
     int ci_n=ptr_n+incre;
-    return c_info(cp_iter[2*ci_n],cp_iter[2*ci_n+1]);
+    c_info ci(cp_iter[2*ci_n],cp_iter[2*ci_n+1]);
+    return ci;
 }
 
 /** Returns an iterator pointing to the first particle in the container.

@@ -35,7 +35,7 @@ class container_base_3d::iterator : public std::iterator<std::random_access_iter
         /** Initializes the iterator.
          * \param[in] co_ a pointer to the particle count array.
          * \param[in] ptr_ information on the particle to point to. */
-        iterator(int* _co,c_info _ptr) : ptr(ptr_), co(co_) {}
+        iterator(int* co_,c_info ptr_) : ptr(ptr_), co(co_) {}
         /** Initializes the iterator as a copy of another.
          * \param[in] ci a reference to an existing iterator. */
         iterator(const iterator& ci) : ptr(ci.ptr), co(ci.co) {}
@@ -115,12 +115,6 @@ class container_base_3d::iterator : public std::iterator<std::random_access_iter
 
 class subset_info_3d {
     public:
-        /** The types of geometrical region to loop over. */
-        enum subset_mode {
-            sphere,
-            box,
-            no_check
-        };
         friend class container_base_3d::iterator_subset;
         friend class container_base_3d;
         template<class c_class>
@@ -128,8 +122,8 @@ class subset_info_3d {
             nxy(con.nxy), nxyz(con.nxyz), ps(con.ps), p(con.p), id(con.id),
             co(con.co), ax(con.ax), ay(con.ay), az(con.az), sx(con.bx-ax),
             sy(con.by-ay), sz(con.bz-az), xsp(con.xsp), ysp(con.ysp),
-            zsp(con.zsp), x_prd(con.x_prd), y_prd(con.y_prd), z_prd(con.z_prd)
-        ~subset_info_3d(){}
+            zsp(con.zsp), x_prd(con.x_prd), y_prd(con.y_prd), z_prd(con.z_prd) {}
+        ~subset_info_3d() {}
         subset_mode mode;
         int nx;
         int ny;
@@ -167,6 +161,7 @@ class subset_info_3d {
         inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
         inline int step_int(double a) {return a<0?int(a)-1:int(a);}
         void setup_common();
+        void previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_,int &cj_,int &ck_,double &px_,double &py_,double &pz_);
         bool out_of_bounds(int ijk_,int q_,double px_,double py_,double pz_);
 };
 
@@ -177,8 +172,8 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
         c_info ptr;
         subset_info_3d* cl_iter;
+        int i,j,k,ci,cj,ck;
         double px,py,pz;
-        int ci,cj,ck,i,j,k;
         /** Computes whether the current point is out of bounds, relative to the
          * current loop setup.
          * \param[in] ijk_ the current block.

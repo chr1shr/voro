@@ -101,71 +101,6 @@ void particle_list4::put(int n,double x,double y,double z,double r) {
     *(ch_p++)=x;*(ch_p++)=y;*(ch_p++)=z;*(ch_p++)=r;
 }
 
-/** Transfers the particles stored within the class to a container class.
- * \param[in] con the container class to transfer to. */
-void particle_list::setup(container &con) {
-    int **c_id=pre_id,*idp,*ide,n;
-    double **c_p=pre_p,*pp,x,y,z;
-    while(c_id<end_id) {
-        idp=*(c_id++);ide=idp+particle_list_chunk_size;
-        pp=*(c_p++);
-        while(idp<ide) {
-            n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);
-            con.put(n,x,y,z);
-        }
-    }
-    idp=*c_id;
-    pp=*c_p;
-    while(idp<ch_id) {
-        n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);
-        con.put(n,x,y,z);
-    }
-}
-
-/** Transfers the particles stored within the class to a container_poly class.
- * \param[in] con the container_poly class to transfer to. */
-void particle_list_poly::setup(container_poly &con) {
-    int **c_id=pre_id,*idp,*ide,n;
-    double **c_p=pre_p,*pp,x,y,z,r;
-    while(c_id<end_id) {
-        idp=*(c_id++);ide=idp+particle_list_chunk_size;
-        pp=*(c_p++);
-        while(idp<ide) {
-            n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);r=*(pp++);
-            con.put(n,x,y,z,r);
-        }
-    }
-    idp=*c_id;
-    pp=*c_p;
-    while(idp<ch_id) {
-        n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);r=*(pp++);
-        con.put(n,x,y,z,r);
-    }
-}
-
-/** Transfers the particles stored within the class to a container class, also
- * recording the order in which particles were stored.
- * \param[in] vo the ordering class to use.
- * \param[in] con the container class to transfer to. */
-void particle_list::setup(particle_order &vo,container &con) {
-    int **c_id=pre_id,*idp,*ide,n;
-    double **c_p=pre_p,*pp,x,y,z;
-    while(c_id<end_id) {
-        idp=*(c_id++);ide=idp+particle_list_chunk_size;
-        pp=*(c_p++);
-        while(idp<ide) {
-            n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);
-            con.put(vo,n,x,y,z);
-        }
-    }
-    idp=*c_id;
-    pp=*c_p;
-    while(idp<ch_id) {
-        n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);
-        con.put(vo,n,x,y,z);
-    }
-}
-
 /** Transfers the particles stored to a container class, also recording the
  * order in which particles were stored.
  * \param[in] vo the ordering class to use.
@@ -282,11 +217,11 @@ template void particle_list3::import(container_poly_2d&);
 template void particle_list3::import(particle_order&,container_poly_2d&);
 template void particle_list3::import(container_3d&);
 template void particle_list3::import(particle_order&,container_3d&);
-template void particle_list3::import(container_tri&);
-template void particle_list3::import(particle_order&,container_tri&);
+template void particle_list3::import(container_triclinic&);
+template void particle_list3::import(particle_order&,container_triclinic&);
 template void particle_list4::import(container_poly_3d&);
 template void particle_list4::import(particle_order&,container_poly_3d&);
 template void particle_list4::import(container_poly_tri&);
-template void particle_list4::import(particle_order&,container_poly_tri&);
+template void particle_list4::import(particle_order&,container_triclinic_poly&);
 
 }

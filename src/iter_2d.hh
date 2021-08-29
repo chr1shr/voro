@@ -13,13 +13,6 @@
 
 namespace voro {
 
-/** The types of geometrical region to loop over. */
-enum subset_mode {
-    circle,
-    box,
-    no_check
-};
-
 class container_base_2d::iterator : public std::iterator<std::random_access_iterator_tag,c_info,int> {
     public:
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;

@@ -9,10 +9,13 @@
 
 #include <cstdio>
 
-#include "c_loops.hh"
-#include "container_3d.hh"
+#include "config.hh"
+#include "common.hh"
+#include "particle_order.hh"
 
 namespace voro {
+
+class container_2d;
 
 /** \brief A class for storing an arbitrary number of particles, prior to
  * setting up a container geometry.
@@ -25,8 +28,8 @@ class particle_list_base {
     public:
         void guess_optimal(double lx,double ly,int &nx,int &ny);
         void guess_optimal(double lx,double ly,double lz,int &nx,int &ny,int &nz);
-        particle_list()
-        ~particle_list();
+        particle_list_base(int ps_);
+        ~particle_list_base();
         /** Calculates and returns the total number of particles stored within
          * the class.
          * \return The number of particles. */
@@ -117,7 +120,7 @@ class particle_list3 : public particle_list_base {
  * The particle_list4 class is an extension of the particle_list_base class for
  * storing particles with four floating number records, corresponding to 3D
  * particles with additional radius information. */
-class particle_list3 : public particle_list_base {
+class particle_list4 : public particle_list_base {
     public:
         particle_list4() : particle_list_base(4) {}
         void put(int n,double x,double y,double z,double r);
