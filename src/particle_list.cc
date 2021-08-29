@@ -74,10 +74,10 @@ void particle_list_base::guess_optimal(double lx,double ly,double lz,int &nx,int
  * necessary.
  * \param[in] n the numerical ID of the inserted particle.
  * \param[in] (x,y) the position vector of the inserted particle. */
-void particle_list2::put(int n,double x,double y,double c) {
+void particle_list2::put(int n,double x,double y) {
     if(ch_id==e_id) new_chunk();
     *(ch_id++)=n;
-    *(ch_p++)=x;*(ch_p++)=y;*(ch_p++)=c;
+    *(ch_p++)=x;*(ch_p++)=y;
 }
 
 /** Stores a particle ID and position, allocating a new memory chunk if
@@ -101,8 +101,54 @@ void particle_list4::put(int n,double x,double y,double z,double r) {
     *(ch_p++)=x;*(ch_p++)=y;*(ch_p++)=z;*(ch_p++)=r;
 }
 
-/** Transfers the particles stored to a container class, also recording the
+/** Transfers the stored particles to a container class.
+ * \param[in] vo the ordering class to use.
+ * \param[in] con the container class to transfer to. */
+template<class con_class>
+void particle_list3::setup(con_class &con) {
+    int **c_id=pre_id,*idp,*ide,n;
+    double **c_p=pre_p,*pp,x,y,c;
+    while(c_id<end_id) {
+        idp=*(c_id++);ide=idp+particle_list_chunk_size;
+        pp=*(c_p++);
+        while(idp<ide) {
+            n=*(idp++);x=*(pp++);y=*(pp++);c=*(pp++);
+            con.put(n,x,y,c);
+        }
+    }
+    idp=*c_id;
+    pp=*c_p;
+    while(idp<ch_id) {
+        n=*(idp++);x=*(pp++);y=*(pp++);c=*(pp++);
+        con.put(n,x,y,c);
+    }
+}
+
+/** Transfers the stored particles to a container class, also recording the
  * order in which particles were stored.
+ * \param[in] vo the ordering class to use.
+ * \param[in] con the container class to transfer to. */
+template<class con_class>
+void particle_list3::setup(particle_order &vo,con_class &con) {
+    int **c_id=pre_id,*idp,*ide,n;
+    double **c_p=pre_p,*pp,x,y,c;
+    while(c_id<end_id) {
+        idp=*(c_id++);ide=idp+particle_list_chunk_size;
+        pp=*(c_p++);
+        while(idp<ide) {
+            n=*(idp++);x=*(pp++);y=*(pp++);c=*(pp++);
+            con.put(vo,n,x,y,c);
+        }
+    }
+    idp=*c_id;
+    pp=*c_p;
+    while(idp<ch_id) {
+        n=*(idp++);x=*(pp++);y=*(pp++);c=*(pp++);
+        con.put(vo,n,x,y,c);
+    }
+}
+
+/** Transfers the stored particles to a container class.
  * \param[in] vo the ordering class to use.
  * \param[in] con the container class to transfer to. */
 template<class con_class>
@@ -114,18 +160,18 @@ void particle_list4::setup(con_class &con) {
         pp=*(c_p++);
         while(idp<ide) {
             n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);r=*(pp++);
-            con.put(vo,n,x,y,z,r);
+            con.put(n,x,y,z,r);
         }
     }
     idp=*c_id;
     pp=*c_p;
     while(idp<ch_id) {
         n=*(idp++);x=*(pp++);y=*(pp++);z=*(pp++);r=*(pp++);
-        con.put(vo,n,x,y,z,r);
+        con.put(n,x,y,z,r);
     }
 }
 
-/** Transfers the particles stored to a container class, also recording the
+/** Transfers the stored particles to a container class, also recording the
  * order in which particles were stored.
  * \param[in] vo the ordering class to use.
  * \param[in] con the container class to transfer to. */
@@ -155,7 +201,7 @@ void particle_list4::setup(particle_order &vo,con_class &con) {
  * \param[in] fp the file handle to read from. */
 void particle_list2::import(FILE *fp) {
     int i,j;
-    double x,y,z;
+    double x,y;
     while((j=fscanf(fp,"%d %lg %lg",&i,&x,&y))==3) put(i,x,y);
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
@@ -168,7 +214,7 @@ void particle_list2::import(FILE *fp) {
  * \param[in] fp the file handle to read from. */
 void particle_list3::import(FILE *fp) {
     int i,j;
-    double x,y,z;
+    double x,y,c;
     while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&c))==4) put(i,x,y,c);
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
@@ -213,15 +259,15 @@ void particle_list_base::extend_chunk_index() {
 }
 
 // Explicit instantiation
-template void particle_list3::import(container_poly_2d&);
-template void particle_list3::import(particle_order&,container_poly_2d&);
-template void particle_list3::import(container_3d&);
-template void particle_list3::import(particle_order&,container_3d&);
-template void particle_list3::import(container_triclinic&);
-template void particle_list3::import(particle_order&,container_triclinic&);
-template void particle_list4::import(container_poly_3d&);
-template void particle_list4::import(particle_order&,container_poly_3d&);
-template void particle_list4::import(container_poly_tri&);
-template void particle_list4::import(particle_order&,container_triclinic_poly&);
+template void particle_list3::setup(container_poly_2d&);
+template void particle_list3::setup(particle_order&,container_poly_2d&);
+template void particle_list3::setup(container_3d&);
+template void particle_list3::setup(particle_order&,container_3d&);
+template void particle_list3::setup(container_triclinic&);
+template void particle_list3::setup(particle_order&,container_triclinic&);
+template void particle_list4::setup(container_poly_3d&);
+template void particle_list4::setup(particle_order&,container_poly_3d&);
+template void particle_list4::setup(container_triclinic_poly&);
+template void particle_list4::setup(particle_order&,container_triclinic_poly&);
 
 }

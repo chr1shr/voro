@@ -33,7 +33,7 @@ const int init_xsearch_size=32;
 const int init_wall_size=32;
 /** The default initial size for the ordering class. */
 const int init_ordering_size=4096;
-/** The initial size of the pre_container chunk index. */
+/** The initial size of the particle_list chunk index. */
 const int init_chunk_size=256;
 
 // If the initial memory is too small, the program dynamically allocates more.
@@ -56,11 +56,11 @@ const int max_particle_memory=16777216;
 const int max_wall_size=2048;
 /** The maximum size for the ordering class. */
 const int max_ordering_size=67108864;
-/** The maximum size for the pre_container chunk index. */
+/** The maximum size for the particle_list chunk index. */
 const int max_chunk_size=65536;
 
-/** The chunk size in the pre_container classes. */
-const int pre_container_chunk_size=4096;
+/** The chunk size in the particle_list classes. */
+const int particle_list_chunk_size=4096;
 
 #ifndef VOROPP_VERBOSE
 /** Voro++ can print a number of different status and debugging messages to
@@ -96,7 +96,7 @@ const double optimal_particles_2d=4.2;
 
 /** A guess for the optimal number of particles per block in three-dimensional
  * computations, used to set up the container grid. */
-const double optimal_particles=5.6;
+const double optimal_particles_3d=5.6;
 
 /** If this is set to 1, then the code reports any instances of particles being
  * put outside of the container geometry. */

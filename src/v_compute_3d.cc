@@ -84,7 +84,7 @@ void voro_compute_3d<c_class>::find_voronoi_cell(double x,double y,double z,int 
     // of which subregion the particle is within.
     unsigned int m1,m2;
     con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
-    di=int(fx*xsp*wl_fgrid);dj=int(fy*ysp*wl_fgrid);dk=int(fz*zsp*wl_fgrid);
+    di=int(fx*xsp*wl_fgrid_3d);dj=int(fy*ysp*wl_fgrid_3d);dk=int(fz*zsp*wl_fgrid_3d);
 
     // The indices (di,dj,dk) tell us which worklist to use, to test the blocks
     // in the optimal order. But we only store worklists for the eighth of the
@@ -93,17 +93,17 @@ void voro_compute_3d<c_class>::find_voronoi_cell(double x,double y,double z,int 
     // for these cases, by reflecting high values of di, dj, and dk. For these
     // cases, a mask is constructed in m1 and m2 which is used to flip the
     // worklist information when it is loaded.
-    if(di>=wl_hgrid) {
+    if(di>=wl_hgrid_3d) {
         mxs=boxx-fx;
-        m1=127+(3<<21);m2=1+(1<<21);di=wl_fgrid-1-di;if(di<0) di=0;
+        m1=127+(3<<21);m2=1+(1<<21);di=wl_fgrid_3d-1-di;if(di<0) di=0;
     } else {m1=m2=0;mxs=fx;}
-    if(dj>=wl_hgrid) {
+    if(dj>=wl_hgrid_3d) {
         mys=boxy-fy;
-        m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=wl_fgrid-1-dj;if(dj<0) dj=0;
+        m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=wl_fgrid_3d-1-dj;if(dj<0) dj=0;
     } else mys=fy;
-    if(dk>=wl_hgrid) {
+    if(dk>=wl_hgrid_3d) {
         mzs=boxz-fz;
-        m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=wl_fgrid-1-dk;if(dk<0) dk=0;
+        m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=wl_fgrid_3d-1-dk;if(dk<0) dk=0;
     } else mzs=fz;
 
     // Do a quick test to account for the case when the minimum radius is small
@@ -113,9 +113,9 @@ void voro_compute_3d<c_class>::find_voronoi_cell(double x,double y,double z,int 
 
     // Now compute which worklist we are going to use, and set radp and e to
     // point at the right offsets
-    ijk=di+wl_hgrid*(dj+wl_hgrid*dk);
-    radp=mrad+ijk*wl_seq_length;
-    e=(const_cast<unsigned int*> (wl))+ijk*wl_seq_length;
+    ijk=di+wl_hgrid_3d*(dj+wl_hgrid_3d*dk);
+    radp=mrad+ijk*wl_seq_length_3d;
+    e=(const_cast<unsigned int*> (wl))+ijk*wl_seq_length_3d;
 
     // Read in how many items in the worklist can be tested without having to
     // worry about writing to the mask
@@ -162,7 +162,7 @@ void voro_compute_3d<c_class>::find_voronoi_cell(double x,double y,double z,int 
     if(mv==0) {reset_mask();mv=1;}
     int *qu_s=qu,*qu_e=qu;
 
-    while(g<wl_seq_length-1) {
+    while(g<wl_seq_length_3d-1) {
 
         // If mrs is less than the minimum distance to any untested block, then
         // we are done
@@ -327,7 +327,7 @@ bool voro_compute_3d<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int c
     // of which subregion the particle is within.
     unsigned int m1,m2;
     con.frac_pos(x,y,z,ci,cj,ck,fx,fy,fz);
-    di=int(fx*xsp*wl_fgrid);dj=int(fy*ysp*wl_fgrid);dk=int(fz*zsp*wl_fgrid);
+    di=int(fx*xsp*wl_fgrid_3d);dj=int(fy*ysp*wl_fgrid_3d);dk=int(fz*zsp*wl_fgrid_3d);
 
     // The indices (di,dj,dk) tell us which worklist to use, to test the blocks
     // in the optimal order. But we only store worklists for the eighth of the
@@ -336,25 +336,25 @@ bool voro_compute_3d<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int c
     // for these cases, by reflecting high values of di, dj, and dk. For these
     // cases, a mask is constructed in m1 and m2 which is used to flip the
     // worklist information when it is loaded.
-    if(di>=wl_hgrid) {
+    if(di>=wl_hgrid_3d) {
         gxs=fx;
-        m1=127+(3<<21);m2=1+(1<<21);di=wl_fgrid-1-di;if(di<0) di=0;
+        m1=127+(3<<21);m2=1+(1<<21);di=wl_fgrid_3d-1-di;if(di<0) di=0;
     } else {m1=m2=0;gxs=boxx-fx;}
-    if(dj>=wl_hgrid) {
+    if(dj>=wl_hgrid_3d) {
         gys=fy;
-        m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=wl_fgrid-1-dj;if(dj<0) dj=0;
+        m1|=(127<<7)+(3<<24);m2|=(1<<7)+(1<<24);dj=wl_fgrid_3d-1-dj;if(dj<0) dj=0;
     } else gys=boxy-fy;
-    if(dk>=wl_hgrid) {
+    if(dk>=wl_hgrid_3d) {
         gzs=fz;
-        m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=wl_fgrid-1-dk;if(dk<0) dk=0;
+        m1|=(127<<14)+(3<<27);m2|=(1<<14)+(1<<27);dk=wl_fgrid_3d-1-dk;if(dk<0) dk=0;
     } else gzs=boxz-fz;
     gxs*=gxs;gys*=gys;gzs*=gzs;
 
     // Now compute which worklist we are going to use, and set radp and e to
     // point at the right offsets
-    ijk=di+wl_hgrid*(dj+wl_hgrid*dk);
-    radp=mrad+ijk*wl_seq_length;
-    e=(const_cast<unsigned int*> (wl))+ijk*wl_seq_length;
+    ijk=di+wl_hgrid_3d*(dj+wl_hgrid_3d*dk);
+    radp=mrad+ijk*wl_seq_length_3d;
+    e=(const_cast<unsigned int*> (wl))+ijk*wl_seq_length_3d;
 
     // Read in how many items in the worklist can be tested without having to
     // worry about writing to the mask
@@ -438,7 +438,7 @@ bool voro_compute_3d<c_class>::compute_cell(v_cell &c,int ijk,int s,int ci,int c
     // Set the queue pointers
     int *qu_s=qu,*qu_e=qu;
 
-    while(g<wl_seq_length-1) {
+    while(g<wl_seq_length_3d-1) {
 
         // At the intervals specified by count_list, we recompute the maximum
         // radius squared
@@ -973,23 +973,23 @@ inline void voro_compute_3d<c_class>::add_list_memory(int*& qu_s,int*& qu_e) {
 }
 
 // Explicit template instantiation
-template voro_compute_3d<container_3d>::voro_compute_3d(container&,int,int,int);
-template voro_compute_3d<container_poly_3d>::voro_compute_3d(container_poly&,int,int,int);
-template bool voro_compute_3d<container_3d>::compute_cell(voronoicell&,int,int,int,int,int);
-template bool voro_compute_3d<container_3d>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template voro_compute_3d<container_3d>::voro_compute_3d(container_3d&,int,int,int);
+template voro_compute_3d<container_poly_3d>::voro_compute_3d(container_poly_3d&,int,int,int);
+template bool voro_compute_3d<container_3d>::compute_cell(voronoicell_3d&,int,int,int,int,int);
+template bool voro_compute_3d<container_3d>::compute_cell(voronoicell_neighbor_3d&,int,int,int,int,int);
 template void voro_compute_3d<container_3d>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_3d&,double&);
-template bool voro_compute_3d<container_poly_3d>::compute_cell(voronoicell&,int,int,int,int,int);
-template bool voro_compute_3d<container_poly_3d>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
+template bool voro_compute_3d<container_poly_3d>::compute_cell(voronoicell_3d&,int,int,int,int,int);
+template bool voro_compute_3d<container_poly_3d>::compute_cell(voronoicell_neighbor_3d&,int,int,int,int,int);
 template void voro_compute_3d<container_poly_3d>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_3d&,double&);
 
 // Explicit template instantiation
-template voro_compute_3d<container_periodic_3d>::voro_compute_3d(container_periodic&,int,int,int);
-template voro_compute_3d<container_periodic_poly_3d>::voro_compute_3d(container_periodic_poly&,int,int,int);
-template bool voro_compute_3d<container_periodic_3d>::compute_cell(voronoicell&,int,int,int,int,int);
-template bool voro_compute_3d<container_periodic_3d>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voro_compute_3d<container_periodic_3d>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_3d&,double&);
-template bool voro_compute_3d<container_periodic_poly_3d>::compute_cell(voronoicell&,int,int,int,int,int);
-template bool voro_compute_3d<container_periodic_poly_3d>::compute_cell(voronoicell_neighbor&,int,int,int,int,int);
-template void voro_compute_3d<container_periodic_poly_3d>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_3d&,double&);
+template voro_compute_3d<container_triclinic>::voro_compute_3d(container_triclinic&,int,int,int);
+template voro_compute_3d<container_triclinic_poly>::voro_compute_3d(container_triclinic_poly&,int,int,int);
+template bool voro_compute_3d<container_triclinic>::compute_cell(voronoicell_3d&,int,int,int,int,int);
+template bool voro_compute_3d<container_triclinic>::compute_cell(voronoicell_neighbor_3d&,int,int,int,int,int);
+template void voro_compute_3d<container_triclinic>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_3d&,double&);
+template bool voro_compute_3d<container_triclinic_poly>::compute_cell(voronoicell_3d&,int,int,int,int,int);
+template bool voro_compute_3d<container_triclinic_poly>::compute_cell(voronoicell_neighbor_3d&,int,int,int,int,int);
+template void voro_compute_3d<container_triclinic_poly>::find_voronoi_cell(double,double,double,int,int,int,int,particle_record_3d&,double&);
 
 }

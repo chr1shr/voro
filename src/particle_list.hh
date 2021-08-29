@@ -34,7 +34,7 @@ class particle_list_base {
          * the class.
          * \return The number of particles. */
         inline int total_particles() {
-            return (end_id-pre_id)*pre_container_chunk_size+(ch_id-*end_id);
+            return (end_id-pre_id)*particle_list_chunk_size+(ch_id-*end_id);
         }
     protected:
         /** The number of doubles associated with a single particle (either
@@ -76,8 +76,8 @@ class particle_list_base {
  * radius information). */
 class particle_list2 : public particle_list_base {
     public:
-        particle_list2() : particle_list_base(3) {}
-        void put(int n,double x,double y,double c);
+        particle_list2() : particle_list_base(2) {}
+        void put(int n,double x,double y);
         void import(FILE *fp=stdin);
         /** Imports particles from a file.
          * \param[in] filename the name of the file to read from. */
@@ -86,7 +86,9 @@ class particle_list2 : public particle_list_base {
             import(fp);
             fclose(fp);
         }
+        template<class con_class>
         void setup(container_2d &con);
+        template<class con_class>
         void setup(particle_order &po,con_class &con);
 };
 

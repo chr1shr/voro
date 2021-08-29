@@ -19,17 +19,17 @@ namespace voro {
  * reverse order by considering the distance to \f$w_{i+1}\f$. */
 voro_base_3d::voro_base_3d(int nx_,int ny_,int nz_,double boxx_,double boxy_,double boxz_) :
     nx(nx_), ny(ny_), nz(nz_), nxy(nx_*ny_), nxyz(nxy*nz_), boxx(boxx_), boxy(boxy_), boxz(boxz_),
-    xsp(1/boxx_), ysp(1/boxy_), zsp(1/boxz_), mrad(new double[wl_hgridcu*wl_seq_length]) {
+    xsp(1/boxx_), ysp(1/boxy_), zsp(1/boxz_), mrad(new double[wl_hgridcu_3d*wl_seq_length_3d]) {
     const unsigned int b1=1<<21,b2=1<<22,b3=1<<24,b4=1<<25,b5=1<<27,b6=1<<28;
-    const double xstep=boxx/wl_fgrid,ystep=boxy/wl_fgrid,zstep=boxz/wl_fgrid;
+    const double xstep=boxx/wl_fgrid_3d,ystep=boxy/wl_fgrid_3d,zstep=boxz/wl_fgrid_3d;
     int i,j,k,lx,ly,lz,q;
     unsigned int f,*e=const_cast<unsigned int*> (wl);
     double xlo,ylo,zlo,xhi,yhi,zhi,minr,*radp=mrad;
-    for(zlo=0,zhi=zstep,lz=0;lz<wl_hgrid;zlo=zhi,zhi+=zstep,lz++) {
-        for(ylo=0,yhi=ystep,ly=0;ly<wl_hgrid;ylo=yhi,yhi+=ystep,ly++) {
-            for(xlo=0,xhi=xstep,lx=0;lx<wl_hgrid;xlo=xhi,xhi+=xstep,lx++) {
+    for(zlo=0,zhi=zstep,lz=0;lz<wl_hgrid_3d;zlo=zhi,zhi+=zstep,lz++) {
+        for(ylo=0,yhi=ystep,ly=0;ly<wl_hgrid_3d;ylo=yhi,yhi+=ystep,ly++) {
+            for(xlo=0,xhi=xstep,lx=0;lx<wl_hgrid_3d;xlo=xhi,xhi+=xstep,lx++) {
                 minr=large_number;
-                for(q=e[0]+1;q<wl_seq_length;q++) {
+                for(q=e[0]+1;q<wl_seq_length_3d;q++) {
                     f=e[q];
                     i=(f&127)-64;
                     j=(f>>7&127)-64;
@@ -58,8 +58,8 @@ voro_base_3d::voro_base_3d(int nx_,int ny_,int nz_,double boxx_,double boxy_,dou
                     q--;
                 }
                 *radp=minr;
-                e+=wl_seq_length;
-                radp+=wl_seq_length;
+                e+=wl_seq_length_3d;
+                radp+=wl_seq_length_3d;
             }
         }
     }

@@ -54,12 +54,12 @@ wall_list_3d::~wall_list_3d() {
 /** Adds all of the walls on another wall_list to this class.
  * \param[in] wl a reference to the wall class. */
 void wall_list_3d::add_wall(wall_list_3d &wl) {
-    for(wall **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
+    for(wall_3d **wp=wl.walls;wp<wl.wep;wp++) add_wall(*wp);
 }
 
 /** Deallocates all of the wall classes pointed to by the wall_list. */
 void wall_list_3d::deallocate() {
-    for(wall **wp=walls;wp<wep;wp++) delete *wp;
+    for(wall_3d **wp=walls;wp<wep;wp++) delete *wp;
 }
 
 /** Increases the memory allocation for the walls array. */
