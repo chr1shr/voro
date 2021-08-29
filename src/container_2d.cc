@@ -410,8 +410,8 @@ void container_2d::draw_particles(FILE *fp) {
  * \param[in] fp a file handle to write to. */
 void container_2d::draw_particles_pov(FILE *fp) {
     for(iterator cli=begin();cli<end();cli++) {
-        int ij=(*cli).ijk,q=(*cli).q;
-        double *pp=p[(*cli).ijk]+2*(*cli).q;
+        int ij=cli->ijk,q=cli->q;
+        double *pp=p[ijk]+2*q;
         fprintf(fp,"// id %d\nsphere{<%g,%g,0>,s}\n",id[ij][q],*pp,pp[1]);
     }
 }
@@ -422,7 +422,7 @@ void container_2d::draw_cells_gnuplot(FILE *fp) {
     voronoicell_2d c;
     for(iterator cli=begin();cli<end();cli++) if(compute_cell(c,cli)) {
         double *pp=p[cli->ijk]+2*cli->q;
-        c.draw_gnuplot(*pp,pp[1],fp);;
+        c.draw_gnuplot(*pp,pp[1],fp);
     }
 }
 
@@ -434,7 +434,7 @@ void container_2d::draw_cells_pov(FILE *fp) {
         int ij=cli->ijk,q=cli->q;
         double *pp=p[ij]+2*q;
         fprintf(fp,"// cell %d\n",id[ij][q]);
-        c.draw_pov(*pp,pp[1],fp);;
+        c.draw_pov(*pp,pp[1],fp);
     }
 }
 

@@ -26,11 +26,11 @@ namespace voro {
 class container_base_3d::iterator : public std::iterator<std::random_access_iterator_tag,c_info,int> {
     public:
         c_info ptr;
-        int* co_iter;
+        int* co;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
-        iterator() : co_iter(0) {}
+        iterator() : co(0) {}
         iterator(int* _co);
         /** Initializes the iterator.
          * \param[in] co_ a pointer to the particle count array.

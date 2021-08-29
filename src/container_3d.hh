@@ -237,23 +237,7 @@ class container_3d : public container_base_3d, public radius_mono {
         }
         void compute_all_cells();
         double sum_cell_volumes();
-        /** Dumps particle IDs and positions to a file.
-         * \param[in] vl the loop class to use.
-         * \param[in] fp a file handle to write to. */
-        template<class c_loop>
-        void draw_particles(c_loop &vl,FILE *fp) {
-            double *pp;
-            if(vl.start()) do {
-                pp=p[vl.ijk]+3*vl.q;
-                fprintf(fp,"%d %g %g %g\n",id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
-            } while(vl.inc());
-        }
-        /** Dumps all of the particle IDs and positions to a file.
-         * \param[in] fp a file handle to write to. */
-        inline void draw_particles(FILE *fp=stdout) {
-            c_loop_all vl(*this);
-            draw_particles(vl,fp);
-        }
+        void draw_particles(FILE *fp=stdout);
         /** Dumps all of the particle IDs and positions to a file.
          * \param[in] filename the name of the file to write to. */
         inline void draw_particles(const char *filename) {
@@ -261,24 +245,7 @@ class container_3d : public container_base_3d, public radius_mono {
             draw_particles(fp);
             fclose(fp);
         }
-        /** Dumps particle positions in POV-Ray format.
-         * \param[in] vl the loop class to use.
-         * \param[in] fp a file handle to write to. */
-        template<class c_loop>
-        void draw_particles_pov(c_loop &vl,FILE *fp) {
-            double *pp;
-            if(vl.start()) do {
-                pp=p[vl.ijk]+3*vl.q;
-                fprintf(fp,"// id %d\nsphere{<%g,%g,%g>,s}\n",
-                        id[vl.ijk][vl.q],*pp,pp[1],pp[2]);
-            } while(vl.inc());
-        }
-        /** Dumps all particle positions in POV-Ray format.
-         * \param[in] fp a file handle to write to. */
-        inline void draw_particles_pov(FILE *fp=stdout) {
-            c_loop_all vl(*this);
-            draw_particles_pov(vl,fp);
-        }
+        void draw_particles_pov(FILE *fp=stdout);
         /** Dumps all particle positions in POV-Ray format.
          * \param[in] filename the name of the file to write to. */
         inline void draw_particles_pov(const char *filename) {
@@ -286,23 +253,7 @@ class container_3d : public container_base_3d, public radius_mono {
             draw_particles_pov(fp);
             fclose(fp);
         }
-        /** Computes Voronoi cells and saves the output in Gnuplot format.
-         * \param[in] vl the loop class to use.
-         * \param[in] fp a file handle to write to. */
-        template<class c_loop>
-        void draw_cells_gnuplot(c_loop &vl,FILE *fp) {
-            voronoicell_3d c(*this);double *pp;
-            if(vl.start()) do if(compute_cell(c,vl)) {
-                pp=p[vl.ijk]+ps*vl.q;
-                c.draw_gnuplot(*pp,pp[1],pp[2],fp);
-            } while(vl.inc());
-        }
-        /** Computes all Voronoi cells and saves the output in Gnuplot format.
-         * \param[in] fp a file handle to write to. */
-        inline void draw_cells_gnuplot(FILE *fp=stdout) {
-            c_loop_all vl(*this);
-            draw_cells_gnuplot(vl,fp);
-        }
+        void draw_cells_gnuplot(FILE *fp=stdout);
         /** Computes all Voronoi cells and saves the output in Gnuplot format.
          * \param[in] filename the name of the file to write to. */
         inline void draw_cells_gnuplot(const char *filename) {
@@ -310,55 +261,23 @@ class container_3d : public container_base_3d, public radius_mono {
             draw_cells_gnuplot(fp);
             fclose(fp);
         }
-        /** Computes Voronoi cells and saves the output in POV-Ray format.
-         * \param[in] vl the loop class to use.
-         * \param[in] fp a file handle to write to. */
-        template<class c_loop>
-        void draw_cells_pov(c_loop &vl,FILE *fp) {
-            voronoicell_3d c(*this);double *pp;
-            if(vl.start()) do if(compute_cell(c,vl)) {
-                fprintf(fp,"// cell %d\n",id[vl.ijk][vl.q]);
-                pp=p[vl.ijk]+ps*vl.q;
-                c.draw_pov(*pp,pp[1],pp[2],fp);
-            } while(vl.inc());
-        }
-        /** Computes all Voronoi cells and saves the output in POV-Ray format.
-         * \param[in] fp a file handle to write to. */
-        inline void draw_cells_pov(FILE *fp=stdout) {
-            c_loop_all vl(*this);
-            draw_cells_pov(vl,fp);
-        }
+
         /** Computes all Voronoi cells and saves the output in POV-Ray format.
          * \param[in] filename the name of the file to write to. */
-        inline void draw_cells_pov(const char *filename) {
+        void draw_cells_pov(const char *filename) {
             FILE *fp=safe_fopen(filename,"w");
             draw_cells_pov(fp);
             fclose(fp);
         }
-        /** Computes the Voronoi cells and saves customized information about
-         * them.
-         * \param[in] vl the loop class to use.
-         * \param[in] format the custom output string to use.
-         * \param[in] fp a file handle to write to. */
-        template<class c_loop>
-        void print_custom(c_loop &vl,const char *format,FILE *fp) {
-            int ijk,q;double *pp;
-            if(voro_contains_neighbor(format)) {
-                voronoicell_neighbor c(*this);
-                if(vl.start()) do if(compute_cell(c,vl)) {
-                    ijk=vl.ijk;q=vl.q;pp=p[ijk]+ps*q;
-                    c.output_custom(format,id[ijk][q],*pp,pp[1],pp[2],default_radius,fp);
-                } while(vl.inc());
-            } else {
-                voronoicell_3d c(*this);
-                if(vl.start()) do if(compute_cell(c,vl)) {
-                    ijk=vl.ijk;q=vl.q;pp=p[ijk]+ps*q;
-                    c.output_custom(format,id[ijk][q],*pp,pp[1],pp[2],default_radius,fp);
-                } while(vl.inc());
-            }
-        }
         void print_custom(const char *format,FILE *fp=stdout);
-        void print_custom(const char *format,const char *filename);
+        /** Computes all the Voronoi cells and saves customized information about them.
+         * \param[in] format the custom output string to use.
+         * \param[in] filename the name of the file to write to. */
+        inline void print_custom(const char *format,const char *filename) {
+            FILE *fp=safe_fopen(filename,"w");
+            print_custom(format,fp);
+            fclose(fp);
+        }
         bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
         /** Computes the Voronoi cell for a particle currently being referenced
          * by a loop class.

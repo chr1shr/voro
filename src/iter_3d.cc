@@ -152,7 +152,10 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
         diff=q_+n-co[ijk_];
     }
     ci.set(ijk_,q_+n);
-    return ci; // XXX CHR - can probably be simplified to "return c_info(ijk_,q_+n);"
+    return ci;
+    // XXX CHR - I think there is a conceptual issue here with this function.
+    // We are returning a reference to a local copy of ci, which will disappear
+    // once the function finishes.
 }
 
 /** Returns an iterator pointing to the first particle in the container.
