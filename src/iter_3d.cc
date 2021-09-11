@@ -12,9 +12,11 @@ container_base_3d::iterator::iterator(int* co_) : co(co_) {
 
     // Find the first empty block
     int ijk=0;
-    while(co[ijk]==0) ijk++;
-    // XXX CHR - what about an empty container? Do we need to check for ijk out of range?
+    while(co[ijk]==0 && ijk<nxyz) ijk++; //if container is empty, return one-past-the-end, defined as (nxyz,0)
+    // [Y:2D, 3D] XXX CHR - what about an empty container? Do we need to check for ijk out of range?
     ptr.set(ijk,0);
+    
+    
 }
 
 /** Increments the iterator by one element. */
@@ -23,13 +25,18 @@ container_base_3d::iterator& container_base_3d::iterator::operator++() {
     // XXX CHR - I think the number of arithmetic operations in the loop below
     // can be reduced. q_ is being set multiple times to zero, and both diff
     // and n are recalculated.
-    while(diff>=0) {
+    if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
-        diff=q_+n-co[ijk_];
+        diff=n-co[ijk_];
     }
-    ptr.set(ijk_,q_+n);
+    while(diff>=0 && ijk_<nxyz) {
+        ijk_++;
+        diff-=co[ijk_]; 
+    }
+    if(ijk_<nxyz){ptr.set(ijk_,q_+diff+co[ijk_]);}
+    else{ptr.set(ijk_,0);} //no next particle found, return one-past-the-end, defined as (nxyz,0)
     return *this;
 }
 
@@ -37,13 +44,14 @@ container_base_3d::iterator& container_base_3d::iterator::operator++() {
 container_base_3d::iterator container_base_3d::iterator::operator++(int) {
     iterator tmp(*this);
     int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
-    while(diff>=0) {
+    while(diff>=0 && ijk_<nxyz) {
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
         diff=q_+n-co[ijk_];
     }
-    ptr.set(ijk_,q_+n);
+    if(ijk_<nxyz){ptr.set(ijk_,q_+n);}
+    else{ptr.set(ijk_,0);} //no next particle found, return one-past-the-end, defined as (nxyz,0)
     return tmp;
 }
 
@@ -52,13 +60,13 @@ container_base_3d::iterator& container_base_3d::iterator::operator--() {
     int q_=ptr.q; int ijk_=ptr.ijk;
     int n=1;
     int diff=q_-n;
-    while(diff<0) {
+    while(diff<0 && ijk_>0) {
         n=n-q_-1;
         ijk_--;
         q_=co[ijk_]-1;
         diff=q_-n;
     }
-    ptr.set(ijk_,q_-n);
+    ptr.set(ijk_,q_-n); //if no previous particle found, this returns (0,-1)
     return *this;
 }
 
@@ -68,13 +76,13 @@ container_base_3d::iterator container_base_3d::iterator::operator--(int) {
     int q_=ptr.q; int ijk_=ptr.ijk;
     int n=1;
     int diff=q_-n;
-    while(diff<0) {
+    while(diff<0 && ijk_>0) {
         n=n-q_-1;
-        ijk_--;
+        ijk_--; 
         q_=co[ijk_]-1;
         diff=q_-n;
     }
-    ptr.set(ijk_,q_-n);
+    ptr.set(ijk_,q_-n); //if no previous particle found, this returns (0,-1)
     return tmp;
 }
 
@@ -83,12 +91,8 @@ container_base_3d::iterator container_base_3d::iterator::operator--(int) {
 container_base_3d::iterator::difference_type container_base_3d::iterator::operator-(const iterator& rhs) const {
     difference_type diff=0;
     if(ptr.ijk==rhs.ptr.ijk) {
-        if(ptr.q==rhs.ptr.q) { // XXX CHR - simplify these six lines to just diff=pts.q-rhs.ptr.q ?
-            diff=0;
-        }
-        else{
-            diff=ptr.q-rhs.ptr.q;
-        }
+        diff=pts.q-rhs.ptr.q;
+         //[Y:2D, 3D] XXX CHR - simplify these six lines to just diff=pts.q-rhs.ptr.q ?
     }
     else{
         int ijk_small=rhs.ptr.ijk;int q_small=rhs.ptr.q;
@@ -112,13 +116,19 @@ container_base_3d::iterator::difference_type container_base_3d::iterator::operat
  * \param[in] incre the number of elements to increment by. */
 container_base_3d::iterator& container_base_3d::iterator::operator+=(const difference_type& incre) {
     int q_=ptr.q,ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
-    while(diff>=0) {
+    
+    if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
-        diff=q_+n-co[ijk_];
+        diff=n-co[ijk_];
     }
-    ptr.set(ijk_,q_+n);
+    while(diff>=0 && ijk_<nxyz) {
+        ijk_++;
+        diff-=co[ijk_]; 
+    }
+    if(ijk_<nxyz){ptr.set(ijk_,q_+diff+co[ijk_]);}
+    else{ptr.set(ijk_,0);} //no next particle found, return one-past-the-end, defined as (nxyz,0)
     return *this;
 }
 
@@ -126,32 +136,46 @@ container_base_3d::iterator& container_base_3d::iterator::operator+=(const diffe
  * \param[in] decre the number of elements to decrement by. */
 container_base_3d::iterator& container_base_3d::iterator::operator-=(const difference_type& decre) {
     int q_=ptr.q,ijk_=ptr.ijk,n=decre,diff=q_-n;
-    while(diff<0) {
+    while(diff<0 && ijk_>0) {
         n=n-q_-1;
         ijk_--;
         q_=co[ijk_]-1;
         diff=q_-n;
     }
-    ptr.set(ijk_,q_-n);
+    ptr.set(ijk_,q_-n); //if no previous particle found, this returns (0,-1)
     return *this;
 }
 
 /* Dereferences the iterator.
  * \param[in] incre the number of elements to offset by. */
 c_info& container_base_3d::iterator::operator[](const difference_type& incre) const {
-    c_info ci;
-    int q_=ptr.q,ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
+    static c_info ci;
+    if(incre>=0){
+        int q_=ptr.q,ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
     // XXX CHR - the following code assumes that incre is positive. For normal
     // array lookups that it not necessary: writing something like a[-2] is
     // fine, and means *(a-2). Do we need to take into account if incre is
     // negative?
-    while(diff>=0) {
-        n=n-co[ijk_]+q_;
-        ijk_++;
-        q_=0;
-        diff=q_+n-co[ijk_];
+        while(diff>=0 && ijk_<nxyz)) {
+            n=n-co[ijk_]+q_;
+            ijk_++;
+            q_=0;
+            diff=q_+n-co[ijk_];
+        }
+        if(ijk_<nxyz){ci.set(ijk_,q_+n);}
+        else{ci.set(ijk_,0);}
     }
-    ci.set(ijk_,q_+n);
+    else{
+        int q_=ptr.q,ijk_=ptr.ijk,n=decre,diff=q_-n;
+        while(diff<0 && ijk_>0) {
+            n=n-q_-1;
+            ijk_--;
+            q_=co[ijk_]-1;
+            diff=q_-n;
+        }
+        ci.set(ijk_,q_-n); 
+    }
+    
     return ci;
     // XXX CHR - I think there is a conceptual issue here with this function.
     // We are returning a reference to a local copy of ci, which will disappear
@@ -165,14 +189,7 @@ container_base_3d::iterator container_base_3d::begin() {return iterator(co);}
 /** Returns an iterator pointing past the last particle in the container.
  * \return The iterator. */
 container_base_3d::iterator container_base_3d::end() {
-    c_info ci;
-    //find the last particle to point to
-    int ijk_=nxyz-1;
-    while(co[ijk_]==0) {
-        ijk_--;
-    }
-    int q_=co[ijk_];  //1 over the end of the particles
-    ci.set(ijk_,q_);
+    c_info ci(nxyz,0);
     return iterator(co, ci);
 
     // XXX CHR - here you are scanning backward through the blocks to put
@@ -181,7 +198,7 @@ container_base_3d::iterator container_base_3d::end() {
     // require a scan. (Same issue for iterator_subset below.)
 }
 
-//swappable??
+//swappable: in .hh
 // XXX CHR - the library is designed to compile with the original ANSI C++
 // standard, and the swappable property is not needed. However some people may
 // wish to compile the library with C++ 11, and the swappable property is
@@ -283,17 +300,23 @@ void subset_info_3d::setup_common() {
  * \param[in,out] (i_,j_,k_) the block coordinates.
  * \param[in,out] (ci_,cj_,ck_) the block coordinates in the primary grid.
  * \param[in,out] (px_,py_,pz_) the periodicity vector. */
-void subset_info_3d::previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_,int &cj_,int &ck_,double &px_,double &py_,double &pz_) {
+bool subset_info_3d::previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_,int &cj_,int &ck_,double &px_,double &py_,double &pz_) {
     if(i_>ai) {
         i_--;
         if(ci_>0) {ci_--;ijk_--;} else {ci_=nx-1;ijk_+=nx-1;px_-=sx;}
+        return true;
     } else if(j_>aj) {
         i_=bi;ci_=ddi;px_=aapx;j_--;
         if(cj_>0) {cj_--;ijk_-=inc1;} else {cj_=ny-1;ijk_+=nxy-inc1;py_-=sy;}
+        return true;
     } else if(k_>ak) {
         i_=bi;ci_=ddi;px_=aapx;
         j_=bj;cj_=ddj;py_=aapy;k_--;
         if(ck_>0) {ck_--;ijk_-=inc2;} else {ck_=nz-1;ijk_+=nxyz-inc2;pz_-=sz;}
+        return true;
+    }
+    else { //out of range! Already at i=ai, j=aj, k=ak; Define 1-before-the-start M: (ai,aj,ak,-1)
+        return false;
     }
 }
 
@@ -316,7 +339,7 @@ bool subset_info_3d::out_of_bounds(int ijk_,int q_,double px_,double py_,double 
 
 /** Moves to the next block, updating all of the required vectors and indices.
  * \param[in,out] ijk_ the index of the block. */
-void container_base_3d::iterator_subset::next_block_iter(int &ijk_) {
+bool container_base_3d::iterator_subset::next_block_iter(int &ijk_) {
     // XXX CHR - it's not clear to me that this function needs to take ijk_ as
     // an argument. It already has access to ijk - it is ptr.ijk. You could
     // even write "int &ijk=ptr.ijk;" at the start to make a shorthand to this
@@ -325,20 +348,26 @@ void container_base_3d::iterator_subset::next_block_iter(int &ijk_) {
         i++;
         if(ci<cl_iter->nx-1) {ci++;ijk_++;}
         else {ci=0;ijk_+=1-cl_iter->nx;px+=cl_iter->sx;}
+        return true;
     } else if(j<cl_iter->bj) {
         i=cl_iter->ai;ci=cl_iter->di;px=cl_iter->apx;j++;
         if(cj<cl_iter->ny-1) {cj++;ijk_+=cl_iter->inc1;}
         else {cj=0;ijk_+=cl_iter->inc1-cl_iter->nxy;py+=cl_iter->sy;}
+        return true;
     } else if(k<cl_iter->bk) {
         i=cl_iter->ai;ci=cl_iter->di;j=cl_iter->aj;cj=cl_iter->dj;px=cl_iter->apx;py=cl_iter->apy;k++;
         if(ck<cl_iter->nz-1) {ck++;ijk_+=cl_iter->inc2;}
         else {ck=0;ijk_+=cl_iter->inc2-cl_iter->nxyz;pz+=cl_iter->sz;}
+        return true;
+    }
+    else{ //out of range! now already at i=bi,j=bj,k=bk: define the next as one-past-the-end P: (bi,bj,bk, co[bijk])
+        return false;
     }
 }
 
 /** Moves to the next block, updating all of the required vectors and indices.
  * \param[in,out] ijk_ the index of the block. */
-void container_base_3d::iterator_subset::previous_block_iter(int &ijk_) {
+bool container_base_3d::iterator_subset::previous_block_iter(int &ijk_) {
     cl_iter->previous_block_iter(ijk_,i,j,k,ci,cj,ck,px,py,pz);
     // XXX CHR - why is the previous_block_iter routine done within
     // subset_info_3d, but the next_block_iter routine is done within the iterator
@@ -364,20 +393,26 @@ container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_)
 
     int ijk_=ci+cl_iter->nx*(cj+cl_iter->ny*ck);
     int q_=0;
+    bool continue_check_ijk=true;
 
-    while(cl_iter->co[ijk_]==0) {
+    while(cl_iter->co[ijk_]==0 && continue_check_ijk==true) {
         // XXX CHR - need to catch case when container is empty and ijk goes
         // out of range? (Same issue as for previous class.)
-        next_block_iter(ijk_);
+        continue_check_ijk=next_block_iter(ijk_);
     }
-    while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
-        q_++;
-        while(q_>=cl_iter->co[ijk_]) {
-            q_=0;
-            next_block_iter(ijk_);
+    if(continue_check_ijk==false){ //empty subset grids, point to 1-past-the-end P, defined by (bijk,co[bijk]), here co[bijk]=0
+        ptr.set(ijk_,0);
+    }
+    else{ //normal case, find the first particle to point to
+        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
+            q_++;
+            while(q_>=cl_iter->co[ijk_]) {
+                q_=0;
+                next_block_iter(ijk_);
+            }
         }
+        ptr.set(ijk_,q_);
     }
-    ptr.set(ijk_,q_);
 }
 
 /** Initializes the iterator.
@@ -415,20 +450,37 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
 /** Increments the iterator by one element. */
 container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator++() {
     int q_=ptr.q,ijk_=ptr.ijk,n=1;
-    while(n>0) {
+    bool continue_check=true;
+    while(n>0 && continue_check) {
         q_++;
-        while(q_>=cl_iter->co[ijk_]) {
+        bool continue_check_ijk=true;
+        while(q_>=cl_iter->co[ijk_] && continue_check_ijk) {
             q_=0;
-            next_block_iter(ijk_);
+            continue_check_ijk=next_block_iter(ijk_);
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
-            q_++;
-            while(q_>=cl_iter->co[ijk_]) {
-                q_=0;
-                next_block_iter(ijk_);
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found. 
+                                       //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
+            continue_check=false;
+            q_=co[ijk_];
+        }
+        else{  //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
+            bool continue_check_ijk_2=true;
+            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+                q_++;
+                while(q_>=cl_iter->co[ijk_] && continue_check_ijk_2) {
+                    q_=0;
+                    continue_check_ijk_2=next_block_iter(ijk_);
+                }
+            }
+            if(continue_check_ijk_2==false){//Subset grids have all checked, and no next particle found. They are all out of shape bound
+                                       //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
+                continue_check=false;
+                q_=co[ijk_];
+            }
+            else{
+                n--; //have found the next particle, decrement the difference 
             }
         }
-        n--;
     }
     ptr.set(ijk_,q_);
     return *this;
@@ -438,21 +490,38 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
 container_base_3d::iterator_subset container_base_3d::iterator_subset::operator++(int) {
     iterator_subset tmp=*this;
     int q_=ptr.q,ijk_=ptr.ijk,n=1;
-    while(n>0) {
+    bool continue_check=true;
+    while(n>0 && continue_check) {
         q_++;
-        while(q_>=cl_iter->co[ijk_]) {
+        bool continue_check_ijk=true;
+        while(q_>=cl_iter->co[ijk_] && continue_check_ijk) {
             q_=0;
-            next_block_iter(ijk_);
+            continue_check_ijk=next_block_iter(ijk_);
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
-            q_++;
-            while(q_>=cl_iter->co[ijk_]) {
-                q_=0;
-                next_block_iter(ijk_);
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found. 
+                                       //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
+            continue_check=false;
+            q_=co[ijk_];
+        }
+        else{  //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
+            bool continue_check_ijk_2=true;
+            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+                q_++;
+                while(q_>=cl_iter->co[ijk_] && continue_check_ijk_2) {
+                    q_=0;
+                    continue_check_ijk_2=next_block_iter(ijk_);
+                }
+            }
+            if(continue_check_ijk_2==false){//Subset grids have all checked, and no next particle found. They are all out of shape bound
+                                       //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
+                continue_check=false;
+                q_=co[ijk_];
+            }
+            else{
+                n--; //have found the next particle, decrement the difference 
             }
         }
-        n--;
-    }
+    }    
     ptr.set(ijk_,q_);
     return tmp;
 }
@@ -460,20 +529,35 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator+
 /** Decrements the iterator by one element. */
 container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator--() {
     int q_=ptr.q,ijk_=ptr.ijk,n=1;
-    while(n>0) {
+    bool continue_check=true;
+    while(n>0 && continue_check) {
         q_--;
-        while(q_<0) {
-            previous_block_iter(ijk_);
+        bool continue_check_ijk=true;
+        while(q_<0 && continue_check_ijk) {
+            continue_check_ijk=previous_block_iter(ijk_);
             q_=cl_iter->co[ijk_]-1;
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
-            q_--;
-            while(q_<0) {
-                previous_block_iter(ijk_);
-                q_=cl_iter->co[ijk_]-1;
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found. 
+                                       //Now ijk_ is at aijk, q_=-1
+            continue_check=false;
+        }
+        else{ //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
+            bool continue_check_ijk_2=true;
+            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+                q_--;
+                while(q_<0&&continue_check_ijk_2) {
+                    continue_check_ijk_2=previous_block_iter(ijk_);
+                    q_=cl_iter->co[ijk_]-1;
+                }
+            }
+            if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
+                                       //Now ijk_ is at aijk, q=-1 (no need to set)
+                continue_check=false;
+            }
+            else{
+                n--; //have found the previous particle, decrement the difference 
             }
         }
-        n--;
     }
     // XXX CHR - What happens if "--" is applied when you are at the first
     // element? Is the iterator meant to handle that case?
@@ -485,21 +569,38 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
 container_base_3d::iterator_subset container_base_3d::iterator_subset::operator--(int) {
     iterator_subset tmp=*this;
     int q_=ptr.q,ijk_=ptr.ijk,n=1;
-    while(n>0) {
+    bool continue_check=true;
+    while(n>0 && continue_check) {
         q_--;
-        while(q_<0) {
-            previous_block_iter(ijk_);
+        bool continue_check_ijk=true;
+        while(q_<0 && continue_check_ijk) {
+            continue_check_ijk=previous_block_iter(ijk_);
             q_=cl_iter->co[ijk_]-1;
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
-            q_--;
-            while(q_<0) {
-                previous_block_iter(ijk_);
-                q_=cl_iter->co[ijk_]-1;
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found. 
+                                       //Now ijk_ is at aijk, q_=-1
+            continue_check=false;
+        }
+        else{ //particles exist in the remaining subset grids, but need to further check if they are within the shape bound
+            bool continue_check_ijk_2=true;
+            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+                q_--;
+                while(q_<0&&continue_check_ijk_2) {
+                    continue_check_ijk_2=previous_block_iter(ijk_);
+                    q_=cl_iter->co[ijk_]-1;
+                }
+            }
+            if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
+                                       //Now ijk_ is at aijk, q=-1 (no need to set)
+                continue_check=false;
+            }
+            else{
+                n--; //have found the previous particle, decrement the difference 
             }
         }
-        n--;
     }
+    // XXX CHR - What happens if "--" is applied when you are at the first
+    // element? Is the iterator meant to handle that case?
     ptr.set(ijk_,q_);
     return tmp;
 }
@@ -520,9 +621,9 @@ container_base_3d::iterator_subset::difference_type container_base_3d::iterator_
         iterator_subset tmp(*this);
         while(tmp!=rhs) {
             tmp++;
-            diff++;  // XXX CHR - change to diff--
+            diff--;  // XXX CHR - change to diff--
         }
-        diff=-diff;  // XXX CHR - and delete this line
+                    // XXX CHR - and delete this line
     }
     else {
         iterator_subset tmp(*this);
@@ -538,20 +639,37 @@ container_base_3d::iterator_subset::difference_type container_base_3d::iterator_
  * \param[in] incre the number of elements to increment by. */
 container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator+=(const difference_type& incre) {
     int q_=ptr.q,ijk_=ptr.ijk,n=incre;
-    while(n>0) {
+    bool continue_check=true;
+    while(n>0 && continue_check) {
         q_++;
-        while(q_>=cl_iter->co[ijk_]) {
+        bool continue_check_ijk=true;
+        while(q_>=cl_iter->co[ijk_] && continue_check_ijk) {
             q_=0;
-            next_block_iter(ijk_);
+            continue_check_ijk=next_block_iter(ijk_);
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
-            q_++;
-            while(q_>=cl_iter->co[ijk_]) {
-                q_=0;
-                next_block_iter(ijk_);
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found. 
+                                       //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
+            continue_check=false;
+            q_=co[ijk_];
+        }
+        else{  //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
+            bool continue_check_ijk_2=true;
+            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+                q_++;
+                while(q_>=cl_iter->co[ijk_] && continue_check_ijk_2) {
+                    q_=0;
+                    continue_check_ijk_2=next_block_iter(ijk_);
+                }
+            }
+            if(continue_check_ijk_2==false){//Subset grids have all checked, and no next particle found. They are all out of shape bound
+                                       //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
+                continue_check=false;
+                q_=co[ijk_];
+            }
+            else{
+                n--; //have found the next particle, decrement the difference 
             }
         }
-        n--;
     }
     ptr.set(ijk_,q_);
     return *this;
@@ -561,21 +679,38 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
  * \param[in] decre the number of elements to decrement by. */
 container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator-=(const difference_type& decre) {
     int q_=ptr.q,ijk_=ptr.ijk,n=decre;
-    while(n>0) {
+    bool continue_check=true;
+    while(n>0 && continue_check) {
         q_--;
-        while(q_<0) {
-            previous_block_iter(ijk_);
+        bool continue_check_ijk=true;
+        while(q_<0 && continue_check_ijk) {
+            continue_check_ijk=previous_block_iter(ijk_);
             q_=cl_iter->co[ijk_]-1;
         }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
-            q_--;
-            while(q_<0) {
-                previous_block_iter(ijk_);
-                q_=cl_iter->co[ijk_]-1;
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found. 
+                                       //Now ijk_ is at aijk, q_=-1
+            continue_check=false;
+        }
+        else{ //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
+            bool continue_check_ijk_2=true;
+            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+                q_--;
+                while(q_<0&&continue_check_ijk_2) {
+                    continue_check_ijk_2=previous_block_iter(ijk_);
+                    q_=cl_iter->co[ijk_]-1;
+                }
+            }
+            if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
+                                       //Now ijk_ is at aijk, q=-1 (no need to set)
+                continue_check=false;
+            }
+            else{
+                n--; //have found the previous particle, decrement the difference 
             }
         }
-        n--;
     }
+    // XXX CHR - What happens if "--" is applied when you are at the first
+    // element? Is the iterator meant to handle that case?
     ptr.set(ijk_,q_);
     return *this;
 }
@@ -583,25 +718,11 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
 /* Dereferences the iterator.
  * \param[in] incre the number of elements to offset by. */
 c_info& container_base_3d::iterator_subset::operator[](const difference_type& incre) const {
-    c_info ci;
+    static c_info ci;
     iterator_subset tmp(*this);
-    int q_=ptr.q,ijk_=ptr.ijk,n=incre;
-    while(n>0) {
-        q_++;
-        while(q_>=cl_iter->co[ijk_]) {
-            q_=0;
-            tmp.next_block_iter(ijk_);
-        }
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
-            q_++;
-            while(q_>=cl_iter->co[ijk_]) {
-                q_=0;
-                tmp.next_block_iter(ijk_);
-            }
-        }
-        n--;
-    }
-    ci.set(ijk_,q_);
+    if(incre>0){tmp+=incre;}
+    else{tmp-=abs(incre);}
+    ci.set(tmp.ptr.ijk,tmp.ptr.q);
     return ci;
 }
 
@@ -614,48 +735,36 @@ container_base_3d::iterator_subset container_base_3d::begin(subset_info_3d& si) 
 /** Returns an iterator pointing past the last particle in the container.
  * \return The iterator. */
 container_base_3d::iterator_subset container_base_3d::end(subset_info_3d& si) {
-    c_info cinfo;
-    //find the last particle to point to
+    //Point to one-past-the-end, defined as (bi,bj,bk,co[bi,bj,bk])
     int i_=si.bi,j_=si.bj,k_=si.bk,
-        ci_=si.ddi,cj_=si.ddj,ck_=si.ddk,
-        ijk_=si.ddi+si.nx*(si.ddj+si.ny*si.ddk),
-        q_=si.co[ijk_]-1;
-    double px_=si.aapx,py_=si.aapy,pz_=si.aapz;
-
-    while(q_<0) {
-        si.previous_block_iter(ijk_,i_,j_,k_,ci_,cj_,ck_,px_,py_,pz_);
-        q_=si.co[ijk_]-1;
-    }
-    while(si.mode!=no_check&&si.out_of_bounds(ijk_,q_,px_,py_,pz_)) {
-        q_--;
-        while(q_<0) {
-            si.previous_block_iter(ijk_,i_,j_,k_,ci_,cj_,ck_,px_,py_,pz_);
-            q_=si.co[ijk_]-1;
-        }
-    }
-    cinfo.set(ijk_,q_+1);
-    return iterator_subset(&si,cinfo,i_,j_,k_);
+    ijk_=si.ddi+si.nx*(si.ddj+si.ny*si.ddk);
+    return iterator_subset(&si,c_info(ijk_,si.co[ijk_]),i_,j_,k_);
 }
+
+//swappable: in .hh
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator++() {
-    ptr_n++;
-    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
+    ptr_n++; 
+    if(ptr_n<pn_upper_bound){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
+    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last 
     return *this;
 }
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator_order container_base_3d::iterator_order::operator++(int) {
     iterator_order tmp(*this);
-    ptr_n++;
-    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
+    ptr_n++; 
+    if(ptr_n<pn_upper_bound){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
+    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last 
     return tmp;
 }
 
 /** Decrements the iterator by one element. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator--() {
     ptr_n--;
-    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
+    if(ptr_n>=0){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
+    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start 
     return *this;
 }
 
@@ -663,7 +772,8 @@ container_base_3d::iterator_order& container_base_3d::iterator_order::operator--
 container_base_3d::iterator_order container_base_3d::iterator_order::operator--(int) {
     iterator_order tmp(*this);
     ptr_n--;
-    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
+    if(ptr_n>=0){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
+    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start 
     return tmp;
 }
 
@@ -678,7 +788,8 @@ container_base_3d::iterator_order::difference_type container_base_3d::iterator_o
  * \param[in] incre the number of elements to increment by. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator+=(const difference_type& incre) {
     ptr_n+=incre;
-    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
+    if(ptr_n<pn_upper_bound){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
+    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last 
     return *this;
 }
 
@@ -686,15 +797,19 @@ container_base_3d::iterator_order& container_base_3d::iterator_order::operator+=
  * \param[in] decre the number of elements to decrement by. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator-=(const difference_type& decre) {
     ptr_n-=decre;
-    ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);
+    if(ptr_n>=0){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
+    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start 
     return *this;
 }
 
 /* Dereferences the iterator.
  * \param[in] incre the number of elements to offset by. */
 c_info& container_base_3d::iterator_order::operator[](const difference_type& incre) const {
+    static c_info ci;
     int ci_n=ptr_n+incre;
-    c_info ci(cp_iter[2*ci_n],cp_iter[2*ci_n+1]);
+    if(ci_n>=0 && ci_n<pn_upper_bound){ci.set(cp_iter[2*ci_n],cp_iter[2*ci_n+1]);}
+    else if(ci_n<0){ci.set(0,-1);} //out of range, return 1-before-the-start
+    else{ci.set{nxyz,0};} //out of range, return 1-over-the-last
     return ci;
 }
 
@@ -708,13 +823,9 @@ container_base_3d::iterator_order container_base_3d::begin(particle_order &vo) {
  * \return The iterator. */
 container_base_3d::iterator_order container_base_3d::end(particle_order &vo) {
     int ptr_n_=(vo.op-vo.o)/2; //1-over-the-last-particle, eg. if 0,1,2,3,4 particle, here, ptr_n=5
-    c_info ci;
-    int ijk_=-1; //dummy
-    int q_=-1; //dummy
-    ci.set(ijk_,q_);
-    // XXX CHR - Do we need to set dummy values here? [Also, if we do need to set them, then presumably
+    // [Y: 2D, 3D] XXX CHR - Do we need to set dummy values here? [Also, if we do need to set them, then presumably
     // you can write ci.set(-1,-1) .]
-    return iterator_order(vo,ci,ptr_n_);
+    return iterator_order(vo,ptr_n_); //this will point to one-over-the-end: (nxyz,0), ptr_n=pn_upper_bound=(vo.op-vo.o)/2
 }
 
 }
