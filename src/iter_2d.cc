@@ -10,7 +10,7 @@ namespace voro {
  * \param[in] co_ a pointer to the particle count array. */
 container_base_2d::iterator::iterator(int* co_) : co(co_) {
     int ij=0;
-    while(co[ij]==0) ij++;
+    while(co[ij]==0 && ij<nxy) ij++;
     ptr.set(ij,0);
 }
 
@@ -81,12 +81,7 @@ container_base_2d::iterator container_base_2d::iterator::operator--(int) {
 container_base_2d::iterator::difference_type container_base_2d::iterator::operator-(const iterator& rhs) const {
     difference_type diff=0;
     if(ptr.ijk==rhs.ptr.ijk) {
-        if(ptr.q==rhs.ptr.q) {
-            diff=0;
-        }
-        else{
-            diff=ptr.q-rhs.ptr.q;
-        }
+        diff=ptr.q-rhs.ptr.q;
     } else {
         int ijk_small=rhs.ptr.ijk,q_small=rhs.ptr.q,
             ijk_big=ptr.ijk,q_big=ptr.q;
@@ -158,15 +153,8 @@ container_base_2d::iterator container_base_2d::begin() {
 /** Returns an iterator pointing past the last particle in the container.
  * \return The iterator. */
 container_base_2d::iterator container_base_2d::end() {
-    c_info ci;
-    //find the last particle to point to
-    int ijk_=nxy-1;
-    while(co[ijk_]==0) {
-        ijk_--;
-    }
-    int q_=co[ijk_]; //1 over the end of the particles
-    ci.set(ijk_,q_);
-    return iterator(co, ci);
+    c_info ci(nxy,0);
+    return iterator(co,ci);
 }
 
 /** Sets up the class constants to loop over all particles inside a circle.
@@ -629,11 +617,7 @@ container_base_2d::iterator_order container_base_2d::begin(particle_order &vo) {
  * \return The iterator. */
 container_base_2d::iterator_order container_base_2d::end(particle_order &vo) {    //vo, ptr, n
     int ptr_n_=0.5*(vo.op-vo.o);//1-over-the-last-particle, eg. if 0,1,2,3,4 particle, here, ptr_n=5
-    c_info ci;
-    int ijk_=-1;//dummy
-    int q_=-1;//dummy
-    ci.set(ijk_,q_);
-    return iterator_order(vo, ci, ptr_n_);
+    return iterator_order(vo, c_info(nxy,0), ptr_n_);
 }
 
 }
