@@ -27,23 +27,25 @@ class container_base_3d::iterator : public std::iterator<std::random_access_iter
     public:
         c_info ptr;
         int* co;
+        int nxyz;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
-        iterator() : co(0) {}
-        iterator(int* _co);
+        //iterator() : co(0) {}
+        iterator(int* _co,int _nxyz);
         /** Initializes the iterator.
          * \param[in] co_ a pointer to the particle count array.
          * \param[in] ptr_ information on the particle to point to. */
-        iterator(int* co_,c_info ptr_) : ptr(ptr_), co(co_) {}
+        iterator(int* co_,c_info ptr_,int _nxyz) : ptr(ptr_), co(co_), nxyz(_nxyz) {}
         /** Initializes the iterator as a copy of another.
          * \param[in] ci a reference to an existing iterator. */
-        iterator(const iterator& ci) : ptr(ci.ptr), co(ci.co) {}
+        iterator(const iterator& ci) : ptr(ci.ptr), co(ci.co),nxyz(ci.nxyz) {}
         /** Sets the iterator to equal another.
          * \param[in] other the iterator to copy. */
         inline iterator& operator=(iterator other) {
             co=other.co;
             ptr=other.ptr;
+            nxyz=other.nxyz;
             return *this;
         }
         /** Evaluates if this iterator is equal to another.
@@ -165,7 +167,7 @@ class subset_info_3d {
         inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
         inline int step_int(double a) {return a<0?int(a)-1:int(a);}
         void setup_common();
-        void previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_,int &cj_,int &ck_,double &px_,double &py_,double &pz_);
+        bool previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_,int &cj_,int &ck_,double &px_,double &py_,double &pz_);
         bool out_of_bounds(int ijk_,int q_,double px_,double py_,double pz_);
 };
 
@@ -186,8 +188,8 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         inline bool out_of_bounds_iter(int ijk_,int q_) const {
             return cl_iter->out_of_bounds(ijk_,q_,px,py,pz);
         }
-        void next_block_iter(int &ijk_);
-        void previous_block_iter(int &ijk_);
+        bool next_block_iter(int &ijk_);
+        bool previous_block_iter(int &ijk_);
         // XXX CHR - is there any reason to initialize cl_iter here? A blank
         // iterator is never going to be used - you'd have to later copy-assign
         // it, or set up the variables another way. In those cases cl_iter will
@@ -281,9 +283,12 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
         int* op_iter;
         int ptr_n;
         int pn_upper_bound; //(op_iter-cp_iter)/2, ie. number of particles; ptr_n< than this number to be in range
+        int nxyz;
         /** Initializes the iterator.
          * \param[in] vo_ a reference to the particle_order class to follow. */
-        iterator_order(particle_order& vo_) : cp_iter(vo_.o), op_iter(vo_.op), ptr_n(0), pn_upper_bound((op_iter-cp_iter)/2) {
+        iterator_order(particle_order& vo_, int _nxyz) : cp_iter(vo_.o), op_iter(vo_.op), ptr_n(0), pn_upper_bound((op_iter-cp_iter)/2),
+        nxyz(_nxyz)
+        {
             if(pn_upper_bound!=0){ptr.set(cp_iter[0],cp_iter[1]);} else{ptr.set(nxyz,0);} //if empty particle_order, set to one over the end 
         }
         // XXX CHR - Do we need to pass in both a c_info and ptr_n? If we know
@@ -294,17 +299,18 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
          * \param[in] ptr_ the particle to point to.
          * \param[in] ptr_n_ the position in the particle_order class of the
          *                   particle. */
-        iterator_order(particle_order& vo_,int ptr_n_)
-            : cp_iter(vo_.o), op_iter(vo_.op), ptr_n(ptr_n_),pn_upper_bound((op_iter-cp_iter)/2) 
+        iterator_order(particle_order& vo_,int ptr_n_,int _nxyz)
+            : cp_iter(vo_.o), op_iter(vo_.op), ptr_n(ptr_n_),pn_upper_bound((op_iter-cp_iter)/2),nxyz(_nxyz)
         {
             if(ptr_n>=0 && ptr_n<pn_upper_bound){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
             else if(ptr_n<0){ptr_n=-1;ptr.set(0,-1);} //out of range, return 1-before-the-start
-            else{ptr_n=pn_upper_bound; ptr.set{nxyz,0};} //out of range, return 1-over-the-last
+            else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);} //out of range, return 1-over-the-last
         }
         /** Initializes the iterator as a copy of another.
          * \param[in] ci a reference to an existing iterator. */
         iterator_order(const iterator_order& ci) : ptr(ci.ptr),
-            cp_iter(ci.cp_iter), op_iter(ci.op_iter), ptr_n(ci.ptr_n), pn_upper_bound(ci.pn_upper_bound){}
+            cp_iter(ci.cp_iter), op_iter(ci.op_iter), ptr_n(ci.ptr_n), pn_upper_bound(ci.pn_upper_bound), nxyz(ci.nxyz)
+        {}
         /** Initializes the iterator as a copy of another.
          * \param[in] other an existing iterator. */
         iterator_order& operator=(iterator_order other) {
@@ -313,6 +319,7 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
             ptr_n=other.ptr_n;
             ptr=other.ptr;
             pn_upper_bound=other.pn_upper_bound;
+            nxyz=other.nxyz;
             return *this;
         }
         /** Evaluates if this iterator is equal to another.

@@ -10,7 +10,7 @@ namespace voro {
  * \param[in] co_ a pointer to the particle count array. */
 container_base_2d::iterator::iterator(int* co_) : co(co_) {
     int ij=0;
-    while(co[ij]==0 && ij<nxy) ij++;
+    while(co[ij]==0) ij++;
     ptr.set(ij,0);
 }
 
