@@ -168,7 +168,6 @@ class subset_info_3d {
         inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
         inline int step_int(double a) {return a<0?int(a)-1:int(a);}
         void setup_common();
-        bool previous_block_iter(int &ijk_,int &i_,int &j_,int &k_,int &ci_,int &cj_,int &ck_,double &px_,double &py_,double &pz_);
         bool out_of_bounds(int ijk_,int q_,double px_,double py_,double pz_);
 };
 
@@ -189,8 +188,8 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         inline bool out_of_bounds_iter(int ijk_,int q_) const {
             return cl_iter->out_of_bounds(ijk_,q_,px,py,pz);
         }
-        bool next_block_iter(int &ijk_);
-        bool previous_block_iter(int &ijk_);
+        bool next_block();
+        bool previous_block();
         // XXX CHR - is there any reason to initialize cl_iter here? A blank
         // iterator is never going to be used - you'd have to later copy-assign
         // it, or set up the variables another way. In those cases cl_iter will
