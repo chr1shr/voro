@@ -112,12 +112,19 @@ void container_poly_3d::put(int n,double x,double y,double z,double r) {
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 void container_3d::put(particle_order &vo,int n,double x,double y,double z) {
     int ijk;
+    printf("aaa\n");
     if(put_locate_block(ijk,x,y,z)) {
+        printf("aa\n");
         id[ijk][co[ijk]]=n;
+        printf("bb\n");
         vo.add(ijk,co[ijk]);
+        printf("cc\n");
         double *pp=p[ijk]+3*co[ijk]++;
+        printf("dd\n");
         *(pp++)=x;*(pp++)=y;*pp=z;
+        printf("ee\n");
     }
+    printf("bbb\n");
 }
 
 /** Put a particle into the correct region of the container, also recording
@@ -148,7 +155,9 @@ void container_poly_3d::put(particle_order &vo,int n,double x,double y,double z,
  * false otherwise. */
 bool container_base_3d::put_locate_block(int &ijk,double &x,double &y,double &z) {
     if(put_remap(ijk,x,y,z)) {
+        printf("111\n");
         if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
+        printf("222\n");
         return true;
     }
 #if VOROPP_REPORT_OUT_OF_BOUNDS ==1
@@ -298,7 +307,11 @@ bool container_poly_3d::find_voronoi_cell(double x,double y,double z,double &rx,
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 void container_base_3d::add_particle_memory(int i) {
+    printf("11, %d %d \n",mem[i], i);
+    
     int l,nmem=mem[i]<<1;
+    
+    printf("112, %d \n",nmem);
 
     // Carry out a check on the memory allocation size, and print a status
     // message if requested
@@ -308,16 +321,29 @@ void container_base_3d::add_particle_memory(int i) {
     fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
 #endif
 
+    printf("22\n");
     // Allocate new memory and copy in the contents of the old arrays
     int *idp=new int[nmem];
+    printf("33\n");
     for(l=0;l<co[i];l++) idp[l]=id[i][l];
+    printf("44\n");
     double *pp=new double[ps*nmem];
+    printf("55\n");
     for(l=0;l<ps*co[i];l++) pp[l]=p[i][l];
+    printf("66, %d %g %g \n", co[i], p[i][0], p[i][1]);
 
     // Update pointers and delete old arrays
+    printf("77\n");
     mem[i]=nmem;
-    delete [] id[i];id[i]=idp;
-    delete [] p[i];p[i]=pp;
+    printf("88, %d\n", mem[i]);
+    delete [] id[i];
+    printf("99\n");
+    id[i]=idp;
+    printf("1010, %g %g \n", p[i][0], p[i][1]);
+    delete [] p[i];
+    printf("1111\n");
+    p[i]=pp;
+    printf("1212\n");
 }
 
 /** Import a list of particles from an open file stream into the container.

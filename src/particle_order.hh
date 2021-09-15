@@ -9,6 +9,8 @@
 
 #include <cstring>
 
+#include <stdio.h>
+
 #include "config.hh"
 
 namespace voro {
@@ -57,12 +59,23 @@ class particle_order {
         }
     private:
         inline void add_ordering_memory() {
+            /*
             int *no=new int[size*4];
             memcpy(no,o,2*sizeof(int)*size);
             delete [] o;
             size<<=1;
             o=no;op=o+size;
+            */
+            
+            int *no=new int[size<<2],*nop=no,*opp=o;
+            while(opp<op) *(nop++)=*(opp++);
+            delete [] o;
+            size<<=1;o=no;op=nop;
         }
+        
+        
+        
+        
 };
 
 }

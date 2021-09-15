@@ -9,6 +9,7 @@
 
 #include "particle_order.hh"
 #include "container_3d.hh"
+#include "container_tri.hh"
 #include "c_info.hh"
 
 namespace voro {
@@ -31,7 +32,7 @@ class container_base_3d::iterator : public std::iterator<std::random_access_iter
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
-        //iterator() : co(0) {}
+        iterator(){}
         iterator(int* _co,int _nxyz);
         /** Initializes the iterator.
          * \param[in] co_ a pointer to the particle count array.
@@ -194,6 +195,7 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         // iterator is never going to be used - you'd have to later copy-assign
         // it, or set up the variables another way. In those cases cl_iter will
         // be initialized then.
+        iterator_subset(){};
         iterator_subset(subset_info_3d* si_);
         iterator_subset(subset_info_3d* si_,c_info ptr_,int i_,int j_,int k_);
         /** Initializes the iterator as a copy of another.
@@ -284,6 +286,7 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
         int ptr_n;
         int pn_upper_bound; //(op_iter-cp_iter)/2, ie. number of particles; ptr_n< than this number to be in range
         int nxyz;
+        iterator_order(){};
         /** Initializes the iterator.
          * \param[in] vo_ a reference to the particle_order class to follow. */
         iterator_order(particle_order& vo_, int _nxyz) : cp_iter(vo_.o), op_iter(vo_.op), ptr_n(0), pn_upper_bound((op_iter-cp_iter)/2),
@@ -387,6 +390,210 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
             std::swap(a.ptr.ijk, b.ptr.ijk);std::swap(a.ptr.q, b.ptr.q);std::swap(a.ptr_n,b.ptr_n);
         }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class container_triclinic_base::iterator : public std::iterator<std::random_access_iterator_tag, c_info, int>
+{
+    public:
+        c_info ptr;
+        int* co_iter;
+        int nxoy; 
+        int nxey; 
+        int nxwy; 
+        int wz; 
+        int ijk0; 
+        int inc2; 
+
+        friend class container_triclinic_base;
+        typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::pointer pointer;
+        typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::reference reference;
+        typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::difference_type difference_type;
+
+        //default-constructible
+        iterator(){};
+        //constructor: point to first particle in container
+        iterator(int *_co, int _nx, int _oy, int _ey, int _wy, int _wz, int _ez) : 
+            co_iter(_co), nxoy(_nx*_oy), nxey(_nx*_ey), nxwy(_nx*_wy), wz(_wz), 
+            ijk0(_nx*(_ey+_oy*_ez)), inc2(2*_nx*_ey+1)
+        {
+            //find the first particle to point to
+            int ijk_=ijk0; int q_=0;
+            while(co_iter[ijk_]==0){
+                if((ijk_+1-nxwy)%nxoy==0){
+                    ijk_+=inc2;
+                } else {
+                    ijk_++;
+                }
+            }
+            ptr.set(ijk_,q_);
+        }
+        //constructor: point to a particle in container
+        iterator(int *_co, int _nx, int _oy, int _ey, int _wy, int _wz, int _ez, c_info _ptr) : 
+            ptr(_ptr), co_iter(_co), nxoy(_nx*_oy), nxey(_nx*_ey), nxwy(_nx*_wy), wz(_wz), 
+            ijk0(_nx*(_ey+_oy*_ez)), inc2(2*_nx*_ey+1) {}
+        //copy-constructible
+        iterator(const iterator& ci) : ptr(ci.ptr), co_iter(ci.co_iter),
+        nxoy(ci.nxoy), nxey(ci.nxey), nxwy(ci.nxwy), wz(ci.wz), ijk0(ci.ijk0), inc2(ci.inc2) {}
+        //copy-assignable
+        iterator& operator=(iterator other);
+        //destructible
+        ~iterator(){}
+
+        //Can be compared for equivalence using the equality/inequality operators
+        bool operator==(const iterator& rhs) const;
+        bool operator!=(const iterator& rhs) const;
+
+        //Can be dereferenced as an rvalue (if in a dereferenceable state).
+        c_info& operator*() {return ptr;}
+        c_info* operator->() {return &ptr;}
+
+        //Can be incremented (if in a dereferenceable state).
+        //The result is either also dereferenceable or a past-the-end iterator.
+        //Two iterators that compare equal, keep comparing equal after being both increased.
+        iterator& operator++();
+        iterator operator++(int);
+
+        //Can be decremented (if a dereferenceable iterator value precedes it).
+        iterator& operator--();
+        iterator operator--(int);
+
+        //Supports the arithmetic operators + and - between an iterator and an integer value, or subtracting an iterator from another.
+        difference_type operator-(const iterator& rhs) const;
+        iterator operator+(const difference_type& incre) const;
+        iterator operator-(const difference_type& decre) const;
+        //Can be compared with inequality relational operators (<, >, <= and >=).
+        bool operator>(const iterator& rhs) const;
+        bool operator<(const iterator& rhs) const;
+        bool operator>=(const iterator& rhs) const;
+        bool operator<=(const iterator& rhs) const;
+
+        //Supports compound assignment operations += and -=
+        iterator& operator+=(const difference_type& incre);
+        iterator& operator-=(const difference_type& decre);
+
+        //Supports the offset dereference operator ([])
+        c_info& operator[](const difference_type& incre) const;
+        //swappable??
+
+};
+
+
+
+class container_triclinic_base::iterator_order : public std::iterator<std::random_access_iterator_tag, c_info, int>
+{
+public:
+    c_info ptr;
+    int* cp_iter;
+    int ptr_n;
+
+    friend class container_triclinic_base;
+    typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::pointer pointer;
+    typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::reference reference;
+    typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::difference_type difference_type;
+
+    //default-constructible??
+    iterator_order(){};
+    //constructor: point to first particle in container
+    iterator_order(particle_order& vo_) : cp_iter(vo_.o), ptr_n(0) {
+        //find the first particle to point to
+        int ijk_=cp_iter[0];
+        int q_=cp_iter[1];
+        ptr.set(ijk_,q_);
+    }
+    //constructor: point to a particle in container
+    iterator_order(particle_order& vo_, c_info _ptr, int ptr_n_) : ptr(_ptr), cp_iter(vo_.o), ptr_n(ptr_n_) {}
+    //copy-constructible
+    iterator_order(const iterator_order& ci) : ptr(ci.ptr), cp_iter(ci.cp_iter), ptr_n(ci.ptr_n) {}
+    //copy-assignable
+    iterator_order& operator=(iterator_order other);
+    //destructible??
+    ~iterator_order(){}
+
+    //Can be compared for equivalence using the equality/inequality operators
+    bool operator==(const iterator_order& rhs) const;
+    bool operator!=(const iterator_order& rhs) const;
+
+    //Can be dereferenced as an rvalue (if in a dereferenceable state).
+    c_info& operator*() {return ptr;}
+    c_info* operator->() {return &ptr;}
+
+    //Can be incremented (if in a dereferenceable state).
+    //The result is either also dereferenceable or a past-the-end iterator.
+    //Two iterators that compare equal, keep comparing equal after being both increased.
+    iterator_order& operator++();
+    iterator_order operator++(int);
+
+    //Can be decremented (if a dereferenceable iterator value precedes it).
+    iterator_order& operator--();
+    iterator_order operator--(int);
+
+    //Supports the arithmetic operators + and - between an iterator and an integer value, or subtracting an iterator from another.
+    difference_type operator-(const iterator_order& rhs) const;
+    iterator_order operator+(const difference_type& incre) const;
+    iterator_order operator-(const difference_type& decre) const;
+
+    //Can be compared with inequality relational operators (<, >, <= and >=).
+    bool operator>(const iterator_order& rhs) const;
+    bool operator<(const iterator_order& rhs) const;
+    bool operator>=(const iterator_order& rhs) const;
+    bool operator<=(const iterator_order& rhs) const;
+
+    //Supports compound assignment operations += and -=
+    iterator_order& operator+=(const difference_type& incre);
+    iterator_order& operator-=(const difference_type& decre);
+
+    //Supports the offset dereference operator ([])
+    c_info& operator[](const difference_type& incre) const;
+
+    //swappable??
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
 

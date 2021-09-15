@@ -368,7 +368,7 @@ bool container_base_3d::iterator_subset::next_block_iter(int &ijk_) {
 /** Moves to the next block, updating all of the required vectors and indices.
  * \param[in,out] ijk_ the index of the block. */
 bool container_base_3d::iterator_subset::previous_block_iter(int &ijk_) {
-    cl_iter->previous_block_iter(ijk_,i,j,k,ci,cj,ck,px,py,pz);
+    return cl_iter->previous_block_iter(ijk_,i,j,k,ci,cj,ck,px,py,pz);
     // XXX CHR - why is the previous_block_iter routine done within
     // subset_info_3d, but the next_block_iter routine is done within the iterator
     // itself? I think the next_block_iter approach is probably better, since
@@ -827,5 +827,500 @@ container_base_3d::iterator_order container_base_3d::end(particle_order &vo) {
     // you can write ci.set(-1,-1) .]
     return iterator_order(vo,ptr_n_,nxyz); //this will point to one-over-the-end: (nxyz,0), ptr_n=pn_upper_bound=(vo.op-vo.o)/2
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//--------------------------iterator triclinic---------------------
+ 
+//copy-assignable
+container_triclinic_base::iterator& container_triclinic_base::iterator::operator=(iterator other)
+{
+    co_iter=other.co_iter;
+    ptr=other.ptr;
+    nxoy=other.nxoy;
+    nxey=other.nxey;
+    nxwy=other.nxwy;
+    wz=other.wz;
+    ijk0=other.ijk0;
+    inc2=other.inc2;
+    return *this;
+}
+
+
+//Can be compared for equivalence using the equality/inequality operators
+bool container_triclinic_base::iterator::operator==(const iterator& rhs) const
+{
+    if(ptr.ijk==rhs.ptr.ijk && ptr.q==rhs.ptr.q){return true;}
+    else{return false;}
+}
+bool container_triclinic_base::iterator::operator!=(const iterator& rhs) const
+{
+    if(ptr.ijk==rhs.ptr.ijk && ptr.q==rhs.ptr.q){return false;}
+    else{return true;}
+}
+
+
+//Can be incremented (if in a dereferenceable state).
+//The result is either also dereferenceable or a past-the-end iterator.
+//Two iterators that compare equal, keep comparing equal after being both increased.
+container_triclinic_base::iterator& container_triclinic_base::iterator::operator++()
+{
+    int q_=ptr.q; int ijk_=ptr.ijk;
+    int n=1;
+    int diff=q_+n-co_iter[ijk_];
+    while(diff>=0){
+        n=n-co_iter[ijk_]+q_;
+        //determine next block ijk increment to: 
+        //First determine if current block ijk is at x=nx-1 && y=wy-1;
+        //If so, next block ijk_+=inc2
+        //else: ijk_++
+        if((ijk_+1-nxwy)%nxoy==0){
+            ijk_+=inc2;
+        } else {
+            ijk_++;
+        }
+        q_=0;
+        diff=q_+n-co_iter[ijk_];
+    }
+    ptr.set(ijk_,q_+n);
+    return *this;
+}
+container_triclinic_base::iterator container_triclinic_base::iterator::operator++(int)
+{
+    iterator tmp(*this);
+    int q_=ptr.q; int ijk_=ptr.ijk;
+    int n=1;
+    int diff=q_+n-co_iter[ijk_];
+    while(diff>=0){
+        n=n-co_iter[ijk_]+q_;
+        //determine next block ijk increment to: 
+        //First determine if current block ijk is at x=nx-1 && y=wy-1;
+        //If so, next block ijk_+=inc2
+        //else: ijk_++
+        if((ijk_+1-nxwy)%nxoy==0){
+            ijk_+=inc2;
+        } else {
+            ijk_++;
+        }
+        q_=0;
+        diff=q_+n-co_iter[ijk_];
+    }
+    ptr.set(ijk_,q_+n);
+    return tmp;
+}
+
+//Can be decremented (if a dereferenceable iterator value precedes it).
+container_triclinic_base::iterator& container_triclinic_base::iterator::operator--()
+{
+    int q_=ptr.q; int ijk_=ptr.ijk;
+    int n=1;
+    int diff=q_-n;
+    while(diff<0){
+        n=n-q_-1;
+        //find next block decrement to
+        //if current block is at i=0, j=ey, then decrement inc2
+        //else ijk_--
+        if((ijk_-nxey)%nxoy==0){
+            ijk_-=inc2;
+        } else {
+            ijk_--;
+        }
+        q_=co_iter[ijk_]-1;
+        diff=q_-n;
+    }
+    ptr.set(ijk_,q_-n);
+    return *this;
+}
+container_triclinic_base::iterator container_triclinic_base::iterator::operator--(int)
+{
+    iterator tmp(*this);
+    int q_=ptr.q; int ijk_=ptr.ijk;
+    int n=1;
+    int diff=q_-n;
+    while(diff<0){
+        n=n-q_-1;
+        //find next block decrement to
+        //if current block is at i=0, j=ey, then decrement inc2
+        //else ijk_--
+        if((ijk_-nxey)%nxoy==0){
+            ijk_-=inc2;
+        } else {
+            ijk_--;
+        }
+        q_=co_iter[ijk_]-1;
+        diff=q_-n;
+    }
+    ptr.set(ijk_,q_-n);
+    return tmp;
+}
+
+//Supports the arithmetic operators + and - between an iterator and an integer value, or subtracting an iterator from another.
+container_triclinic_base::iterator::difference_type container_triclinic_base::iterator::operator-(const iterator& rhs) const
+{
+    difference_type diff=0;
+    if(ptr.ijk==rhs.ptr.ijk){
+        if(ptr.q==rhs.ptr.q){
+            diff=0;
+        }
+        else{
+            diff=ptr.q-rhs.ptr.q;
+        }
+    }
+    else{
+        int ijk_small=rhs.ptr.ijk; int q_small=rhs.ptr.q;
+        int ijk_big=ptr.ijk; int q_big=ptr.q;
+        bool negative=false;
+        if(ptr.ijk < rhs.ptr.ijk){
+            negative=true;
+            ijk_small=ptr.ijk; q_small=ptr.q;
+            ijk_big=rhs.ptr.ijk; q_big=rhs.ptr.q;
+        }
+
+        int ijk_diff=ijk_small+1;
+        while(ijk_diff<ijk_big){
+            diff+=co_iter[ijk_diff];
+            //determine next block ijk_diff increment to: 
+            //First determine if current block ijk_diff is at x=nx-1 && y=wy-1;
+            //If so, next block ijk_diff+=inc2
+            //else: ijk_diff++
+            if((ijk_diff+1-nxwy)%nxoy==0){
+                ijk_diff+=inc2;
+            } else {
+                ijk_diff++;
+            }
+        }
+
+        diff=diff+q_big+(co_iter[ijk_small]-q_small);
+        if(negative==true){diff=-diff;}
+    }
+    return diff;
+}
+container_triclinic_base::iterator container_triclinic_base::iterator::operator+(const difference_type& incre) const
+{
+    iterator tmp(*this);
+    tmp+=incre;
+    return tmp;
+}
+container_triclinic_base::iterator container_triclinic_base::iterator::operator-(const difference_type& decre) const
+{
+    iterator tmp(*this);
+    tmp-=decre;
+    return tmp;
+}
+//Can be compared with inequality relational operators (<, >, <= and >=).
+bool container_triclinic_base::iterator::operator>(const iterator& rhs) const
+{
+    if(ptr.ijk > rhs.ptr.ijk){return true;}
+    else if(ptr.ijk==rhs.ptr.ijk && ptr.q > rhs.ptr.q){return true;}
+    else{return false;}
+}
+bool container_triclinic_base::iterator::operator<(const iterator& rhs) const
+{
+    if(ptr.ijk < rhs.ptr.ijk){return true;}
+    else if(ptr.ijk==rhs.ptr.ijk && ptr.q < rhs.ptr.q){return true;}
+    else{return false;}
+}
+bool container_triclinic_base::iterator::operator>=(const iterator& rhs) const
+{
+    if(ptr.ijk > rhs.ptr.ijk){return true;}
+    else if(ptr.ijk==rhs.ptr.ijk && ptr.q >= rhs.ptr.q){return true;}
+    else{return false;}
+}
+bool container_triclinic_base::iterator::operator<=(const iterator& rhs) const
+{
+    if(ptr.ijk < rhs.ptr.ijk){return true;}
+    else if(ptr.ijk==rhs.ptr.ijk && ptr.q <= rhs.ptr.q){return true;}
+    else{return false;}
+}
+
+//Supports compound assignment operations += and -=
+container_triclinic_base::iterator& container_triclinic_base::iterator::operator+=(const difference_type& incre)
+{
+    int q_=ptr.q; int ijk_=ptr.ijk;
+    int n=incre;
+    int diff=q_+n-co_iter[ijk_];
+    while(diff>=0){
+        n=n-co_iter[ijk_]+q_;
+        //determine next block ijk increment to: 
+        //First determine if current block ijk is at x=nx-1 && y=wy-1;
+        //If so, next block ijk_+=inc2
+        //else: ijk_++
+        if((ijk_+1-nxwy)%nxoy==0){
+            ijk_+=inc2;
+        } else {
+            ijk_++;
+        }
+        q_=0;
+        diff=q_+n-co_iter[ijk_];
+    }
+    ptr.set(ijk_,q_+n);
+    return *this;
+}
+container_triclinic_base::iterator& container_triclinic_base::iterator::operator-=(const difference_type& decre)
+{
+    int q_=ptr.q; int ijk_=ptr.ijk;
+    int n=decre;
+    int diff=q_-n;
+    while(diff<0){
+        n=n-q_-1;
+        //find next block decrement to
+        //if current block is at i=0, j=ey, then decrement inc2
+        //else ijk_--
+        if((ijk_-nxey)%nxoy==0){
+            ijk_-=inc2;
+        } else {
+            ijk_--;
+        }
+        q_=co_iter[ijk_]-1;
+        diff=q_-n;
+    }
+    ptr.set(ijk_,q_-n);
+    return *this;
+}
+
+//Supports the offset dereference operator ([])
+c_info& container_triclinic_base::iterator::operator[](const difference_type& incre) const
+{
+    c_info ci;
+    int q_=ptr.q; int ijk_=ptr.ijk;
+    int n=incre;
+    int diff=q_+n-co_iter[ijk_];
+    while(diff>=0){
+        n=n-co_iter[ijk_]+q_;
+        //determine next block ijk increment to: 
+        //First determine if current block ijk is at x=nx-1 && y=wy-1;
+        //If so, next block ijk_+=inc2
+        //else: ijk_++
+        if((ijk_+1-nxwy)%nxoy==0){
+            ijk_+=inc2;
+        } else {
+            ijk_++;
+        }
+        q_=0;
+        diff=q_+n-co_iter[ijk_];
+    }
+    ci.set(ijk_,q_+n);
+    return ci;
+}
+//swappable??
+
+
+container_triclinic_base::iterator container_triclinic_base::begin() {           
+    return iterator(co,nx,oy,ey,wy,wz,ez); //first particle in the container
+} 
+
+container_triclinic_base::iterator container_triclinic_base::end() {
+    
+    int nxoy=nx*oy; 
+    int nxey=nx*ey; 
+    int inc2=2*nx*ey+1; 
+    
+    c_info ci;
+    //find the last particle to point to
+    int ijk_=wz*nxoy-nxey-1; //the last block in the primary domain
+    while(co[ijk_]==0){
+        //find next block decrement to
+        //if current block is at i=0, j=ey, then decrement inc2
+        //else ijk_--
+        if((ijk_-nxey)%nxoy==0){
+            ijk_-=inc2;
+        } else {
+            ijk_--;
+        }
+    }
+    int q_=co[ijk_];  //1 over the end of the particles
+    ci.set(ijk_,q_);
+    return iterator(co, nx, oy, ey, wy, wz, ez, ci);
+}
+
+
+//------------------------iterator_order---------------------
+container_triclinic_base::iterator_order& container_triclinic_base::iterator_order::operator=(iterator_order other){
+    cp_iter=other.cp_iter;
+    ptr_n=other.ptr_n;
+    ptr=other.ptr;
+    return *this;
+}
+
+//Can be compared for equivalence using the equality/inequality operators
+bool container_triclinic_base::iterator_order::operator==(const iterator_order& rhs) const {
+    if(ptr_n==rhs.ptr_n){return true;}
+    else{return false;}
+}
+bool container_triclinic_base::iterator_order::operator!=(const iterator_order& rhs) const {
+    if(ptr_n==rhs.ptr_n){return false;}
+    else{return true;}
+}
+
+//Can be incremented (if in a dereferenceable state).
+//The result is either also dereferenceable or a past-the-end iterator.
+//Two iterators that compare equal, keep comparing equal after being both increased.
+container_triclinic_base::iterator_order& container_triclinic_base::iterator_order::operator++() {
+    ptr_n++;
+    int ijk_=cp_iter[2*ptr_n];
+    int q_=cp_iter[2*ptr_n+1];
+    ptr.set(ijk_,q_);
+    return *this;
+}
+container_triclinic_base::iterator_order container_triclinic_base::iterator_order::operator++(int) {
+    iterator_order tmp(*this);
+    ptr_n++;
+    int ijk_=cp_iter[2*ptr_n];
+    int q_=cp_iter[2*ptr_n+1];
+    ptr.set(ijk_,q_);
+    return tmp;
+}
+
+//Can be decremented (if a dereferenceable iterator value precedes it).
+container_triclinic_base::iterator_order& container_triclinic_base::iterator_order::operator--() {
+    ptr_n--;
+    int ijk_=cp_iter[2*ptr_n];
+    int q_=cp_iter[2*ptr_n+1];
+    ptr.set(ijk_,q_);
+    return *this;
+}
+container_triclinic_base::iterator_order container_triclinic_base::iterator_order::operator--(int) {
+    iterator_order tmp(*this);
+    ptr_n--;
+    int ijk_=cp_iter[2*ptr_n];
+    int q_=cp_iter[2*ptr_n+1];
+    ptr.set(ijk_,q_);
+    return tmp;
+}
+
+//Supports the arithmetic operators + and - between an iterator and an integer value, or subtracting an iterator from another.
+container_triclinic_base::iterator_order::difference_type container_triclinic_base::iterator_order::operator-(const iterator_order& rhs) const {
+    difference_type diff=ptr_n-rhs.ptr_n;
+    return diff;
+}
+container_triclinic_base::iterator_order container_triclinic_base::iterator_order::operator+(const difference_type& incre) const {
+    iterator_order tmp(*this);
+    tmp+=incre;
+    return tmp;
+}
+container_triclinic_base::iterator_order container_triclinic_base::iterator_order::operator-(const difference_type& decre) const {
+    iterator_order tmp(*this);
+    tmp-=decre;
+    return tmp;
+}
+
+//Can be compared with inequality relational operators (<, >, <= and >=).
+bool container_triclinic_base::iterator_order::operator>(const iterator_order& rhs) const {
+    if(ptr_n>rhs.ptr_n){return true;}
+    else{return false;}
+}
+bool container_triclinic_base::iterator_order::operator<(const iterator_order& rhs) const {
+    if(ptr_n<rhs.ptr_n){return true;}
+    else{return false;}
+}
+bool container_triclinic_base::iterator_order::operator>=(const iterator_order& rhs) const {
+    if(ptr_n>=rhs.ptr_n){return true;}
+    else{return false;}
+}
+bool container_triclinic_base::iterator_order::operator<=(const iterator_order& rhs) const {
+    if(ptr_n<=rhs.ptr_n){return true;}
+    else{return false;}
+}
+
+//Supports compound assignment operations += and -=
+container_triclinic_base::iterator_order& container_triclinic_base::iterator_order::operator+=(const difference_type& incre) {
+    ptr_n+=incre; 
+    int ijk_=cp_iter[2*ptr_n];
+    int q_=cp_iter[2*ptr_n+1];
+    ptr.set(ijk_,q_);
+    return *this;
+}
+container_triclinic_base::iterator_order& container_triclinic_base::iterator_order::operator-=(const difference_type& decre) {
+    ptr_n-=decre; 
+    int ijk_=cp_iter[2*ptr_n];
+    int q_=cp_iter[2*ptr_n+1];
+    ptr.set(ijk_,q_);
+    return *this;
+}
+
+//Supports the offset dereference operator ([])
+c_info& container_triclinic_base::iterator_order::operator[](const difference_type& incre) const {
+    c_info ci;
+    int ci_n=ptr_n+incre;
+    int ijk_=cp_iter[2*ci_n];
+    int q_=cp_iter[2*ci_n+1];
+    ci.set(ijk_,q_);
+    return ci;
+}
+
+//swappable??
+
+
+container_triclinic_base::iterator_order container_triclinic_base::begin(particle_order &vo) {
+    return iterator_order(vo); //first particle in the container
+}
+container_triclinic_base::iterator_order container_triclinic_base::end(particle_order &vo) {    //vo, ptr, n
+    int ptr_n_=0.5*(vo.op-vo.o); //1-over-the-last-particle, eg. if 0,1,2,3,4 particle, here, ptr_n=5
+    c_info ci;
+    int ijk_=-1; //dummy
+    int q_=-1; //dummy
+    ci.set(ijk_,q_);
+    return iterator_order(vo, ci, ptr_n_);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

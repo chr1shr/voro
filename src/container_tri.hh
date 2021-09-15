@@ -165,6 +165,17 @@ class container_triclinic_base : public unitcell, public voro_base_3d {
         }
         void create_all_images();
         void check_compartmentalized();
+        
+
+        friend class iterator; 
+        class iterator;
+        iterator begin();
+        iterator end();
+
+        friend class iterator_order;
+        class iterator_order;
+        iterator_order begin(particle_order &vo);
+        iterator_order end(particle_order &vo);
     protected:
         void add_particle_memory(int i);
         void put_locate_block(int &ijk,double &x,double &y,double &z);

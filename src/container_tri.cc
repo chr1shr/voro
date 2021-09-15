@@ -6,6 +6,7 @@
  * related classes. */
 
 #include "container_tri.hh"
+#include "iter_3d.hh"
 
 namespace voro {
 
@@ -26,7 +27,7 @@ namespace voro {
 container_triclinic_base::container_triclinic_base(double bx_,double bxy_,double by_,
         double bxz_,double byz_,double bz_,int nx_,int ny_,int nz_,int init_mem_,int ps_)
     : unitcell(bx_,bxy_,by_,bxz_,byz_,bz_),
-    voro_base(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_), max_len_sq(unit_voro.max_radius_squared()),
+    voro_base_3d(nx_,ny_,nz_,bx_/nx_,by_/ny_,bz_/nz_), max_len_sq(unit_voro.max_radius_squared()),
     ey(int(max_uv_y*ysp+1)), ez(int(max_uv_z*zsp+1)), wy(ny+ey), wz(nz+ez),
     oy(ny+2*ey), oz(nz+2*ez), oxyz(nx*oy*oz), id(new int*[oxyz]), p(new double*[oxyz]),
     co(new int[oxyz]), mem(new int[oxyz]), img(new char[oxyz]), init_mem(init_mem_), ps(ps_) {
@@ -299,7 +300,7 @@ inline void container_triclinic_base::remap(int &ai,int &aj,int &ak,int &ci,int 
  * then the search will not find a Voronoi cell and false is returned. */
 bool container_triclinic::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
     int ai,aj,ak,ci,cj,ck,ijk;
-    particle_record w;
+    particle_record_3d w;
     double mrs;
 
     // Remap the vector into the primary domain and then search for the Voronoi
@@ -333,7 +334,7 @@ bool container_triclinic::find_voronoi_cell(double x,double y,double z,double &r
  * then the search will not find a Voronoi cell and false is returned. */
 bool container_triclinic_poly::find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid) {
     int ai,aj,ak,ci,cj,ck,ijk;
-    particle_record w;
+    particle_record_3d w;
     double mrs;
 
     // Remap the vector into the primary domain and then search for the Voronoi

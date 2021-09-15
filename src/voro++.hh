@@ -334,5 +334,6 @@
 #include "wall_3d.hh"
 #include "worklist_2d.hh"
 #include "worklist_3d.hh"
+#include "iter_3d.hh"
 
 #endif
