@@ -15,43 +15,44 @@ container_base_3d::iterator::iterator(int* co_,int _nxyz) : co(co_), nxyz(_nxyz)
     while(co[ijk]==0 && ijk<nxyz) ijk++; //if container is empty, return one-past-the-end, defined as (nxyz,0)
     // [Y:2D, 3D] XXX CHR - what about an empty container? Do we need to check for ijk out of range?
     ptr.set(ijk,0);
-    
-    
 }
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator& container_base_3d::iterator::operator++() {
-    int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
+    
     // XXX CHR - I think the number of arithmetic operations in the loop below
     // can be reduced. q_ is being set multiple times to zero, and both diff
     // and n are recalculated.
+    
+    int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
     if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
         diff=n-co[ijk_];
     }
-    while(diff>=0 && ijk_<nxyz) {
-        ijk_++;
-        diff-=co[ijk_]; 
-    }
-    if(ijk_<nxyz){ptr.set(ijk_,q_+diff+co[ijk_]);}
-    else{ptr.set(ijk_,0);} //no next particle found, return one-past-the-end, defined as (nxyz,0)
+    while(diff>=0 && ijk_<nxyz) {diff-=(co[ijk_++]+co[ijk_]); }
+    if(ijk_<nxyz){q_=diff+co[ijk_];}
+    else{q_=0;} //no next particle found, return one-past-the-end, defined as (nxyz,0)
+
     return *this;
 }
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator container_base_3d::iterator::operator++(int) {
     iterator tmp(*this);
-    int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
-    while(diff>=0 && ijk_<nxyz) {
+    
+    int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
+    if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
-        diff=q_+n-co[ijk_];
+        diff=n-co[ijk_];
     }
-    if(ijk_<nxyz){ptr.set(ijk_,q_+n);}
-    else{ptr.set(ijk_,0);} //no next particle found, return one-past-the-end, defined as (nxyz,0)
+    while(diff>=0 && ijk_<nxyz) {diff-=(co[ijk_++]+co[ijk_]); }
+    if(ijk_<nxyz){q_=diff+co[ijk_];}
+    else{q_=0;} //no next particle found, return one-past-the-end, defined as (nxyz,0)
+
     return tmp;
 }
 
@@ -115,20 +116,18 @@ container_base_3d::iterator::difference_type container_base_3d::iterator::operat
 /** Increments the iterator.
  * \param[in] incre the number of elements to increment by. */
 container_base_3d::iterator& container_base_3d::iterator::operator+=(const difference_type& incre) {
-    int q_=ptr.q,ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
     
+    int &q_=ptr.q,&ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
     if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
         ijk_++;
         q_=0;
         diff=n-co[ijk_];
     }
-    while(diff>=0 && ijk_<nxyz) {
-        ijk_++;
-        diff-=co[ijk_]; 
-    }
-    if(ijk_<nxyz){ptr.set(ijk_,q_+diff+co[ijk_]);}
-    else{ptr.set(ijk_,0);} //no next particle found, return one-past-the-end, defined as (nxyz,0)
+    while(diff>=0 && ijk_<nxyz) {diff-=(co[ijk_++]+co[ijk_]); }
+    if(ijk_<nxyz){q_=diff+co[ijk_];}
+    else{q_=0;} //no next particle found, return one-past-the-end, defined as (nxyz,0)
+
     return *this;
 }
 
@@ -156,13 +155,14 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
     // array lookups that it not necessary: writing something like a[-2] is
     // fine, and means *(a-2). Do we need to take into account if incre is
     // negative?
-        while(diff>=0 && ijk_<nxyz) {
+        if(diff>=0 && ijk_<nxyz){
             n=n-co[ijk_]+q_;
             ijk_++;
             q_=0;
-            diff=q_+n-co[ijk_];
+            diff=n-co[ijk_];
         }
-        if(ijk_<nxyz){ci.set(ijk_,q_+n);}
+        while(diff>=0 && ijk_<nxyz) {diff-=(co[ijk_++]+co[ijk_]); }
+        if(ijk_<nxyz){ci.set(ijk_,diff+co[ijk_]);}
         else{ci.set(ijk_,0);}
     }
     else{
