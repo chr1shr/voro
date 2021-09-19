@@ -32,7 +32,7 @@ class container_base_3d::iterator : public std::iterator<std::random_access_iter
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
         typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
-        iterator(){}
+        iterator() {}
         iterator(int* _co,int _nxyz);
         /** Initializes the iterator.
          * \param[in] co_ a pointer to the particle count array.
@@ -268,7 +268,7 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         friend class container_base_3d;
         friend void swap(iterator_subset& a, iterator_subset& b){
             std::swap(a.ptr.ijk, b.ptr.ijk);std::swap(a.ptr.q, b.ptr.q);
-            std::swap(a.i,b.i);std::swap(a.j,b.j);std::swap(a.k,b.k); 
+            std::swap(a.i,b.i);std::swap(a.j,b.j);std::swap(a.k,b.k);
             std::swap(a.ci,b.ci);std::swap(a.cj,b.cj);std::swap(a.ck,b.ck);
             std::swap(a.px,b.px);std::swap(a.py,b.py);std::swap(a.pz,b.pz);
         }
@@ -285,13 +285,13 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
         int ptr_n;
         int pn_upper_bound; //(op_iter-cp_iter)/2, ie. number of particles; ptr_n< than this number to be in range
         int nxyz;
-        iterator_order(){};
+        iterator_order() {}
         /** Initializes the iterator.
          * \param[in] vo_ a reference to the particle_order class to follow. */
         iterator_order(particle_order& vo_, int _nxyz) : cp_iter(vo_.o), op_iter(vo_.op), ptr_n(0), pn_upper_bound((op_iter-cp_iter)/2),
         nxyz(_nxyz)
         {
-            if(pn_upper_bound!=0){ptr.set(cp_iter[0],cp_iter[1]);} else{ptr.set(nxyz,0);} //if empty particle_order, set to one over the end 
+            if(pn_upper_bound!=0){ptr.set(cp_iter[0],cp_iter[1]);} else{ptr.set(nxyz,0);} //if empty particle_order, set to one over the end
         }
         // XXX CHR - Do we need to pass in both a c_info and ptr_n? If we know
         // ptr_n, then we can set c_info. I guess it depends on the situations
@@ -390,46 +390,17 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
         }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class container_triclinic_base::iterator : public std::iterator<std::random_access_iterator_tag, c_info, int>
 {
     public:
         c_info ptr;
         int* co_iter;
-        int nxoy; 
-        int nxey; 
-        int nxwy; 
-        int wz; 
-        int ijk0; 
-        int inc2; 
+        int nxoy;
+        int nxey;
+        int nxwy;
+        int wz;
+        int ijk0;
+        int inc2;
 
         friend class container_triclinic_base;
         typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::pointer pointer;
@@ -439,8 +410,8 @@ class container_triclinic_base::iterator : public std::iterator<std::random_acce
         //default-constructible
         iterator(){};
         //constructor: point to first particle in container
-        iterator(int *_co, int _nx, int _oy, int _ey, int _wy, int _wz, int _ez) : 
-            co_iter(_co), nxoy(_nx*_oy), nxey(_nx*_ey), nxwy(_nx*_wy), wz(_wz), 
+        iterator(int *_co, int _nx, int _oy, int _ey, int _wy, int _wz, int _ez) :
+            co_iter(_co), nxoy(_nx*_oy), nxey(_nx*_ey), nxwy(_nx*_wy), wz(_wz),
             ijk0(_nx*(_ey+_oy*_ez)), inc2(2*_nx*_ey+1)
         {
             //find the first particle to point to
@@ -455,8 +426,8 @@ class container_triclinic_base::iterator : public std::iterator<std::random_acce
             ptr.set(ijk_,q_);
         }
         //constructor: point to a particle in container
-        iterator(int *_co, int _nx, int _oy, int _ey, int _wy, int _wz, int _ez, c_info _ptr) : 
-            ptr(_ptr), co_iter(_co), nxoy(_nx*_oy), nxey(_nx*_ey), nxwy(_nx*_wy), wz(_wz), 
+        iterator(int *_co, int _nx, int _oy, int _ey, int _wy, int _wz, int _ez, c_info _ptr) :
+            ptr(_ptr), co_iter(_co), nxoy(_nx*_oy), nxey(_nx*_ey), nxwy(_nx*_wy), wz(_wz),
             ijk0(_nx*(_ey+_oy*_ez)), inc2(2*_nx*_ey+1) {}
         //copy-constructible
         iterator(const iterator& ci) : ptr(ci.ptr), co_iter(ci.co_iter),
@@ -503,8 +474,6 @@ class container_triclinic_base::iterator : public std::iterator<std::random_acce
         //swappable??
 
 };
-
-
 
 class container_triclinic_base::iterator_order : public std::iterator<std::random_access_iterator_tag, c_info, int>
 {
@@ -575,24 +544,6 @@ public:
     //swappable??
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 

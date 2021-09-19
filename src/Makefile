@@ -6,7 +6,7 @@ include ../config.mk
 
 # List of the common source files
 objs=cell_2d.o cell_3d.o common.o container_2d.o container_3d.o \
-	 iter_2d.o iter_3d.o particle_list.o unitcell.o \
+	 container_tri.o iter_2d.o iter_3d.o particle_list.o unitcell.o \
 	 v_base_2d.o v_base_3d.o v_compute_2d.o v_compute_3d.o wall.o \
 	 wall_2d.o wall_3d.o
 src=$(patsubst %.o,%.cc,$(objs))

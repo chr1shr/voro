@@ -299,7 +299,7 @@ bool container_poly_3d::find_voronoi_cell(double x,double y,double z,double &rx,
  * \param[in] i the index of the region to reallocate. */
 void container_base_3d::add_particle_memory(int i) {
     int l,nmem=mem[i]<<1;
-    
+
     // Carry out a check on the memory allocation size, and print a status
     // message if requested
     if(nmem>max_particle_memory)

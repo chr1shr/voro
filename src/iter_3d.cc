@@ -19,11 +19,11 @@ container_base_3d::iterator::iterator(int* co_,int _nxyz) : co(co_), nxyz(_nxyz)
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator& container_base_3d::iterator::operator++() {
-    
+
     // XXX CHR - I think the number of arithmetic operations in the loop below
     // can be reduced. q_ is being set multiple times to zero, and both diff
     // and n are recalculated.
-    
+
     int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
     if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
@@ -41,7 +41,7 @@ container_base_3d::iterator& container_base_3d::iterator::operator++() {
 /** Increments the iterator by one element. */
 container_base_3d::iterator container_base_3d::iterator::operator++(int) {
     iterator tmp(*this);
-    
+
     int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
     if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
@@ -79,7 +79,7 @@ container_base_3d::iterator container_base_3d::iterator::operator--(int) {
     int diff=q_-n;
     while(diff<0 && ijk_>0) {
         n=n-q_-1;
-        ijk_--; 
+        ijk_--;
         q_=co[ijk_]-1;
         diff=q_-n;
     }
@@ -116,7 +116,7 @@ container_base_3d::iterator::difference_type container_base_3d::iterator::operat
 /** Increments the iterator.
  * \param[in] incre the number of elements to increment by. */
 container_base_3d::iterator& container_base_3d::iterator::operator+=(const difference_type& incre) {
-    
+
     int &q_=ptr.q,&ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
     if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
@@ -173,9 +173,9 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
             q_=co[ijk_]-1;
             diff=q_-n;
         }
-        ci.set(ijk_,q_-n); 
+        ci.set(ijk_,q_-n);
     }
-    
+
     return ci;
     // XXX CHR - I think there is a conceptual issue here with this function.
     // We are returning a reference to a local copy of ci, which will disappear
@@ -294,8 +294,6 @@ void subset_info_3d::setup_common() {
 // represent the same thing, then it is fine (and likely preferable) for them
 // to have the same name. C++ name scoping avoids potential clashes.
 
-
-
 /** Computes whether the current point is out of bounds, relative to the
  * current loop setup.
  * \param[in] ijk_ the current block.
@@ -384,7 +382,7 @@ container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_)
     px=cl_iter->step_div(i,cl_iter->nx)*cl_iter->sx;
     py=cl_iter->step_div(j,cl_iter->ny)*cl_iter->sy;
     pz=cl_iter->step_div(k,cl_iter->nz)*cl_iter->sz;
-    
+
     ptr.set(ci+cl_iter->nx*(cj+cl_iter->ny*ck),0);
     int &q_=ptr.q,&ijk_=ptr.ijk;
     bool continue_check_ijk=true;
@@ -452,7 +450,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
             q_=0;
             continue_check_ijk=next_block();
         }
-        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found. 
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found.
                                        //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
             continue_check=false;
             q_=cl_iter->co[ijk_];
@@ -472,7 +470,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
                 q_=cl_iter->co[ijk_];
             }
             else{
-                n--; //have found the next particle, decrement the difference 
+                n--; //have found the next particle, decrement the difference
             }
         }
     }
@@ -492,7 +490,7 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator+
             q_=0;
             continue_check_ijk=next_block();
         }
-        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found. 
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found.
                                        //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
             continue_check=false;
             q_=cl_iter->co[ijk_];
@@ -512,10 +510,10 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator+
                 q_=cl_iter->co[ijk_];
             }
             else{
-                n--; //have found the next particle, decrement the difference 
+                n--; //have found the next particle, decrement the difference
             }
         }
-    }    
+    }
     //ptr.set(ijk_,q_);
     return tmp;
 }
@@ -531,7 +529,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
             continue_check_ijk=previous_block();
             q_=cl_iter->co[ijk_]-1;
         }
-        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found. 
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found.
                                        //Now ijk_ is at aijk, q_=-1
             continue_check=false;
         }
@@ -549,7 +547,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
                 continue_check=false;
             }
             else{
-                n--; //have found the previous particle, decrement the difference 
+                n--; //have found the previous particle, decrement the difference
             }
         }
     }
@@ -571,7 +569,7 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-
             continue_check_ijk=previous_block();
             q_=cl_iter->co[ijk_]-1;
         }
-        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found. 
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found.
                                        //Now ijk_ is at aijk, q_=-1
             continue_check=false;
         }
@@ -589,7 +587,7 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-
                 continue_check=false;
             }
             else{
-                n--; //have found the previous particle, decrement the difference 
+                n--; //have found the previous particle, decrement the difference
             }
         }
     }
@@ -641,7 +639,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
             q_=0;
             continue_check_ijk=next_block();
         }
-        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found. 
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no next particle found.
                                        //Now ijk_ is at bijk, we just set q=co[ijk_] to let ptr point to 1-over-the-last P
             continue_check=false;
             q_=cl_iter->co[ijk_];
@@ -661,7 +659,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
                 q_=cl_iter->co[ijk_];
             }
             else{
-                n--; //have found the next particle, decrement the difference 
+                n--; //have found the next particle, decrement the difference
             }
         }
     }
@@ -681,7 +679,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
             continue_check_ijk=previous_block();
             q_=cl_iter->co[ijk_]-1;
         }
-        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found. 
+        if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found.
                                        //Now ijk_ is at aijk, q_=-1
             continue_check=false;
         }
@@ -699,7 +697,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
                 continue_check=false;
             }
             else{
-                n--; //have found the previous particle, decrement the difference 
+                n--; //have found the previous particle, decrement the difference
             }
         }
     }
@@ -739,18 +737,18 @@ container_base_3d::iterator_subset container_base_3d::end(subset_info_3d& si) {
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator++() {
-    ptr_n++; 
+    ptr_n++;
     if(ptr_n<pn_upper_bound){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
-    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last 
+    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last
     return *this;
 }
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator_order container_base_3d::iterator_order::operator++(int) {
     iterator_order tmp(*this);
-    ptr_n++; 
+    ptr_n++;
     if(ptr_n<pn_upper_bound){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
-    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last 
+    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last
     return tmp;
 }
 
@@ -758,7 +756,7 @@ container_base_3d::iterator_order container_base_3d::iterator_order::operator++(
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator--() {
     ptr_n--;
     if(ptr_n>=0){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
-    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start 
+    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start
     return *this;
 }
 
@@ -767,7 +765,7 @@ container_base_3d::iterator_order container_base_3d::iterator_order::operator--(
     iterator_order tmp(*this);
     ptr_n--;
     if(ptr_n>=0){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
-    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start 
+    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start
     return tmp;
 }
 
@@ -783,7 +781,7 @@ container_base_3d::iterator_order::difference_type container_base_3d::iterator_o
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator+=(const difference_type& incre) {
     ptr_n+=incre;
     if(ptr_n<pn_upper_bound){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
-    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last 
+    else{ptr_n=pn_upper_bound; ptr.set(nxyz,0);}//out of range, set as one-over-the-last
     return *this;
 }
 
@@ -792,7 +790,7 @@ container_base_3d::iterator_order& container_base_3d::iterator_order::operator+=
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator-=(const difference_type& decre) {
     ptr_n-=decre;
     if(ptr_n>=0){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
-    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start 
+    else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start
     return *this;
 }
 
@@ -822,44 +820,8 @@ container_base_3d::iterator_order container_base_3d::end(particle_order &vo) {
     return iterator_order(vo,ptr_n_,nxyz); //this will point to one-over-the-end: (nxyz,0), ptr_n=pn_upper_bound=(vo.op-vo.o)/2
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //--------------------------iterator triclinic---------------------
- 
+
 //copy-assignable
 container_triclinic_base::iterator& container_triclinic_base::iterator::operator=(iterator other)
 {
@@ -874,7 +836,6 @@ container_triclinic_base::iterator& container_triclinic_base::iterator::operator
     return *this;
 }
 
-
 //Can be compared for equivalence using the equality/inequality operators
 bool container_triclinic_base::iterator::operator==(const iterator& rhs) const
 {
@@ -887,7 +848,6 @@ bool container_triclinic_base::iterator::operator!=(const iterator& rhs) const
     else{return true;}
 }
 
-
 //Can be incremented (if in a dereferenceable state).
 //The result is either also dereferenceable or a past-the-end iterator.
 //Two iterators that compare equal, keep comparing equal after being both increased.
@@ -898,7 +858,7 @@ container_triclinic_base::iterator& container_triclinic_base::iterator::operator
     int diff=q_+n-co_iter[ijk_];
     while(diff>=0){
         n=n-co_iter[ijk_]+q_;
-        //determine next block ijk increment to: 
+        //determine next block ijk increment to:
         //First determine if current block ijk is at x=nx-1 && y=wy-1;
         //If so, next block ijk_+=inc2
         //else: ijk_++
@@ -921,7 +881,7 @@ container_triclinic_base::iterator container_triclinic_base::iterator::operator+
     int diff=q_+n-co_iter[ijk_];
     while(diff>=0){
         n=n-co_iter[ijk_]+q_;
-        //determine next block ijk increment to: 
+        //determine next block ijk increment to:
         //First determine if current block ijk is at x=nx-1 && y=wy-1;
         //If so, next block ijk_+=inc2
         //else: ijk_++
@@ -1007,7 +967,7 @@ container_triclinic_base::iterator::difference_type container_triclinic_base::it
         int ijk_diff=ijk_small+1;
         while(ijk_diff<ijk_big){
             diff+=co_iter[ijk_diff];
-            //determine next block ijk_diff increment to: 
+            //determine next block ijk_diff increment to:
             //First determine if current block ijk_diff is at x=nx-1 && y=wy-1;
             //If so, next block ijk_diff+=inc2
             //else: ijk_diff++
@@ -1069,7 +1029,7 @@ container_triclinic_base::iterator& container_triclinic_base::iterator::operator
     int diff=q_+n-co_iter[ijk_];
     while(diff>=0){
         n=n-co_iter[ijk_]+q_;
-        //determine next block ijk increment to: 
+        //determine next block ijk increment to:
         //First determine if current block ijk is at x=nx-1 && y=wy-1;
         //If so, next block ijk_+=inc2
         //else: ijk_++
@@ -1115,7 +1075,7 @@ c_info& container_triclinic_base::iterator::operator[](const difference_type& in
     int diff=q_+n-co_iter[ijk_];
     while(diff>=0){
         n=n-co_iter[ijk_]+q_;
-        //determine next block ijk increment to: 
+        //determine next block ijk increment to:
         //First determine if current block ijk is at x=nx-1 && y=wy-1;
         //If so, next block ijk_+=inc2
         //else: ijk_++
@@ -1132,17 +1092,16 @@ c_info& container_triclinic_base::iterator::operator[](const difference_type& in
 }
 //swappable??
 
-
-container_triclinic_base::iterator container_triclinic_base::begin() {           
+container_triclinic_base::iterator container_triclinic_base::begin() {
     return iterator(co,nx,oy,ey,wy,wz,ez); //first particle in the container
-} 
+}
 
 container_triclinic_base::iterator container_triclinic_base::end() {
-    
-    int nxoy=nx*oy; 
-    int nxey=nx*ey; 
-    int inc2=2*nx*ey+1; 
-    
+
+    int nxoy=nx*oy;
+    int nxey=nx*ey;
+    int inc2=2*nx*ey+1;
+
     c_info ci;
     //find the last particle to point to
     int ijk_=wz*nxoy-nxey-1; //the last block in the primary domain
@@ -1160,7 +1119,6 @@ container_triclinic_base::iterator container_triclinic_base::end() {
     ci.set(ijk_,q_);
     return iterator(co, nx, oy, ey, wy, wz, ez, ci);
 }
-
 
 //------------------------iterator_order---------------------
 container_triclinic_base::iterator_order& container_triclinic_base::iterator_order::operator=(iterator_order other){
@@ -1252,14 +1210,14 @@ bool container_triclinic_base::iterator_order::operator<=(const iterator_order& 
 
 //Supports compound assignment operations += and -=
 container_triclinic_base::iterator_order& container_triclinic_base::iterator_order::operator+=(const difference_type& incre) {
-    ptr_n+=incre; 
+    ptr_n+=incre;
     int ijk_=cp_iter[2*ptr_n];
     int q_=cp_iter[2*ptr_n+1];
     ptr.set(ijk_,q_);
     return *this;
 }
 container_triclinic_base::iterator_order& container_triclinic_base::iterator_order::operator-=(const difference_type& decre) {
-    ptr_n-=decre; 
+    ptr_n-=decre;
     int ijk_=cp_iter[2*ptr_n];
     int q_=cp_iter[2*ptr_n+1];
     ptr.set(ijk_,q_);
@@ -1278,7 +1236,6 @@ c_info& container_triclinic_base::iterator_order::operator[](const difference_ty
 
 //swappable??
 
-
 container_triclinic_base::iterator_order container_triclinic_base::begin(particle_order &vo) {
     return iterator_order(vo); //first particle in the container
 }
@@ -1290,31 +1247,5 @@ container_triclinic_base::iterator_order container_triclinic_base::end(particle_
     ci.set(ijk_,q_);
     return iterator_order(vo, ci, ptr_n_);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

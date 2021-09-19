@@ -19,8 +19,6 @@
 #include "v_compute_3d.hh"
 #include "wall.hh"
 
-
-
 namespace voro {
 
 class subset_info_3d;
