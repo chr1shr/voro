@@ -31,7 +31,7 @@ container_base_3d::iterator& container_base_3d::iterator::operator++() {
         q_=0;
         diff=n-co[ijk_];
     }
-    while(diff>=0 && ijk_<nxyz) {diff-=(co[ijk_++]+co[ijk_]); }
+    while(diff>=0 && ijk_<nxyz) {diff-=co[++ijk_];}
     if(ijk_<nxyz){q_=diff+co[ijk_];}
     else{q_=0;} //no next particle found, return one-past-the-end, defined as (nxyz,0)
 
@@ -49,7 +49,7 @@ container_base_3d::iterator container_base_3d::iterator::operator++(int) {
         q_=0;
         diff=n-co[ijk_];
     }
-    while(diff>=0 && ijk_<nxyz) {diff-=(co[ijk_++]+co[ijk_]); }
+    while(diff>=0 && ijk_<nxyz) {diff-=co[++ijk_];}
     if(ijk_<nxyz){q_=diff+co[ijk_];}
     else{q_=0;} //no next particle found, return one-past-the-end, defined as (nxyz,0)
 
@@ -124,7 +124,7 @@ container_base_3d::iterator& container_base_3d::iterator::operator+=(const diffe
         q_=0;
         diff=n-co[ijk_];
     }
-    while(diff>=0 && ijk_<nxyz) {diff-=(co[ijk_++]+co[ijk_]); }
+    while(diff>=0 && ijk_<nxyz) {diff-=co[++ijk_];}
     if(ijk_<nxyz){q_=diff+co[ijk_];}
     else{q_=0;} //no next particle found, return one-past-the-end, defined as (nxyz,0)
 
@@ -161,7 +161,7 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
             q_=0;
             diff=n-co[ijk_];
         }
-        while(diff>=0 && ijk_<nxyz) {diff-=(co[ijk_++]+co[ijk_]); }
+        while(diff>=0 && ijk_<nxyz) {diff-=co[++ijk_];}
         if(ijk_<nxyz){ci.set(ijk_,diff+co[ijk_]);}
         else{ci.set(ijk_,0);}
     }
