@@ -140,6 +140,7 @@ class subset_info_3d {
         double **p;
         int **id;
         int *co;
+        double apx,apy,apz;
         void setup_sphere(double vx,double vy,double vz,double r,bool bounds_test=true);
         void setup_box(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax,bool bounds_test=true);
         /** Sets up the class constants to loop over all particles in a
@@ -155,7 +156,6 @@ class subset_info_3d {
             mode=no_check;
             setup_common();
         }
-        double apx,apy,apz;
     private:
         double ax,ay,az,sx,sy,sz,xsp,ysp,zsp;
         bool x_prd,y_prd,z_prd;
@@ -168,7 +168,6 @@ class subset_info_3d {
         inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
         inline int step_int(double a) {return a<0?int(a)-1:int(a);}
         void setup_common();
-        bool out_of_bounds(int ijk_,int q_,double px_,double py_,double pz_);
 };
 
 class container_base_3d::iterator_subset : public std::iterator<std::random_access_iterator_tag,c_info,int> {
@@ -182,19 +181,15 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         double px,py,pz;
         /** Computes whether the current point is out of bounds, relative to the
          * current loop setup.
-         * \param[in] ijk_ the current block.
-         * \param[in] q_ the index of the particle in the current block.
          * \return True if the point is out of bounds, false otherwise. */
-        inline bool out_of_bounds_iter(int ijk_,int q_) const {
-            return cl_iter->out_of_bounds(ijk_,q_,px,py,pz);
-        }
+        bool out_of_bounds();
         bool next_block();
         bool previous_block();
         // XXX CHR - is there any reason to initialize cl_iter here? A blank
         // iterator is never going to be used - you'd have to later copy-assign
         // it, or set up the variables another way. In those cases cl_iter will
         // be initialized then.
-        iterator_subset(){};
+        iterator_subset(){}
         iterator_subset(subset_info_3d* si_);
         iterator_subset(subset_info_3d* si_,c_info ptr_,int i_,int j_,int k_);
         /** Initializes the iterator as a copy of another.
@@ -215,7 +210,7 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
          * \param[in] rhs a reference to another iterator.
          * \return True if they aren't equal, false if they are. */
         inline bool operator!=(const iterator_subset& rhs) const {
-            return ptr.ijk!=rhs.ptr.ijk||ptr.q!=rhs.ptr.q||i!=rhs.i||j!=rhs.j||k!=rhs.k;
+            return ptr.q!=rhs.ptr.q||i!=rhs.i||j!=rhs.j||k!=rhs.k;
         }
         /** Dereferences the iterator as an rvalue. */
         c_info& operator*() {return ptr;}
@@ -226,6 +221,9 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         iterator_subset& operator--();
         iterator_subset operator--(int);
         difference_type operator-(const iterator_subset& rhs) const;
+        iterator_subset& operator+=(const difference_type& incre);
+        iterator_subset& operator-=(const difference_type& decre);
+        c_info& operator[](const difference_type& incre) const;
         /** Calculates a new iterator by adding elements.
          * \param[in] incre the number of elements to increment by. */
         inline iterator_subset operator+(const difference_type& incre) const {
@@ -262,9 +260,6 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         inline bool operator<=(const iterator_subset& rhs) const {
             return k<rhs.k||(k==rhs.k&&(j<rhs.j||(j==rhs.j&&(i<rhs.i||(i==rhs.i&&ptr.q<=rhs.ptr.q)))));
         }
-        iterator_subset& operator+=(const difference_type& incre);
-        iterator_subset& operator-=(const difference_type& decre);
-        c_info& operator[](const difference_type& incre) const;
         friend class container_base_3d;
         friend void swap(iterator_subset& a, iterator_subset& b){
             std::swap(a.ptr.ijk, b.ptr.ijk);std::swap(a.ptr.q, b.ptr.q);
@@ -285,7 +280,7 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
         int ptr_n;
         int pn_upper_bound; //(op_iter-cp_iter)/2, ie. number of particles; ptr_n< than this number to be in range
         int nxyz;
-        iterator_order(){};
+        iterator_order(){}
         /** Initializes the iterator.
          * \param[in] vo_ a reference to the particle_order class to follow. */
         iterator_order(particle_order& vo_, int _nxyz) : cp_iter(vo_.o), op_iter(vo_.op), ptr_n(0), pn_upper_bound((op_iter-cp_iter)/2),
@@ -412,9 +407,12 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
 
 
 
+/*
 
-
-
+class container_triclinic_base::iterator : public container_base_3d::iterator {
+    friend class container_triclinic_base;
+};
+*/
 
 
 
@@ -503,6 +501,9 @@ class container_triclinic_base::iterator : public std::iterator<std::random_acce
         //swappable??
 
 };
+
+
+
 
 
 

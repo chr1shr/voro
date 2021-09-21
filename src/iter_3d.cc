@@ -302,15 +302,17 @@ void subset_info_3d::setup_common() {
  * \param[in] q_ the index of the particle in the current block.
  * \param[in] (px_,py_,pz_) the periodicity vector.
  * \return True if the point is out of bounds, false otherwise. */
-bool subset_info_3d::out_of_bounds(int ijk_,int q_,double px_,double py_,double pz_) {
-    double *pp=p[ijk_]+ps*q_;
-    if(mode==sphere) {
-            double fx=*pp+px_-v0,fy=pp[1]+py_-v1,fz=pp[2]+pz_-v2;
-            return fx*fx+fy*fy+fz*fz>v3;
+bool container_base_3d::iterator_subset::out_of_bounds() {
+    int ijk_=ptr.ijk;
+    int q_=ptr.q;
+    double *pp=cl_iter->p[ijk_]+cl_iter->ps*q_;
+    if(cl_iter->mode==sphere) {
+            double fx=*pp+px-cl_iter->v0,fy=pp[1]+py-cl_iter->v1,fz=pp[2]+pz-cl_iter->v2;
+            return fx*fx+fy*fy+fz*fz>cl_iter->v3;
     }
-    double f=*pp+px_;if(f<v0||f>v1) return true;
-    f=pp[1]+py_;if(f<v2||f>v3) return true;
-    f=pp[2]+pz_;return f<v4||f>v5;
+    double f=*pp+px;if(f<cl_iter->v0||f>cl_iter->v1) return true;
+    f=pp[1]+py;if(f<cl_iter->v2||f>cl_iter->v3) return true;
+    f=pp[2]+pz;return f<cl_iter->v4||f>cl_iter->v5;
 }
 
 /** Moves to the next block, updating all of the required vectors and indices.
@@ -398,7 +400,7 @@ container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_)
     //    ptr.set(ijk_,0);
     //}
     if(continue_check_ijk==true){ //normal case, find the first particle to point to
-        while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)) {
+        while(cl_iter->mode!=no_check&&out_of_bounds()) {
             q_++;
             while(q_>=cl_iter->co[ijk_]) {
                 q_=0;
@@ -459,7 +461,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
         }
         else{  //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
             bool continue_check_ijk_2=true;
-            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+            while(cl_iter->mode!=no_check&&out_of_bounds()&&continue_check_ijk_2) {
                 q_++;
                 while(q_>=cl_iter->co[ijk_] && continue_check_ijk_2) {
                     q_=0;
@@ -499,7 +501,7 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator+
         }
         else{  //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
             bool continue_check_ijk_2=true;
-            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+            while(cl_iter->mode!=no_check&&out_of_bounds()&&continue_check_ijk_2) {
                 q_++;
                 while(q_>=cl_iter->co[ijk_] && continue_check_ijk_2) {
                     q_=0;
@@ -537,7 +539,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
         }
         else{ //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
             bool continue_check_ijk_2=true;
-            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+            while(cl_iter->mode!=no_check&&out_of_bounds()&&continue_check_ijk_2) {
                 q_--;
                 while(q_<0&&continue_check_ijk_2) {
                     continue_check_ijk_2=previous_block();
@@ -577,7 +579,7 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-
         }
         else{ //particles exist in the remaining subset grids, but need to further check if they are within the shape bound
             bool continue_check_ijk_2=true;
-            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+            while(cl_iter->mode!=no_check&&out_of_bounds()&&continue_check_ijk_2) {
                 q_--;
                 while(q_<0&&continue_check_ijk_2) {
                     continue_check_ijk_2=previous_block();
@@ -648,7 +650,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
         }
         else{  //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
             bool continue_check_ijk_2=true;
-            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+            while(cl_iter->mode!=no_check&&out_of_bounds()&&continue_check_ijk_2) {
                 q_++;
                 while(q_>=cl_iter->co[ijk_] && continue_check_ijk_2) {
                     q_=0;
@@ -687,7 +689,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
         }
         else{ //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
             bool continue_check_ijk_2=true;
-            while(cl_iter->mode!=no_check&&out_of_bounds_iter(ijk_,q_)&&continue_check_ijk_2) {
+            while(cl_iter->mode!=no_check&&out_of_bounds()&&continue_check_ijk_2) {
                 q_--;
                 while(q_<0&&continue_check_ijk_2) {
                     continue_check_ijk_2=previous_block();
