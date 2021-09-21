@@ -14,14 +14,6 @@ container_base_2d::iterator::iterator(int* co_) : co(co_) {
     ptr.set(ij,0);
 }
 
-/** Sets the iterator to equal another.
- * \param[in] other the iterator to copy. */
-container_base_2d::iterator& container_base_2d::iterator::operator=(iterator other) {
-    co=other.co;
-    ptr=other.ptr;
-    return *this;
-}
-
 /** Increments the iterator by one element. */
 container_base_2d::iterator& container_base_2d::iterator::operator++() {
     int q_=ptr.q,ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];

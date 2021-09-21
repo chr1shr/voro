@@ -19,6 +19,8 @@
 #include "v_compute_3d.hh"
 #include "unitcell.hh"
 
+
+#include "container_3d.hh"
 namespace voro {
 
 /** \brief Class for representing a particle system in a 3D triclinic domain.
@@ -35,7 +37,8 @@ namespace voro {
  * The class is derived from the unitcell class, which encapsulates information
  * about the domain geometry, and the voro_base class, which encapsulates
  * information about the underlying computational grid. */
-class container_triclinic_base : public unitcell, public voro_base_3d {
+class container_triclinic_base : public unitcell,  public voro_base_3d  //public container_base_3d  //public voro_base_3d, public container_base_3d 
+{
     public:
         const double max_len_sq;
         /** The lower y index (inclusive) of the primary domain within the
