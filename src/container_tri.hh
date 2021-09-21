@@ -168,9 +168,8 @@ class container_triclinic_base : public unitcell,  public voro_base_3d  //public
         }
         void create_all_images();
         void check_compartmentalized();
-        
 
-        friend class iterator; 
+        friend class iterator;
         class iterator;
         iterator begin();
         iterator end();

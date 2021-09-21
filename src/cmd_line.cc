@@ -113,7 +113,7 @@ void custom_output_message() {
 
 // Ths message is displayed if the user requests version information
 void version_message() {
-    puts("Voro++ version 1.0.0 (August 20th 2021)");
+    puts("Voro++ version 1.0.0 (September 20th 2021)");
 }
 
 // Prints an error message. This is called when the program is unable to make
@@ -128,7 +128,7 @@ inline bool se(const char* f1,const char* f2) {
 }
 
 // Opens an extra output file
-inline FILE* open_extra(char *buffer,char **argv,wall_list &wl,int f_output,const char *ext,const char* base_fn,bool &stdout_used) {
+inline FILE* open_extra(char *buffer,char **argv,wall_list_3d &wl,int f_output,const char *ext,const char* base_fn,bool &stdout_used) {
     if(f_output>=0) {
 
         // If no specific filename was given then assemble the default one
@@ -159,59 +159,59 @@ inline void fclosec(FILE *fp) {
     if(fp!=NULL&&fp!=stdout) fclose(fp);
 }
 
+template<class v_class,class i_class>
+inline void cell_output(v_class &c,i_class &cli,const int ps,double** conp,int **conid,const char* format,FILE* out_file,FILE* gnu_file,FILE* povp_file,FILE* povv_file) {
+    int ijk=cli->ijk,q=cli->q,pid=conid[ijk][q];
+    double *pp=conp[ijk]+ps*q,x=*pp,y=pp[1],z=pp[2],r=ps==4?pp[3]:0.5;
+    if(out_file!=NULL) c.output_custom(format,pid,x,y,z,r,out_file);
+    if(gnu_file!=NULL) c.draw_gnuplot(x,y,z,gnu_file);
+    if(povp_file!=NULL) {
+        fprintf(povp_file,"// id %d\n",pid);
+        if(ps==4) fprintf(povp_file,"sphere{<%g,%g,%g>,%g}\n",x,y,z,r);
+        else fprintf(povp_file,"sphere{<%g,%g,%g>,s}\n",x,y,z);
+    }
+    if(povv_file!=NULL) {
+        fprintf(povv_file,"// cell %d\n",pid);
+        c.draw_pov(x,y,z,povv_file);
+    }
+}
+
 // Carries out the Voronoi computation and outputs the results to the requested
 // files
-template<class c_loop,class c_class>
-void cmd_line_output(c_loop &vl,c_class &con,const char* format,FILE* out_file,FILE* gnu_file,FILE* povp_file,FILE* povv_file,bool verbose,double &vol,int &vcc,int &tp) {
-    int pid,ps=con.ps;double x,y,z,r;
-    if(voro_contains_neighbor(format)) {
-        voronoicell_neighbor_3d c(con);
-        if(vl.start()) do if(con.compute_cell(c,vl)) {
-            vl.pos(pid,x,y,z,r);
-            if(out_file!=NULL) c.output_custom(format,pid,x,y,z,r,out_file);
-            if(gnu_file!=NULL) c.draw_gnuplot(x,y,z,gnu_file);
-            if(povp_file!=NULL) {
-                fprintf(povp_file,"// id %d\n",pid);
-                if(ps==4) fprintf(povp_file,"sphere{<%g,%g,%g>,%g}\n",x,y,z,r);
-                else fprintf(povp_file,"sphere{<%g,%g,%g>,s}\n",x,y,z);
-            }
-            if(povv_file!=NULL) {
-                fprintf(povv_file,"// cell %d\n",pid);
-                c.draw_pov(x,y,z,povv_file);
-            }
-            if(verbose) {vol+=c.volume();vcc++;}
-        } while(vl.inc());
-    } else {
-        voronoicell_3d c(con);
-        if(vl.start()) do if(con.compute_cell(c,vl)) {
-            vl.pos(pid,x,y,z,r);
-            if(out_file!=NULL) c.output_custom(format,pid,x,y,z,r,out_file);
-            if(gnu_file!=NULL) c.draw_gnuplot(x,y,z,gnu_file);
-            if(povp_file!=NULL) {
-                fprintf(povp_file,"// id %d\n",pid);
-                if(ps==4) fprintf(povp_file,"sphere{<%g,%g,%g>,%g}\n",x,y,z,r);
-                else fprintf(povp_file,"sphere{<%g,%g,%g>,s}\n",x,y,z);
-            }
-            if(povv_file!=NULL) {
-                fprintf(povv_file,"// cell %d\n",pid);
-                c.draw_pov(x,y,z,povv_file);
-            }
-            if(verbose) {vol+=c.volume();vcc++;}
-        } while(vl.inc());
+template<class c_class,class v_class>
+void cmd_line_output(c_class &con,v_class &c,const char* format,FILE* out_file,FILE* gnu_file,FILE* povp_file,FILE* povv_file,bool verbose,double &vol,int &vcc,int &tp) {
+    container_base_3d::iterator cli;
+    double **conp=con.p;int **conid=con.id;
+    for(cli=con.begin();cli<con.end();cli++) if(con.compute_cell(c,cli)) {
+        cell_output(c,cli,con.ps,conp,conid,format,out_file,gnu_file,povp_file,povv_file);
+        if(verbose) {vol+=c.volume();vcc++;}
+    }
+    if(verbose) tp=con.total_particles();
+}
+
+// Carries out the Voronoi computation and outputs the results to the requested
+// files, for the case when a particu
+template<class c_class,class v_class>
+void cmd_line_output(particle_order vo,c_class &con,v_class &c,const char* format,FILE* out_file,FILE* gnu_file,FILE* povp_file,FILE* povv_file,bool verbose,double &vol,int &vcc,int &tp) {
+    container_base_3d::iterator_order cli;
+    double **conp=con.p;int **conid=con.id;
+    for(cli=con.begin(vo);cli<con.end(vo);cli++) if(con.compute_cell(c,cli)) {
+        cell_output(c,cli,con.ps,conp,conid,format,out_file,gnu_file,povp_file,povv_file);
+        if(verbose) {vol+=c.volume();vcc++;}
     }
     if(verbose) tp=con.total_particles();
 }
 
 int main(int argc,char **argv) {
     int i=1,j=-7,custom_output=0,nx,ny,nz,init_mem=8,
-        gnuplot_output=-1,povv_output=-1,povp_output=-1;
+    gnuplot_output=-1,povv_output=-1,povp_output=-1;
     double ls=0;
     blocks_mode bm=none;
     bool polydisperse=false,x_prd=false,y_prd=false,z_prd=false,
          ordered=false,verbose=false,stdout_used=false;
 
-    pre_container_3d *pcon=NULL;pre_container_poly_3d *pconp=NULL;
-    wall_list wl;
+    particle_list3 *plist3=NULL;particle_list4 *plist4=NULL;
+    wall_list_3d wl;
 
     // If there's one argument, check to see if it's requesting help.
     // Otherwise, bail out with an error.
@@ -372,7 +372,8 @@ int main(int argc,char **argv) {
     // to divide the region up into
     double ax=atof(argv[i]),bx=atof(argv[i+1]),
            ay=atof(argv[i+2]),by=atof(argv[i+3]),
-           az=atof(argv[i+4]),bz=atof(argv[i+5]);
+           az=atof(argv[i+4]),bz=atof(argv[i+5]),
+           lx=bx-ax,ly=by-ay,lz=bz-az;
 
     // Check that for each coordinate, the minimum value is smaller than the
     // maximum value
@@ -415,15 +416,15 @@ int main(int argc,char **argv) {
     if(bm==none) {
 
         // If no information has been given, then read all the particles into
-        // the pre_container in order to estimate the number of blocks
+        // the a particle_list class in order to estimate the number of blocks
         if(polydisperse) {
-            pconp=new pre_container_poly(ax,bx,ay,by,az,bz,x_prd,y_prd,z_prd);
-            pconp->import(in_file);
-            pconp->guess_optimal(nx,ny,nz);
+            plist4=new particle_list4();
+            plist4->import(in_file);
+            plist4->guess_optimal(lx,ly,lz,nx,ny,nz);
         } else {
-            pcon=new pre_container(ax,bx,ay,by,az,bz,x_prd,y_prd,z_prd);
-            pcon->import(in_file);
-            pcon->guess_optimal(nx,ny,nz);
+            plist3=new particle_list3();
+            plist3->import(in_file);
+            plist3->guess_optimal(lx,ly,lz,nx,ny,nz);
         }
         if(in_file!=stdin) fclose(in_file);
     } else {
@@ -431,21 +432,20 @@ int main(int argc,char **argv) {
         if(bm==length_scale) {
 
             // Check that the length scale is positive and reasonably large
-            if(ls<tolerance) {
+            if(ls*ls<tolerance*tolerance*(lx*lx+ly*ly+lz*lz)) {
                 fputs("voro++: ",stderr);
                 if(ls<0) {
                     fputs("The length scale must be positive\n",stderr);
                 } else {
-                    fprintf(stderr,"The length scale is smaller than the safe limit of %g. Either\n"
-                            "increase the particle length scale, or recompile with a different limit.\n",tolerance);
+                    fputs("The ratio of the length scale to the container domain is too small\n",stderr);
                 }
                 wl.deallocate();
                 return VOROPP_CMD_LINE_ERROR;
             }
             ls=0.6/ls;
-            nxf=(bx-ax)*ls+1;
-            nyf=(by-ay)*ls+1;
-            nzf=(bz-az)*ls+1;
+            nxf=lx*ls+1;
+            nyf=ly*ls+1;
+            nzf=lz*ls+1;
 
             nx=int(nxf);ny=int(nyf);nz=int(nzf);
         } else {
@@ -487,66 +487,82 @@ int main(int argc,char **argv) {
     delete [] buffer;
 
     // Set up the output string
-    const char *c_str=(custom_output==0?(polydisperse?"%i %q %v %r":"%i %q %v"):argv[custom_output]);
+    const char *c_str=custom_output!=0?argv[custom_output]:(polydisperse?"%i %q %v %r":"%i %q %v");
+    bool neigh=custom_output!=0&&voro_contains_neighbor(argv[custom_output]);
 
     // Now switch depending on whether polydispersity was enabled, and whether
     // output ordering is requested
     double vol=0;int tp=0,vcc=0;
     if(polydisperse) {
+        container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
+        con.add_wall(wl);
+
         if(ordered) {
             particle_order vo;
-            container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
-            con.add_wall(wl);
             if(bm==none) {
-                pconp->setup(vo,con);delete pconp;
+                plist4->setup(vo,con);delete plist4;
             } else {
                 con.import(vo,in_file);
                 if(in_file!=stdin) fclose(in_file);
             }
-
-            c_loop_order vlo(con,vo);
-            cmd_line_output(vlo,con,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            if(neigh) {
+                voronoicell_neighbor_3d c(con);
+                cmd_line_output(vo,con,c,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            } else {
+                voronoicell_3d c(con);
+                cmd_line_output(vo,con,c,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            }
         } else {
-            container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
-            con.add_wall(wl);
-
             if(bm==none) {
-                pconp->setup(con);delete pconp;
+                plist4->setup(con);delete plist4;
             } else {
                 con.import(in_file);
                 if(in_file!=stdin) fclose(in_file);
             }
-
-            c_loop_all vla(con);
-            cmd_line_output(vla,con,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            if(neigh) {
+                voronoicell_neighbor_3d c(con);
+                cmd_line_output(con,c,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            } else {
+                voronoicell_3d c(con);
+                cmd_line_output(con,c,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            }
         }
     } else {
+        container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
+        con.add_wall(wl);
+
         if(ordered) {
             particle_order vo;
-            container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
-            con.add_wall(wl);
             if(bm==none) {
-                pcon->setup(vo,con);delete pcon;
+                plist3->setup(vo,con);delete plist3;
             } else {
                 con.import(vo,in_file);
                 if(in_file!=stdin) fclose(in_file);
             }
-
-            c_loop_order vlo(con,vo);
-            cmd_line_output(vlo,con,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            if(neigh) {
+                voronoicell_neighbor_3d c(con);
+                cmd_line_output(vo,con,c,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            } else {
+                voronoicell_3d c(con);
+                cmd_line_output(vo,con,c,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            }
         } else {
-            container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
-            con.add_wall(wl);
             if(bm==none) {
-                pcon->setup(con);delete pcon;
+                plist3->setup(con);delete plist3;
             } else {
                 con.import(in_file);
                 if(in_file!=stdin) fclose(in_file);
             }
-            c_loop_all vla(con);
-            cmd_line_output(vla,con,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            if(neigh) {
+                voronoicell_neighbor_3d c(con);
+                cmd_line_output(con,c,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            } else {
+                voronoicell_3d c(con);
+                cmd_line_output(con,c,c_str,out_file,gnu_file,povp_file,povv_file,verbose,vol,vcc,tp);
+            }
         }
     }
+    wl.deallocate();
 
     // Print information if verbose output requested
     if(verbose) {
@@ -562,8 +578,8 @@ int main(int argc,char **argv) {
                bm==none?"estimated from file":(bm==length_scale?
                "estimated using length scale":"directly specified"),
                argv[i+6],c_str,custom_output==0?" (default)":"",
-               tp,((double) tp)/(nx*ny*nz),vcc,
-               (bx-ax)*(by-ay)*(bz-az),vol);
+               tp,static_cast<double>(tp)/(nx*ny*nz),vcc,
+               lx*ly*lz,vol);
     }
 
     // Close output files
