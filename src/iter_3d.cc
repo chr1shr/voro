@@ -58,16 +58,15 @@ container_base_3d::iterator container_base_3d::iterator::operator++(int) {
 
 /** Decrements the iterator by one element. */
 container_base_3d::iterator& container_base_3d::iterator::operator--() {
-    int q_=ptr.q; int ijk_=ptr.ijk;
-    int n=1;
-    int diff=q_-n;
+    int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_-n;
     while(diff<0 && ijk_>0) {
         n=n-q_-1;
         ijk_--;
         q_=co[ijk_]-1;
         diff=q_-n;
     }
-    ptr.set(ijk_,q_-n); //if no previous particle found, this returns (0,-1)
+    if(diff<0){q_=-1;} //if no previous particle found, this returns (0,-1)
+    else{q_=diff;}
     return *this;
 }
 
@@ -95,8 +94,8 @@ container_base_3d::iterator::difference_type container_base_3d::iterator::operat
          //[Y:2D, 3D] XXX CHR - simplify these six lines to just diff=pts.q-rhs.ptr.q ?
     }
     else{
-        int ijk_small=rhs.ptr.ijk;int q_small=rhs.ptr.q;
-        int ijk_big=ptr.ijk;int q_big=ptr.q;
+        int ijk_small=rhs.ptr.ijk,q_small=rhs.ptr.q,
+            ijk_big=ptr.ijk,q_big=ptr.q;
         bool negative=false;
         if(ptr.ijk < rhs.ptr.ijk) {
             negative=true;
@@ -191,7 +190,7 @@ container_base_3d::iterator container_base_3d::begin() {return iterator(co,nxyz)
  * \return The iterator. */
 container_base_3d::iterator container_base_3d::end() {
     c_info ci(nxyz,0);
-    return iterator(co, ci, nxyz);
+    return iterator(co,ci,nxyz);
 
     // XXX CHR - here you are scanning backward through the blocks to put
     // "end()" after the last particle, at (ijk,q+1). But if there are n
