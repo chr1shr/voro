@@ -19,4 +19,5 @@
 #include "wall.cc"
 #include "wall_2d.cc"
 #include "wall_3d.cc"
+#include "iter_2d.cc"
 #include "iter_3d.cc"

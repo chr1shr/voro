@@ -306,7 +306,7 @@ bool container_base_2d::iterator_subset::previous_block() {
         i--;
         if(ci>0) {ci--;ijk_--;} else {ci=cl_iter->nx-1;ijk_+=cl_iter->nx-1;px-=cl_iter->sx;}
         return true;
-    } else if(j>aj) {
+    } else if(j>cl_iter->aj) {
         i=cl_iter->bi;ci=cl_iter->ddi;px=cl_iter->aapx;j--;
         if(cj>0) {cj--;ijk_-=cl_iter->inc1;} else {cj=cl_iter->ny-1;ijk_+=cl_iter->nxy-cl_iter->inc1;py-=cl_iter->sy;}
         return true;
