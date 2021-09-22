@@ -74,16 +74,15 @@ container_base_3d::iterator& container_base_3d::iterator::operator--() {
 /** Decrements the iterator by one element. */
 container_base_3d::iterator container_base_3d::iterator::operator--(int) {
     iterator tmp(*this);
-    int q_=ptr.q; int ijk_=ptr.ijk;
-    int n=1;
-    int diff=q_-n;
+    int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_-n;
     while(diff<0 && ijk_>0) {
         n=n-q_-1;
         ijk_--;
         q_=co[ijk_]-1;
         diff=q_-n;
     }
-    ptr.set(ijk_,q_-n); //if no previous particle found, this returns (0,-1)
+    if(diff<0){q_=-1;} //if no previous particle found, this returns (0,-1)
+    else{q_=diff;}
     return tmp;
 }
 
@@ -134,14 +133,15 @@ container_base_3d::iterator& container_base_3d::iterator::operator+=(const diffe
 /** Decrements the iterator.
  * \param[in] decre the number of elements to decrement by. */
 container_base_3d::iterator& container_base_3d::iterator::operator-=(const difference_type& decre) {
-    int q_=ptr.q,ijk_=ptr.ijk,n=decre,diff=q_-n;
+    int &q_=ptr.q,&ijk_=ptr.ijk,n=decre,diff=q_-n;
     while(diff<0 && ijk_>0) {
         n=n-q_-1;
         ijk_--;
         q_=co[ijk_]-1;
         diff=q_-n;
     }
-    ptr.set(ijk_,q_-n); //if no previous particle found, this returns (0,-1)
+    if(diff<0){q_=-1;} //if no previous particle found, this returns (0,-1)
+    else{q_=diff;}
     return *this;
 }
 
@@ -173,7 +173,8 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
             q_=co[ijk_]-1;
             diff=q_-n;
         }
-        ci.set(ijk_,q_-n);
+        if(diff<0){ci.set(ijk_,-1);} //if no previous particle found, this returns (0,-1)
+        else{ci.set(ijk_,diff);}
     }
 
     return ci;
@@ -476,7 +477,6 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
             }
         }
     }
-    //ptr.set(ijk_,q_);
     return *this;
 }
 
@@ -533,6 +533,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
         }
         if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found.
                                        //Now ijk_ is at aijk, q_=-1
+            q_=-1;
             continue_check=false;
         }
         else{ //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
@@ -545,8 +546,9 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 (no need to set)
+                                       //Now ijk_ is at aijk, q=-1 
                 continue_check=false;
+                q_=-1;
             }
             else{
                 n--; //have found the previous particle, decrement the difference
@@ -573,9 +575,10 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-
         }
         if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found.
                                        //Now ijk_ is at aijk, q_=-1
+            q_=-1;
             continue_check=false;
         }
-        else{ //particles exist in the remaining subset grids, but need to further check if they are within the shape bound
+        else{ //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
             bool continue_check_ijk_2=true;
             while(cl_iter->mode!=no_check&&out_of_bounds()&&continue_check_ijk_2) {
                 q_--;
@@ -585,8 +588,9 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 (no need to set)
+                                       //Now ijk_ is at aijk, q=-1 
                 continue_check=false;
+                q_=-1;
             }
             else{
                 n--; //have found the previous particle, decrement the difference
@@ -684,6 +688,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
         if(continue_check_ijk==false){ //Subset grids have all checked, and no previous particle found.
                                        //Now ijk_ is at aijk, q_=-1
             continue_check=false;
+            q_=-1;
         }
         else{ //particles exist in the remaining sebset grids, but need to further check if they are within the shape bound
             bool continue_check_ijk_2=true;
@@ -695,8 +700,9 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 (no need to set)
+                                       //Now ijk_ is at aijk, q=-1 
                 continue_check=false;
+                q_=-1;
             }
             else{
                 n--; //have found the previous particle, decrement the difference
