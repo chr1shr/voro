@@ -45,6 +45,13 @@ container_triclinic_base::container_triclinic_base(double bx_,double bxy_,double
         id[l]=new int[init_mem];
         p[l]=new double[ps*init_mem];
     }
+    
+    #if defined(_OPENMP)
+    img_lock=new omp_lock_t[oz];
+    for(int i=0;i<oz;i++){
+        omp_init_lock(img_lock+i);
+    }
+    #endif
 }
 
 /** The container destructor frees the dynamically allocated memory. */
@@ -58,6 +65,13 @@ container_triclinic_base::~container_triclinic_base() {
     delete [] co;
     delete [] id;
     delete [] p;
+    
+    #if defined(_OPENMP)
+    for(int i=0;i<oz;i++){
+        omp_destroy_lock(img_lock+i);
+    }
+    delete [] img_lock;
+    #endif
 }
 
 /** The class constructor sets up the geometry of container.
@@ -69,9 +83,40 @@ container_triclinic_base::~container_triclinic_base() {
  *                coordinate directions.
  * \param[in] init_mem_ the initial memory allocation for each block. */
 container_triclinic::container_triclinic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-    int nx_,int ny_,int nz_,int init_mem_)
+    int nx_,int ny_,int nz_,int init_mem_,int number_thread)
     : container_triclinic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem_,3),
-    vc(*this,2*nx_+1,2*ey+1,2*ez+1) {}
+    nt(number_thread), vc(new voro_compute_3d<container_triclinic>*[nt]),
+    overflow_mem_numPt(64), overflowPtCt(0), ijk_m_id_overflow(new int[3*overflow_mem_numPt]),
+    p_overflow(new double[3*overflow_mem_numPt])
+    {   
+        #pragma omp parallel num_threads(nt)
+        {  
+        vc[t_num()]= new voro_compute_3d<container_triclinic>(*this,2*nx_+1,2*ey+1,2*ez+1);
+        }          
+    }
+
+
+container_triclinic::~container_triclinic(){
+    int l;
+    for(l=nt-1;l>=0;l--) delete vc[l];
+    delete [] vc;
+    //delete overflow arrays
+    delete [] ijk_m_id_overflow;
+    delete [] p_overflow;
+}
+
+void container_triclinic::change_number_thread(int number_thread){
+    int l;
+    for(l=nt-1;l>=0;l--) delete vc[l];
+    delete [] vc;
+    
+    nt=number_thread;
+    vc=new voro_compute_3d<container_triclinic>*[nt];
+    #pragma omp parallel num_threads(nt)
+    {  
+    vc[t_num()]= new voro_compute_3d<container_triclinic>(*this,2*nx+1,2*ey+1,2*ez+1);
+    } 
+}
 
 /** The class constructor sets up the geometry of container.
  * \param[in] (bx_) The x coordinate of the first unit vector.
@@ -82,67 +127,510 @@ container_triclinic::container_triclinic(double bx_,double bxy_,double by_,doubl
  *                coordinate directions.
  * \param[in] init_mem_ the initial memory allocation for each block. */
 container_triclinic_poly::container_triclinic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-    int nx_,int ny_,int nz_,int init_mem_)
+    int nx_,int ny_,int nz_,int init_mem_,int number_thread)
     : container_triclinic_base(bx_,bxy_,by_,bxz_,byz_,bz_,nx_,ny_,nz_,init_mem_,4),
-    vc(*this,2*nx_+1,2*ey+1,2*ez+1) {ppr=p;}
+    nt(number_thread), vc(new voro_compute_3d<container_triclinic_poly>*[nt]),
+    overflow_mem_numPt(64), overflowPtCt(0), ijk_m_id_overflow(new int[3*overflow_mem_numPt]),
+    p_overflow(new double[4*overflow_mem_numPt])
+    {   
+        max_r=new double[nt];
+        #pragma omp parallel num_threads(nt)
+        {  
+        vc[t_num()]= new voro_compute_3d<container_triclinic_poly>(*this,2*nx_+1,2*ey+1,2*ez+1);
+        max_r[t_num()]=0.0;
+        }        
+        ppr=p;
+        //create thread-private copies of variables in rad_option.hh 
+        r_rad=new double[nt];
+        r_mul=new double[nt];
+        r_val=new double[nt];
+    }
+
+
+container_triclinic_poly::~container_triclinic_poly(){
+    int l;
+    for(l=nt-1;l>=0;l--) delete vc[l];
+    delete [] vc;
+    delete [] max_r;
+    //delete overflow arrays
+    delete [] ijk_m_id_overflow;
+    delete [] p_overflow;
+    //delete thread-private copies of variables in rad_option.hh 
+    delete [] r_rad;
+    delete [] r_mul;
+    delete [] r_val; 
+}
+
+void container_triclinic_poly::change_number_thread(int number_thread){
+    int l;
+    for(l=nt-1;l>=0;l--) delete vc[l];
+    delete [] vc;
+    delete [] max_r;
+    //delete thread-private copies of variables in rad_option.hh 
+    delete [] r_rad;
+    delete [] r_mul;
+    delete [] r_val; 
+
+    nt=number_thread;
+    vc=new voro_compute_3d<container_triclinic_poly>*[nt];
+    max_r=new double[nt];
+    #pragma omp parallel num_threads(nt)
+    { 
+    vc[t_num()]= new voro_compute_3d<container_triclinic_poly>(*this,2*nx+1,2*ey+1,2*ez+1);
+    max_r[t_num()]=0.0;
+    } 
+    //create thread-private copies of variables in rad_option.hh 
+    r_rad=new double[nt];
+    r_mul=new double[nt];
+    r_val=new double[nt];
+}
+
 
 /** Put a particle into the correct region of the container.
- * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
-void container_triclinic::put(int n,double x,double y,double z) {
-    int ijk;
+void container_triclinic::put(int i,double x,double y,double z) {
+    int ijk; 
+    
+    //find block ijk that point (x,y,z) is in
+    //remap (x,y,z) into primary domain if necessary
     put_locate_block(ijk,x,y,z);
-    for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+3*l);
-    id[ijk][co[ijk]]=n;
-    double *pp=p[ijk]+3*co[ijk]++;
-    *(pp++)=x;*(pp++)=y;*pp=z;
+    
+    ///check memory allocation       
+    int m;
+    #pragma omp atomic capture
+    m=co[ijk]++;   //co[ijk]: number of points in block ijk
+
+    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+    //pt and id info in id, p directly
+    if(m<mem[ijk]){
+        id[ijk][m]=i;
+        double *pp=p[ijk]+3*m;
+        *(pp++)=x; *(pp++)=y; *pp=z;
+    }
+    else{ 
+        //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
+        //ijk_m_id_overflow, p_overflow, and reconcile later 
+        #pragma omp critical
+        {
+            //opti: index of overflow point
+            //overflowPtCt: number of overflow points
+            int opti=overflowPtCt++;
+
+            //if overflow arrays memory slots not enough, add new length
+            if(overflowPtCt>overflow_mem_numPt){  
+                int old_overflow_mem_numPt=overflow_mem_numPt;
+                overflow_mem_numPt=overflow_mem_numPt*2;
+                int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
+                double *new_p_overflow=new double [3*overflow_mem_numPt];
+                for(int ii=0;ii<old_overflow_mem_numPt;ii++){
+                    int ii3=3*ii;
+                    new_ijk_m_id_overflow[ii3]=ijk_m_id_overflow[ii3];
+                    new_ijk_m_id_overflow[ii3+1]=ijk_m_id_overflow[ii3+1];
+                    new_ijk_m_id_overflow[ii3+2]=ijk_m_id_overflow[ii3+2];
+
+                    new_p_overflow[ii3]=p_overflow[ii3];
+                    new_p_overflow[ii3+1]=p_overflow[ii3+1];
+                    new_p_overflow[ii3+2]=p_overflow[ii3+2];
+                }
+
+                delete [] ijk_m_id_overflow; 
+                delete [] p_overflow;
+
+                ijk_m_id_overflow=new_ijk_m_id_overflow;
+                p_overflow=new_p_overflow;
+            }
+
+            //add in overflow info in overflow arrays
+            int opti3=3*opti; 
+            ijk_m_id_overflow[opti3]=ijk;
+            ijk_m_id_overflow[opti3+1]=m;
+            ijk_m_id_overflow[opti3+2]=i;
+
+            p_overflow[opti3]=x;
+            p_overflow[opti3+1]=y;
+            p_overflow[opti3+2]=z;
+        }
+    }
+}
+
+
+//con.put with a input point array, parallel put
+void container_triclinic::put(double *pt_list, int num_pt, int num_thread){
+    #pragma omp parallel for num_threads(num_thread)
+    for(int i=0; i<num_pt; i++){ //id:i      
+        double x=pt_list[3*i];
+        double y=pt_list[3*i+1];
+        double z=pt_list[3*i+2];
+        put(i,x,y,z);
+    }
+}
+
+
+void container_triclinic::put_reconcile_overflow(){
+    //reconcile overflow
+    //loop through points in overflow arrays, 
+    //if (m>=mem[ijk]): int nmem (new memory length) = 2*mem[ijk];
+    //                  while(m>=nmem) {nmem=2*nmem;}
+    // then construct new arrays of id, p with size nmem, and add in overflow pt info
+    for(int i=0;i<overflowPtCt;i++){
+        int i3=3*i;
+        int ijk=ijk_m_id_overflow[i3];
+        int m=ijk_m_id_overflow[i3+1];
+        int idd=ijk_m_id_overflow[i3+2];
+        double x=p_overflow[i3];
+        double y=p_overflow[i3+1];
+        double z=p_overflow[i3+2];
+        if(m>=mem[ijk]){
+            int nmem=2*mem[ijk];
+            while(m>=nmem){nmem=2*nmem;}
+            int l; 
+            //the following are the same as add_particle_memory(ijk)
+            // Carry out a check on the memory allocation size, and
+            // print a status message if requested
+            if(nmem>max_particle_memory)
+                    voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
+    #if VOROPP_VERBOSE >=3
+            fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
+    #endif
+
+            // Allocate new memory and copy in the contents of the old arrays
+            int *idp=new int[nmem];
+            for(l=0;l<mem[ijk];l++) {
+                idp[l]=id[ijk][l];
+            }
+
+            double *pp=new double[ps*nmem];
+            for(l=0;l<ps*mem[ijk];l++) {
+                pp[l]=p[ijk][l];
+            }
+            // Update pointers and delete old arrays
+            mem[ijk]=nmem;
+            delete [] id[ijk];
+            delete [] p[ijk];
+            id[ijk]=idp;
+            p[ijk]=pp;
+        }
+        //after fixing memory issue above, now, add overflow pt information into the original p, id arrays
+        id[ijk][m]=idd;
+        double *pp=p[ijk]+3*m;
+        *(pp++)=x; *(pp++)=y; *pp=z;
+    }   
+    //after reconciling, set overflowPtCt back to initial value
+    overflowPtCt=0;
+    
 }
 
 /** Put a particle into the correct region of the container.
- * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */
-void container_triclinic_poly::put(int n,double x,double y,double z,double r) {
-    int ijk;
+void container_triclinic_poly::put(int i,double x,double y,double z,double r) {
+    int ithread=t_num();
+    int ijk; 
+    
+    //find block ijk that point (x,y,z) is in
+    //remap (x,y,z) into primary domain if necessary
     put_locate_block(ijk,x,y,z);
-    for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+4*l);
-    id[ijk][co[ijk]]=n;
-    double *pp=p[ijk]+4*co[ijk]++;
-    *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-    if(max_radius<r) max_radius=r;
+    
+    ///check memory allocation       
+    int m;
+    #pragma omp atomic capture
+    m=co[ijk]++;   //co[ijk]: number of points in block ijk
+
+    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+    //pt and id info in id, p directly
+    if(m<mem[ijk]){
+        id[ijk][m]=i;
+        double *pp=p[ijk]+4*m;
+        *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
+        //max_r
+        if(max_r[ithread]<r) {max_r[ithread]=r;}
+    }
+    else{ 
+        //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
+        //ijk_m_id_overflow, p_overflow, and reconcile later 
+        #pragma omp critical
+        {
+            //opti: index of overflow point
+            //overflowPtCt: number of overflow points
+            int opti=overflowPtCt++;
+
+            //if overflow arrays memory slots not enough, add new length
+            if(overflowPtCt>overflow_mem_numPt){  
+                int old_overflow_mem_numPt=overflow_mem_numPt;
+                overflow_mem_numPt=overflow_mem_numPt*2;
+                int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
+                double *new_p_overflow=new double [4*overflow_mem_numPt];
+                for(int ii=0;ii<old_overflow_mem_numPt;ii++){
+                    int ii3=3*ii;
+                    new_ijk_m_id_overflow[ii3]=ijk_m_id_overflow[ii3];
+                    new_ijk_m_id_overflow[ii3+1]=ijk_m_id_overflow[ii3+1];
+                    new_ijk_m_id_overflow[ii3+2]=ijk_m_id_overflow[ii3+2];
+
+                    int ii4=4*ii;
+                    new_p_overflow[ii4]=p_overflow[ii4];
+                    new_p_overflow[ii4+1]=p_overflow[ii4+1];
+                    new_p_overflow[ii4+2]=p_overflow[ii4+2];
+                    new_p_overflow[ii4+3]=p_overflow[ii4+3];
+                }
+
+                delete [] ijk_m_id_overflow; 
+                delete [] p_overflow;
+
+                ijk_m_id_overflow=new_ijk_m_id_overflow;
+                p_overflow=new_p_overflow;
+            }
+
+            //add in overflow info in overflow arrays
+            int opti3=3*opti; 
+            ijk_m_id_overflow[opti3]=ijk;
+            ijk_m_id_overflow[opti3+1]=m;
+            ijk_m_id_overflow[opti3+2]=i;
+
+            int opti4=4*opti; 
+            p_overflow[opti4]=x;
+            p_overflow[opti4+1]=y;
+            p_overflow[opti4+2]=z;
+            p_overflow[opti4+3]=r;
+
+            //max_r
+            if(max_r[ithread]<r) {max_r[ithread]=r;}
+        }
+    }
+    
+}
+
+
+//con.put with a input point array, parallel put
+void container_triclinic_poly::put(double *pt_r_list, int num_pt, int num_thread){
+    #pragma omp parallel for num_threads(num_thread)
+    for(int i=0; i<num_pt; i++){ //id:i      
+        double x=pt_r_list[4*i];
+        double y=pt_r_list[4*i+1];
+        double z=pt_r_list[4*i+2];
+        double r=pt_r_list[4*i+3];
+        put(i,x,y,z,r);
+    }
+}
+
+
+void container_triclinic_poly::put_reconcile_overflow(){
+    //update max_radius
+    //and reset max_r[i]
+    for(int i=0;i<nt;i++){
+        if(max_radius<max_r[i]){max_radius=max_r[i];}
+        max_r[i]=0.0;
+    }
+    
+    //reconcile overflow
+    //loop through points in overflow arrays, 
+    //if (m>=mem[ijk]): int nmem (new memory length) = 2*mem[ijk];
+    //                  while(m>=nmem) {nmem=2*nmem;}
+    // then construct new arrays of id, p with size nmem, and add in overflow pt info
+    for(int i=0;i<overflowPtCt;i++){
+        int i3=3*i;
+        int ijk=ijk_m_id_overflow[i3];
+        int m=ijk_m_id_overflow[i3+1];
+        int idd=ijk_m_id_overflow[i3+2];
+        
+        int i4=4*i;
+        double x=p_overflow[i4];
+        double y=p_overflow[i4+1];
+        double z=p_overflow[i4+2];
+        double r=p_overflow[i4+3];
+        
+        if(m>=mem[ijk]){
+            int nmem=2*mem[ijk];
+            while(m>=nmem){nmem=2*nmem;}
+            int l; 
+            //the following are the same as add_particle_memory(ijk)
+            // Carry out a check on the memory allocation size, and
+            // print a status message if requested
+            if(nmem>max_particle_memory)
+                    voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
+    #if VOROPP_VERBOSE >=3
+            fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
+    #endif
+
+            // Allocate new memory and copy in the contents of the old arrays
+            int *idp=new int[nmem];
+            for(l=0;l<mem[ijk];l++) {
+                idp[l]=id[ijk][l];
+            }
+
+            double *pp=new double[ps*nmem];
+            for(l=0;l<ps*mem[ijk];l++) {
+                pp[l]=p[ijk][l];
+            }
+            // Update pointers and delete old arrays
+            mem[ijk]=nmem;
+            delete [] id[ijk];
+            delete [] p[ijk];
+            id[ijk]=idp;
+            p[ijk]=pp;
+        }
+        //after fixing memory issue above, now, add overflow pt information into the original p, id arrays
+        id[ijk][m]=idd;
+        double *pp=p[ijk]+4*m;
+        *(pp++)=x; *(pp++)=y; *(pp++)=z; *pp=r;
+    }   
+    //after reconciling, set overflowPtCt back to initial value
+    overflowPtCt=0;
+    
 }
 
 /** Put a particle into the correct region of the container.
- * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
  *                        in, with (0,0,0) corresponding to the primary domain.
  */
-void container_triclinic::put(int n,double x,double y,double z,int &ai,int &aj,int &ak) {
-    int ijk;
+void container_triclinic::put(int i,double x,double y,double z,int &ai,int &aj,int &ak) {
+    int ijk; 
+    
+    //find block ijk that point (x,y,z) is in
+    //remap (x,y,z) into primary domain if necessary
     put_locate_block(ijk,x,y,z,ai,aj,ak);
-    for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+3*l);
-    id[ijk][co[ijk]]=n;
-    double *pp=p[ijk]+3*co[ijk]++;
-    *(pp++)=x;*(pp++)=y;*pp=z;
+    
+    ///check memory allocation       
+    int m;
+    #pragma omp atomic capture
+    m=co[ijk]++;   //co[ijk]: number of points in block ijk
+
+    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+    //pt and id info in id, p directly
+    if(m<mem[ijk]){
+        id[ijk][m]=i;
+        double *pp=p[ijk]+3*m;
+        *(pp++)=x; *(pp++)=y; *pp=z;
+    }
+    else{ 
+        //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
+        //ijk_m_id_overflow, p_overflow, and reconcile later 
+        #pragma omp critical
+        {
+            //opti: index of overflow point
+            //overflowPtCt: number of overflow points
+            int opti=overflowPtCt++;
+
+            //if overflow arrays memory slots not enough, add new length
+            if(overflowPtCt>overflow_mem_numPt){  
+                int old_overflow_mem_numPt=overflow_mem_numPt;
+                overflow_mem_numPt=overflow_mem_numPt*2;
+                int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
+                double *new_p_overflow=new double [3*overflow_mem_numPt];
+                for(int ii=0;ii<old_overflow_mem_numPt;ii++){
+                    int ii3=3*ii;
+                    new_ijk_m_id_overflow[ii3]=ijk_m_id_overflow[ii3];
+                    new_ijk_m_id_overflow[ii3+1]=ijk_m_id_overflow[ii3+1];
+                    new_ijk_m_id_overflow[ii3+2]=ijk_m_id_overflow[ii3+2];
+
+                    new_p_overflow[ii3]=p_overflow[ii3];
+                    new_p_overflow[ii3+1]=p_overflow[ii3+1];
+                    new_p_overflow[ii3+2]=p_overflow[ii3+2];
+                }
+
+                delete [] ijk_m_id_overflow; 
+                delete [] p_overflow;
+
+                ijk_m_id_overflow=new_ijk_m_id_overflow;
+                p_overflow=new_p_overflow;
+            }
+
+            //add in overflow info in overflow arrays
+            int opti3=3*opti; 
+            ijk_m_id_overflow[opti3]=ijk;
+            ijk_m_id_overflow[opti3+1]=m;
+            ijk_m_id_overflow[opti3+2]=i;
+
+            p_overflow[opti3]=x;
+            p_overflow[opti3+1]=y;
+            p_overflow[opti3+2]=z;
+        }
+    }
 }
 
 /** Put a particle into the correct region of the container.
- * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle.
  * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
  *                        in, with (0,0,0) corresponding to the primary domain.
  */
-void container_triclinic_poly::put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
-    int ijk;
+void container_triclinic_poly::put(int i,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
+    int ithread=t_num();
+    int ijk; 
+    
+    //find block ijk that point (x,y,z) is in
+    //remap (x,y,z) into primary domain if necessary
     put_locate_block(ijk,x,y,z,ai,aj,ak);
-    for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+4*l);
+    
+    ///check memory allocation       
+    int m;
+    #pragma omp atomic capture
+    m=co[ijk]++;   //co[ijk]: number of points in block ijk
 
-    id[ijk][co[ijk]]=n;
-    double *pp=p[ijk]+4*co[ijk]++;
-    *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-    if(max_radius<r) max_radius=r;
+    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+    //pt and id info in id, p directly
+    if(m<mem[ijk]){
+        id[ijk][m]=i;
+        double *pp=p[ijk]+4*m;
+        *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
+        //max_r
+        if(max_r[ithread]<r) {max_r[ithread]=r;}
+    }
+    else{ 
+        //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
+        //ijk_m_id_overflow, p_overflow, and reconcile later 
+        #pragma omp critical
+        {
+            //opti: index of overflow point
+            //overflowPtCt: number of overflow points
+            int opti=overflowPtCt++;
+
+            //if overflow arrays memory slots not enough, add new length
+            if(overflowPtCt>overflow_mem_numPt){  
+                int old_overflow_mem_numPt=overflow_mem_numPt;
+                overflow_mem_numPt=overflow_mem_numPt*2;
+                int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
+                double *new_p_overflow=new double [4*overflow_mem_numPt];
+                for(int ii=0;ii<old_overflow_mem_numPt;ii++){
+                    int ii3=3*ii;
+                    new_ijk_m_id_overflow[ii3]=ijk_m_id_overflow[ii3];
+                    new_ijk_m_id_overflow[ii3+1]=ijk_m_id_overflow[ii3+1];
+                    new_ijk_m_id_overflow[ii3+2]=ijk_m_id_overflow[ii3+2];
+
+                    int ii4=4*ii;
+                    new_p_overflow[ii4]=p_overflow[ii4];
+                    new_p_overflow[ii4+1]=p_overflow[ii4+1];
+                    new_p_overflow[ii4+2]=p_overflow[ii4+2];
+                    new_p_overflow[ii4+3]=p_overflow[ii4+3];
+                }
+
+                delete [] ijk_m_id_overflow; 
+                delete [] p_overflow;
+
+                ijk_m_id_overflow=new_ijk_m_id_overflow;
+                p_overflow=new_p_overflow;
+            }
+
+            //add in overflow info in overflow arrays
+            int opti3=3*opti; 
+            ijk_m_id_overflow[opti3]=ijk;
+            ijk_m_id_overflow[opti3+1]=m;
+            ijk_m_id_overflow[opti3+2]=i;
+
+            int opti4=4*opti; 
+            p_overflow[opti4]=x;
+            p_overflow[opti4+1]=y;
+            p_overflow[opti4+2]=z;
+            p_overflow[opti4+3]=r;
+
+            //max_r
+            if(max_r[ithread]<r) {max_r[ithread]=r;}
+        }
+    }
 }
 
 /** Put a particle into the correct region of the container, also recording
@@ -306,7 +794,8 @@ bool container_triclinic::find_voronoi_cell(double x,double y,double z,double &r
     // Remap the vector into the primary domain and then search for the Voronoi
     // cell that it is within
     remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk);
-    vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
+    const int tn=t_num();
+    vc[tn]->find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
     if(w.ijk!=-1) {
 
@@ -340,7 +829,8 @@ bool container_triclinic_poly::find_voronoi_cell(double x,double y,double z,doub
     // Remap the vector into the primary domain and then search for the Voronoi
     // cell that it is within
     remap(ai,aj,ak,ci,cj,ck,x,y,z,ijk);
-    vc.find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
+    const int tn=t_num();
+    vc[tn]->find_voronoi_cell(x,y,z,ci,cj,ck,ijk,w,mrs);
 
     if(w.ijk!=-1) {
 
@@ -703,7 +1193,6 @@ void container_triclinic::draw_particles(FILE *fp) {
 /** Dumps particle positions in POV-Ray format.
  * \param[in] fp a file handle to write to. */
 void container_triclinic::draw_particles_pov(FILE *fp) {
-    double *pp;
     for(iterator cli=begin();cli<end();cli++) {
         int ijk=cli->ijk,q=cli->q;
         double *pp=p[ijk]+3*q;
@@ -791,7 +1280,6 @@ void container_triclinic_poly::draw_particles(FILE *fp) {
 /** Dumps particle positions in POV-Ray format.
  * \param[in] fp a file handle to write to. */
 void container_triclinic_poly::draw_particles_pov(FILE *fp) {
-    double *pp;
     for(iterator cli=begin();cli<end();cli++) {
         int ijk=cli->ijk,q=cli->q;
         double *pp=p[ijk]+3*q;

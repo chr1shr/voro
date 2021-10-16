@@ -219,10 +219,14 @@ class container_base_3d : public voro_base_3d, public wall_list_3d {
 class container_3d : public container_base_3d, public radius_mono {
     public:
         container_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-                  int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem);
+                  int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem, int number_thread);
+        ~container_3d(); 
+        void change_number_thread(int number_thread);
         void clear();
-        void put(int n,double x,double y,double z);
+        void put(int i,double x,double y,double z);
+        void put(double *pt_list, int num_pt, int num_thread);
         void put(particle_order &vo,int n,double x,double y,double z);
+        void put_reconcile_overflow();
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -304,7 +308,8 @@ class container_3d : public container_base_3d, public radius_mono {
         template<class v_cell>
         inline bool compute_cell(v_cell &c,int ijk,int q) {
             int k=ijk/nxy,ijkt=ijk-nxy*k,j=ijkt/nx,i=ijkt-j*nx;
-            return vc.compute_cell(c,ijk,q,i,j,k);
+            const int tn=t_num();
+            return vc[tn]->compute_cell(c,ijk,q,i,j,k);
         }
         /** Computes the Voronoi cell for a particle currently being referenced
          * by an iterator.
@@ -338,8 +343,13 @@ class container_3d : public container_base_3d, public radius_mono {
             return false;
         }
     private:
-        voro_compute_3d<container_3d> vc;
+        int nt;
+        voro_compute_3d<container_3d> **vc;
         friend class voro_compute_3d<container_3d>;
+        int overflow_mem_numPt;
+        int overflowPtCt;
+        int *ijk_m_id_overflow;
+        double *p_overflow; 
 };
 
 /** \brief Extension of the container_base class for computing radical Voronoi
@@ -351,10 +361,14 @@ class container_3d : public container_base_3d, public radius_mono {
 class container_poly_3d : public container_base_3d, public radius_poly {
     public:
         container_poly_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-                          int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem);
+                          int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem, int number_thread);
+        ~container_poly_3d(); 
+        void change_number_thread(int number_thread);
         void clear();
-        void put(int n,double x,double y,double z,double r);
+        void put(int i,double x,double y,double z,double r);
+        void put(double *pt_r_list, int num_pt, int num_thread);
         void put(particle_order &vo,int n,double x,double y,double z,double r);
+        void put_reconcile_overflow();
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -436,7 +450,8 @@ class container_poly_3d : public container_base_3d, public radius_poly {
         template<class v_cell>
         inline bool compute_cell(v_cell &c,int ijk,int q) {
             int k=ijk/nxy,ijkt=ijk-nxy*k,j=ijkt/nx,i=ijkt-j*nx;
-            return vc.compute_cell(c,ijk,q,i,j,k);
+            const int tn=t_num();
+            return vc[tn]->compute_cell(c,ijk,q,i,j,k);
         }
         /** Computes the Voronoi cell for a particle currently being referenced
          * by an iterator.
@@ -473,8 +488,14 @@ class container_poly_3d : public container_base_3d, public radius_poly {
         }
         bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
     private:
-        voro_compute_3d<container_poly_3d> vc;
+        double *max_r;
+        int nt;
+        voro_compute_3d<container_poly_3d> **vc;
         friend class voro_compute_3d<container_poly_3d>;
+        int overflow_mem_numPt;
+        int overflowPtCt;
+        int *ijk_m_id_overflow;
+        double *p_overflow; 
 };
 
 }

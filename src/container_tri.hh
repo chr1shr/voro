@@ -191,14 +191,23 @@ class container_triclinic_base : public unitcell,  public voro_base_3d {
         inline void create_periodic_image(int di,int dj,int dk) {
             if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz)
                 voro_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
+            #if defined(_OPENMP)
+            omp_set_lock(img_lock+dk);
+            #endif
             if(dk>=ez&&dk<wz) {
                 if(dj<ey||dj>=wy) create_side_image(di,dj,dk);
             } else create_vertical_image(di,dj,dk);
+            #if defined(_OPENMP)
+            omp_unset_lock(img_lock+dk);
+            #endif
         }
         void create_side_image(int di,int dj,int dk);
         void create_vertical_image(int di,int dj,int dk);
         void put_image(int reg,int fijk,int l,double dx,double dy,double dz);
         inline void remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
+        #if defined(_OPENMP)
+        omp_lock_t *img_lock;
+        #endif
 };
 
 /** \brief Extension of the container_triclinic_base class for computing regular
@@ -210,11 +219,15 @@ class container_triclinic_base : public unitcell,  public voro_base_3d {
 class container_triclinic : public container_triclinic_base, public radius_mono {
     public:
         container_triclinic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-                int nx_,int ny_,int nz_,int init_mem_);
+                int nx_,int ny_,int nz_,int init_mem_,int number_thread);
+        ~container_triclinic();
+        void change_number_thread(int number_thread);
         void clear();
-        void put(int n,double x,double y,double z);
+        void put(int i,double x,double y,double z);
+        void put(double *pt_list, int num_pt, int num_thread);
         void put(int n,double x,double y,double z,int &ai,int &aj,int &ak);
         void put(particle_order &vo,int n,double x,double y,double z);
+        void put_reconcile_overflow();
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -297,7 +310,8 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
         template<class v_cell>
         inline bool compute_cell(v_cell &c,int ijk,int q) {
             int k=ijk/(nx*oy),ijkt=ijk-(nx*oy)*k,j=ijkt/nx,i=ijkt-j*nx;
-            return vc.compute_cell(c,ijk,q,i,j,k);
+            const int tn=t_num();
+            return vc[tn]->compute_cell(c,ijk,q,i,j,k);
         }
         /** Computes the Voronoi cell for a particle currently being referenced
          * by a loop class.
@@ -329,8 +343,13 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
             return q;
         }
     private:
-        voro_compute_3d<container_triclinic> vc;
+        int nt;
+        voro_compute_3d<container_triclinic> **vc;
         friend class voro_compute_3d<container_triclinic>;
+        int overflow_mem_numPt;
+        int overflowPtCt;
+        int *ijk_m_id_overflow;
+        double *p_overflow; 
 };
 
 /** \brief Extension of the container_triclinic_base class for computing radical
@@ -342,11 +361,15 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
 class container_triclinic_poly : public container_triclinic_base, public radius_poly {
     public:
         container_triclinic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-                int nx_,int ny_,int nz_,int init_mem_);
+                int nx_,int ny_,int nz_,int init_mem_,int number_thread);
+        ~container_triclinic_poly(); 
+        void change_number_thread(int number_thread);
         void clear();
         void put(int n,double x,double y,double z,double r);
         void put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak);
+        void put(double *pt_r_list, int num_pt, int num_thread);
         void put(particle_order &vo,int n,double x,double y,double z,double r);
+        void put_reconcile_overflow();
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -428,7 +451,8 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
         template<class v_cell>
         inline bool compute_cell(v_cell &c,int ijk,int q) {
             int k=ijk/(nx*oy),ijkt=ijk-(nx*oy)*k,j=ijkt/nx,i=ijkt-j*nx;
-            return vc.compute_cell(c,ijk,q,i,j,k);
+            const int tn=t_num();
+            return vc[tn]->compute_cell(c,ijk,q,i,j,k);
         }
         /** Computes the Voronoi cell for a particle currently being referenced
          * by a loop class.
@@ -464,8 +488,14 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
         }
         bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
     private:
-        voro_compute_3d<container_triclinic_poly> vc;
+        double *max_r;
+        int nt;
+        voro_compute_3d<container_triclinic_poly> **vc;
         friend class voro_compute_3d<container_triclinic_poly>;
+        int overflow_mem_numPt;
+        int overflowPtCt;
+        int *ijk_m_id_overflow;
+        double *p_overflow; 
 };
 
 }

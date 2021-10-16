@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+using namespace std;
 
 #include "config.hh"
 #include "common.hh"
@@ -209,10 +210,14 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
 class container_2d : public container_base_2d, public radius_mono {
     public:
         container_2d(double ax_,double bx_,double ay_,double by_,
-                 int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem);
+                 int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread);
         void clear();
+        ~container_2d(); 
+        void change_number_thread(int number_thread);
+        void put(double *pt_list, int num_pt, int num_thread);
         void put(int n,double x,double y);
         void put(particle_order &vo,int n,double x,double y);
+        void put_reconcile_overflow();
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -291,7 +296,9 @@ class container_2d : public container_base_2d, public radius_mono {
          * then the routine returns false. */
         template<class v_cell_2d>
         inline bool compute_cell(v_cell_2d &c,int ij,int q) {
-            return vc.compute_cell(c,ij,q,ij%nx,ij/nx);
+            const int tn=t_num();
+            printf("tn:%d\n",tn);
+            return vc[tn]->compute_cell(c,ij,q,ij%nx,ij/nx);
         }
         /** Computes the Voronoi cell for a particle currently being referenced
          * by a loop class.
@@ -306,8 +313,13 @@ class container_2d : public container_base_2d, public radius_mono {
             return compute_cell(c,cli->ijk,cli->q);
         }
     private:
-        voro_compute_2d<container_2d> vc;
+        int nt;
+        voro_compute_2d<container_2d> **vc;
         friend class voro_compute_2d<container_2d>;
+        int overflow_mem_numPt;
+        int overflowPtCt;
+        int *ijk_m_id_overflow;
+        double *p_overflow; 
 };
 
 /** \brief Extension of the container_base class for computing radical Voronoi
@@ -319,10 +331,14 @@ class container_2d : public container_base_2d, public radius_mono {
 class container_poly_2d : public container_base_2d, public radius_poly {
     public:
         container_poly_2d(double ax_,double bx_,double ay_,double by_,
-                   int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem);
+                   int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread);
+        ~container_poly_2d();
+        void change_number_thread(int number_thread);
         void clear();
         void put(int n,double x,double y,double r);
+        void put(double *pt_r_list, int num_pt, int num_thread);
         void put(particle_order &vo,int n,double x,double y,double r);
+        void put_reconcile_overflow();
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -403,7 +419,8 @@ class container_poly_2d : public container_base_2d, public radius_poly {
          * then the routine returns false. */
         template<class v_cell_2d>
         inline bool compute_cell(v_cell_2d &c,int ij,int q) {
-            return vc.compute_cell(c,ij,q,ij%nx,ij/nx);
+            const int tn=t_num();
+            return vc[tn]->compute_cell(c,ij,q,ij%nx,ij/nx);
         }
         /** Computes the Voronoi cell for a particle currently being referenced
          * by a loop class.
@@ -419,8 +436,14 @@ class container_poly_2d : public container_base_2d, public radius_poly {
         }
         bool find_voronoi_cell(double x,double y,double &rx,double &ry,int &pid);
     private:
-        voro_compute_2d<container_poly_2d> vc;
+        double *max_r;
+        int nt;
+        voro_compute_2d<container_poly_2d> **vc;
         friend class voro_compute_2d<container_poly_2d>;
+        int overflow_mem_numPt;
+        int overflowPtCt;
+        int *ijk_m_id_overflow;
+        double *p_overflow; 
 };
 
 }
