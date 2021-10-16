@@ -358,7 +358,7 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
  * This class is an extension of container_triclinic_base that has routines
  * specifically for computing the radical Voronoi tessellation that depends
  * on the particle radii. */
-class container_triclinic_poly : public container_triclinic_base, public radius_poly {
+class container_triclinic_poly : public container_triclinic_base, public radius_poly_3d {
     public:
         container_triclinic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
                 int nx_,int ny_,int nz_,int init_mem_,int number_thread);

@@ -297,7 +297,6 @@ class container_2d : public container_base_2d, public radius_mono {
         template<class v_cell_2d>
         inline bool compute_cell(v_cell_2d &c,int ij,int q) {
             const int tn=t_num();
-            printf("tn:%d\n",tn);
             return vc[tn]->compute_cell(c,ij,q,ij%nx,ij/nx);
         }
         /** Computes the Voronoi cell for a particle currently being referenced
@@ -328,7 +327,7 @@ class container_2d : public container_base_2d, public radius_mono {
  * This class is an extension of container_base class that has routines
  * specifically for computing the radical Voronoi tessellation that depends on
  * the particle radii. */
-class container_poly_2d : public container_base_2d, public radius_poly {
+class container_poly_2d : public container_base_2d, public radius_poly_2d {
     public:
         container_poly_2d(double ax_,double bx_,double ay_,double by_,
                    int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread);

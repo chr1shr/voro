@@ -358,7 +358,7 @@ class container_3d : public container_base_3d, public radius_mono {
  * This class is an extension of container_base class that has routines
  * specifically for computing the radical Voronoi tessellation that depends on
  * the particle radii. */
-class container_poly_3d : public container_base_3d, public radius_poly {
+class container_poly_3d : public container_base_3d, public radius_poly_3d {
     public:
         container_poly_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
                           int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem, int number_thread);
