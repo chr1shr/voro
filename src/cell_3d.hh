@@ -233,6 +233,23 @@ class voronoicell_base_3d {
          * \param[in] p the number of the vertex.
          * \return nu[p]-1 if a=0, or a-1 otherwise. */
         inline int cycle_down(int a,int p) {return a==0?nu[p]-1:a-1;}
+        
+        
+        inline void reset_edges(){
+            int i,j;
+            for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
+                if(ed[i][j]>=0) voro_fatal_error("Edge reset routine found a previously untested edge",VOROPP_INTERNAL_ERROR);
+                ed[i][j]=-1-ed[i][j];
+            }
+        }
+        
+        inline bool search_edge(int l,int &m,int &k){
+            for(m=0;m<nu[l];m++) {
+                k=ed[l][m];
+                if(k>=0) return true;
+            }
+            return false;
+        }
     protected:
         /** This a one dimensional array that holds the current sizes
          * of the memory allocations for them mep array.*/
@@ -249,7 +266,7 @@ class voronoicell_base_3d {
          * on mep[p] is stored in mem[p]. If the space runs out, the
          * code allocates more using the add_memory() routine. */
         int **mep;
-        inline void reset_edges();
+        //inline void reset_edges();
         template<class vc_class>
         void check_memory_for_copy(vc_class &vc,voronoicell_base_3d* vb);
         void copy(voronoicell_base_3d* vb);
@@ -305,7 +322,7 @@ class voronoicell_base_3d {
         void minkowski_formula(double x0,double y0,double z0,double r,double &ar,double &vo);
         inline bool plane_intersects_track(double x,double y,double z,double rs,double g);
         inline void normals_search(std::vector<double> &v,int i,int j,int k);
-        inline bool search_edge(int l,int &m,int &k);
+        //inline bool search_edge(int l,int &m,int &k);
         inline unsigned int m_test(int n,double &ans);
         inline unsigned int m_testx(int n,double &ans);
         unsigned int m_calc(int n,double &ans);

@@ -1871,6 +1871,7 @@ void voronoicell_base_3d::draw_gnuplot(double x,double y,double z,FILE *fp) {
     reset_edges();
 }
 
+/*
 inline bool voronoicell_base_3d::search_edge(int l,int &m,int &k) {
     for(m=0;m<nu[l];m++) {
         k=ed[l][m];
@@ -1878,6 +1879,7 @@ inline bool voronoicell_base_3d::search_edge(int l,int &m,int &k) {
     }
     return false;
 }
+*/
 
 /** Outputs the Voronoi cell in the POV mesh2 format, described in section
  * 1.3.2.2 of the POV-Ray documentation. The mesh2 output consists of a list of
@@ -1917,6 +1919,7 @@ void voronoicell_base_3d::draw_pov_mesh(double x,double y,double z,FILE *fp) {
  * to positive. When it is called, it assumes that every edge in the routine
  * should have already been flipped to negative, and it bails out with an
  * internal error if it encounters a positive edge. */
+/*
 inline void voronoicell_base_3d::reset_edges() {
     int i,j;
     for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
@@ -1924,6 +1927,7 @@ inline void voronoicell_base_3d::reset_edges() {
         ed[i][j]=-1-ed[i][j];
     }
 }
+*/
 
 /** Checks to see if a given vertex is inside, outside or within the test
  * plane. If the point is far away from the test plane, the routine immediately
