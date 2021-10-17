@@ -494,7 +494,7 @@ int main(int argc,char **argv) {
     // output ordering is requested
     double vol=0;int tp=0,vcc=0;
     if(polydisperse) {
-        container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem,3);
+        container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
         con.add_wall(wl);
 
         if(ordered) {
@@ -528,7 +528,7 @@ int main(int argc,char **argv) {
             }
         }
     } else {
-        container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem,3);
+        container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
         con.add_wall(wl);
 
         if(ordered) {

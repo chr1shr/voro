@@ -140,10 +140,6 @@ container_triclinic_poly::container_triclinic_poly(double bx_,double bxy_,double
         max_r[t_num()]=0.0;
         }        
         ppr=p;
-        //create thread-private copies of variables in rad_option.hh 
-        r_rad=new double[nt];
-        r_mul=new double[nt];
-        r_val=new double[nt];
     }
 
 
@@ -155,10 +151,6 @@ container_triclinic_poly::~container_triclinic_poly(){
     //delete overflow arrays
     delete [] ijk_m_id_overflow;
     delete [] p_overflow;
-    //delete thread-private copies of variables in rad_option.hh 
-    delete [] r_rad;
-    delete [] r_mul;
-    delete [] r_val; 
 }
 
 void container_triclinic_poly::change_number_thread(int number_thread){
@@ -166,10 +158,6 @@ void container_triclinic_poly::change_number_thread(int number_thread){
     for(l=nt-1;l>=0;l--) delete vc[l];
     delete [] vc;
     delete [] max_r;
-    //delete thread-private copies of variables in rad_option.hh 
-    delete [] r_rad;
-    delete [] r_mul;
-    delete [] r_val; 
 
     nt=number_thread;
     vc=new voro_compute_3d<container_triclinic_poly>*[nt];
@@ -179,17 +167,13 @@ void container_triclinic_poly::change_number_thread(int number_thread){
     vc[t_num()]= new voro_compute_3d<container_triclinic_poly>(*this,2*nx+1,2*ey+1,2*ez+1);
     max_r[t_num()]=0.0;
     } 
-    //create thread-private copies of variables in rad_option.hh 
-    r_rad=new double[nt];
-    r_mul=new double[nt];
-    r_val=new double[nt];
 }
 
 
 /** Put a particle into the correct region of the container.
  * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
-void container_triclinic::put(int i,double x,double y,double z) {
+void container_triclinic::put_parallel(int i,double x,double y,double z) {
     int ijk; 
     
     //find block ijk that point (x,y,z) is in
@@ -256,13 +240,13 @@ void container_triclinic::put(int i,double x,double y,double z) {
 
 
 //con.put with a input point array, parallel put
-void container_triclinic::put(double *pt_list, int num_pt, int num_thread){
+void container_triclinic::put_parallel(double *pt_list, int num_pt, int num_thread){
     #pragma omp parallel for num_threads(num_thread)
     for(int i=0; i<num_pt; i++){ //id:i      
         double x=pt_list[3*i];
         double y=pt_list[3*i+1];
         double z=pt_list[3*i+2];
-        put(i,x,y,z);
+        put_parallel(i,x,y,z);
     }
 }
 
@@ -325,7 +309,7 @@ void container_triclinic::put_reconcile_overflow(){
  * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */
-void container_triclinic_poly::put(int i,double x,double y,double z,double r) {
+void container_triclinic_poly::put_parallel(int i,double x,double y,double z,double r) {
     int ithread=t_num();
     int ijk; 
     
@@ -403,14 +387,14 @@ void container_triclinic_poly::put(int i,double x,double y,double z,double r) {
 
 
 //con.put with a input point array, parallel put
-void container_triclinic_poly::put(double *pt_r_list, int num_pt, int num_thread){
+void container_triclinic_poly::put_parallel(double *pt_r_list, int num_pt, int num_thread){
     #pragma omp parallel for num_threads(num_thread)
     for(int i=0; i<num_pt; i++){ //id:i      
         double x=pt_r_list[4*i];
         double y=pt_r_list[4*i+1];
         double z=pt_r_list[4*i+2];
         double r=pt_r_list[4*i+3];
-        put(i,x,y,z,r);
+        put_parallel(i,x,y,z,r);
     }
 }
 
@@ -486,7 +470,7 @@ void container_triclinic_poly::put_reconcile_overflow(){
  * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
  *                        in, with (0,0,0) corresponding to the primary domain.
  */
-void container_triclinic::put(int i,double x,double y,double z,int &ai,int &aj,int &ak) {
+void container_triclinic::put_parallel(int i,double x,double y,double z,int &ai,int &aj,int &ak) {
     int ijk; 
     
     //find block ijk that point (x,y,z) is in
@@ -558,7 +542,7 @@ void container_triclinic::put(int i,double x,double y,double z,int &ai,int &aj,i
  * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
  *                        in, with (0,0,0) corresponding to the primary domain.
  */
-void container_triclinic_poly::put(int i,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
+void container_triclinic_poly::put_parallel(int i,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
     int ithread=t_num();
     int ijk; 
     
@@ -631,6 +615,65 @@ void container_triclinic_poly::put(int i,double x,double y,double z,double r,int
             if(max_r[ithread]<r) {max_r[ithread]=r;}
         }
     }
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle. */
+void container_triclinic::put(int n,double x,double y,double z) {
+    int ijk;
+    put_locate_block(ijk,x,y,z);
+    for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+3*l);
+    id[ijk][co[ijk]]=n;
+    double *pp=p[ijk]+3*co[ijk]++;
+    *(pp++)=x;*(pp++)=y;*pp=z;
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle.
+ * \param[in] r the radius of the particle. */
+void container_triclinic_poly::put(int n,double x,double y,double z,double r) {
+    int ijk;
+    put_locate_block(ijk,x,y,z);
+    for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+4*l);
+    id[ijk][co[ijk]]=n;
+    double *pp=p[ijk]+4*co[ijk]++;
+    *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
+    if(max_radius<r) max_radius=r;
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle.
+ * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
+ *                        in, with (0,0,0) corresponding to the primary domain.
+ */
+void container_triclinic::put(int n,double x,double y,double z,int &ai,int &aj,int &ak) {
+    int ijk;
+    put_locate_block(ijk,x,y,z,ai,aj,ak);
+    for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+3*l);
+    id[ijk][co[ijk]]=n;
+    double *pp=p[ijk]+3*co[ijk]++;
+    *(pp++)=x;*(pp++)=y;*pp=z;
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y,z) the position vector of the inserted particle.
+ * \param[in] r the radius of the particle.
+ * \param[out] (ai,aj,ak) the periodic image displacement that the particle is
+ *                        in, with (0,0,0) corresponding to the primary domain.
+ */
+void container_triclinic_poly::put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
+    int ijk;
+    put_locate_block(ijk,x,y,z,ai,aj,ak);
+    for(int l=0;l<co[ijk];l++) check_duplicate(n,x,y,z,id[ijk][l],p[ijk]+4*l);
+
+    id[ijk][co[ijk]]=n;
+    double *pp=p[ijk]+4*co[ijk]++;
+    *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
+    if(max_radius<r) max_radius=r;
 }
 
 /** Put a particle into the correct region of the container, also recording

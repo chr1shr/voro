@@ -219,13 +219,15 @@ class container_triclinic_base : public unitcell,  public voro_base_3d {
 class container_triclinic : public container_triclinic_base, public radius_mono {
     public:
         container_triclinic(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-                int nx_,int ny_,int nz_,int init_mem_,int number_thread);
+                int nx_,int ny_,int nz_,int init_mem_,int number_thread=1);
         ~container_triclinic();
         void change_number_thread(int number_thread);
         void clear();
         void put(int i,double x,double y,double z);
-        void put(double *pt_list, int num_pt, int num_thread);
         void put(int n,double x,double y,double z,int &ai,int &aj,int &ak);
+        void put_parallel(int i,double x,double y,double z);
+        void put_parallel(double *pt_list, int num_pt, int num_thread);
+        void put_parallel(int n,double x,double y,double z,int &ai,int &aj,int &ak);
         void put(particle_order &vo,int n,double x,double y,double z);
         void put_reconcile_overflow();
         void import(FILE *fp=stdin);
@@ -361,13 +363,15 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
 class container_triclinic_poly : public container_triclinic_base, public radius_poly_3d {
     public:
         container_triclinic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-                int nx_,int ny_,int nz_,int init_mem_,int number_thread);
+                int nx_,int ny_,int nz_,int init_mem_,int number_thread=1);
         ~container_triclinic_poly(); 
         void change_number_thread(int number_thread);
         void clear();
         void put(int n,double x,double y,double z,double r);
         void put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak);
-        void put(double *pt_r_list, int num_pt, int num_thread);
+        void put_parallel(int n,double x,double y,double z,double r);
+        void put_parallel(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak);
+        void put_parallel(double *pt_r_list, int num_pt, int num_thread);
         void put(particle_order &vo,int n,double x,double y,double z,double r);
         void put_reconcile_overflow();
         void import(FILE *fp=stdin);

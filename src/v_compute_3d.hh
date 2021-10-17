@@ -107,20 +107,20 @@ class voro_compute_3d {
          * queue is full. */
         int *qu_l;
         template<class v_cell>
-        bool corner_test(v_cell &c,double xl,double yl,double zl,double xh,double yh,double zh);
+        bool corner_test(v_cell &c,double xl,double yl,double zl,double xh,double yh,double zh,double &r_mul,double &r_val);
         template<class v_cell>
-        inline bool edge_x_test(v_cell &c,double x0,double yl,double zl,double x1,double yh,double zh);
+        inline bool edge_x_test(v_cell &c,double x0,double yl,double zl,double x1,double yh,double zh,double &r_mul,double &r_val);
         template<class v_cell>
-        inline bool edge_y_test(v_cell &c,double xl,double y0,double zl,double xh,double y1,double zh);
+        inline bool edge_y_test(v_cell &c,double xl,double y0,double zl,double xh,double y1,double zh,double &r_mul,double &r_val);
         template<class v_cell>
-        inline bool edge_z_test(v_cell &c,double xl,double yl,double z0,double xh,double yh,double z1);
+        inline bool edge_z_test(v_cell &c,double xl,double yl,double z0,double xh,double yh,double z1,double &r_mul,double &r_val);
         template<class v_cell>
-        inline bool face_x_test(v_cell &c,double xl,double y0,double z0,double y1,double z1);
+        inline bool face_x_test(v_cell &c,double xl,double y0,double z0,double y1,double z1,double &r_mul,double &r_val);
         template<class v_cell>
-        inline bool face_y_test(v_cell &c,double x0,double yl,double z0,double x1,double z1);
+        inline bool face_y_test(v_cell &c,double x0,double yl,double z0,double x1,double z1,double &r_mul,double &r_val);
         template<class v_cell>
-        inline bool face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1);
-        bool compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gx,double gy,double gz,double& crs,double mrs);
+        inline bool face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1,double &r_mul,double &r_val);
+        bool compute_min_max_radius(int di,int dj,int dk,double fx,double fy,double fz,double gx,double gy,double gz,double& crs,double mrs,double &r_mul);
         bool compute_min_radius(int di,int dj,int dk,double fx,double fy,double fz,double mrs);
         inline void add_to_mask(int ei,int ej,int ek,int *&qu_e);
         inline void scan_bits_mask_add(unsigned int q,unsigned int *mijk,int ei,int ej,int ek,int *&qu_e);

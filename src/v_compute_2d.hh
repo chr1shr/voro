@@ -97,12 +97,12 @@ class voro_compute_2d {
          * queue is full. */
         int *qu_l;
         template<class v_cell_2d>
-        inline bool corner_test(v_cell_2d &c,double xl,double yl,double xh,double yh);
+        inline bool corner_test(v_cell_2d &c,double xl,double yl,double xh,double yh,double &r_mul,double &r_val);
         template<class v_cell_2d>
-        inline bool edge_x_test(v_cell_2d &c,double xl,double y0,double y1);
+        inline bool edge_x_test(v_cell_2d &c,double xl,double y0,double y1,double &r_mul,double &r_val);
         template<class v_cell_2d>
-        inline bool edge_y_test(v_cell_2d &c,double x0,double yl,double x1);
-        bool compute_min_max_radius(int di,int dj,double fx,double fy,double gx,double gy,double& crs,double mrs);
+        inline bool edge_y_test(v_cell_2d &c,double x0,double yl,double x1,double &r_mul,double &r_val);
+        bool compute_min_max_radius(int di,int dj,double fx,double fy,double gx,double gy,double& crs,double mrs,double &r_mul);
         bool compute_min_radius(int di,int dj,double fx,double fy,double mrs);
         inline void add_to_mask(int ei,int ej,int *&qu_e);
         inline void scan_bits_mask_add(unsigned int q,unsigned int *mij,int ei,int ej,int *&qu_e);

@@ -113,10 +113,6 @@ container_poly_2d::container_poly_2d(double ax_,double bx_,double ay_,double by_
             max_r[t_num()]=0.0;
         }
         ppr=p;
-        //create thread-private copies of variables in rad_option.hh 
-        r_rad=new double[nt];
-        r_mul=new double[nt];
-        r_val=new double[nt];
     }
 
 
@@ -128,10 +124,6 @@ container_poly_2d::~container_poly_2d(){
     //delete overflow arrays
     delete [] ijk_m_id_overflow;
     delete [] p_overflow;
-    //delete thread-private copies of variables in rad_option.hh 
-    delete [] r_rad;
-    delete [] r_mul;
-    delete [] r_val; 
 }
 
 void container_poly_2d::change_number_thread(int number_thread){
@@ -139,10 +131,6 @@ void container_poly_2d::change_number_thread(int number_thread){
     for(l=nt-1;l>=0;l--) delete vc[l];
     delete [] vc;
     delete [] max_r;
-    //delete thread-private copies of variables in rad_option.hh 
-    delete [] r_rad;
-    delete [] r_mul;
-    delete [] r_val; 
     
     nt=number_thread;
     vc=new voro_compute_2d<container_poly_2d>*[nt];
@@ -152,16 +140,24 @@ void container_poly_2d::change_number_thread(int number_thread){
         vc[t_num()]=new voro_compute_2d<container_poly_2d>(*this,x_prd?2*nx+1:nx,y_prd?2*ny+1:ny);
         max_r[t_num()]=0.0;
     }
-    //create thread-private copies of variables in rad_option.hh 
-    r_rad=new double[nt];
-    r_mul=new double[nt];
-    r_val=new double[nt];
+}
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y) the position vector of the inserted particle. */
+void container_2d::put(int n,double x,double y) {
+    int ij;
+    if(put_locate_block(ij,x,y)) {
+        id[ij][co[ij]]=n;
+        double *pp=p[ij]+2*co[ij]++;
+        *(pp++)=x;*pp=y;
+    }
 }
 
 /** Put a particle into the correct region of the container.
  * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y) the position vector of the inserted particle. */
-void container_2d::put(int i,double x,double y) {
+void container_2d::put_parallel(int i,double x,double y) {
     int ij; 
     //find block ijk that point (x,y,z) is in
     if(put_remap(ij,x,y)){
@@ -225,12 +221,12 @@ void container_2d::put(int i,double x,double y) {
 
 
 //con.put with a input point array, parallel put
-void container_2d::put(double *pt_list, int num_pt, int num_thread){
+void container_2d::put_parallel(double *pt_list, int num_pt, int num_thread){
     #pragma omp parallel for num_threads(num_thread)
     for(int i=0; i<num_pt; i++){ //id:i      
         double x=pt_list[2*i];
         double y=pt_list[2*i+1];
-        put(i,x,y);
+        put_parallel(i,x,y);
     }
 }
 
@@ -289,11 +285,26 @@ void container_2d::put_reconcile_overflow(){
     overflowPtCt=0;
 }
 
+
+/** Put a particle into the correct region of the container.
+ * \param[in] n the numerical ID of the inserted particle.
+ * \param[in] (x,y) the position vector of the inserted particle.
+ * \param[in] r the radius of the particle. */
+void container_poly_2d::put(int n,double x,double y,double r) {
+    int ij;
+    if(put_locate_block(ij,x,y)) {
+        id[ij][co[ij]]=n;
+        double *pp=p[ij]+3*co[ij]++;
+        *(pp++)=x;*(pp++)=y;*pp=r;
+        if(max_radius<r) max_radius=r;
+    }
+}
+
 /** Put a particle into the correct region of the container.
  * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */
-void container_poly_2d::put(int i,double x,double y,double r) {
+void container_poly_2d::put_parallel(int i,double x,double y,double r) {
     int ithread=t_num();
     int ij; 
     //find block ijk that point (x,y,z) is in
@@ -362,13 +373,13 @@ void container_poly_2d::put(int i,double x,double y,double r) {
 
 
 //con.put with a input point array, parallel put
-void container_poly_2d::put(double *pt_r_list, int num_pt, int num_thread){
+void container_poly_2d::put_parallel(double *pt_r_list, int num_pt, int num_thread){
     #pragma omp parallel for num_threads(num_thread)
     for(int i=0; i<num_pt; i++){ //id:i      
         double x=pt_r_list[3*i];
         double y=pt_r_list[3*i+1];
         double r=pt_r_list[3*i+2];
-        put(i,x,y,r);
+        put_parallel(i,x,y,r);
     }
 }
 

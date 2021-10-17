@@ -210,12 +210,13 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
 class container_2d : public container_base_2d, public radius_mono {
     public:
         container_2d(double ax_,double bx_,double ay_,double by_,
-                 int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread);
+                 int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread=1);
         void clear();
         ~container_2d(); 
         void change_number_thread(int number_thread);
-        void put(double *pt_list, int num_pt, int num_thread);
+        void put_parallel(double *pt_list, int num_pt, int num_thread);
         void put(int n,double x,double y);
+        void put_parallel(int n,double x,double y);
         void put(particle_order &vo,int n,double x,double y);
         void put_reconcile_overflow();
         void import(FILE *fp=stdin);
@@ -330,12 +331,13 @@ class container_2d : public container_base_2d, public radius_mono {
 class container_poly_2d : public container_base_2d, public radius_poly_2d {
     public:
         container_poly_2d(double ax_,double bx_,double ay_,double by_,
-                   int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread);
+                   int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread=1);
         ~container_poly_2d();
         void change_number_thread(int number_thread);
         void clear();
         void put(int n,double x,double y,double r);
-        void put(double *pt_r_list, int num_pt, int num_thread);
+        void put_parallel(int n,double x,double y,double r);
+        void put_parallel(double *pt_r_list, int num_pt, int num_thread);
         void put(particle_order &vo,int n,double x,double y,double r);
         void put_reconcile_overflow();
         void import(FILE *fp=stdin);
