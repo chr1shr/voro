@@ -15,7 +15,7 @@ src=$(patsubst %.o,%.cc,$(objs))
 all: libvoro++.a voro++
 
 depend:
-	$(cxx) -MM $(src) >Makefile.dep
+	$(CXX) -MM $(src) >Makefile.dep
 
 include Makefile.dep
 
@@ -24,10 +24,10 @@ libvoro++.a: $(objs)
 	ar rs libvoro++.a $^
 
 voro++: libvoro++.a cmd_line.cc
-	$(cxx) $(cflags) -L. -o voro++ cmd_line.cc -lvoro++
+	$(CXX) $(CFLAGS) -L. -o voro++ cmd_line.cc -lvoro++
 
 %.o: %.cc
-	$(cxx) $(cflags) -c $<
+	$(CXX) $(CFLAGS) -c $<
 
 help: Doxyfile $(SOURCE)
 	doxygen Doxyfile

@@ -9,6 +9,10 @@
 #include "voro++.hh"
 using namespace voro;
 
+#ifdef _OPENMP
+#include "omp.h"
+#endif
+
 enum blocks_mode {
     none,
     length_scale,
@@ -46,6 +50,9 @@ void help_message() {
          " -py         : Make container periodic in the y direction\n"
          " -pz         : Make container periodic in the z direction\n"
          " -r          : Assume the input file has an extra coordinate for radii\n"
+#ifdef _OPENMP
+         " -t <num>    : Use <num> threads for the computation [default: 1]\n"
+#endif
          " -v          : Verbose output\n"
          " --version   : Print version information\n"
          " -wb [6]     : Add six plane wall objects to make rectangular box containing\n"
@@ -203,7 +210,7 @@ void cmd_line_output(particle_order vo,c_class &con,v_class &c,const char* forma
 }
 
 int main(int argc,char **argv) {
-    int i=1,j=-7,custom_output=0,nx,ny,nz,init_mem=8,
+    int i=1,j=-7,custom_output=0,num_thread=1,nx,ny,nz,init_mem=8,
     gnuplot_output=-1,povv_output=-1,povp_output=-1;
     double ls=0;
     blocks_mode bm=none;
@@ -292,6 +299,23 @@ int main(int argc,char **argv) {
         else if(se(argv[i],"-py")) y_prd=true;
         else if(se(argv[i],"-pz")) z_prd=true;
         else if(se(argv[i],"-r")) polydisperse=true;
+#ifdef _OPENMP
+        else if(se(argv[i],"-t")) {
+            if(i>=argc-8) {error_message();wl.deallocate();return VOROPP_CMD_LINE_ERROR;}
+            num_thread=atoi(argv[++i]);
+            int max_thread=omp_get_max_threads();
+            if(num_thread<1) {
+                fputs("voro++: The number of threads must greater than zero\n",stderr);
+                wl.deallocate();
+                return VOROPP_CMD_LINE_ERROR;
+            } else if(num_thread>max_thread) {
+                fprintf(stderr,"voro++: The number of threads must be less than or equal to the maximum\n"
+                        "available, which is %d on this system\n",max_thread);
+                wl.deallocate();
+                return VOROPP_CMD_LINE_ERROR;
+            }
+        }
+#endif
         else if(se(argv[i],"-v")) verbose=true;
         else if(se(argv[i],"--version")) {
             version_message();
@@ -494,7 +518,7 @@ int main(int argc,char **argv) {
     // output ordering is requested
     double vol=0;int tp=0,vcc=0;
     if(polydisperse) {
-        container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
+        container_poly_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem,num_thread);
         con.add_wall(wl);
 
         if(ordered) {
@@ -528,7 +552,7 @@ int main(int argc,char **argv) {
             }
         }
     } else {
-        container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem);
+        container_3d con(ax,bx,ay,by,az,bz,nx,ny,nz,x_prd,y_prd,z_prd,init_mem,num_thread);
         con.add_wall(wl);
 
         if(ordered) {
