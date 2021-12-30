@@ -1721,6 +1721,69 @@ void voronoicell_base::minkowski_formula(double x0,double y0,double z0,double r,
 	ar+=arc*si;
 }
 
+static double dot_product(double *a, double *b) {
+	return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+}
+
+static void cross_product(double *a, double *b, double *c) {
+	c[0]=a[1]*b[2]-a[2]*b[1];
+	c[1]=a[2]*b[0]-a[0]*b[2];
+	c[2]=a[0]*b[1]-a[1]*b[0];
+}
+
+static double triple_product(double *a, double *b, double *c) {
+	double cp[3];
+	cross_product(b,c,cp);
+	return dot_product(a,cp);
+}
+
+static void normalize_vector(double *x, double *normalized) {
+	double norm = sqrt(dot_product(x,x));
+	for (int i=0;i<3;i++) {
+		normalized[i]=x[i]/norm;
+	}
+}
+
+static double calculate_solid_angle(double *R1, double *R2, double *R3) {
+	// Method described in:
+	// A. Van Oosterom and J. Strackee
+	// "The Solid Angle of a Plane Triangle"
+	// IEEE Transactions on Biomedical Engineering, BME-30, 2, 1983, 125--126
+	// https://doi.org/10.1109/TBME.1983.325207
+	return fabs(2*atan2(triple_product(R1,R2,R3),1+dot_product(R1,R2)+dot_product(R2,R3)+dot_product(R3,R1)));
+}
+
+/** Calculates the solid angles of each face of the Voronoi cell and prints
+ * the results to an output stream.
+ * \param[out] v the vector to store the results in. */
+void voronoicell_base::solid_angles(std::vector<double> &v) {
+	double solid_angle;
+	std::vector<double> normalized(3*p);
+	v.clear();
+	int i,j,k,l,m,n;
+	for (i=0;i<p;i++) {
+		normalize_vector(&pts[4*i], &normalized[3*i]);
+	}
+
+	for(i=1;i<p;i++) for(j=0;j<nu[i];j++) {
+		k=ed[i][j];
+		if(k>=0) {
+			solid_angle=0;
+			ed[i][j]=-1-k;
+			l=cycle_up(ed[i][nu[i]+j],k);
+			m=ed[k][l];ed[k][l]=-1-m;
+			while(m!=i) {
+				n=cycle_up(ed[k][nu[k]+l],m);
+				solid_angle+=calculate_solid_angle(&normalized[3*i],&normalized[3*k],&normalized[3*m]);
+				k=m;l=n;
+				m=ed[k][l];ed[k][l]=-1-m;
+			}
+			v.push_back(solid_angle);
+		}
+	}
+	reset_edges();
+}
+
 /** Calculates the areas of each face of the Voronoi cell and prints the
  * results to an output stream.
  * \param[out] v the vector to store the results in. */
