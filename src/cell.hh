@@ -140,8 +140,15 @@ class voronoicell_base {
 		void output_vertices(FILE *fp=stdout);
 		void vertices(double x,double y,double z,std::vector<double> &v);
 		void output_vertices(double x,double y,double z,FILE *fp=stdout);
+		void solid_angles(std::vector<double> &v);
 		void face_areas(std::vector<double> &v);
 		void minkowski(double r,double &ar,double &vo);
+		/** Outputs the solid angles of the faces.
+		 * \param[in] fp the file handle to write to. */
+		inline void output_solid_angles(FILE *fp=stdout) {
+			std::vector<double> v;solid_angles(v);
+			voro_print_vector(v,fp);
+		}
 		/** Outputs the areas of the faces.
 		 * \param[in] fp the file handle to write to. */
 		inline void output_face_areas(FILE *fp=stdout) {
