@@ -1738,9 +1738,10 @@ static double triple_product(double *a, double *b, double *c) {
 }
 
 static void normalize_vector(double *x, double *normalized) {
-	double norm = sqrt(dot_product(x,x));
+	double normsq = dot_product(x,x);
+	double invnorm = normsq<=0?0:1/sqrt(normsq);
 	for (int i=0;i<3;i++) {
-		normalized[i]=x[i]/norm;
+		normalized[i]=x[i]*invnorm;
 	}
 }
 
