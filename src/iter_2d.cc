@@ -245,20 +245,6 @@ void subset_info_2d::setup_common() {
     aapy=step_div(bj,ny)*sy;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /** Computes whether the current point is out of bounds, relative to the
  * current loop setup.
  * \param[in] ijk_ the current block.
@@ -276,7 +262,6 @@ bool container_base_2d::iterator_subset::out_of_bounds() {
     double f=*pp+px;if(f<cl_iter->v0||f>cl_iter->v1) return true;
     f=pp[1]+py;return f<cl_iter->v2||f>cl_iter->v3;
 }
-
 
 /** Moves to the next block, updating all of the required vectors and indices.
  * \param[in,out] ijk_ the index of the block. */

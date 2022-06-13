@@ -7,11 +7,11 @@ using namespace voro;
 // preprocessor variable NNN hasn't been passed to the code, then initialize it
 // to a good value. Otherwise, use the value that has been passed.
 #ifndef NNN
-#define NNN 26
+#define NNN 745
 #endif
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=100000;
+const int particles=2000000;
 
 // This function returns a random floating point number between 0 and 1
 double rnd() {return double(rand())/RAND_MAX;}

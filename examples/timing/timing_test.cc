@@ -22,7 +22,7 @@ inline double rnd() {return 1./RAND_MAX*static_cast<double>(rand());}
 
 // Prints out a message about the syntax of the command-line utility
 void syntax_message() {
-    puts("Syntax: ./timing_test <num> <block_lo> <block_hi> <reps>\n"
+    puts("Syntax: ./timing_test <num> <block_lo> <block_hi> <reps> <prd>\n"
          "Arguments:\n"
          "<num>         The number of particles       [100000]\n"
          "<block_lo>    The lower limit of blocks     [10]\n"
