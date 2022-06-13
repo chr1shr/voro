@@ -82,7 +82,6 @@ int main(int argc,char **argv) {
 
             // Store the timing statistics
             t0=t1-t0;t1=wtime_()-t1;
-            printf("%g %g\n",t0,t1);
             st+=t0;stt+=t0*t0;
             sc+=t1;scc+=t1*t1;
         }
