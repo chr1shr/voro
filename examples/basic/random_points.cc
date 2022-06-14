@@ -15,7 +15,7 @@ const double cvol=(x_max-x_min)*(y_max-y_min)*(z_max-z_min);
 const int n_x=6,n_y=6,n_z=6;
 
 // Set the number of particles that are going to be randomly introduced
-const int particles=20;
+const int particles=200;
 
 // This function returns a random number uniformly distributed over the range
 // from a to b

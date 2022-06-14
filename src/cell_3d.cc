@@ -2196,22 +2196,36 @@ bool voronoicell_base_3d::plane_intersects_guess(double x,double y,double z,doub
  * \param[in] rsq the distance along this vector of the plane.
  * \param[in] g the distance of up from the plane.
  * \return False if the plane does not intersect the plane, true if it does. */
-inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double z,double rsq,double g) {
+inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double z,double rsq,double l) {
 
 //    bool fres=false;
   //  for(int tp=0;tp<p;tp++) if(x*pts[tp<<2]+y*pts[(tp<<2)+1]+z*pts[(tp<<2)+2]>rsq) fres=true;
 
-    int ls,us,lp;
-    double l;
-    unsigned int uw;
+    int vs,ls,lp=up;
+    double u=l;
 
-    // Initialize the safe testing routine
-    px=x;py=y;pz=z;prsq=rsq;
-    maskc+=4;
-    if(maskc<4) reset_mask();
+    // The test point is outside of the cutting space
+    for(ls=0;ls<nu[lp];ls++) {
+        up=ed[lp][ls];
+        u=x*pts[up<<2]+y*pts[(up<<2)+1]+z*pts[(up<<2)+2];
+        if(u>l) break;
+    }
+    if(ls==nu[lp]) return false;
 
-    g-=rsq;
-    return search_upward(uw,lp,ls,us,l,g);
+    while(u<rsq) {
+
+        // Test all the neighbors of the current point and find the one which
+        // is closest to the plane
+        vs=ed[lp][nu[lp]+ls];lp=up;l=u;
+        for(ls=0;ls<nu[lp];ls++) {
+            if(ls==vs) continue;
+            up=ed[lp][ls];
+            u=x*pts[up<<2]+y*pts[(up<<2)+1]+z*pts[(up<<2)+2];
+            if(u>l) break;
+        }
+        if(ls==nu[lp]) return false;
+    }
+    return true;
 }
 
 /** Counts the number of edges of the Voronoi cell.

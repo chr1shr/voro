@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "voro++.cc"
+#include "voro++.hh"
 using namespace voro;
 
 // Set up timing routine. If code was compiled with OpenMP, then use the
