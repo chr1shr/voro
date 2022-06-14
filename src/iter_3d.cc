@@ -1076,7 +1076,7 @@ container_triclinic_base::iterator& container_triclinic_base::iterator::operator
 //Supports the offset dereference operator ([])
 c_info& container_triclinic_base::iterator::operator[](const difference_type& incre) const
 {
-    c_info ci;
+    static c_info ci;
     int q_=ptr.q; int ijk_=ptr.ijk;
     int n=incre;
     int diff=q_+n-co_iter[ijk_];
@@ -1233,7 +1233,7 @@ container_triclinic_base::iterator_order& container_triclinic_base::iterator_ord
 
 //Supports the offset dereference operator ([])
 c_info& container_triclinic_base::iterator_order::operator[](const difference_type& incre) const {
-    c_info ci;
+    static c_info ci;
     int ci_n=ptr_n+incre;
     int ijk_=cp_iter[2*ci_n];
     int q_=cp_iter[2*ci_n+1];

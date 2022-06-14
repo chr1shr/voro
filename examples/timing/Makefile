@@ -1,8 +1,5 @@
 # Voro++ makefile
-#
-# Author : Chris H. Rycroft (Harvard University / LBL)
-# Email  : chr@alum.mit.edu
-# Date   : August 30th 2011
+# By Chris H. Rycroft and Rycroft Group
 
 # Load the common configuration file
 include ../../config.mk
