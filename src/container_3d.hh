@@ -191,6 +191,23 @@ class container_base_3d : public voro_base_3d, public wall_list_3d {
             for(int *cop=co+1;cop<co+nxyz;cop++) tp+=*cop;
             return tp;
         }
+        /** Gets the position of the particle currently pointed at by an
+         * iterator.
+         * \param[in] c_iter_3d cli a reference to the iterator class.
+         * \param[out] (x,y,z) the particle position vector. */
+        template<class c_iter_3d>
+        inline void pos(c_iter_3d &cli,double &x,double &y,double &z) {
+            double *pp=p[cli->ijk]+ps*cli->q;
+            x=*pp;y=pp[1];z=pp[2];
+        }
+        /** Returns the IDrof the particle currently pointed at by an
+         * iterator.
+         * \param[in] c_iter_3d cli a reference to the iterator class.
+         * \return The particle ID. */
+        template<class c_iter_3d>
+        inline int pid(c_iter_3d &cli) {
+            return id[cli->ijk][cli->q];
+        }
         friend class iterator;
         class iterator;
         iterator begin();
