@@ -31,7 +31,7 @@ class wall_l_shape : public wall_3d {
             // Set the tolerance to 100, to make the code search
             // for cases where non-convex cells are cut in multiple
             // places
-            c.big_tol=100;
+            //c.big_tol=100;
             return true;
         }
         bool cut_cell(voronoicell_neighbor_3d &c,double x,double y,double z) {
@@ -43,7 +43,7 @@ class wall_l_shape : public wall_3d {
             // Set the tolerance to 100, to make the code search
             // for cases where non-convex cells are cut in multiple
             // places
-            c.big_tol=100;
+            //c.big_tol=100;
             return true;
         }
     private:
