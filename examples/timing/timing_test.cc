@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <cfloat>
 
 #include "voro++.hh"
 using namespace voro;
@@ -68,7 +69,7 @@ int main(int argc,char **argv) {
         container_3d con(0,1,0,1,0,1,b,b,b,prd,prd,prd,8);
 
         // Perform the repeat trials
-        double st=0,stt=0,sc=0,scc=0,t0,t1;
+        double st=0,stt=0,mint=DBL_MAX,minc=DBL_MAX,sc=0,scc=0,t0,t1;
         for(int l=0;l<reps;l++) {
 
             // Randomly insert the particles into the container
@@ -82,14 +83,16 @@ int main(int argc,char **argv) {
 
             // Store the timing statistics
             t0=t1-t0;t1=wtime_()-t1;
+            if(mint>t0) mint=t0;
             st+=t0;stt+=t0*t0;
+            if(minc>t1) minc=t1;
             sc+=t1;scc+=t1*t1;
         }
 
         // Output the timing information
         st/=reps;stt=stt/reps-st*st;
         sc/=reps;scc=scc/reps-sc*sc;
-        printf("%d %g %g %g %g\n",b,st,stt<0?0:sqrt(stt),sc,scc<0?0:sqrt(scc));
+        printf("%d %g %g %g %g %g %g\n",b,mint,st,stt<0?0:sqrt(stt),minc,sc,scc<0?0:sqrt(scc));
         con.clear();
     }
 }
