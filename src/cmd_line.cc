@@ -135,7 +135,7 @@ inline bool se(const char* f1,const char* f2) {
 }
 
 // Opens an extra output file
-inline FILE* open_extra(char *buffer,char **argv,wall_list_3d &wl,int f_output,const char *ext,const char* base_fn,bool &stdout_used) {
+FILE* open_extra(char *buffer,char **argv,wall_list_3d &wl,int f_output,const char *ext,const char* base_fn,bool &stdout_used) {
     if(f_output>=0) {
 
         // If no specific filename was given then assemble the default one

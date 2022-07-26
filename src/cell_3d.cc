@@ -280,9 +280,18 @@ void voronoicell_base_3d::add_memory_xse() {
  * \param[in] (ymin,ymax) the minimum and maximum y coordinates.
  * \param[in] (zmin,zmax) the minimum and maximum z coordinates. */
 void voronoicell_base_3d::init_base(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax) {
+    int qq[56]={1,4,2,2,1,0,0,3,5,0,2,1,0,1,
+                0,6,3,2,1,0,2,2,7,1,2,1,0,3,
+                6,0,5,2,1,0,4,4,1,7,2,1,0,5,
+                7,2,4,2,1,0,6,5,3,6,2,1,0,7},*q=mep[3];
     for(int i=0;i<current_vertex_order;i++) mec[i]=0;
     up=0;
-    mec[3]=p=8;xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
+    mec[3]=p=8;
+    memcpy(q,qq,sizeof(int)*56);
+    *ed=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
+    ed[4]=q+28;ed[5]=q+35;ed[6]=q+42;ed[7]=q+49;
+    *nu=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
+    xmin*=2;xmax*=2;ymin*=2;ymax*=2;zmin*=2;zmax*=2;
     *pts=xmin;pts[1]=ymin;pts[2]=zmin;
     pts[3]=xmax;pts[4]=ymin;pts[5]=zmin;
     pts[6]=xmin;pts[7]=ymax;pts[8]=zmin;
@@ -291,56 +300,34 @@ void voronoicell_base_3d::init_base(double xmin,double xmax,double ymin,double y
     pts[15]=xmax;pts[16]=ymin;pts[17]=zmax;
     pts[18]=xmin;pts[19]=ymax;pts[20]=zmax;
     pts[21]=xmax;pts[22]=ymax;pts[23]=zmax;
-    int *q=mep[3];
-    *q=1;q[1]=4;q[2]=2;q[3]=2;q[4]=1;q[5]=0;q[6]=0;
-    q[7]=3;q[8]=5;q[9]=0;q[10]=2;q[11]=1;q[12]=0;q[13]=1;
-    q[14]=0;q[15]=6;q[16]=3;q[17]=2;q[18]=1;q[19]=0;q[20]=2;
-    q[21]=2;q[22]=7;q[23]=1;q[24]=2;q[25]=1;q[26]=0;q[27]=3;
-    q[28]=6;q[29]=0;q[30]=5;q[31]=2;q[32]=1;q[33]=0;q[34]=4;
-    q[35]=4;q[36]=1;q[37]=7;q[38]=2;q[39]=1;q[40]=0;q[41]=5;
-    q[42]=7;q[43]=2;q[44]=4;q[45]=2;q[46]=1;q[47]=0;q[48]=6;
-    q[49]=5;q[50]=3;q[51]=6;q[52]=2;q[53]=1;q[54]=0;q[55]=7;
-    *ed=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
-    ed[4]=q+28;ed[5]=q+35;ed[6]=q+42;ed[7]=q+49;
-    *nu=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=nu[6]=nu[7]=3;
 }
 
 /** Initializes an L-shaped Voronoi cell of a fixed size for testing the
  * convexity robustness. */
 void voronoicell_3d::init_l_shape() {
+    int qq[84]={1,6,2,2,1,0,0,5,7,0,2,1,0,1,
+                0,8,3,2,1,0,2,2,9,4,2,1,0,3,
+                3,10,5,2,1,0,4,4,11,1,2,1,0,5,
+                8,0,7,2,1,0,6,6,1,11,2,1,0,7,
+                9,2,6,2,1,0,8,10,3,8,2,1,0,9,
+                11,4,9,2,1,0,10,7,5,10,2,1,0,11};
     for(int i=0;i<current_vertex_order;i++) mec[i]=0;
     up=0;
     mec[3]=p=12;
-    const double j=0;
+    memcpy(mep[3],qq,sizeof(int)*84);
+    for(int i=0;i<12;i++) {nu[i]=3;ed[i]=mep[3]+i*7;}
     *pts=-2;pts[1]=-2;pts[2]=-2;
     pts[3]=2;pts[4]=-2;pts[5]=-2;
     pts[6]=-2;pts[7]=0;pts[8]=-2;
-    pts[9]=-j;pts[10]=j;pts[11]=-2;
+    pts[9]=0;pts[10]=0;pts[11]=-2;
     pts[12]=0;pts[13]=2;pts[14]=-2;
     pts[15]=2;pts[16]=2;pts[17]=-2;
     pts[18]=-2;pts[19]=-2;pts[20]=2;
     pts[21]=2;pts[22]=-2;pts[23]=2;
     pts[24]=-2;pts[25]=0;pts[26]=2;
-    pts[27]=-j;pts[28]=j;pts[29]=2;
+    pts[27]=0;pts[28]=0;pts[29]=2;
     pts[30]=0;pts[31]=2;pts[32]=2;
     pts[33]=2;pts[34]=2;pts[35]=2;
-    int *q=mep[3];
-    *q=1;q[1]=6;q[2]=2;q[6]=0;
-    q[7]=5;q[8]=7;q[9]=0;q[13]=1;
-    q[14]=0;q[15]=8;q[16]=3;q[20]=2;
-    q[21]=2;q[22]=9;q[23]=4;q[27]=3;
-    q[28]=3;q[29]=10;q[30]=5;q[34]=4;
-    q[35]=4;q[36]=11;q[37]=1;q[41]=5;
-    q[42]=8;q[43]=0;q[44]=7;q[48]=6;
-    q[49]=6;q[50]=1;q[51]=11;q[55]=7;
-    q[56]=9;q[57]=2;q[58]=6;q[62]=8;
-    q[63]=10;q[64]=3;q[65]=8;q[69]=9;
-    q[70]=11;q[71]=4;q[72]=9;q[76]=10;
-    q[77]=7;q[78]=5;q[79]=10;q[83]=11;
-    *ed=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;ed[4]=q+28;ed[5]=q+35;
-    ed[6]=q+42;ed[7]=q+49;ed[8]=q+56;ed[9]=q+63;ed[10]=q+70;ed[11]=q+77;
-    for(int i=0;i<12;i++) nu[i]=3;
-    construct_relations();
 }
 
 /** Initializes a Voronoi cell as a regular octahedron.
@@ -348,7 +335,13 @@ void voronoicell_3d::init_l_shape() {
  *              vertices are initialized at (-l,0,0), (l,0,0), (0,-l,0),
  *              (0,l,0), (0,0,-l), and (0,0,l). */
 void voronoicell_base_3d::init_octahedron_base(double l) {
+    int qq[54]={2,5,3,4,0,0,0,0,0,2,4,3,5,2,2,2,2,1,
+                0,4,1,5,0,3,0,1,2,0,5,1,4,2,3,2,1,3,
+                0,3,1,2,3,3,1,1,4,0,2,1,3,1,3,3,1,5},*q=mep[4];
     for(int i=0;i<current_vertex_order;i++) mec[i]=0;
+    memcpy(q,qq,54*sizeof(int));
+    *ed=q;ed[1]=q+9;ed[2]=q+18;ed[3]=q+27;ed[4]=q+36;ed[5]=q+45;
+    *nu=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
     up=0;
     mec[4]=p=6;l*=2;
     *pts=-l;pts[1]=0;pts[2]=0;
@@ -357,15 +350,6 @@ void voronoicell_base_3d::init_octahedron_base(double l) {
     pts[9]=0;pts[10]=l;pts[11]=0;
     pts[12]=0;pts[13]=0;pts[14]=-l;
     pts[15]=0;pts[16]=0;pts[17]=l;
-    int *q=mep[4];
-    *q=2;q[1]=5;q[2]=3;q[3]=4;q[4]=0;q[5]=0;q[6]=0;q[7]=0;q[8]=0;
-    q[9]=2;q[10]=4;q[11]=3;q[12]=5;q[13]=2;q[14]=2;q[15]=2;q[16]=2;q[17]=1;
-    q[18]=0;q[19]=4;q[20]=1;q[21]=5;q[22]=0;q[23]=3;q[24]=0;q[25]=1;q[26]=2;
-    q[27]=0;q[28]=5;q[29]=1;q[30]=4;q[31]=2;q[32]=3;q[33]=2;q[34]=1;q[35]=3;
-    q[36]=0;q[37]=3;q[38]=1;q[39]=2;q[40]=3;q[41]=3;q[42]=1;q[43]=1;q[44]=4;
-    q[45]=0;q[46]=2;q[47]=1;q[48]=3;q[49]=1;q[50]=3;q[51]=3;q[52]=1;q[53]=5;
-    *ed=q;ed[1]=q+9;ed[2]=q+18;ed[3]=q+27;ed[4]=q+36;ed[5]=q+45;
-    *nu=nu[1]=nu[2]=nu[3]=nu[4]=nu[5]=4;
 }
 
 /** Initializes a Voronoi cell as a tetrahedron. It assumes that the normal to
@@ -375,20 +359,18 @@ void voronoicell_base_3d::init_octahedron_base(double l) {
  * \param (x2,y2,z2) a position vector for the third vertex.
  * \param (x3,y3,z3) a position vector for the fourth vertex. */
 void voronoicell_base_3d::init_tetrahedron_base(double x0,double y0,double z0,double x1,double y1,double z1,double x2,double y2,double z2,double x3,double y3,double z3) {
+    int qq[28]={1,3,2,0,0,0,0,0,2,3,0,2,1,1,
+                0,3,1,2,2,1,2,0,1,2,1,2,1,3},*q=mep[3];
     for(int i=0;i<current_vertex_order;i++) mec[i]=0;
     up=0;
     mec[3]=p=4;
+    *ed=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
+    *nu=nu[1]=nu[2]=nu[3]=3;
+    memcpy(q,qq,28*sizeof(int));
     *pts=x0*2;pts[1]=y0*2;pts[2]=z0*2;
     pts[3]=x1*2;pts[4]=y1*2;pts[5]=z1*2;
     pts[6]=x2*2;pts[7]=y2*2;pts[8]=z2*2;
     pts[9]=x3*2;pts[10]=y3*2;pts[11]=z3*2;
-    int *q=mep[3];
-    *q=1;q[1]=3;q[2]=2;q[3]=0;q[4]=0;q[5]=0;q[6]=0;
-    q[7]=0;q[8]=2;q[9]=3;q[10]=0;q[11]=2;q[12]=1;q[13]=1;
-    q[14]=0;q[15]=3;q[16]=1;q[17]=2;q[18]=2;q[19]=1;q[20]=2;
-    q[21]=0;q[22]=1;q[23]=2;q[24]=1;q[25]=2;q[26]=1;q[27]=3;
-    *ed=q;ed[1]=q+7;ed[2]=q+14;ed[3]=q+21;
-    *nu=nu[1]=nu[2]=nu[3]=3;
 }
 
 /** Checks that the relational table of the Voronoi cell is accurate, and

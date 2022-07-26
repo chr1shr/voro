@@ -1,11 +1,8 @@
 # Voro++ makefile
-#
-# Author : Chris H. Rycroft (LBL / UC Berkeley)
-# Email  : chr@alum.mit.edu
-# Date   : August 30th 2011
+# By Chris H. Rycroft and the Rycroft Group
 
 # Makefile rules
-all: ex_basic ex_walls ex_custom ex_extra ex_degenerate ex_interface
+all: ex_basic ex_walls ex_custom ex_extra ex_degenerate ex_interface ex_timing
 
 ex_basic:
 	$(MAKE) -C basic
@@ -25,6 +22,9 @@ ex_degenerate:
 ex_interface:
 	$(MAKE) -C interface
 
+ex_timing:
+	$(MAKE) -C timing
+
 clean:
 	$(MAKE) -C basic clean
 	$(MAKE) -C walls clean
@@ -32,5 +32,6 @@ clean:
 	$(MAKE) -C extra clean
 	$(MAKE) -C degenerate clean
 	$(MAKE) -C interface clean
+	$(MAKE) -C timing clean
 
 .PHONY: all ex_basic ex_walls ex_custom ex_extra ex_degenerate clean
