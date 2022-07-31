@@ -38,7 +38,6 @@ container_base_3d::container_base_3d(double ax_,double bx_,double ay_,double by_
     p(new double*[nxyz]), co(new int[nxyz]), mem(new int[nxyz]), ps(ps_),
     nt(nt_), oflow_co(0), oflow_mem(init_overflow_size),
     ijk_m_id_oflow(new int[3*oflow_mem]), p_oflow(new double[ps*oflow_mem]) {
-
     int l;
     for(l=0;l<nxyz;l++) co[l]=0;
     for(l=0;l<nxyz;l++) mem[l]=init_mem;
@@ -200,7 +199,8 @@ void container_3d::put_parallel(int i,double x,double y,double z) {
 #pragma omp atomic capture
         m=co[ijk]++;
 
-        // If the slot is within the available allocated memory, then add it directly
+        // If the slot is within the available allocated memory, then add it
+        // directly
         if(m<mem[ijk]){
             id[ijk][m]=i;
             double *pp=p[ijk]+3*m;
@@ -276,8 +276,7 @@ void container_3d::put_reconcile_overflow() {
         // Store the particle information
         id[ijk][m]=*(idp++);
         double *pp=p[ijk]+3*m;
-        *(pp++)=*(op++);*(pp++)=*(op++);
-        *(pp++)=*(op++);
+        *pp=*(op++);pp[1]=*(op++);pp[2]=*(op++);
     }
 
     // All particles in the overflow buffer have been considered, so set the
@@ -343,8 +342,8 @@ void container_poly_3d::put_parallel(int i,double x,double y,double z,double r) 
 
 /** Adds an array of particle positions to the container using multithreaded
  * insertion.
- * \param[in] pt_list a pointer to the array of positions, stored as (x,y,z)
- *                    triplets.
+ * \param[in] pt_list a pointer to the array of positions, stored as (x,y,z,r)
+ *                    quadruplets.
  * \param[in] num the number of particles.
  * \param[in] nt_ the number of threads to use. */
 void container_poly_3d::add_parallel(double *pt_list,int num,int nt_){
@@ -375,8 +374,8 @@ void container_poly_3d::put_reconcile_overflow() {
         // Store the particle information
         id[ijk][m]=*(idp++);
         double *pp=p[ijk]+4*m;
-        *(pp++)=*(op++);*(pp++)=*(op++);
-        *(pp++)=*(op++);*(pp++)=*(op++);
+        *pp=*(op++);pp[1]=*(op++);
+        pp[2]=*(op++);pp[3]=*(op++);
     }
 
     // All particles in the overflow buffer have been considered, so set the
@@ -581,12 +580,11 @@ bool container_poly_3d::find_voronoi_cell(double x,double y,double z,double &rx,
 void container_base_3d::add_particle_memory(int i) {
     mem[i]<<=1;
 
-    // Carry out a check on the memory allocation size, and print a status
-    // message if requested
+    // Check the memory allocation size and print a status message if requested
     if(mem[i]>max_particle_memory)
         voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
-    fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
+    fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,mem[i]);
 #endif
 
     // Allocate new memory and copy in the contents of the old arrays
@@ -607,7 +605,7 @@ void container_3d::import(FILE *fp) {
     int i,j;
     double x,y,z;
     while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z))==4) {put(i,x,y,z);}
-    put_reconcile_overflow();
+    put_reconcile_overflow();                                     // XXX - why is this needed here?
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
@@ -633,7 +631,7 @@ void container_poly_3d::import(FILE *fp) {
     int i,j;
     double x,y,z,r;
     while((j=fscanf(fp,"%d %lg %lg %lg %lg",&i,&x,&y,&z,&r))==5) {put(i,x,y,z,r);}
-    put_reconcile_overflow();
+    put_reconcile_overflow();                                     // XXX - why is this needed here?
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 

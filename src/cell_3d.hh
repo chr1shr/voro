@@ -238,7 +238,6 @@ class voronoicell_base_3d {
                 ed[i][j]=-1-ed[i][j];
             }
         }
-
         inline bool search_edge(int l,int &m,int &k){
             for(m=0;m<nu[l];m++) {
                 k=ed[l][m];
