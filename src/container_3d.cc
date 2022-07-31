@@ -58,10 +58,10 @@ container_base_3d::~container_base_3d() {
     delete [] ijk_m_id_oflow;
 
     // Delete the block arrays
-    delete [] id;
-    delete [] p;
-    delete [] co;
     delete [] mem;
+    delete [] co;
+    delete [] p;
+    delete [] id;
 }
 
 /** The class constructor sets up the geometry of the container.
@@ -89,11 +89,7 @@ container_3d::container_3d(double ax_,double bx_,double ay_,double by_,double az
 
 /** The class destructor frees the dynamically allocated memory. */
 container_3d::~container_3d() {
-
-    // Delete the Voronoi computation objects
     for(int l=0;l<nt;l++) delete vc[l];
-
-    // Delete the Voronoi computation pointer array
     delete [] vc;
 }
 
@@ -140,11 +136,7 @@ container_poly_3d::container_poly_3d(double ax_,double bx_,double ay_,double by_
 
 /** The class destructor frees the dynamically allocated memory. */
 container_poly_3d::~container_poly_3d(){
-
-    // Delete the Voronoi computation objects
     for(int l=0;l<nt;l++) delete vc[l];
-
-    // Delete other arrays
     delete [] max_r;
     delete [] vc;
 }
@@ -310,7 +302,7 @@ void container_poly_3d::put_parallel(int i,double x,double y,double z,double r) 
 
         // Update the per-thread maximum radius
         int tn=t_num();
-        if(max_r[tn]<r) {max_r[tn]=r;}
+        if(max_r[tn]<r) max_r[tn]=r;
 
         // Find the unique available slot number in the block, using an atomic
         // increment of the counter

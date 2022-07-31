@@ -6,21 +6,23 @@ container_2d.o: container_2d.cc container_2d.hh config.hh common.hh \
  v_compute_2d.hh wall.hh cell_3d.hh iter_2d.hh c_info.hh
 container_3d.o: container_3d.cc container_3d.hh config.hh common.hh \
  rad_option.hh particle_order.hh cell_3d.hh v_base_3d.hh worklist_3d.hh \
- v_compute_3d.hh wall.hh cell_2d.hh iter_3d.hh c_info.hh
+ v_compute_3d.hh wall.hh cell_2d.hh iter_3d.hh container_tri.hh \
+ unitcell.hh c_info.hh
 container_tri.o: container_tri.cc container_tri.hh config.hh common.hh \
  rad_option.hh particle_order.hh cell_3d.hh v_base_3d.hh worklist_3d.hh \
- v_compute_3d.hh unitcell.hh
+ v_compute_3d.hh unitcell.hh iter_3d.hh container_3d.hh wall.hh \
+ cell_2d.hh c_info.hh
 iter_2d.o: iter_2d.cc iter_2d.hh particle_order.hh config.hh \
  container_2d.hh common.hh rad_option.hh cell_2d.hh v_base_2d.hh \
  worklist_2d.hh v_compute_2d.hh wall.hh cell_3d.hh c_info.hh
 iter_3d.o: iter_3d.cc iter_3d.hh particle_order.hh config.hh \
  container_3d.hh common.hh rad_option.hh cell_3d.hh v_base_3d.hh \
- worklist_3d.hh v_compute_3d.hh wall.hh cell_2d.hh c_info.hh
-particle_list.o: particle_list.cc config.hh particle_list.hh c_loops.hh \
- container_3d.hh common.hh rad_option.hh particle_order.hh cell_3d.hh \
- v_base_3d.hh worklist_3d.hh v_compute_3d.hh wall.hh cell_2d.hh \
- container_2d.hh v_base_2d.hh worklist_2d.hh v_compute_2d.hh \
- container_tri.hh unitcell.hh
+ worklist_3d.hh v_compute_3d.hh wall.hh cell_2d.hh container_tri.hh \
+ unitcell.hh c_info.hh
+particle_list.o: particle_list.cc config.hh particle_list.hh common.hh \
+ particle_order.hh container_2d.hh rad_option.hh cell_2d.hh v_base_2d.hh \
+ worklist_2d.hh v_compute_2d.hh wall.hh cell_3d.hh container_3d.hh \
+ v_base_3d.hh worklist_3d.hh v_compute_3d.hh container_tri.hh unitcell.hh
 unitcell.o: unitcell.cc unitcell.hh config.hh cell_3d.hh common.hh
 v_base_2d.o: v_base_2d.cc v_base_2d.hh worklist_2d.hh config.hh \
  v_base_wl_2d.cc

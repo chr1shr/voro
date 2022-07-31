@@ -1,5 +1,11 @@
-Version 0.5 (...)
+Version 1.0 (...)
 ===================
+* This version is a major update and adds multithreading support using the
+  OpenMP library. The c_loop classes have been removed and replaced with
+  C++ iterator classes. These classes are compatible with OpenMP and allow
+  loops over the particles to be multithreaded with a single "#pragma omp".
+  The code can still be compiled for single-threaded calculations without
+  any multithreading support.
 * Fixed typo in random_points.cc example. Thanks to Guo-Jie Gao (Osaka
   University) and Jose Adsuara (Universit of Valencia) for pointing this out.
 * Fixed documentation error in normals routine. Thanks to Jean Farago
@@ -10,6 +16,14 @@ Version 0.5 (...)
   changing config.hh could create a problem.
 * Updated plane cutting routine to handle non-convex cases. This should remove
   some extremely rare errors where cells can accidentally be deleted.
+* Improved the command-line utility to provide more flexibility with input
+  and output filenames
+* Extended the custom output routines to allow for variable precision
+* Made the tolerances in the Voronoi cell classes be set relative to the
+  container size
+* Merged the 2D prototype library into the main library. Used "_2d" and "_3d"
+  suffixes on class names to differentiate between two-dimensional and
+  three-dimensional routines
 * Fixed a typo in the delete_connection routine in cell.cc that could cause
   segmentation faults in extremely rare cases. Thanks to Francesco Biscani (Max
   Planck institute for Astronomy, Heidelberg) for pointing this out.
@@ -17,7 +31,7 @@ Version 0.5 (...)
   for pointing this out.
 * Incorporated Roger Wesson's fix to cmd_line.cc and the man page
 * Cleaned up comments
-* Updated Doxyfile to 1.8.9.1
+* Updated Doxyfile to 1.9.3
 
 Version 0.4.6 (October 17th 2013)
 =================================

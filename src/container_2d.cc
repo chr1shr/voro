@@ -4,6 +4,8 @@
 /** \file container_2d.cc
  * \brief Function implementations for the container_2d and related classes. */
 
+#include <cstring>
+
 #include "container_2d.hh"
 #include "iter_2d.hh"
 
