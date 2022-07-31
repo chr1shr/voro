@@ -86,7 +86,7 @@ class container_base_3d : public voro_base_3d, public wall_list_3d {
         const int ps;
         container_base_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
                 int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,
-                int init_mem,int ps_);
+                int init_mem,int ps_,int nt_);
         ~container_base_3d();
         bool point_inside(double x,double y,double z);
         void region_count();
@@ -221,10 +221,23 @@ class container_base_3d : public voro_base_3d, public wall_list_3d {
         iterator_order begin(particle_order &vo);
         iterator_order end(particle_order &vo);
     protected:
+        void add_overflow_memory();
         void add_particle_memory(int i);
         bool put_locate_block(int &ijk,double &x,double &y,double &z);
         inline bool put_remap(int &ijk,double &x,double &y,double &z);
         inline bool remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
+        /** The maximum number of threads that can be used for computation. */
+        int nt;
+        /** The number of particles in the overflow buffer. */
+        int oflow_co;
+        /** The current size of the overflow buffer for multithreaded insertion
+         * of particles. */
+        int oflow_mem;
+        /** An array of particle IDs and block information in the overflow
+         * buffer. */
+        int *ijk_m_id_oflow;
+        /** An array of particle positions in the overflow buffer. */
+        double *p_oflow;
 };
 
 /** \brief Extension of the container_base_3d class for computing regular
@@ -236,15 +249,15 @@ class container_base_3d : public voro_base_3d, public wall_list_3d {
 class container_3d : public container_base_3d, public radius_mono {
     public:
         container_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-                  int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem, int number_thread=1);
-        ~container_3d(); 
-        void change_number_thread(int number_thread);
+                  int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem,int nt_=1);
+        ~container_3d();
+        void change_number_thread(int nt_);
         void clear();
         void put(int i,double x,double y,double z);
         void put_parallel(int i,double x,double y,double z);
-        void put_parallel(double *pt_list, int num_pt, int num_thread);
         void put(particle_order &vo,int n,double x,double y,double z);
         void put_reconcile_overflow();
+        void add_parallel(double *pt_list,int num,int nt_);
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -361,13 +374,10 @@ class container_3d : public container_base_3d, public radius_mono {
             return false;
         }
     private:
-        int nt;
+        /** An array of pointers to Voronoi computation objects for use by the
+         * different threads. */
         voro_compute_3d<container_3d> **vc;
         friend class voro_compute_3d<container_3d>;
-        int overflow_mem_numPt;
-        int overflowPtCt;
-        int *ijk_m_id_overflow;
-        double *p_overflow; 
 };
 
 /** \brief Extension of the container_base class for computing radical Voronoi
@@ -379,15 +389,15 @@ class container_3d : public container_base_3d, public radius_mono {
 class container_poly_3d : public container_base_3d, public radius_poly_3d {
     public:
         container_poly_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-                          int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem, int number_thread=1);
-        ~container_poly_3d(); 
-        void change_number_thread(int number_thread);
+                          int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem,int nt_=1);
+        ~container_poly_3d();
+        void change_number_thread(int nt_);
         void clear();
         void put(int i,double x,double y,double z,double r);
         void put_parallel(int i,double x,double y,double z,double r);
-        void put_parallel(double *pt_r_list, int num_pt, int num_thread);
         void put(particle_order &vo,int n,double x,double y,double z,double r);
         void put_reconcile_overflow();
+        void add_parallel(double *pt_list,int num,int nt_);
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -507,14 +517,12 @@ class container_poly_3d : public container_base_3d, public radius_poly_3d {
         }
         bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
     private:
-        double *max_r;
-        int nt;
+        /** An array of pointers to Voronoi computation objects for use by the
+         * different threads. */
         voro_compute_3d<container_poly_3d> **vc;
+        /** An array for storing the maximum radii computed per thread. */
+        double *max_r;
         friend class voro_compute_3d<container_poly_3d>;
-        int overflow_mem_numPt;
-        int overflowPtCt;
-        int *ijk_m_id_overflow;
-        double *p_overflow; 
 };
 
 }

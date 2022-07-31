@@ -60,13 +60,12 @@ container_2d::container_2d(double ax_,double bx_,double ay_,double by_,
     nt(number_thread),vc(new voro_compute_2d<container_2d>*[nt]),
     overflow_mem_numPt(64), overflowPtCt(0), ijk_m_id_overflow(new int[3*overflow_mem_numPt]),
     p_overflow(new double[2*overflow_mem_numPt])
-    {   
+    {
         #pragma omp parallel num_threads(nt)
-        {  
+        {
         vc[t_num()]= new voro_compute_2d<container_2d>(*this,x_prd_?2*nx_+1:nx_,y_prd_?2*ny_+1:ny_);
-        }          
+        }
     }
-    
 
 container_2d::~container_2d(){
     int l;
@@ -77,18 +76,17 @@ container_2d::~container_2d(){
     delete [] p_overflow;
 }
 
-
 void container_2d::change_number_thread(int number_thread){
     int l;
     for(l=nt-1;l>=0;l--) delete vc[l];
     delete [] vc;
-    
+
     nt=number_thread;
     vc=new voro_compute_2d<container_2d>*[nt];
     #pragma omp parallel num_threads(nt)
-    {  
+    {
     vc[t_num()]= new voro_compute_2d<container_2d>(*this,x_prd?2*nx+1:nx,y_prd?2*ny+1:ny);
-    } 
+    }
 }
 
 /** The class constructor sets up the geometry of container.
@@ -108,13 +106,12 @@ container_poly_2d::container_poly_2d(double ax_,double bx_,double ay_,double by_
     {
         max_r=new double[nt];
         #pragma omp parallel num_threads(nt)
-        {  
+        {
             vc[t_num()]=new voro_compute_2d<container_poly_2d>(*this,x_prd_?2*nx_+1:nx_,y_prd_?2*ny_+1:ny_);
             max_r[t_num()]=0.0;
         }
         ppr=p;
     }
-
 
 container_poly_2d::~container_poly_2d(){
     int l;
@@ -131,12 +128,12 @@ void container_poly_2d::change_number_thread(int number_thread){
     for(l=nt-1;l>=0;l--) delete vc[l];
     delete [] vc;
     delete [] max_r;
-    
+
     nt=number_thread;
     vc=new voro_compute_2d<container_poly_2d>*[nt];
     max_r=new double[nt];
     #pragma omp parallel num_threads(nt)
-    {  
+    {
         vc[t_num()]=new voro_compute_2d<container_poly_2d>(*this,x_prd?2*nx+1:nx,y_prd?2*ny+1:ny);
         max_r[t_num()]=0.0;
     }
@@ -158,23 +155,23 @@ void container_2d::put(int n,double x,double y) {
  * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y) the position vector of the inserted particle. */
 void container_2d::put_parallel(int i,double x,double y) {
-    int ij; 
+    int ij;
     //find block ijk that point (x,y,z) is in
     if(put_remap(ij,x,y)){
         int m;
         #pragma omp atomic capture
         m=co[ij]++;   //co[ij]: number of points in block ij
 
-        //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+        //if m<init memory slot (mem[ijk]=init_mem in constructor), then add
         //pt and id info in id, p directly
         if(m<mem[ij]){
             id[ij][m]=i;
             double *pp=p[ij]+2*m;
             *(pp++)=x; *pp=y;
         }
-        else{ 
+        else{
             //in critical block: if(m>=mem[ij]), add pt info in overflow arrays:
-            //ijk_m_id_overflow, p_overflow, and reconcile later 
+            //ijk_m_id_overflow, p_overflow, and reconcile later
             #pragma omp critical
             {
                 //opti: index of overflow point
@@ -182,7 +179,7 @@ void container_2d::put_parallel(int i,double x,double y) {
                 int opti=overflowPtCt++;
 
                 //if overflow arrays memory slots not enough, add new length
-                if(overflowPtCt>overflow_mem_numPt){  
+                if(overflowPtCt>overflow_mem_numPt){
                     int old_overflow_mem_numPt=overflow_mem_numPt;
                     overflow_mem_numPt=overflow_mem_numPt*2;
                     int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
@@ -198,7 +195,7 @@ void container_2d::put_parallel(int i,double x,double y) {
                         new_p_overflow[ii2+1]=p_overflow[ii2+1];
                     }
 
-                    delete [] ijk_m_id_overflow; 
+                    delete [] ijk_m_id_overflow;
                     delete [] p_overflow;
 
                     ijk_m_id_overflow=new_ijk_m_id_overflow;
@@ -206,24 +203,23 @@ void container_2d::put_parallel(int i,double x,double y) {
                 }
 
                 //add in overflow info in overflow arrays
-                int opti3=3*opti; 
+                int opti3=3*opti;
                 ijk_m_id_overflow[opti3]=ij;
                 ijk_m_id_overflow[opti3+1]=m;
                 ijk_m_id_overflow[opti3+2]=i;
 
-                int opti2=2*opti; 
+                int opti2=2*opti;
                 p_overflow[opti2]=x;
                 p_overflow[opti2+1]=y;
             }
         }
-    } 
+    }
 }
-
 
 //con.put with a input point array, parallel put
 void container_2d::put_parallel(double *pt_list, int num_pt, int num_thread){
     #pragma omp parallel for num_threads(num_thread)
-    for(int i=0; i<num_pt; i++){ //id:i      
+    for(int i=0; i<num_pt; i++){ //id:i
         double x=pt_list[2*i];
         double y=pt_list[2*i+1];
         put_parallel(i,x,y);
@@ -232,7 +228,7 @@ void container_2d::put_parallel(double *pt_list, int num_pt, int num_thread){
 
 void container_2d::put_reconcile_overflow(){
     //reconcile overflow
-    //loop through points in overflow arrays, 
+    //loop through points in overflow arrays,
     //if (m>=mem[ij]): int nmem (new memory length) = 2*mem[ij];
     //                  while(m>=nmem) {nmem=2*nmem;}
     // then construct new arrays of id, p with size nmem, and add in overflow pt info
@@ -241,15 +237,15 @@ void container_2d::put_reconcile_overflow(){
         int ij=ijk_m_id_overflow[i3];
         int m=ijk_m_id_overflow[i3+1];
         int idd=ijk_m_id_overflow[i3+2];
-        
+
         int i2=2*i;
         double x=p_overflow[i2];
         double y=p_overflow[i2+1];
-        
+
         if(m>=mem[ij]){
             int nmem=2*mem[ij];
             while(m>=nmem){nmem=2*nmem;}
-            int l; 
+            int l;
             //the following are the same as add_particle_memory(ij)
             // Carry out a check on the memory allocation size, and
             // print a status message if requested
@@ -280,11 +276,10 @@ void container_2d::put_reconcile_overflow(){
         id[ij][m]=idd;
         double *pp=p[ij]+2*m;
         *(pp++)=x; *pp=y;
-    }   
+    }
     //after reconciling, set overflowPtCt back to initial value
     overflowPtCt=0;
 }
-
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
@@ -306,14 +301,14 @@ void container_poly_2d::put(int n,double x,double y,double r) {
  * \param[in] r the radius of the particle. */
 void container_poly_2d::put_parallel(int i,double x,double y,double r) {
     int ithread=t_num();
-    int ij; 
+    int ij;
     //find block ijk that point (x,y,z) is in
     if(put_remap(ij,x,y)){
         int m;
         #pragma omp atomic capture
         m=co[ij]++;   //co[ij]: number of points in block ij
 
-        //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+        //if m<init memory slot (mem[ijk]=init_mem in constructor), then add
         //pt and id info in id, p directly
         if(m<mem[ij]){
             id[ij][m]=i;
@@ -322,9 +317,9 @@ void container_poly_2d::put_parallel(int i,double x,double y,double r) {
             //max_r
             if(max_r[ithread]<r) {max_r[ithread]=r;}
         }
-        else{ 
+        else{
             //in critical block: if(m>=mem[ij]), add pt info in overflow arrays:
-            //ijk_m_id_overflow, p_overflow, and reconcile later 
+            //ijk_m_id_overflow, p_overflow, and reconcile later
             #pragma omp critical
             {
                 //opti: index of overflow point
@@ -332,7 +327,7 @@ void container_poly_2d::put_parallel(int i,double x,double y,double r) {
                 int opti=overflowPtCt++;
 
                 //if overflow arrays memory slots not enough, add new length
-                if(overflowPtCt>overflow_mem_numPt){  
+                if(overflowPtCt>overflow_mem_numPt){
                     int old_overflow_mem_numPt=overflow_mem_numPt;
                     overflow_mem_numPt=overflow_mem_numPt*2;
                     int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
@@ -348,14 +343,14 @@ void container_poly_2d::put_parallel(int i,double x,double y,double r) {
                         new_p_overflow[ii3+2]=p_overflow[ii3+2];
                     }
 
-                    delete [] ijk_m_id_overflow; 
+                    delete [] ijk_m_id_overflow;
                     delete [] p_overflow;
 
                     ijk_m_id_overflow=new_ijk_m_id_overflow;
                     p_overflow=new_p_overflow;
                 }
                 //add in overflow info in overflow arrays
-                int opti3=3*opti; 
+                int opti3=3*opti;
                 ijk_m_id_overflow[opti3]=ij;
                 ijk_m_id_overflow[opti3+1]=m;
                 ijk_m_id_overflow[opti3+2]=i;
@@ -363,26 +358,24 @@ void container_poly_2d::put_parallel(int i,double x,double y,double r) {
                 p_overflow[opti3]=x;
                 p_overflow[opti3+1]=y;
                 p_overflow[opti3+2]=r;
-                
+
                 //max_r
                 if(max_r[ithread]<r) {max_r[ithread]=r;}
             }
         }
-    } 
+    }
 }
-
 
 //con.put with a input point array, parallel put
 void container_poly_2d::put_parallel(double *pt_r_list, int num_pt, int num_thread){
     #pragma omp parallel for num_threads(num_thread)
-    for(int i=0; i<num_pt; i++){ //id:i      
+    for(int i=0; i<num_pt; i++){ //id:i
         double x=pt_r_list[3*i];
         double y=pt_r_list[3*i+1];
         double r=pt_r_list[3*i+2];
         put_parallel(i,x,y,r);
     }
 }
-
 
 void container_poly_2d::put_reconcile_overflow(){
     //update max_radius
@@ -391,9 +384,9 @@ void container_poly_2d::put_reconcile_overflow(){
         if(max_radius<max_r[i]){max_radius=max_r[i];}
         max_r[i]=0.0;
     }
-    
+
     //reconcile overflow
-    //loop through points in overflow arrays, 
+    //loop through points in overflow arrays,
     //if (m>=mem[ij]): int nmem (new memory length) = 2*mem[ij];
     //                  while(m>=nmem) {nmem=2*nmem;}
     // then construct new arrays of id, p with size nmem, and add in overflow pt info
@@ -406,11 +399,11 @@ void container_poly_2d::put_reconcile_overflow(){
         double x=p_overflow[i3];
         double y=p_overflow[i3+1];
         double r=p_overflow[i3+2];
-        
+
         if(m>=mem[ij]){
             int nmem=2*mem[ij];
             while(m>=nmem){nmem=2*nmem;}
-            int l; 
+            int l;
             //the following are the same as add_particle_memory(ij)
             // Carry out a check on the memory allocation size, and
             // print a status message if requested
@@ -441,7 +434,7 @@ void container_poly_2d::put_reconcile_overflow(){
         id[ij][m]=idd;
         double *pp=p[ij]+3*m;
         *(pp++)=x; *(pp++)=y; *pp=r;
-    }   
+    }
     //after reconciling, set overflowPtCt back to initial value
     overflowPtCt=0;
 }

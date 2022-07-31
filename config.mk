@@ -1,8 +1,5 @@
 # Voro++, a 3D cell-based Voronoi library
-#
-# Author : Chris H. Rycroft (LBL / UC Berkeley)
-# Email  : chr@alum.mit.edu
-# Date   : August 28th 2011
+# By Chris H. Rycroft and the Rycroft Group
 
 # This a common configuration file that includes definitions used by all
 # the Makefiles.

@@ -351,7 +351,7 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
         int overflow_mem_numPt;
         int overflowPtCt;
         int *ijk_m_id_overflow;
-        double *p_overflow; 
+        double *p_overflow;
 };
 
 /** \brief Extension of the container_triclinic_base class for computing radical
@@ -364,7 +364,7 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
     public:
         container_triclinic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
                 int nx_,int ny_,int nz_,int init_mem_,int number_thread=1);
-        ~container_triclinic_poly(); 
+        ~container_triclinic_poly();
         void change_number_thread(int number_thread);
         void clear();
         void put(int n,double x,double y,double z,double r);
@@ -499,7 +499,7 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
         int overflow_mem_numPt;
         int overflowPtCt;
         int *ijk_m_id_overflow;
-        double *p_overflow; 
+        double *p_overflow;
 };
 
 }

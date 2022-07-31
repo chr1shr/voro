@@ -45,7 +45,7 @@ container_triclinic_base::container_triclinic_base(double bx_,double bxy_,double
         id[l]=new int[init_mem];
         p[l]=new double[ps*init_mem];
     }
-    
+
     #if defined(_OPENMP)
     img_lock=new omp_lock_t[oz];
     for(int i=0;i<oz;i++){
@@ -65,7 +65,7 @@ container_triclinic_base::~container_triclinic_base() {
     delete [] co;
     delete [] id;
     delete [] p;
-    
+
     #if defined(_OPENMP)
     for(int i=0;i<oz;i++){
         omp_destroy_lock(img_lock+i);
@@ -88,13 +88,12 @@ container_triclinic::container_triclinic(double bx_,double bxy_,double by_,doubl
     nt(number_thread), vc(new voro_compute_3d<container_triclinic>*[nt]),
     overflow_mem_numPt(64), overflowPtCt(0), ijk_m_id_overflow(new int[3*overflow_mem_numPt]),
     p_overflow(new double[3*overflow_mem_numPt])
-    {   
+    {
         #pragma omp parallel num_threads(nt)
-        {  
+        {
         vc[t_num()]= new voro_compute_3d<container_triclinic>(*this,2*nx_+1,2*ey+1,2*ez+1);
-        }          
+        }
     }
-
 
 container_triclinic::~container_triclinic(){
     int l;
@@ -109,13 +108,13 @@ void container_triclinic::change_number_thread(int number_thread){
     int l;
     for(l=nt-1;l>=0;l--) delete vc[l];
     delete [] vc;
-    
+
     nt=number_thread;
     vc=new voro_compute_3d<container_triclinic>*[nt];
     #pragma omp parallel num_threads(nt)
-    {  
+    {
     vc[t_num()]= new voro_compute_3d<container_triclinic>(*this,2*nx+1,2*ey+1,2*ez+1);
-    } 
+    }
 }
 
 /** The class constructor sets up the geometry of container.
@@ -132,16 +131,15 @@ container_triclinic_poly::container_triclinic_poly(double bx_,double bxy_,double
     nt(number_thread), vc(new voro_compute_3d<container_triclinic_poly>*[nt]),
     overflow_mem_numPt(64), overflowPtCt(0), ijk_m_id_overflow(new int[3*overflow_mem_numPt]),
     p_overflow(new double[4*overflow_mem_numPt])
-    {   
+    {
         max_r=new double[nt];
         #pragma omp parallel num_threads(nt)
-        {  
+        {
         vc[t_num()]= new voro_compute_3d<container_triclinic_poly>(*this,2*nx_+1,2*ey+1,2*ez+1);
         max_r[t_num()]=0.0;
-        }        
+        }
         ppr=p;
     }
-
 
 container_triclinic_poly::~container_triclinic_poly(){
     int l;
@@ -163,38 +161,37 @@ void container_triclinic_poly::change_number_thread(int number_thread){
     vc=new voro_compute_3d<container_triclinic_poly>*[nt];
     max_r=new double[nt];
     #pragma omp parallel num_threads(nt)
-    { 
+    {
     vc[t_num()]= new voro_compute_3d<container_triclinic_poly>(*this,2*nx+1,2*ey+1,2*ez+1);
     max_r[t_num()]=0.0;
-    } 
+    }
 }
-
 
 /** Put a particle into the correct region of the container.
  * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 void container_triclinic::put_parallel(int i,double x,double y,double z) {
-    int ijk; 
-    
+    int ijk;
+
     //find block ijk that point (x,y,z) is in
     //remap (x,y,z) into primary domain if necessary
     put_locate_block(ijk,x,y,z);
-    
-    ///check memory allocation       
+
+    ///check memory allocation
     int m;
     #pragma omp atomic capture
     m=co[ijk]++;   //co[ijk]: number of points in block ijk
 
-    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add
     //pt and id info in id, p directly
     if(m<mem[ijk]){
         id[ijk][m]=i;
         double *pp=p[ijk]+3*m;
         *(pp++)=x; *(pp++)=y; *pp=z;
     }
-    else{ 
+    else{
         //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
-        //ijk_m_id_overflow, p_overflow, and reconcile later 
+        //ijk_m_id_overflow, p_overflow, and reconcile later
         #pragma omp critical
         {
             //opti: index of overflow point
@@ -202,7 +199,7 @@ void container_triclinic::put_parallel(int i,double x,double y,double z) {
             int opti=overflowPtCt++;
 
             //if overflow arrays memory slots not enough, add new length
-            if(overflowPtCt>overflow_mem_numPt){  
+            if(overflowPtCt>overflow_mem_numPt){
                 int old_overflow_mem_numPt=overflow_mem_numPt;
                 overflow_mem_numPt=overflow_mem_numPt*2;
                 int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
@@ -218,7 +215,7 @@ void container_triclinic::put_parallel(int i,double x,double y,double z) {
                     new_p_overflow[ii3+2]=p_overflow[ii3+2];
                 }
 
-                delete [] ijk_m_id_overflow; 
+                delete [] ijk_m_id_overflow;
                 delete [] p_overflow;
 
                 ijk_m_id_overflow=new_ijk_m_id_overflow;
@@ -226,7 +223,7 @@ void container_triclinic::put_parallel(int i,double x,double y,double z) {
             }
 
             //add in overflow info in overflow arrays
-            int opti3=3*opti; 
+            int opti3=3*opti;
             ijk_m_id_overflow[opti3]=ijk;
             ijk_m_id_overflow[opti3+1]=m;
             ijk_m_id_overflow[opti3+2]=i;
@@ -238,11 +235,10 @@ void container_triclinic::put_parallel(int i,double x,double y,double z) {
     }
 }
 
-
 //con.put with a input point array, parallel put
 void container_triclinic::put_parallel(double *pt_list, int num_pt, int num_thread){
     #pragma omp parallel for num_threads(num_thread)
-    for(int i=0; i<num_pt; i++){ //id:i      
+    for(int i=0; i<num_pt; i++){ //id:i
         double x=pt_list[3*i];
         double y=pt_list[3*i+1];
         double z=pt_list[3*i+2];
@@ -250,10 +246,9 @@ void container_triclinic::put_parallel(double *pt_list, int num_pt, int num_thre
     }
 }
 
-
 void container_triclinic::put_reconcile_overflow(){
     //reconcile overflow
-    //loop through points in overflow arrays, 
+    //loop through points in overflow arrays,
     //if (m>=mem[ijk]): int nmem (new memory length) = 2*mem[ijk];
     //                  while(m>=nmem) {nmem=2*nmem;}
     // then construct new arrays of id, p with size nmem, and add in overflow pt info
@@ -268,7 +263,7 @@ void container_triclinic::put_reconcile_overflow(){
         if(m>=mem[ijk]){
             int nmem=2*mem[ijk];
             while(m>=nmem){nmem=2*nmem;}
-            int l; 
+            int l;
             //the following are the same as add_particle_memory(ijk)
             // Carry out a check on the memory allocation size, and
             // print a status message if requested
@@ -299,10 +294,10 @@ void container_triclinic::put_reconcile_overflow(){
         id[ijk][m]=idd;
         double *pp=p[ijk]+3*m;
         *(pp++)=x; *(pp++)=y; *pp=z;
-    }   
+    }
     //after reconciling, set overflowPtCt back to initial value
     overflowPtCt=0;
-    
+
 }
 
 /** Put a particle into the correct region of the container.
@@ -311,18 +306,18 @@ void container_triclinic::put_reconcile_overflow(){
  * \param[in] r the radius of the particle. */
 void container_triclinic_poly::put_parallel(int i,double x,double y,double z,double r) {
     int ithread=t_num();
-    int ijk; 
-    
+    int ijk;
+
     //find block ijk that point (x,y,z) is in
     //remap (x,y,z) into primary domain if necessary
     put_locate_block(ijk,x,y,z);
-    
-    ///check memory allocation       
+
+    ///check memory allocation
     int m;
     #pragma omp atomic capture
     m=co[ijk]++;   //co[ijk]: number of points in block ijk
 
-    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add
     //pt and id info in id, p directly
     if(m<mem[ijk]){
         id[ijk][m]=i;
@@ -331,9 +326,9 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
         //max_r
         if(max_r[ithread]<r) {max_r[ithread]=r;}
     }
-    else{ 
+    else{
         //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
-        //ijk_m_id_overflow, p_overflow, and reconcile later 
+        //ijk_m_id_overflow, p_overflow, and reconcile later
         #pragma omp critical
         {
             //opti: index of overflow point
@@ -341,7 +336,7 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
             int opti=overflowPtCt++;
 
             //if overflow arrays memory slots not enough, add new length
-            if(overflowPtCt>overflow_mem_numPt){  
+            if(overflowPtCt>overflow_mem_numPt){
                 int old_overflow_mem_numPt=overflow_mem_numPt;
                 overflow_mem_numPt=overflow_mem_numPt*2;
                 int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
@@ -359,7 +354,7 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
                     new_p_overflow[ii4+3]=p_overflow[ii4+3];
                 }
 
-                delete [] ijk_m_id_overflow; 
+                delete [] ijk_m_id_overflow;
                 delete [] p_overflow;
 
                 ijk_m_id_overflow=new_ijk_m_id_overflow;
@@ -367,12 +362,12 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
             }
 
             //add in overflow info in overflow arrays
-            int opti3=3*opti; 
+            int opti3=3*opti;
             ijk_m_id_overflow[opti3]=ijk;
             ijk_m_id_overflow[opti3+1]=m;
             ijk_m_id_overflow[opti3+2]=i;
 
-            int opti4=4*opti; 
+            int opti4=4*opti;
             p_overflow[opti4]=x;
             p_overflow[opti4+1]=y;
             p_overflow[opti4+2]=z;
@@ -382,14 +377,13 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
             if(max_r[ithread]<r) {max_r[ithread]=r;}
         }
     }
-    
-}
 
+}
 
 //con.put with a input point array, parallel put
 void container_triclinic_poly::put_parallel(double *pt_r_list, int num_pt, int num_thread){
     #pragma omp parallel for num_threads(num_thread)
-    for(int i=0; i<num_pt; i++){ //id:i      
+    for(int i=0; i<num_pt; i++){ //id:i
         double x=pt_r_list[4*i];
         double y=pt_r_list[4*i+1];
         double z=pt_r_list[4*i+2];
@@ -398,7 +392,6 @@ void container_triclinic_poly::put_parallel(double *pt_r_list, int num_pt, int n
     }
 }
 
-
 void container_triclinic_poly::put_reconcile_overflow(){
     //update max_radius
     //and reset max_r[i]
@@ -406,9 +399,9 @@ void container_triclinic_poly::put_reconcile_overflow(){
         if(max_radius<max_r[i]){max_radius=max_r[i];}
         max_r[i]=0.0;
     }
-    
+
     //reconcile overflow
-    //loop through points in overflow arrays, 
+    //loop through points in overflow arrays,
     //if (m>=mem[ijk]): int nmem (new memory length) = 2*mem[ijk];
     //                  while(m>=nmem) {nmem=2*nmem;}
     // then construct new arrays of id, p with size nmem, and add in overflow pt info
@@ -417,17 +410,17 @@ void container_triclinic_poly::put_reconcile_overflow(){
         int ijk=ijk_m_id_overflow[i3];
         int m=ijk_m_id_overflow[i3+1];
         int idd=ijk_m_id_overflow[i3+2];
-        
+
         int i4=4*i;
         double x=p_overflow[i4];
         double y=p_overflow[i4+1];
         double z=p_overflow[i4+2];
         double r=p_overflow[i4+3];
-        
+
         if(m>=mem[ijk]){
             int nmem=2*mem[ijk];
             while(m>=nmem){nmem=2*nmem;}
-            int l; 
+            int l;
             //the following are the same as add_particle_memory(ijk)
             // Carry out a check on the memory allocation size, and
             // print a status message if requested
@@ -458,10 +451,10 @@ void container_triclinic_poly::put_reconcile_overflow(){
         id[ijk][m]=idd;
         double *pp=p[ijk]+4*m;
         *(pp++)=x; *(pp++)=y; *(pp++)=z; *pp=r;
-    }   
+    }
     //after reconciling, set overflowPtCt back to initial value
     overflowPtCt=0;
-    
+
 }
 
 /** Put a particle into the correct region of the container.
@@ -471,27 +464,27 @@ void container_triclinic_poly::put_reconcile_overflow(){
  *                        in, with (0,0,0) corresponding to the primary domain.
  */
 void container_triclinic::put_parallel(int i,double x,double y,double z,int &ai,int &aj,int &ak) {
-    int ijk; 
-    
+    int ijk;
+
     //find block ijk that point (x,y,z) is in
     //remap (x,y,z) into primary domain if necessary
     put_locate_block(ijk,x,y,z,ai,aj,ak);
-    
-    ///check memory allocation       
+
+    ///check memory allocation
     int m;
     #pragma omp atomic capture
     m=co[ijk]++;   //co[ijk]: number of points in block ijk
 
-    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add
     //pt and id info in id, p directly
     if(m<mem[ijk]){
         id[ijk][m]=i;
         double *pp=p[ijk]+3*m;
         *(pp++)=x; *(pp++)=y; *pp=z;
     }
-    else{ 
+    else{
         //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
-        //ijk_m_id_overflow, p_overflow, and reconcile later 
+        //ijk_m_id_overflow, p_overflow, and reconcile later
         #pragma omp critical
         {
             //opti: index of overflow point
@@ -499,7 +492,7 @@ void container_triclinic::put_parallel(int i,double x,double y,double z,int &ai,
             int opti=overflowPtCt++;
 
             //if overflow arrays memory slots not enough, add new length
-            if(overflowPtCt>overflow_mem_numPt){  
+            if(overflowPtCt>overflow_mem_numPt){
                 int old_overflow_mem_numPt=overflow_mem_numPt;
                 overflow_mem_numPt=overflow_mem_numPt*2;
                 int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
@@ -515,7 +508,7 @@ void container_triclinic::put_parallel(int i,double x,double y,double z,int &ai,
                     new_p_overflow[ii3+2]=p_overflow[ii3+2];
                 }
 
-                delete [] ijk_m_id_overflow; 
+                delete [] ijk_m_id_overflow;
                 delete [] p_overflow;
 
                 ijk_m_id_overflow=new_ijk_m_id_overflow;
@@ -523,7 +516,7 @@ void container_triclinic::put_parallel(int i,double x,double y,double z,int &ai,
             }
 
             //add in overflow info in overflow arrays
-            int opti3=3*opti; 
+            int opti3=3*opti;
             ijk_m_id_overflow[opti3]=ijk;
             ijk_m_id_overflow[opti3+1]=m;
             ijk_m_id_overflow[opti3+2]=i;
@@ -544,18 +537,18 @@ void container_triclinic::put_parallel(int i,double x,double y,double z,int &ai,
  */
 void container_triclinic_poly::put_parallel(int i,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
     int ithread=t_num();
-    int ijk; 
-    
+    int ijk;
+
     //find block ijk that point (x,y,z) is in
     //remap (x,y,z) into primary domain if necessary
     put_locate_block(ijk,x,y,z,ai,aj,ak);
-    
-    ///check memory allocation       
+
+    ///check memory allocation
     int m;
     #pragma omp atomic capture
     m=co[ijk]++;   //co[ijk]: number of points in block ijk
 
-    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
+    //if m<init memory slot (mem[ijk]=init_mem in constructor), then add
     //pt and id info in id, p directly
     if(m<mem[ijk]){
         id[ijk][m]=i;
@@ -564,9 +557,9 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
         //max_r
         if(max_r[ithread]<r) {max_r[ithread]=r;}
     }
-    else{ 
+    else{
         //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
-        //ijk_m_id_overflow, p_overflow, and reconcile later 
+        //ijk_m_id_overflow, p_overflow, and reconcile later
         #pragma omp critical
         {
             //opti: index of overflow point
@@ -574,7 +567,7 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
             int opti=overflowPtCt++;
 
             //if overflow arrays memory slots not enough, add new length
-            if(overflowPtCt>overflow_mem_numPt){  
+            if(overflowPtCt>overflow_mem_numPt){
                 int old_overflow_mem_numPt=overflow_mem_numPt;
                 overflow_mem_numPt=overflow_mem_numPt*2;
                 int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
@@ -592,7 +585,7 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
                     new_p_overflow[ii4+3]=p_overflow[ii4+3];
                 }
 
-                delete [] ijk_m_id_overflow; 
+                delete [] ijk_m_id_overflow;
                 delete [] p_overflow;
 
                 ijk_m_id_overflow=new_ijk_m_id_overflow;
@@ -600,12 +593,12 @@ void container_triclinic_poly::put_parallel(int i,double x,double y,double z,dou
             }
 
             //add in overflow info in overflow arrays
-            int opti3=3*opti; 
+            int opti3=3*opti;
             ijk_m_id_overflow[opti3]=ijk;
             ijk_m_id_overflow[opti3+1]=m;
             ijk_m_id_overflow[opti3+2]=i;
 
-            int opti4=4*opti; 
+            int opti4=4*opti;
             p_overflow[opti4]=x;
             p_overflow[opti4+1]=y;
             p_overflow[opti4+2]=z;

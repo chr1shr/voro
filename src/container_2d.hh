@@ -212,7 +212,7 @@ class container_2d : public container_base_2d, public radius_mono {
         container_2d(double ax_,double bx_,double ay_,double by_,
                  int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread=1);
         void clear();
-        ~container_2d(); 
+        ~container_2d();
         void change_number_thread(int number_thread);
         void put_parallel(double *pt_list, int num_pt, int num_thread);
         void put(int n,double x,double y);
@@ -319,7 +319,7 @@ class container_2d : public container_base_2d, public radius_mono {
         int overflow_mem_numPt;
         int overflowPtCt;
         int *ijk_m_id_overflow;
-        double *p_overflow; 
+        double *p_overflow;
 };
 
 /** \brief Extension of the container_base class for computing radical Voronoi
@@ -444,7 +444,7 @@ class container_poly_2d : public container_base_2d, public radius_poly_2d {
         int overflow_mem_numPt;
         int overflowPtCt;
         int *ijk_m_id_overflow;
-        double *p_overflow; 
+        double *p_overflow;
 };
 
 }
