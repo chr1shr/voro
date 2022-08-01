@@ -2124,15 +2124,27 @@ bool voronoicell_base_3d::plane_intersects(double x,double y,double z,double rsq
  * \return False if the plane does not intersect the plane, true if it does. */
 bool voronoicell_base_3d::plane_intersects_guess(double x,double y,double z,double rsq) {
     up=0;
-    double g=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
-    if(g<rsq) {
-        double m;
-        for(int mp=1;mp<p;mp<<=1) {
+    double g=x*(*pts)+y*pts[1]+z*pts[2],m;
+    if(p<12) {
+        if(g>rsq) return true;
+        for(int mp=1;mp<p;mp++) {
             m=x*pts[3*mp]+y*pts[3*mp+1]+z*pts[3*mp+2];
             if(m>g) {
                 if(m>rsq) return true;
                 g=m;up=mp;
             }
+        }
+        return false;
+    }
+    if(g<rsq) {
+        int ca=1,cc=p>>3,mp=1;
+        while(ca<cc) {
+            m=x*pts[3*mp]+y*pts[3*mp+1]+z*pts[3*mp+2];
+            if(m>g) {
+                if(m>rsq) return true;
+                g=m;up=mp;
+            }
+            ca+=mp++;
         }
         return plane_intersects_track(x,y,z,rsq,g);
     }
