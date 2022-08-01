@@ -2130,8 +2130,9 @@ bool voronoicell_base_3d::plane_intersects_guess(double x,double y,double z,doub
         for(int mp=1;mp<p;mp++) {
             m=x*pts[3*mp]+y*pts[3*mp+1]+z*pts[3*mp+2];
             if(m>g) {
+                up=mp;
                 if(m>rsq) return true;
-                g=m;up=mp;
+                g=m;
             }
         }
         return false;
@@ -2141,8 +2142,9 @@ bool voronoicell_base_3d::plane_intersects_guess(double x,double y,double z,doub
         while(ca<cc) {
             m=x*pts[3*mp]+y*pts[3*mp+1]+z*pts[3*mp+2];
             if(m>g) {
+                up=mp;
                 if(m>rsq) return true;
-                g=m;up=mp;
+                g=m;
             }
             ca+=mp++;
         }
