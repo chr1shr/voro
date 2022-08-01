@@ -197,7 +197,7 @@ void cmd_line_output(c_class &con,v_class &c,const char* format,FILE* out_file,F
 }
 
 // Carries out the Voronoi computation and outputs the results to the requested
-// files, for the case when a particu
+// files, for the case when a particle order has been computed
 template<class c_class,class v_class>
 void cmd_line_output(particle_order vo,c_class &con,v_class &c,const char* format,FILE* out_file,FILE* gnu_file,FILE* povp_file,FILE* povv_file,bool verbose,double &vol,int &vcc,int &tp) {
     container_base_3d::iterator_order cli;
