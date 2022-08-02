@@ -463,9 +463,8 @@ inline bool voronoicell_base_3d::search_upward(unsigned int &uw,int &lp,int &ls,
     }
 
     while(uw==0) {
-        //if(++count>=p) failsafe_find(lp,ls,us,l,u);
 
-        // Test all the neighbors of the current point and find the one which
+        // Test all the neighbors of the current point and find the one that
         // is closest to the plane
         vs=ed[lp][nu[lp]+ls];lp=up;l=u;
         for(ls=0;ls<nu[lp];ls++) {
@@ -2125,18 +2124,6 @@ bool voronoicell_base_3d::plane_intersects(double x,double y,double z,double rsq
 bool voronoicell_base_3d::plane_intersects_guess(double x,double y,double z,double rsq) {
     up=0;
     double g=x*(*pts)+y*pts[1]+z*pts[2],m;
-    if(p<12) {
-        if(g>rsq) return true;
-        for(int mp=1;mp<p;mp++) {
-            m=x*pts[3*mp]+y*pts[3*mp+1]+z*pts[3*mp+2];
-            if(m>g) {
-                up=mp;
-                if(m>rsq) return true;
-                g=m;
-            }
-        }
-        return false;
-    }
     if(g<rsq) {
         int ca=1,cc=p>>3,mp=1;
         while(ca<cc) {
@@ -2162,10 +2149,6 @@ bool voronoicell_base_3d::plane_intersects_guess(double x,double y,double z,doub
  * \param[in] g the distance of up from the plane.
  * \return False if the plane does not intersect the plane, true if it does. */
 inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double z,double rsq,double l) {
-
-//    bool fres=false;
-  //  for(int tp=0;tp<p;tp++) if(x*pts[3*tp]+y*pts[3*tp+1]+z*pts[3*tp+2]>rsq) fres=true;
-
     int vs,ls,lp=up;
     double u=l;
 
@@ -2175,11 +2158,14 @@ inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double
         u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
         if(u>l) break;
     }
-    if(ls==nu[lp]) return false;
+    if(ls==nu[lp]&&p_i_def_max(x,y,z,lp,ls,l,u)) {
+        up=lp;
+        return false;
+    }
 
     while(u<rsq) {
 
-        // Test all the neighbors of the current point and find the one that
+        // Test all the neighbors of the current point and find the one which
         // is closest to the plane
         vs=ed[lp][nu[lp]+ls];lp=up;l=u;
         for(ls=0;ls<nu[lp];ls++) {
@@ -2188,59 +2174,18 @@ inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double
             u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
             if(u>l) break;
         }
-        if(ls==nu[lp]) return false;
-    }
-    return true;
-}
-
-/** Assuming that the point up is outside the cutting plane, this routine
- * searches upwards along edges trying to find an edge that intersects the
- * cutting plane.
- * \param[in] rsq the distance along this vector of the plane.
- * \param[in,out] u the dot product of point up with the normal.
- * \return True if the cutting plane was reached, false otherwise. */
-/*inline bool voronoicell_base_3d::search_upward(unsigned int &uw,int &lp,int &ls,int &us,double &l,double &u) {
-    int vs;
-    lp=up;l=u;
-
-    // The test point is outside of the cutting space
-    for(ls=0;ls<nu[lp];ls++) {
-        up=ed[lp][ls];
-        uw=m_test(up,u);
-        if(u>l) break;
-    }
-    if(ls==nu[lp]) if(definite_max(lp,ls,l,u,uw)) {
-        up=lp;
-        return false;
-    }
-
-    while(uw==0) {
-        //if(++count>=p) failsafe_find(lp,ls,us,l,u);
-
-        // Test all the neighbors of the current point and find the one which
-        // is closest to the plane
-        vs=ed[lp][nu[lp]+ls];lp=up;l=u;
-        for(ls=0;ls<nu[lp];ls++) {
-            if(ls==vs) continue;
-            up=ed[lp][ls];
-            uw=m_test(up,u);
-            if(u>l) break;
-        }
-        if(ls==nu[lp]&&definite_max(lp,ls,l,u,uw)) {
+        if(ls==nu[lp]&&p_i_def_max(x,y,z,lp,ls,l,u)) {
             up=lp;
             return false;
         }
     }
-    us=ed[lp][nu[lp]+ls];
     return true;
-}*/
+}
 
 /** Checks whether a particular point lp is a definite maximum, searching
- * through any possible minor non-convexities, for a better maximum.
- * \param[in] (x,y,z) the normal vector to the plane. */
-/*bool voronoicell_base_3d::definite_max(int &lp,int &ls,double &l,double &u,unsigned int &uw) {
+ * through any possible minor non-convexities, for a better maximum. */
+bool voronoicell_base_3d::p_i_def_max(double x,double y,double z,int &lp,int &ls,double &l,double &u) {
     int tp=lp,ts,qp=0;
-    unsigned int qw;
     double q;
 
     // Check to see whether point up is a well-defined maximum. Otherwise any
@@ -2248,7 +2193,7 @@ inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double
     // if they lead to a better maximum.
     for(ts=0;ts<nu[tp];ts++) {
         qp=ed[tp][ts];
-        m_test(qp,q);
+        q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2];
         if(q>l-big_tol) break;
     }
     if(ts==nu[tp]) return true;
@@ -2263,7 +2208,7 @@ inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double
     ts++;
     while(ts<nu[tp]) {
         qp=ed[tp][ts];
-        m_test(qp,q);
+        q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2];
         if(q>l-big_tol) {
             if(stackp==stacke) add_memory_ds();
             *(stackp++)=up;
@@ -2281,7 +2226,7 @@ inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double
 
             // Skip the point if it's already marked
             if(ed[qp][nu[qp]<<1]<0) continue;
-            qw=m_test(qp,q);
+            q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2];
 
             // This point is a better maximum. Reset markers and return true.
             if(q>l) {
@@ -2290,7 +2235,6 @@ inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double
                 ls=ts;
                 m_test(lp,l);
                 up=qp;
-                uw=qw;
                 u=q;
                 while(stackp>ds) flip(*(--stackp));
                 return false;
@@ -2313,7 +2257,7 @@ inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double
     flip(lp);
     while(stackp>ds) flip(*(--stackp));
     return true;
-}*/
+}
 
 /** Counts the number of edges of the Voronoi cell.
  * \return the number of edges. */
