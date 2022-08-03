@@ -2149,111 +2149,200 @@ bool voronoicell_base_3d::plane_intersects_guess(double x,double y,double z,doub
  * \param[in] g the distance of up from the plane.
  * \return False if the plane does not intersect the plane, true if it does. */
 inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double z,double rsq,double l) {
-    int vs,ls,lp=up;
-    double u=l;
+    int vs,ls,lp=up,up1,up2;
+    double u,u1,u2;
 
-    // The test point is outside of the cutting space
-    for(ls=0;ls<nu[lp];ls++) {
-        up=ed[lp][ls];
+    // Most vertices are of order 3, so handle this case separately, since it
+    // can allow the scalar products to be kept in registers rather than be
+    // recomputed
+    if(nu[lp]==3) {
+
+        // Test zeroth neighbor to see if it's closer to the plane
+        up=ed[lp][0];
         u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
-        if(u>l) break;
-    }
-    if(ls==nu[lp]&&p_i_def_max(x,y,z,lp,ls,l,u)) {
-        up=lp;
+        if(u>l) {ls=0;goto find;}
+
+        // Test first neighbor to see if it's closer to the plane
+        up1=ed[lp][1];
+        u1=x*pts[3*up1]+y*pts[3*up1+1]+z*pts[3*up1+2];
+        if(u1>l) {ls=1;u=u1;up=up1;goto find;}
+
+        // Test second neighbor to see if it's closer to the plane
+        up2=ed[lp][2];
+        u2=x*pts[3*up2]+y*pts[3*up2+1]+z*pts[3*up2+2];
+        if(u2>l) {ls=2;u=u2;up=up2;goto find;}
+
+        // Re-check zeroth neighbor to see if it's within a small margin of
+        // being closer, which would require a more extensive search
+        if(u>l-big_tol) {
+            if(p_i_search(x,y,z,l,lp,ls=0,u)) goto find;
+            return false;
+        }
+
+        // Re-check first neighbor
+        if(u1>l-big_tol) {
+            up=up1;
+            if(p_i_search(x,y,z,l,lp,ls=1,u)) goto find;
+            return false;
+        }
+
+        // Re-check second neighbor
+        if(u2>l-big_tol) {
+            up=up2;
+            if(p_i_search(x,y,z,l,lp,ls=2,u)) goto find;
+        }
+
+        // If the code reaches here, then the vertex under on consideration is
+        // a definite maximum, so because of convexity the plane cannot
+        // intersect the cell
+        return false;
+    } else {
+
+        // Check all the neighbors to see if any of them are closer to the
+        // plane
+        for(ls=0;ls<nu[lp];ls++) {
+            up=ed[lp][ls];
+            u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+            if(u>l) goto find;
+        }
+
+        // Re-check to see if any of them are within a small margin of being closer
+        for(ls=0;ls<nu[lp];ls++) {
+            up=ed[lp][ls];
+            u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+            if(u>l-big_tol) {
+                if(p_i_search(x,y,z,l,lp,ls,u)) goto find;
+                return false;
+            }
+        }
         return false;
     }
 
+    // A vertex closer to the plane has been found. Keep going to find closer
+    // ones, until one intersects the plane.
+find:
     while(u<rsq) {
 
-        // Test all the neighbors of the current point and find the one which
-        // is closest to the plane
+        // From here, lp and l store the information about the new vertex. vs is used
+        // to mark the edge index corresponding to the previous vertex considered. It
+        // does not need to be considered again.
         vs=ed[lp][nu[lp]+ls];lp=up;l=u;
-        for(ls=0;ls<nu[lp];ls++) {
-            if(ls==vs) continue;
-            up=ed[lp][ls];
+
+        // Use special code for the common case of three vertices
+        if(nu[lp]==3) {
+
+            // Test zeroth neighbor to see if it's closer to the plane
+            up=ed[lp][0];
             u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
-            if(u>l) break;
-        }
-        if(ls==nu[lp]&&p_i_def_max(x,y,z,lp,ls,l,u)) {
-            up=lp;
+            if(vs!=0&&u>l) {ls=0;goto find2;}
+
+            // Test first neighbor to see if it's closer to the plane
+            up1=ed[lp][1];
+            u1=x*pts[3*up1]+y*pts[3*up1+1]+z*pts[3*up1+2];
+            if(vs!=1&&u1>l) {ls=1;u=u1;up=up1;goto find2;}
+
+            // Test second neighbor to see if it's closer to the plane
+            up2=ed[lp][2];
+            u2=x*pts[3*up2]+y*pts[3*up2+1]+z*pts[3*up2+2];
+            if(vs!=2&&u2>l) {ls=2;u=u2;up=up2;goto find2;}
+
+            // Re-check zeroth neighbor
+            if(u>l-big_tol) {
+                if(p_i_search(x,y,z,l,lp,ls=0,u)) goto find2;
+                return false;
+            }
+
+            // Re-check first neighbor
+            if(u1>l-big_tol) {
+                up=up1;
+                if(p_i_search(x,y,z,l,lp,ls=1,u)) goto find2;
+                return false;
+            }
+
+            // Re-check second neighbor
+            if(u2>l-big_tol) {
+                up=up2;
+                if(p_i_search(x,y,z,l,lp,ls=2,u)) goto find2;
+            }
+            return false;
+        } else {
+
+            // Check all the neighbors to see if any of them are closer to the
+            // plane
+            for(ls=0;ls<nu[lp];ls++) {
+                if(ls==vs) continue;
+                up=ed[lp][ls];
+                u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+                if(u>l) goto find2;
+            }
+
+            // Re-check to see if any of them are within a small margin of
+            // being closer
+            for(ls=0;ls<nu[lp];ls++) {
+                up=ed[lp][ls];
+                u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+                if(u>l-big_tol) {
+                    if(p_i_search(x,y,z,l,lp,ls,u)) goto find2;
+                    return false;
+                }
+            }
             return false;
         }
+find2:
+        continue;
     }
     return true;
 }
 
-/** Checks whether a particular point lp is a definite maximum, searching
- * through any possible minor non-convexities, for a better maximum. */
-inline bool voronoicell_base_3d::p_i_def_max(double x,double y,double z,int &lp,int &ls,double &l,double &u) {
-    int tp=lp,ts,qp=0;
-    double q;
+bool voronoicell_base_3d::p_i_search(double x,double y,double z,double l,int &lp,int &ls,double &u) {
 
-    // Check to see whether point up is a well-defined maximum. Otherwise any
-    // neighboring vertices of up that are marginal need to be followed, to see
-    // if they lead to a better maximum.
-    for(ts=0;ts<nu[tp];ts++) {
-        qp=ed[tp][ts];
-        q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2];
-        if(q>l-big_tol) return p_i_search(x,y,z,qp,ts,lp,ls,l,u);
-    }
-    return true;
-}
-
-bool voronoicell_base_3d::p_i_search(double x,double y,double z,int qp,int ts,int &lp,int &ls,double &l,double &u) {
-    int tp=lp;
-    double q;
-
-    // The point tp is marginal, so it will be necessary to do the flood-fill
-    // search. Mark the point tp and the point qp, and search any remaining
-    // neighbors of the point tp.
+    // The point lp is marginal, so it will be necessary to do the flood-fill
+    // search. Mark the point lp and the point up, and search any remaining
+    // neighbors of the point lp.
     int *stackp=ds+1;
     flip(lp);
-    flip(qp);
-    *ds=qp;
-    ts++;
-    while(ts<nu[tp]) {
-        qp=ed[tp][ts];
-        q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2];
-        if(q>l-big_tol) {
+    flip(up);
+    *ds=up;
+    ls++;
+    while(ls<nu[lp]) {
+        up=ed[lp][ls];
+        u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
+        if(u>l-big_tol) {
             if(stackp==stacke) add_memory_ds();
             *(stackp++)=up;
             flip(up);
         }
-        ts++;
+        ls++;
     }
 
     // Consider additional marginal points, starting with the original point qp
-    int *spp=ds;
+    int tp=lp,*spp=ds;
     while(spp<stackp) {
         tp=*(spp++);
-        for(ts=0;ts<nu[tp];ts++) {
-            qp=ed[tp][ts];
+        for(ls=0;ls<nu[tp];ls++) {
+            up=ed[tp][ls];
 
             // Skip the point if it's already marked
-            if(ed[qp][nu[qp]<<1]<0) continue;
-            q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2];
+            if(ed[up][nu[up]<<1]<0) continue;
+            u=x*pts[3*up]+y*pts[3*up+1]+z*pts[3*up+2];
 
             // This point is a better maximum. Reset markers and return true.
-            if(q>l) {
+            if(u>l) {
                 flip(lp);
                 lp=tp;
-                ls=ts;
-                l=x*pts[3*lp]+y*pts[3*lp+1]+z*pts[3*lp+2];
-                up=qp;
-                u=q;
                 while(stackp>ds) flip(*(--stackp));
-                return false;
+                return true;
             }
 
             // The point is marginal and therefore must also be considered
-            if(q>l-big_tol) {
+            if(u>l-big_tol) {
                 if(stackp==stacke) {
                     int nn=stackp-spp;
                     add_memory_ds();
                     spp=stackp-nn;
                 }
-                *(stackp++)=qp;
-                flip(qp);
+                *(stackp++)=up;
+                flip(up);
             }
         }
     }
@@ -2261,7 +2350,7 @@ bool voronoicell_base_3d::p_i_search(double x,double y,double z,int qp,int ts,in
     // Reset markers and return false
     flip(lp);
     while(stackp>ds) flip(*(--stackp));
-    return true;
+    return false;
 }
 
 /** Counts the number of edges of the Voronoi cell.
