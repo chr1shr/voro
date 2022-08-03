@@ -308,7 +308,8 @@ class voronoicell_base_3d {
         inline bool search_upward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u);
         bool definite_min(int &lp,int &us,double &l,double &u,unsigned int &lw);
         inline bool plane_intersects_track(double x,double y,double z,double rs,double l);
-        bool p_i_def_max(double x,double y,double z,int &lp,int &ls,double &l,double &u);
+        inline bool p_i_def_max(double x,double y,double z,int &lp,int &ls,double &l,double &u);
+        bool p_i_search(double x,double y,double z,int qp,int ts,int &lp,int &ls,double &l,double &u);
         inline void normals_search(std::vector<double> &v,int i,int j,int k);
         //inline bool search_edge(int l,int &m,int &k);
         inline unsigned int m_test(int n,double &ans);

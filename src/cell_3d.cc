@@ -2184,7 +2184,7 @@ inline bool voronoicell_base_3d::plane_intersects_track(double x,double y,double
 
 /** Checks whether a particular point lp is a definite maximum, searching
  * through any possible minor non-convexities, for a better maximum. */
-bool voronoicell_base_3d::p_i_def_max(double x,double y,double z,int &lp,int &ls,double &l,double &u) {
+inline bool voronoicell_base_3d::p_i_def_max(double x,double y,double z,int &lp,int &ls,double &l,double &u) {
     int tp=lp,ts,qp=0;
     double q;
 
@@ -2194,9 +2194,14 @@ bool voronoicell_base_3d::p_i_def_max(double x,double y,double z,int &lp,int &ls
     for(ts=0;ts<nu[tp];ts++) {
         qp=ed[tp][ts];
         q=x*pts[3*qp]+y*pts[3*qp+1]+z*pts[3*qp+2];
-        if(q>l-big_tol) break;
+        if(q>l-big_tol) return p_i_search(x,y,z,qp,ts,lp,ls,l,u);
     }
-    if(ts==nu[tp]) return true;
+    return true;
+}
+
+bool voronoicell_base_3d::p_i_search(double x,double y,double z,int qp,int ts,int &lp,int &ls,double &l,double &u) {
+    int tp=lp;
+    double q;
 
     // The point tp is marginal, so it will be necessary to do the flood-fill
     // search. Mark the point tp and the point qp, and search any remaining
@@ -2233,7 +2238,7 @@ bool voronoicell_base_3d::p_i_def_max(double x,double y,double z,int &lp,int &ls
                 flip(lp);
                 lp=tp;
                 ls=ts;
-                m_test(lp,l);
+                l=x*pts[3*lp]+y*pts[3*lp+1]+z*pts[3*lp+2];
                 up=qp;
                 u=q;
                 while(stackp>ds) flip(*(--stackp));
