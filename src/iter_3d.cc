@@ -1199,20 +1199,16 @@ container_triclinic_base::iterator_order container_triclinic_base::iterator_orde
 
 //Can be compared with inequality relational operators (<, >, <= and >=).
 bool container_triclinic_base::iterator_order::operator>(const iterator_order& rhs) const {
-    if(ptr_n>rhs.ptr_n){return true;}
-    else{return false;}
+    return ptr_n>rhs.ptr_n;
 }
 bool container_triclinic_base::iterator_order::operator<(const iterator_order& rhs) const {
-    if(ptr_n<rhs.ptr_n){return true;}
-    else{return false;}
+    return ptr_n<rhs.ptr_n;
 }
 bool container_triclinic_base::iterator_order::operator>=(const iterator_order& rhs) const {
-    if(ptr_n>=rhs.ptr_n){return true;}
-    else{return false;}
+    return ptr_n>=rhs.ptr_n;
 }
 bool container_triclinic_base::iterator_order::operator<=(const iterator_order& rhs) const {
-    if(ptr_n<=rhs.ptr_n){return true;}
-    else{return false;}
+    return ptr_n<=rhs.ptr_n;
 }
 
 //Supports compound assignment operations += and -=
