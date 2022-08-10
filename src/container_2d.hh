@@ -79,7 +79,7 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
         const int ps;
         container_base_2d(double ax_,double bx_,double ay_,double by_,
                 int nx_,int ny_,bool x_prd_,bool y_prd_,
-                int init_mem,int ps_);
+                int init_mem,int ps_,int nt_);
         ~container_base_2d();
         bool point_inside(double x,double y);
         void region_count();
@@ -195,10 +195,23 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
         iterator_order begin(particle_order &vo);
         iterator_order end(particle_order &vo);
     protected:
+        void add_overflow_memory();
         void add_particle_memory(int i);
         inline bool put_locate_block(int &ij,double &x,double &y);
         inline bool put_remap(int &ij,double &x,double &y);
         inline bool remap(int &ai,int &aj,int &ci,int &cj,double &x,double &y,int &ij);
+        /** The maximum number of threads that can be used for computation. */
+        int nt;
+        /** The number of particles in the overflow buffer. */
+        int oflow_co;
+        /** The current size of the overflow buffer for multithreaded insertion
+         * of particles. */
+        int oflow_mem;
+        /** An array of particle IDs and block information in the overflow
+         * buffer. */
+        int *ij_m_id_oflow;
+        /** An array of particle positions in the overflow buffer. */
+        double *p_oflow;
 };
 
 /** \brief Extension of the container_base class for computing regular Voronoi
@@ -212,13 +225,13 @@ class container_2d : public container_base_2d, public radius_mono {
         container_2d(double ax_,double bx_,double ay_,double by_,
                  int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem, int number_thread=1);
         void clear();
-        ~container_2d(); 
+        ~container_2d();
         void change_number_thread(int number_thread);
-        void put_parallel(double *pt_list, int num_pt, int num_thread);
         void put(int n,double x,double y);
         void put_parallel(int n,double x,double y);
         void put(particle_order &vo,int n,double x,double y);
         void put_reconcile_overflow();
+        void add_parallel(double *pt_list,int num,int nt_);
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -313,13 +326,8 @@ class container_2d : public container_base_2d, public radius_mono {
             return compute_cell(c,cli->ijk,cli->q);
         }
     private:
-        int nt;
         voro_compute_2d<container_2d> **vc;
         friend class voro_compute_2d<container_2d>;
-        int overflow_mem_numPt;
-        int overflowPtCt;
-        int *ijk_m_id_overflow;
-        double *p_overflow; 
 };
 
 /** \brief Extension of the container_base class for computing radical Voronoi
@@ -337,7 +345,7 @@ class container_poly_2d : public container_base_2d, public radius_poly_2d {
         void clear();
         void put(int n,double x,double y,double r);
         void put_parallel(int n,double x,double y,double r);
-        void put_parallel(double *pt_r_list, int num_pt, int num_thread);
+        void add_parallel(double *pt_list,int num,int nt_);
         void put(particle_order &vo,int n,double x,double y,double r);
         void put_reconcile_overflow();
         void import(FILE *fp=stdin);
@@ -437,14 +445,12 @@ class container_poly_2d : public container_base_2d, public radius_poly_2d {
         }
         bool find_voronoi_cell(double x,double y,double &rx,double &ry,int &pid);
     private:
-        double *max_r;
-        int nt;
+        /** An array of pointers to Voronoi computation objects for use by the
+         * different threads. */
         voro_compute_2d<container_poly_2d> **vc;
+        /** An array for storing the maximum radii computed per thread. */
+        double *max_r;
         friend class voro_compute_2d<container_poly_2d>;
-        int overflow_mem_numPt;
-        int overflowPtCt;
-        int *ijk_m_id_overflow;
-        double *p_overflow; 
 };
 
 }

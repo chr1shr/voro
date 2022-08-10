@@ -60,8 +60,8 @@ unitcell::unitcell(double bx_,double bxy_,double by_,double bxz_,double byz_,dou
             // cell vertex.
             max_uv_y=max_uv_z=0;
             double y,z,q,*pts=unit_voro.pts,*pp=pts;
-            while(pp<pts+4*unit_voro.p) {
-                q=*(pp++);y=*(pp++);z=*pp;pp+=2;q=sqrt(q*q+y*y+z*z);
+            while(pp<pts+3*unit_voro.p) {
+                q=*(pp++);y=*(pp++);z=*(pp++);q=sqrt(q*q+y*y+z*z);
                 if(y+q>max_uv_y) max_uv_y=y+q;
                 if(z+q>max_uv_z) max_uv_z=z+q;
             }

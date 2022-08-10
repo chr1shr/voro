@@ -623,13 +623,12 @@ template<class c_class>
 template<class v_cell>
 bool voro_compute_3d<c_class>::corner_test(v_cell &c,double xl,double yl,double zl,double xh,double yh,double zh,double &r_mul,double &r_val) {
     con.r_prime(xl*xl+yl*yl+zl*zl,r_mul,r_val);
-    if(c.plane_intersects_guess(xh,yl,zl,con.r_cutoff(xl*xh+yl*yl+zl*zl,r_val))) return false;
-    if(c.plane_intersects(xh,yh,zl,con.r_cutoff(xl*xh+yl*yh+zl*zl,r_val))) return false;
-    if(c.plane_intersects(xl,yh,zl,con.r_cutoff(xl*xl+yl*yh+zl*zl,r_val))) return false;
-    if(c.plane_intersects(xl,yh,zh,con.r_cutoff(xl*xl+yl*yh+zl*zh,r_val))) return false;
-    if(c.plane_intersects(xl,yl,zh,con.r_cutoff(xl*xl+yl*yl+zl*zh,r_val))) return false;
-    if(c.plane_intersects(xh,yl,zh,con.r_cutoff(xl*xh+yl*yl+zl*zh,r_val))) return false;
-    return true;
+    return !(c.plane_intersects_guess(xh,yl,zl,con.r_cutoff(xl*xh+yl*yl+zl*zl,r_val))
+           ||c.plane_intersects(xh,yh,zl,con.r_cutoff(xl*xh+yl*yh+zl*zl,r_val))
+           ||c.plane_intersects(xl,yh,zl,con.r_cutoff(xl*xl+yl*yh+zl*zl,r_val))
+           ||c.plane_intersects(xl,yh,zh,con.r_cutoff(xl*xl+yl*yh+zl*zh,r_val))
+           ||c.plane_intersects(xl,yl,zh,con.r_cutoff(xl*xl+yl*yl+zl*zh,r_val))
+           ||c.plane_intersects(xh,yl,zh,con.r_cutoff(xl*xh+yl*yl+zl*zh,r_val)));
 }
 
 /** This function checks to see whether a particular block can possibly have
@@ -648,13 +647,12 @@ template<class c_class>
 template<class v_cell>
 inline bool voro_compute_3d<c_class>::edge_x_test(v_cell &c,double x0,double yl,double zl,double x1,double yh,double zh,double &r_mul,double &r_val) {
     con.r_prime(yl*yl+zl*zl,r_mul,r_val);
-    if(c.plane_intersects_guess(x0,yl,zh,con.r_cutoff(yl*yl+zl*zh,r_val))) return false;
-    if(c.plane_intersects(x1,yl,zh,con.r_cutoff(yl*yl+zl*zh,r_val))) return false;
-    if(c.plane_intersects(x1,yl,zl,con.r_cutoff(yl*yl+zl*zl,r_val))) return false;
-    if(c.plane_intersects(x0,yl,zl,con.r_cutoff(yl*yl+zl*zl,r_val))) return false;
-    if(c.plane_intersects(x0,yh,zl,con.r_cutoff(yl*yh+zl*zl,r_val))) return false;
-    if(c.plane_intersects(x1,yh,zl,con.r_cutoff(yl*yh+zl*zl,r_val))) return false;
-    return true;
+    return !(c.plane_intersects_guess(x0,yl,zh,con.r_cutoff(yl*yl+zl*zh,r_val))
+           ||c.plane_intersects(x1,yl,zh,con.r_cutoff(yl*yl+zl*zh,r_val))
+           ||c.plane_intersects(x1,yl,zl,con.r_cutoff(yl*yl+zl*zl,r_val))
+           ||c.plane_intersects(x0,yl,zl,con.r_cutoff(yl*yl+zl*zl,r_val))
+           ||c.plane_intersects(x0,yh,zl,con.r_cutoff(yl*yh+zl*zl,r_val))
+           ||c.plane_intersects(x1,yh,zl,con.r_cutoff(yl*yh+zl*zl,r_val)));
 }
 
 /** This function checks to see whether a particular block can possibly have
@@ -673,13 +671,12 @@ template<class c_class>
 template<class v_cell>
 inline bool voro_compute_3d<c_class>::edge_y_test(v_cell &c,double xl,double y0,double zl,double xh,double y1,double zh,double &r_mul,double &r_val) {
     con.r_prime(xl*xl+zl*zl,r_mul,r_val);
-    if(c.plane_intersects_guess(xl,y0,zh,con.r_cutoff(xl*xl+zl*zh,r_val))) return false;
-    if(c.plane_intersects(xl,y1,zh,con.r_cutoff(xl*xl+zl*zh,r_val))) return false;
-    if(c.plane_intersects(xl,y1,zl,con.r_cutoff(xl*xl+zl*zl,r_val))) return false;
-    if(c.plane_intersects(xl,y0,zl,con.r_cutoff(xl*xl+zl*zl,r_val))) return false;
-    if(c.plane_intersects(xh,y0,zl,con.r_cutoff(xl*xh+zl*zl,r_val))) return false;
-    if(c.plane_intersects(xh,y1,zl,con.r_cutoff(xl*xh+zl*zl,r_val))) return false;
-    return true;
+    return !(c.plane_intersects_guess(xl,y0,zh,con.r_cutoff(xl*xl+zl*zh,r_val))
+           ||c.plane_intersects(xl,y1,zh,con.r_cutoff(xl*xl+zl*zh,r_val))
+           ||c.plane_intersects(xl,y1,zl,con.r_cutoff(xl*xl+zl*zl,r_val))
+           ||c.plane_intersects(xl,y0,zl,con.r_cutoff(xl*xl+zl*zl,r_val))
+           ||c.plane_intersects(xh,y0,zl,con.r_cutoff(xl*xh+zl*zl,r_val))
+           ||c.plane_intersects(xh,y1,zl,con.r_cutoff(xl*xh+zl*zl,r_val)));
 }
 
 /** This function checks to see whether a particular block can possibly have
@@ -697,13 +694,12 @@ template<class c_class>
 template<class v_cell>
 inline bool voro_compute_3d<c_class>::edge_z_test(v_cell &c,double xl,double yl,double z0,double xh,double yh,double z1,double &r_mul,double &r_val) {
     con.r_prime(xl*xl+yl*yl,r_mul,r_val);
-    if(c.plane_intersects_guess(xl,yh,z0,con.r_cutoff(xl*xl+yl*yh,r_val))) return false;
-    if(c.plane_intersects(xl,yh,z1,con.r_cutoff(xl*xl+yl*yh,r_val))) return false;
-    if(c.plane_intersects(xl,yl,z1,con.r_cutoff(xl*xl+yl*yl,r_val))) return false;
-    if(c.plane_intersects(xl,yl,z0,con.r_cutoff(xl*xl+yl*yl,r_val))) return false;
-    if(c.plane_intersects(xh,yl,z0,con.r_cutoff(xl*xh+yl*yl,r_val))) return false;
-    if(c.plane_intersects(xh,yl,z1,con.r_cutoff(xl*xh+yl*yl,r_val))) return false;
-    return true;
+    return !(c.plane_intersects_guess(xl,yh,z0,con.r_cutoff(xl*xl+yl*yh,r_val))
+           ||c.plane_intersects(xl,yh,z1,con.r_cutoff(xl*xl+yl*yh,r_val))
+           ||c.plane_intersects(xl,yl,z1,con.r_cutoff(xl*xl+yl*yl,r_val))
+           ||c.plane_intersects(xl,yl,z0,con.r_cutoff(xl*xl+yl*yl,r_val))
+           ||c.plane_intersects(xh,yl,z0,con.r_cutoff(xl*xh+yl*yl,r_val))
+           ||c.plane_intersects(xh,yl,z1,con.r_cutoff(xl*xh+yl*yl,r_val)));
 }
 
 /** This function checks to see whether a particular block can possibly have
@@ -720,11 +716,10 @@ template<class c_class>
 template<class v_cell>
 inline bool voro_compute_3d<c_class>::face_x_test(v_cell &c,double xl,double y0,double z0,double y1,double z1,double &r_mul,double &r_val) {
     con.r_prime(xl*xl,r_mul,r_val);
-    if(c.plane_intersects_guess(xl,y0,z0,con.r_cutoff(xl*xl,r_val))) return false;
-    if(c.plane_intersects(xl,y0,z1,con.r_cutoff(xl*xl,r_val))) return false;
-    if(c.plane_intersects(xl,y1,z1,con.r_cutoff(xl*xl,r_val))) return false;
-    if(c.plane_intersects(xl,y1,z0,con.r_cutoff(xl*xl,r_val))) return false;
-    return true;
+    return !(c.plane_intersects_guess(xl,y0,z0,con.r_cutoff(xl*xl,r_val))
+           ||c.plane_intersects(xl,y0,z1,con.r_cutoff(xl*xl,r_val))
+           ||c.plane_intersects(xl,y1,z1,con.r_cutoff(xl*xl,r_val))
+           ||c.plane_intersects(xl,y1,z0,con.r_cutoff(xl*xl,r_val)));
 }
 
 /** This function checks to see whether a particular block can possibly have
@@ -741,11 +736,10 @@ template<class c_class>
 template<class v_cell>
 inline bool voro_compute_3d<c_class>::face_y_test(v_cell &c,double x0,double yl,double z0,double x1,double z1,double &r_mul,double &r_val) {
     con.r_prime(yl*yl,r_mul,r_val);
-    if(c.plane_intersects_guess(x0,yl,z0,con.r_cutoff(yl*yl,r_val))) return false;
-    if(c.plane_intersects(x0,yl,z1,con.r_cutoff(yl*yl,r_val))) return false;
-    if(c.plane_intersects(x1,yl,z1,con.r_cutoff(yl*yl,r_val))) return false;
-    if(c.plane_intersects(x1,yl,z0,con.r_cutoff(yl*yl,r_val))) return false;
-    return true;
+    return !(c.plane_intersects_guess(x0,yl,z0,con.r_cutoff(yl*yl,r_val))
+           ||c.plane_intersects(x0,yl,z1,con.r_cutoff(yl*yl,r_val))
+           ||c.plane_intersects(x1,yl,z1,con.r_cutoff(yl*yl,r_val))
+           ||c.plane_intersects(x1,yl,z0,con.r_cutoff(yl*yl,r_val)));
 }
 
 /** This function checks to see whether a particular block can possibly have
@@ -762,10 +756,10 @@ template<class c_class>
 template<class v_cell>
 inline bool voro_compute_3d<c_class>::face_z_test(v_cell &c,double x0,double y0,double zl,double x1,double y1,double &r_mul,double &r_val) {
     con.r_prime(zl*zl,r_mul,r_val);
-    if(c.plane_intersects_guess(x0,y0,zl,con.r_cutoff(zl*zl,r_val))) return false;
-    if(c.plane_intersects(x0,y1,zl,con.r_cutoff(zl*zl,r_val))) return false;
-    if(c.plane_intersects(x1,y1,zl,con.r_cutoff(zl*zl,r_val))) return false;
-    if(c.plane_intersects(x1,y0,zl,con.r_cutoff(zl*zl,r_val))) return false;
+    return !(c.plane_intersects_guess(x0,y0,zl,con.r_cutoff(zl*zl,r_val))
+           ||c.plane_intersects(x0,y1,zl,con.r_cutoff(zl*zl,r_val))
+           ||c.plane_intersects(x1,y1,zl,con.r_cutoff(zl*zl,r_val))
+           ||c.plane_intersects(x1,y0,zl,con.r_cutoff(zl*zl,r_val)));
     return true;
 }
 

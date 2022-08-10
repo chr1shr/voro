@@ -85,7 +85,7 @@ class container_triclinic_base : public unitcell,  public voro_base_3d {
          * also hold the particle radii. */
         const int ps;
         container_triclinic_base(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
-                int nx_,int ny_,int nz_,int init_mem_,int ps);
+                int nx_,int ny_,int nz_,int init_mem_,int ps_,int nt_);
         ~container_triclinic_base();
         /** Prints all particles in the container, including those that have
          * been constructed in image blocks. */
@@ -177,6 +177,7 @@ class container_triclinic_base : public unitcell,  public voro_base_3d {
         iterator_order end(particle_order &vo);
     protected:
         void add_particle_memory(int i);
+        void add_overflow_memory();
         void put_locate_block(int &ijk,double &x,double &y,double &z);
         void put_locate_block(int &ijk,double &x,double &y,double &z,int &ai,int &aj,int &ak);
         /** Creates particles within an image block by copying them from the
@@ -191,23 +192,35 @@ class container_triclinic_base : public unitcell,  public voro_base_3d {
         inline void create_periodic_image(int di,int dj,int dk) {
             if(di<0||di>=nx||dj<0||dj>=oy||dk<0||dk>=oz)
                 voro_fatal_error("Constructing periodic image for nonexistent point",VOROPP_INTERNAL_ERROR);
-            #if defined(_OPENMP)
+#ifdef _OPENMP
             omp_set_lock(img_lock+dk);
-            #endif
+#endif
             if(dk>=ez&&dk<wz) {
                 if(dj<ey||dj>=wy) create_side_image(di,dj,dk);
             } else create_vertical_image(di,dj,dk);
-            #if defined(_OPENMP)
+#ifdef _OPENMP
             omp_unset_lock(img_lock+dk);
-            #endif
+#endif
         }
         void create_side_image(int di,int dj,int dk);
         void create_vertical_image(int di,int dj,int dk);
         void put_image(int reg,int fijk,int l,double dx,double dy,double dz);
         inline void remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
-        #if defined(_OPENMP)
+        /** The maximum number of threads that can be used for computation. */
+        int nt;
+        /** The number of particles in the overflow buffer. */
+        int oflow_co;
+        /** The current size of the overflow buffer for multithreaded insertion
+         * of particles. */
+        int oflow_mem;
+        /** An array of particle IDs and block information in the overflow
+         * buffer. */
+        int *ijk_m_id_oflow;
+        /** An array of particle positions in the overflow buffer. */
+        double *p_oflow;
+#ifdef _OPENMP
         omp_lock_t *img_lock;
-        #endif
+#endif
 };
 
 /** \brief Extension of the container_triclinic_base class for computing regular
@@ -225,11 +238,28 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
         void clear();
         void put(int i,double x,double y,double z);
         void put(int n,double x,double y,double z,int &ai,int &aj,int &ak);
-        void put_parallel(int i,double x,double y,double z);
-        void put_parallel(double *pt_list, int num_pt, int num_thread);
-        void put_parallel(int n,double x,double y,double z,int &ai,int &aj,int &ak);
+        /** Put a particle into the correct region of the container.
+         * \param[in] i the numerical ID of the inserted particle.
+         * \param[in] (x,y,z) the position vector of the inserted particle. */
+        inline void put_parallel(int i,double x,double y,double z) {
+            int ijk;
+            put_locate_block(ijk,x,y,z);
+            put_parallel_internal(i,ijk,x,y,z);
+        }
+        /** Put a particle into the correct region of the container, also
+         * returning the periodic image that it was in.
+         * \param[in] i the numerical ID of the inserted particle.
+         * \param[in] (x,y,z) the position vector of the inserted particle.
+         * \param[out] (ai,aj,ak) the periodic image displacement from the
+         *                        (0,0,0) domain. */
+        inline void put_parallel(int i,double x,double y,double z,int &ai,int &aj,int &ak) {
+            int ijk;
+            put_locate_block(ijk,x,y,z,ai,aj,ak);
+            put_parallel_internal(i,ijk,x,y,z);
+        }
         void put(particle_order &vo,int n,double x,double y,double z);
         void put_reconcile_overflow();
+        void add_parallel(double *pt_list,int num,int nt_);
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -345,13 +375,11 @@ class container_triclinic : public container_triclinic_base, public radius_mono 
             return q;
         }
     private:
-        int nt;
+        void put_parallel_internal(int i,int ijk,double x,double y,double z);
+        /** An array of pointers to Voronoi computation objects for use by the
+         * different threads. */
         voro_compute_3d<container_triclinic> **vc;
         friend class voro_compute_3d<container_triclinic>;
-        int overflow_mem_numPt;
-        int overflowPtCt;
-        int *ijk_m_id_overflow;
-        double *p_overflow; 
 };
 
 /** \brief Extension of the container_triclinic_base class for computing radical
@@ -364,16 +392,35 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
     public:
         container_triclinic_poly(double bx_,double bxy_,double by_,double bxz_,double byz_,double bz_,
                 int nx_,int ny_,int nz_,int init_mem_,int number_thread=1);
-        ~container_triclinic_poly(); 
+        ~container_triclinic_poly();
         void change_number_thread(int number_thread);
         void clear();
         void put(int n,double x,double y,double z,double r);
         void put(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak);
-        void put_parallel(int n,double x,double y,double z,double r);
-        void put_parallel(int n,double x,double y,double z,double r,int &ai,int &aj,int &ak);
-        void put_parallel(double *pt_r_list, int num_pt, int num_thread);
+        /** Put a particle into the correct region of the container.
+         * \param[in] i the numerical ID of the inserted particle.
+         * \param[in] (x,y,z) the position vector of the inserted particle.
+         * \param[in] r the radius of the particle. */
+        inline void put_parallel(int i,double x,double y,double z,double r) {
+            int ijk;
+            put_locate_block(ijk,x,y,z);
+            put_parallel_internal(i,ijk,x,y,z,r);
+        }
+        /** Put a particle into the correct region of the container, also
+         * returning the periodic image that it was in.
+         * \param[in] i the numerical ID of the inserted particle.
+         * \param[in] (x,y,z) the position vector of the inserted particle.
+         * \param[in] r the radius of the particle.
+         * \param[out] (ai,aj,ak) the periodic image displacement from the
+         *                        (0,0,0) domain. */
+        inline void put_parallel(int i,double x,double y,double z,double r,int &ai,int &aj,int &ak) {
+            int ijk;
+            put_locate_block(ijk,x,y,z,ai,aj,ak);
+            put_parallel_internal(i,ijk,x,y,z,r);
+        }
         void put(particle_order &vo,int n,double x,double y,double z,double r);
         void put_reconcile_overflow();
+        void add_parallel(double *pt_list,int num,int nt_);
         void import(FILE *fp=stdin);
         void import(particle_order &vo,FILE *fp=stdin);
         /** Imports a list of particles from an open file stream into the
@@ -492,14 +539,13 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
         }
         bool find_voronoi_cell(double x,double y,double z,double &rx,double &ry,double &rz,int &pid);
     private:
-        double *max_r;
-        int nt;
+        void put_parallel_internal(int i,int ijk,double x,double y,double z,double r);
+        /** An array of pointers to Voronoi computation objects for use by the
+         * different threads. */
         voro_compute_3d<container_triclinic_poly> **vc;
+        /** An array for storing the maximum radii computed per thread. */
+        double *max_r;
         friend class voro_compute_3d<container_triclinic_poly>;
-        int overflow_mem_numPt;
-        int overflowPtCt;
-        int *ijk_m_id_overflow;
-        double *p_overflow; 
 };
 
 }

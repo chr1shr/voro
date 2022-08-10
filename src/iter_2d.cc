@@ -16,7 +16,7 @@ container_base_2d::iterator::iterator(int* co_, int _nxy) : co(co_), nxy(_nxy) {
 
 /** Increments the iterator by one element. */
 container_base_2d::iterator& container_base_2d::iterator::operator++() {
-    
+
     int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
     if(diff>=0 && ijk_<nxy){
         n=n-co[ijk_]+q_;
@@ -34,7 +34,7 @@ container_base_2d::iterator& container_base_2d::iterator::operator++() {
 /** Increments the iterator by one element. */
 container_base_2d::iterator container_base_2d::iterator::operator++(int) {
     iterator tmp(*this);
-    
+
     int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
     if(diff>=0 && ijk_<nxy){
         n=n-co[ijk_]+q_;
@@ -116,7 +116,7 @@ container_base_2d::iterator& container_base_2d::iterator::operator+=(const diffe
     while(diff>=0 && ijk_<nxy) {diff-=co[++ijk_];}
     if(ijk_<nxy){q_=diff+co[ijk_];}
     else{q_=0;} //no next particle found, return one-past-the-end, defined as (nxyz,0)
-    
+
     return *this;
 }
 
@@ -269,12 +269,12 @@ bool container_base_2d::iterator_subset::next_block() {
     int &ijk_=ptr.ijk;
     if(i<cl_iter->bi) {
         i++;
-        if(ci<cl_iter->nx-1) {ci++;ijk_++;} 
+        if(ci<cl_iter->nx-1) {ci++;ijk_++;}
         else {ci=0;ijk_+=1-cl_iter->nx;px+=cl_iter->sx;}
         return true;
     } else if(j<cl_iter->bj) {
         i=cl_iter->ai;ci=cl_iter->di;px=cl_iter->apx;j++;
-        if(cj<cl_iter->ny-1) {cj++;ijk_+=cl_iter->inc1;} 
+        if(cj<cl_iter->ny-1) {cj++;ijk_+=cl_iter->inc1;}
         else {cj=0;ijk_+=cl_iter->inc1-cl_iter->nxy;py+=cl_iter->sy;}
         return true;
     }
@@ -301,7 +301,6 @@ bool container_base_2d::iterator_subset::previous_block() {
     }
 }
 
-
 /** Initializes the iterator, setting it to point at the first particle in the
  * container.
  * \param[in] si_ a pointer to the information about the particle subset to
@@ -314,7 +313,7 @@ container_base_2d::iterator_subset::iterator_subset(subset_info_2d* si_) :
 
     px=cl_iter->step_div(i,cl_iter->nx)*cl_iter->sx;
     py=cl_iter->step_div(j,cl_iter->ny)*cl_iter->sy;
-    
+
     ptr.set(ci+cl_iter->nx*cj,0);
     int &q_=ptr.q,&ijk_=ptr.ijk;
     bool continue_check_ijk=true;
@@ -463,7 +462,7 @@ container_base_2d::iterator_subset& container_base_2d::iterator_subset::operator
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 
+                                       //Now ijk_ is at aijk, q=-1
                 continue_check=false;
                 q_=-1;
             }
@@ -502,7 +501,7 @@ container_base_2d::iterator_subset container_base_2d::iterator_subset::operator-
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 
+                                       //Now ijk_ is at aijk, q=-1
                 continue_check=false;
                 q_=-1;
             }
@@ -525,7 +524,7 @@ container_base_2d::iterator_subset::difference_type container_base_2d::iterator_
         iterator_subset tmp(*this);
         while(tmp!=rhs) {
             tmp++;
-            diff--;  
+            diff--;
         }
     } else { //*this>rhs
         iterator_subset tmp(*this);
@@ -603,7 +602,7 @@ container_base_2d::iterator_subset& container_base_2d::iterator_subset::operator
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 
+                                       //Now ijk_ is at aijk, q=-1
                 continue_check=false;
                 q_=-1;
             }
@@ -660,7 +659,7 @@ container_base_2d::iterator_order container_base_2d::iterator_order::operator++(
 
 /** Decrements the iterator by one element. */
 container_base_2d::iterator_order& container_base_2d::iterator_order::operator--() {
-    ptr_n--;   
+    ptr_n--;
     if(ptr_n>=0){ptr.set(cp_iter[2*ptr_n],cp_iter[2*ptr_n+1]);}
     else{ptr_n=-1; ptr.set(0,-1);} //one-before-the-start
     return *this;

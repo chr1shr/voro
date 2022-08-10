@@ -12,12 +12,12 @@
 
 #ifdef _OPENMP
 #include "omp.h"
-        
+
 inline int max_t(int thread_number) {
     if(thread_number!=0) {
         return thread_number;
-    } 
-    else { 
+    }
+    else {
         return omp_get_max_threads();
     }
 }
@@ -34,7 +34,6 @@ inline double wtime() {
     return 0.;
 }
 #endif
-
 
 #include <cmath>
 
@@ -258,12 +257,6 @@ class radius_poly_2d {
 			return rs<sqrt(mrs*trs);
 		}
 };
-
-
-
-
-
-
 
 }
 #endif

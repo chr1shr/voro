@@ -1,10 +1,7 @@
 # Voro++ makefile
-#
-# Author : Chris H. Rycroft (LBL / UC Berkeley)
-# Email  : chr@alum.mit.edu
-# Date   : August 30th 2011
+# By Chris H. Rycroft and the Rycroft Group
 
-# Tell make that these are phony targets
+# Tell GNU Make that these are phony targets
 .PHONY: all help clean install uninstall
 
 include config.mk

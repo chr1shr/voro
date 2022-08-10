@@ -545,7 +545,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 
+                                       //Now ijk_ is at aijk, q=-1
                 continue_check=false;
                 q_=-1;
             }
@@ -587,7 +587,7 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 
+                                       //Now ijk_ is at aijk, q=-1
                 continue_check=false;
                 q_=-1;
             }
@@ -699,7 +699,7 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
                 }
             }
             if(continue_check_ijk_2==false){//Subset grids have all checked, and no previous particle found. They are all out of shape bound
-                                       //Now ijk_ is at aijk, q=-1 
+                                       //Now ijk_ is at aijk, q=-1
                 continue_check=false;
                 q_=-1;
             }

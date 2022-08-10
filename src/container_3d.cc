@@ -4,6 +4,8 @@
 /** \file container_3d.cc
  * \brief Function implementations for the container_3d and related classes. */
 
+#include <cstring>
+
 #include "container_3d.hh"
 #include "iter_3d.hh"
 
@@ -23,16 +25,19 @@ namespace voro {
  *                                   periodic in each coordinate direction.
  * \param[in] init_mem the initial memory allocation for each block.
  * \param[in] ps_ the number of floating point entries to store for each
- *                particle. */
+ *                particle.
+ * \param[in] nt_ the maximum number of threads that will be used for Voronoi
+ *                computations. */
 container_base_3d::container_base_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-        int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem,int ps_)
+        int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem,int ps_,int nt_)
     : voro_base_3d(nx_,ny_,nz_,(bx_-ax_)/nx_,(by_-ay_)/ny_,(bz_-az_)/nz_),
     ax(ax_), bx(bx_), ay(ay_), by(by_), az(az_), bz(bz_),
     max_len_sq((bx-ax)*(bx-ax)*(x_prd_?0.25:1)+(by-ay)*(by-ay)*(y_prd_?0.25:1)
           +(bz-az)*(bz-az)*(z_prd_?0.25:1)),
-    x_prd(x_prd_), y_prd(y_prd_), z_prd(z_prd_),
-    id(new int*[nxyz]), p(new double*[nxyz]), co(new int[nxyz]), mem(new int[nxyz]), ps(ps_) {
-
+    x_prd(x_prd_), y_prd(y_prd_), z_prd(z_prd_), id(new int*[nxyz]),
+    p(new double*[nxyz]), co(new int[nxyz]), mem(new int[nxyz]), ps(ps_),
+    nt(nt_), oflow_co(0), oflow_mem(init_overflow_size),
+    ijk_m_id_oflow(new int[3*oflow_mem]), p_oflow(new double[ps*oflow_mem]) {
     int l;
     for(l=0;l<nxyz;l++) co[l]=0;
     for(l=0;l<nxyz;l++) mem[l]=init_mem;
@@ -40,15 +45,23 @@ container_base_3d::container_base_3d(double ax_,double bx_,double ay_,double by_
     for(l=0;l<nxyz;l++) p[l]=new double[ps*init_mem];
 }
 
-/** The container destructor frees the dynamically allocated memory. */
+/** The class destructor frees the dynamically allocated memory. */
 container_base_3d::~container_base_3d() {
+
+    // Delete the per-block arrays
     int l;
     for(l=0;l<nxyz;l++) delete [] p[l];
     for(l=0;l<nxyz;l++) delete [] id[l];
-    delete [] id;
-    delete [] p;
-    delete [] co;
+
+    // Delete the overflow arrays
+    delete [] p_oflow;
+    delete [] ijk_m_id_oflow;
+
+    // Delete the block arrays
     delete [] mem;
+    delete [] co;
+    delete [] p;
+    delete [] id;
 }
 
 /** The class constructor sets up the geometry of the container.
@@ -59,41 +72,43 @@ container_base_3d::~container_base_3d() {
  *                          coordinate directions.
  * \param[in] (x_prd_,y_prd_,z_prd_) flags setting whether the container is
  *                                   periodic in each coordinate direction.
- * \param[in] init_mem the initial memory allocation for each block. */
+ * \param[in] init_mem the initial memory allocation for each block.
+ * \param[in] nt_ the maximum number of threads that will be used for Voronoi
+ *                computations. */
 container_3d::container_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-    int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem, int number_thread)
-    : container_base_3d(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,x_prd_,y_prd_,z_prd_,init_mem,3),
-    nt(number_thread), vc(new voro_compute_3d<container_3d>*[nt]), 
-    overflow_mem_numPt(64), overflowPtCt(0), ijk_m_id_overflow(new int[3*overflow_mem_numPt]),
-    p_overflow(new double[3*overflow_mem_numPt])
-    {   
-        #pragma omp parallel num_threads(nt)
-        {  
-        vc[t_num()]= new voro_compute_3d<container_3d>(*this,x_prd_?2*nx_+1:nx_,y_prd_?2*ny_+1:ny_,z_prd_?2*nz_+1:nz_);
-        }          
+    int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem,int nt_)
+    : container_base_3d(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,x_prd_,y_prd_,z_prd_,init_mem,3,nt_),
+    vc(new voro_compute_3d<container_3d>*[nt]) {
+
+    // Allocate as many Voronoi computation objects as there are threads
+#pragma omp parallel num_threads(nt)
+    {
+        vc[t_num()]=new voro_compute_3d<container_3d>(*this,x_prd_?2*nx_+1:nx_,y_prd_?2*ny_+1:ny_,z_prd_?2*nz_+1:nz_);
     }
-
-
-container_3d::~container_3d(){
-    int l;
-    for(l=nt-1;l>=0;l--) delete vc[l];
-    delete [] vc;
-    //delete overflow arrays
-    delete [] ijk_m_id_overflow;
-    delete [] p_overflow;
 }
 
-void container_3d::change_number_thread(int number_thread){
-    int l;
-    for(l=nt-1;l>=0;l--) delete vc[l];
+/** The class destructor frees the dynamically allocated memory. */
+container_3d::~container_3d() {
+    for(int l=0;l<nt;l++) delete vc[l];
     delete [] vc;
-    
-    nt=number_thread;
+}
+
+/** Changes the maximum number of threads that can be used in multithreaded
+ * computations.
+ * \param[in] nt_ the new maximum number of threads. */
+void container_3d::change_number_thread(int nt_){
+
+    // Delete the previous Voronoi computation objects
+    for(int l=0;l<nt;l++) delete vc[l];
+    delete [] vc;
+
+    // Allocate the new Voronoi computation objects
+    nt=nt_;
     vc=new voro_compute_3d<container_3d>*[nt];
-    #pragma omp parallel num_threads(nt)
-    {  
-    vc[t_num()]= new voro_compute_3d<container_3d>(*this,x_prd?2*nx+1:nx,y_prd?2*ny+1:ny,z_prd?2*nz+1:nz);
-        }   
+#pragma omp parallel num_threads(nt)
+    {
+        vc[t_num()]=new voro_compute_3d<container_3d>(*this,x_prd?2*nx+1:nx,y_prd?2*ny+1:ny,z_prd?2*nz+1:nz);
+    }
 }
 
 /** The class constructor sets up the geometry of container.
@@ -104,49 +119,47 @@ void container_3d::change_number_thread(int number_thread){
  *                          coordinate directions.
  * \param[in] (x_prd_,y_prd_,z_prd_) flags setting whether the container is
  *                                   periodic in each coordinate direction.
- * \param[in] init_mem the initial memory allocation for each block. */
+ * \param[in] init_mem the initial memory allocation for each block.
+ * \param[in] nt_ the maximum number of threads that will be used for Voronoi
+ *                computations. */
 container_poly_3d::container_poly_3d(double ax_,double bx_,double ay_,double by_,double az_,double bz_,
-    int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem,int number_thread)
-    : container_base_3d(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,x_prd_,y_prd_,z_prd_,init_mem,4),
-    nt(number_thread), vc(new voro_compute_3d<container_poly_3d>*[nt]), 
-    overflow_mem_numPt(64), overflowPtCt(0), ijk_m_id_overflow(new int[3*overflow_mem_numPt]),
-    p_overflow(new double[4*overflow_mem_numPt])
-    {   
-        max_r=new double[nt];
-        #pragma omp parallel num_threads(nt)
-        {  
-        vc[t_num()]= new voro_compute_3d<container_poly_3d>(*this,x_prd_?2*nx_+1:nx_,y_prd_?2*ny_+1:ny_,z_prd_?2*nz_+1:nz_);
-        max_r[t_num()]=0.0;
-        }        
-        ppr=p;
+    int nx_,int ny_,int nz_,bool x_prd_,bool y_prd_,bool z_prd_,int init_mem,int nt_)
+    : container_base_3d(ax_,bx_,ay_,by_,az_,bz_,nx_,ny_,nz_,x_prd_,y_prd_,z_prd_,init_mem,4,nt_),
+    vc(new voro_compute_3d<container_poly_3d>*[nt]), max_r(new double[nt]) {
+    for(int j=0;j<nt;j++) max_r[j]=0.;
+#pragma omp parallel num_threads(nt)
+    {
+        vc[t_num()]=new voro_compute_3d<container_poly_3d>(*this,x_prd_?2*nx_+1:nx_,y_prd_?2*ny_+1:ny_,z_prd_?2*nz_+1:nz_);
     }
-
-
-container_poly_3d::~container_poly_3d(){
-    int l;
-    for(l=nt-1;l>=0;l--) delete vc[l];
-    delete [] vc;
-    delete [] max_r;
-    //delete overflow arrays
-    delete [] ijk_m_id_overflow;
-    delete [] p_overflow;
+    ppr=p;
 }
 
-void container_poly_3d::change_number_thread(int number_thread){
-    int l;
-    for(l=nt-1;l>=0;l--) delete vc[l];
+/** The class destructor frees the dynamically allocated memory. */
+container_poly_3d::~container_poly_3d(){
+    for(int l=0;l<nt;l++) delete vc[l];
+    delete [] max_r;
+    delete [] vc;
+}
+
+/** Changes the maximum number of threads that can be used in multithreaded
+ * computations.
+ * \param[in] nt_ the new maximum number of threads. */
+void container_poly_3d::change_number_thread(int nt_) {
+
+    // Delete the previous Voronoi computation objects and maximum radius array
+    for(int l=0;l<nt;l++) delete vc[l];
     delete [] vc;
     delete [] max_r;
-    
-    
-    nt=number_thread;
-    vc=new voro_compute_3d<container_poly_3d>*[nt];
+
+    // Allocate the new Voronoi computation objects and maximum radius array
+    nt=nt_;
     max_r=new double[nt];
-    #pragma omp parallel num_threads(nt)
-    {  
-    vc[t_num()]= new voro_compute_3d<container_poly_3d>(*this,x_prd?2*nx+1:nx,y_prd?2*ny+1:ny,z_prd?2*nz+1:nz);
-    max_r[t_num()]=0.0;
-    } 
+    for(int j=0;j<nt;j++) max_r[j]=0.;
+    vc=new voro_compute_3d<container_poly_3d>*[nt];
+#pragma omp parallel num_threads(nt)
+    {
+        vc[t_num()]= new voro_compute_3d<container_poly_3d>(*this,x_prd?2*nx+1:nx,y_prd?2*ny+1:ny,z_prd?2*nz+1:nz);
+    }
 }
 
 /** Put a particle into the correct region of the container.
@@ -157,143 +170,111 @@ void container_3d::put(int n,double x,double y,double z) {
     if(put_locate_block(ijk,x,y,z)) {
         id[ijk][co[ijk]]=n;
         double *pp=p[ijk]+3*co[ijk]++;
-        *(pp++)=x;*(pp++)=y;*pp=z;
+        *pp=x;pp[1]=y;pp[2]=z;
     }
 }
 
-/** Put a particle into the correct region of the container.
+/** Put a particle into the correct region of the container, using a
+ * thread-safe routine that sorts particles into an overflow buffer if there is
+ * no space available for immediate storage.
  * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle. */
 void container_3d::put_parallel(int i,double x,double y,double z) {
-    int ijk; 
-    //find block ijk that point (x,y,z) is in
-    if(put_remap(ijk,x,y,z)){
-        int m;
-        #pragma omp atomic capture
-        m=co[ijk]++;   //co[ijk]: number of points in block ijk
+    int ijk;
 
-        //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
-        //pt and id info in id, p directly
+    // Locate the particle that the block is in
+    if(put_remap(ijk,x,y,z)) {
+
+        // Find the unique available slot number in the block, using an atomic
+        // increment of the counter
+        int m;
+#pragma omp atomic capture
+        m=co[ijk]++;
+
+        // If the slot is within the available allocated memory, then add it
+        // directly
         if(m<mem[ijk]){
             id[ijk][m]=i;
             double *pp=p[ijk]+3*m;
-            *(pp++)=x; *(pp++)=y; *pp=z;
-        }
-        else{ 
-            //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
-            //ijk_m_id_overflow, p_overflow, and reconcile later 
-            #pragma omp critical
+            *pp=x;pp[1]=y;pp[2]=z;
+        } else {
+
+            // Otherwise, store it into the overflow array to reconcile later.
+            // This routine can only be accessed by one thread at a time, in
+            // case the overflow buffer needs to be extended.
+#pragma omp critical
             {
-                //opti: index of overflow point
-                //overflowPtCt: number of overflow points
-                int opti=overflowPtCt++;
-
-                //if overflow arrays memory slots not enough, add new length
-                if(overflowPtCt>overflow_mem_numPt){  
-                    int old_overflow_mem_numPt=overflow_mem_numPt;
-                    overflow_mem_numPt=overflow_mem_numPt*2;
-                    int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
-                    double *new_p_overflow=new double [3*overflow_mem_numPt];
-                    for(int ii=0;ii<old_overflow_mem_numPt;ii++){
-                        int ii3=3*ii;
-                        new_ijk_m_id_overflow[ii3]=ijk_m_id_overflow[ii3];
-                        new_ijk_m_id_overflow[ii3+1]=ijk_m_id_overflow[ii3+1];
-                        new_ijk_m_id_overflow[ii3+2]=ijk_m_id_overflow[ii3+2];
-
-                        new_p_overflow[ii3]=p_overflow[ii3];
-                        new_p_overflow[ii3+1]=p_overflow[ii3+1];
-                        new_p_overflow[ii3+2]=p_overflow[ii3+2];
-                    }
-
-                    delete [] ijk_m_id_overflow; 
-                    delete [] p_overflow;
-
-                    ijk_m_id_overflow=new_ijk_m_id_overflow;
-                    p_overflow=new_p_overflow;
-                }
-
-                //add in overflow info in overflow arrays
-                int opti3=3*opti; 
-                ijk_m_id_overflow[opti3]=ijk;
-                ijk_m_id_overflow[opti3+1]=m;
-                ijk_m_id_overflow[opti3+2]=i;
-
-                p_overflow[opti3]=x;
-                p_overflow[opti3+1]=y;
-                p_overflow[opti3+2]=z;
-
+                if(oflow_co>=oflow_mem) add_overflow_memory();
+                int *idp=ijk_m_id_oflow+3*oflow_co;
+                *idp=ijk;idp[1]=m;idp[2]=i;
+                double *pp=p_oflow+3*oflow_co++;
+                *pp=x;pp[1]=y;pp[2]=z;
             }
         }
-    } 
-}
-
-
-
-//con.put with a input point array, parallel put
-void container_3d::put_parallel(double *pt_list, int num_pt, int num_thread){
-    #pragma omp parallel for num_threads(num_thread)
-    for(int i=0; i<num_pt; i++){ //id:i      
-        double x=pt_list[3*i];
-        double y=pt_list[3*i+1];
-        double z=pt_list[3*i+2];
-        put_parallel(i,x,y,z);
     }
 }
 
+/** Increases the size of the overflow buffer for multithreaded insertion of particles
+ * into the container. */
+void container_base_3d::add_overflow_memory() {
 
-void container_3d::put_reconcile_overflow(){
-    //reconcile overflow
-    //loop through points in overflow arrays, 
-    //if (m>=mem[ijk]): int nmem (new memory length) = 2*mem[ijk];
-    //                  while(m>=nmem) {nmem=2*nmem;}
-    // then construct new arrays of id, p with size nmem, and add in overflow pt info
-    for(int i=0;i<overflowPtCt;i++){
-        int i3=3*i;
-        int ijk=ijk_m_id_overflow[i3];
-        int m=ijk_m_id_overflow[i3+1];
-        int idd=ijk_m_id_overflow[i3+2];
-        double x=p_overflow[i3];
-        double y=p_overflow[i3+1];
-        double z=p_overflow[i3+2];
-        if(m>=mem[ijk]){
-            int nmem=2*mem[ijk];
-            while(m>=nmem){nmem=2*nmem;}
-            int l; 
-            //the following are the same as add_particle_memory(ijk)
-            // Carry out a check on the memory allocation size, and
-            // print a status message if requested
-            if(nmem>max_particle_memory)
-                    voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
-    #if VOROPP_VERBOSE >=3
-            fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
-    #endif
+    // Calculate the size of the extended array and check it is within the
+    // limit
+    oflow_mem<<=1;
+    if(oflow_mem>max_overflow_size)
+        voro_fatal_error("Maximum overflow memory size exceeded",VOROPP_MEMORY_ERROR);
+#if VOROPP_VERBOSE >=3
+    fprintf(stderr,"Overflow memory scaled up to %d\n",oflow_mem);
+#endif
 
-            // Allocate new memory and copy in the contents of the old arrays
-            int *idp=new int[nmem];
-            for(l=0;l<mem[ijk];l++) {
-                idp[l]=id[ijk][l];
-            }
+    // Copy integer information from old array to new
+    int *ijk_m_id_new=new int[3*oflow_mem];
+    memcpy(ijk_m_id_new,ijk_m_id_oflow,3*sizeof(int)*oflow_co);
+    delete [] ijk_m_id_oflow;
+    ijk_m_id_oflow=ijk_m_id_new;
 
-            double *pp=new double[ps*nmem];
-            for(l=0;l<ps*mem[ijk];l++) {
-                pp[l]=p[ijk][l];
-            }
-            // Update pointers and delete old arrays
-            mem[ijk]=nmem;
-            delete [] id[ijk];
-            delete [] p[ijk];
-            id[ijk]=idp;
-            p[ijk]=pp;
-        }
-        //after fixing memory issue above, now, add overflow pt information into the original p, id arrays
-        id[ijk][m]=idd;
-        double *pp=p[ijk]+3*m;
-        *(pp++)=x; *(pp++)=y; *pp=z;
-    }   
-    //after reconciling, set overflowPtCt back to initial value
-    overflowPtCt=0;
+    // Copy floating point information from old array to new
+    double *p_new=new double[ps*oflow_mem];
+    memcpy(p_new,p_oflow,sizeof(double)*ps*oflow_co);
+    delete [] p_oflow;
+    p_oflow=p_new;
 }
 
+/** Adds an array of particle positions to the container using multithreaded
+ * insertion.
+ * \param[in] pt_list a pointer to the array of positions, stored as (x,y,z)
+ *                    triplets.
+ * \param[in] num the number of particles.
+ * \param[in] nt_ the number of threads to use. */
+void container_3d::add_parallel(double *pt_list,int num,int nt_) {
+#pragma omp parallel for num_threads(nt_)
+    for(int i=0;i<num;i++){
+        double *pp=pt_list+3*i;
+        put_parallel(i,*pp,pp[1],pp[2]);
+    }
+}
+
+/** Adds the particles stored in the overflow buffer to the container. */
+void container_3d::put_reconcile_overflow() {
+
+    // Consider each of the particles in the buffer
+    double *op=p_oflow;
+    for(int *idp=ijk_m_id_oflow;idp<=ijk_m_id_oflow+3*oflow_co;) {
+
+        // Add particle memory if needed to store this particle
+        int ijk=*(idp++),m=*(idp++);
+        while(m<=mem[ijk]) add_particle_memory(ijk);
+
+        // Store the particle information
+        id[ijk][m]=*(idp++);
+        double *pp=p[ijk]+3*m;
+        *pp=*(op++);pp[1]=*(op++);pp[2]=*(op++);
+    }
+
+    // All particles in the overflow buffer have been considered, so set the
+    // overflow counter to zero
+    oflow_co=0;
+}
 
 /** Put a particle into the correct region of the container.
  * \param[in] n the numerical ID of the inserted particle.
@@ -309,160 +290,90 @@ void container_poly_3d::put(int n,double x,double y,double z,double r) {
     }
 }
 
-
 /** Put a particle into the correct region of the container.
  * \param[in] i the numerical ID of the inserted particle.
  * \param[in] (x,y,z) the position vector of the inserted particle.
  * \param[in] r the radius of the particle. */
 void container_poly_3d::put_parallel(int i,double x,double y,double z,double r) {
-    int ithread=t_num();
-    int ijk; 
-    //find block ijk that point (x,y,z) is in
-    if(put_remap(ijk,x,y,z)){
-        int m;
-        #pragma omp atomic capture
-        m=co[ijk]++;   //co[ijk]: number of points in block ijk
+    int ijk;
 
-        //if m<init memory slot (mem[ijk]=init_mem in constructor), then add 
-        //pt and id info in id, p directly
+    // Locate the particle that the block is in
+    if(put_remap(ijk,x,y,z)) {
+
+        // Update the per-thread maximum radius
+        int tn=t_num();
+        if(max_r[tn]<r) max_r[tn]=r;
+
+        // Find the unique available slot number in the block, using an atomic
+        // increment of the counter
+        int m;
+#pragma omp atomic capture
+        m=co[ijk]++;
+
+        // If the slot is within the available allocated memory, then add it directly
         if(m<mem[ijk]){
             id[ijk][m]=i;
             double *pp=p[ijk]+4*m;
-            *(pp++)=x; *(pp++)=y; *(pp++)=z;*pp=r;
-            //max_r
-            if(max_r[ithread]<r) {max_r[ithread]=r;}
-        }
-        else{ 
-            //in critical block: if(m>=mem[ijk]), add pt info in overflow arrays:
-            //ijk_m_id_overflow, p_overflow, and reconcile later 
-            #pragma omp critical
+            *pp=x;pp[1]=y;pp[2]=z;pp[3]=r;
+        } else {
+
+            // Otherwise, store it into the overflow array to reconcile later.
+            // This routine can only be accessed by one thread at a time, in
+            // case the overflow buffer needs to be extended.
+#pragma omp critical
             {
-                //opti: index of overflow point
-                //overflowPtCt: number of overflow points
-                int opti=overflowPtCt++;
-
-                //if overflow arrays memory slots not enough, add new length
-                if(overflowPtCt>overflow_mem_numPt){  
-                    int old_overflow_mem_numPt=overflow_mem_numPt;
-                    overflow_mem_numPt=overflow_mem_numPt*2;
-                    int *new_ijk_m_id_overflow=new int[3*overflow_mem_numPt];
-                    double *new_p_overflow=new double [4*overflow_mem_numPt];
-                    for(int ii=0;ii<old_overflow_mem_numPt;ii++){
-                        int ii3=3*ii;
-                        new_ijk_m_id_overflow[ii3]=ijk_m_id_overflow[ii3];
-                        new_ijk_m_id_overflow[ii3+1]=ijk_m_id_overflow[ii3+1];
-                        new_ijk_m_id_overflow[ii3+2]=ijk_m_id_overflow[ii3+2];
-                        
-                        int ii4=4*ii;
-                        new_p_overflow[ii4]=p_overflow[ii4];
-                        new_p_overflow[ii4+1]=p_overflow[ii4+1];
-                        new_p_overflow[ii4+2]=p_overflow[ii4+2];
-                        new_p_overflow[ii4+3]=p_overflow[ii4+3];
-                    }
-
-                    delete [] ijk_m_id_overflow; 
-                    delete [] p_overflow;
-
-                    ijk_m_id_overflow=new_ijk_m_id_overflow;
-                    p_overflow=new_p_overflow;
-                }
-
-                //add in overflow info in overflow arrays
-                int opti3=3*opti; 
-                ijk_m_id_overflow[opti3]=ijk;
-                ijk_m_id_overflow[opti3+1]=m;
-                ijk_m_id_overflow[opti3+2]=i;
-
-                int opti4=4*opti; 
-                p_overflow[opti4]=x;
-                p_overflow[opti4+1]=y;
-                p_overflow[opti4+2]=z;
-                p_overflow[opti4+3]=r;
-                
-                //max_r
-                if(max_r[ithread]<r) {max_r[ithread]=r;}
+                if(oflow_co>=oflow_mem) add_overflow_memory();
+                int *idp=ijk_m_id_oflow+3*oflow_co;
+                *idp=ijk;idp[1]=m;idp[2]=i;
+                double *pp=p_oflow+4*oflow_co++;
+                *pp=x;pp[1]=y;pp[2]=z;pp[3]=r;
             }
         }
-    } 
-}
-
-
-//con.put with a input point array, parallel put
-void container_poly_3d::put_parallel(double *pt_r_list, int num_pt, int num_thread){
-    #pragma omp parallel for num_threads(num_thread)
-    for(int i=0; i<num_pt; i++){ //id:i      
-        double x=pt_r_list[4*i];
-        double y=pt_r_list[4*i+1];
-        double z=pt_r_list[4*i+2];
-        double r=pt_r_list[4*i+3];
-        put_parallel(i,x,y,z,r);
     }
 }
 
-void container_poly_3d::put_reconcile_overflow(){
-    //update max_radius
-    //and reset max_r[i]
-    for(int i=0;i<nt;i++){
-        if(max_radius<max_r[i]){max_radius=max_r[i];}
-        max_r[i]=0.0;
+/** Adds an array of particle positions to the container using multithreaded
+ * insertion.
+ * \param[in] pt_list a pointer to the array of positions, stored as (x,y,z,r)
+ *                    quadruplets.
+ * \param[in] num the number of particles.
+ * \param[in] nt_ the number of threads to use. */
+void container_poly_3d::add_parallel(double *pt_list,int num,int nt_){
+#pragma omp parallel for num_threads(nt_)
+    for(int i=0;i<num;i++) {
+        double *pp=pt_list+4*i;
+        put_parallel(i,*pp,pp[1],pp[2],pp[3]);
     }
-    
-    //reconcile overflow
-    //loop through points in overflow arrays, 
-    //if (m>=mem[ijk]): int nmem (new memory length) = 2*mem[ijk];
-    //                  while(m>=nmem) {nmem=2*nmem;}
-    // then construct new arrays of id, p with size nmem, and add in overflow pt info
-    for(int i=0;i<overflowPtCt;i++){
-        int i3=3*i;
-        int ijk=ijk_m_id_overflow[i3];
-        int m=ijk_m_id_overflow[i3+1];
-        int idd=ijk_m_id_overflow[i3+2];
-        
-        int i4=4*i;
-        double x=p_overflow[i4];
-        double y=p_overflow[i4+1];
-        double z=p_overflow[i4+2];
-        double r=p_overflow[i4+3];
-        
-        if(m>=mem[ijk]){
-            int nmem=2*mem[ijk];
-            while(m>=nmem){nmem=2*nmem;}
-            int l; 
-            //the following are the same as add_particle_memory(ijk)
-            // Carry out a check on the memory allocation size, and
-            // print a status message if requested
-            if(nmem>max_particle_memory)
-                    voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
-    #if VOROPP_VERBOSE >=3
-            fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
-    #endif
+}
 
-            // Allocate new memory and copy in the contents of the old arrays
-            int *idp=new int[nmem];
-            for(l=0;l<mem[ijk];l++) {
-                idp[l]=id[ijk][l];
-            }
+/** Adds the particles stored in the overflow buffer to the container. */
+void container_poly_3d::put_reconcile_overflow() {
 
-            double *pp=new double[ps*nmem];
-            for(l=0;l<ps*mem[ijk];l++) {
-                pp[l]=p[ijk][l];
-            }
-            // Update pointers and delete old arrays
-            mem[ijk]=nmem;
-            delete [] id[ijk];
-            delete [] p[ijk];
-            id[ijk]=idp;
-            p[ijk]=pp;
-        }
-        //after fixing memory issue above, now, add overflow pt information into the original p, id arrays
-        id[ijk][m]=idd;
+    // Compute the global maximum radius using the per-thread values
+    for(int i=0;i<nt;i++) {
+        if(max_radius<max_r[i]) max_radius=max_r[i];
+        max_r[i]=0.;
+    }
+
+    // Consider each of the particles in the buffer
+    double *op=p_oflow;
+    for(int *idp=ijk_m_id_oflow;idp<=ijk_m_id_oflow+3*oflow_co;) {
+
+        // Add particle memory if needed to store this particle
+        int ijk=*(idp++),m=*(idp++);
+        while(m<=mem[ijk]) add_particle_memory(ijk);
+
+        // Store the particle information
+        id[ijk][m]=*(idp++);
         double *pp=p[ijk]+4*m;
-        *(pp++)=x; *(pp++)=y; *(pp++)=z; *pp=r;
-    }   
-    //after reconciling, set overflowPtCt back to initial value
-    overflowPtCt=0;
-}
+        *pp=*(op++);pp[1]=*(op++);
+        pp[2]=*(op++);pp[3]=*(op++);
+    }
 
+    // All particles in the overflow buffer have been considered, so set the
+    // overflow counter to zero
+    oflow_co=0;
+}
 
 /** Put a particle into the correct region of the container, also recording
  * into which region it was stored.
@@ -659,25 +570,21 @@ bool container_poly_3d::find_voronoi_cell(double x,double y,double z,double &rx,
 /** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate. */
 void container_base_3d::add_particle_memory(int i) {
-    int l,nmem=mem[i]<<1;
+    mem[i]<<=1;
 
-    // Carry out a check on the memory allocation size, and print a status
-    // message if requested
-    if(nmem>max_particle_memory)
+    // Check the memory allocation size and print a status message if requested
+    if(mem[i]>max_particle_memory)
         voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
-    fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
+    fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,mem[i]);
 #endif
 
     // Allocate new memory and copy in the contents of the old arrays
-    int *idp=new int[nmem];
-    for(l=0;l<co[i];l++) idp[l]=id[i][l];
-    double *pp=new double[ps*nmem];
-    for(l=0;l<ps*co[i];l++) pp[l]=p[i][l];
-
-    // Update pointers and delete old arrays
-    mem[i]=nmem;
+    int *idp=new int[mem[i]];
+    memcpy(idp,id[i],sizeof(int)*co[i]);
     delete [] id[i];id[i]=idp;
+    double *pp=new double[ps*mem[i]];
+    memcpy(pp,p[i],ps*sizeof(double)*co[i]);
     delete [] p[i];p[i]=pp;
 }
 
@@ -690,7 +597,7 @@ void container_3d::import(FILE *fp) {
     int i,j;
     double x,y,z;
     while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z))==4) {put(i,x,y,z);}
-    put_reconcile_overflow();
+    put_reconcile_overflow();                                     // XXX - why is this needed here?
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
@@ -716,7 +623,7 @@ void container_poly_3d::import(FILE *fp) {
     int i,j;
     double x,y,z,r;
     while((j=fscanf(fp,"%d %lg %lg %lg %lg",&i,&x,&y,&z,&r))==5) {put(i,x,y,z,r);}
-    put_reconcile_overflow();
+    put_reconcile_overflow();                                     // XXX - why is this needed here?
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 

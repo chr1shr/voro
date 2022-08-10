@@ -80,7 +80,6 @@ class voronoicell_base_3d {
          * cell. This array is dynamically allocated, with its current
          * size held by current_vertices. */
         int *nu;
-        unsigned int *mask;
         /** This in an array with size 3*current_vertices for holding
          * the positions of the vertices. */
         double *pts;
@@ -232,8 +231,6 @@ class voronoicell_base_3d {
          * \param[in] p the number of the vertex.
          * \return nu[p]-1 if a=0, or a-1 otherwise. */
         inline int cycle_down(int a,int p) {return a==0?nu[p]-1:a-1;}
-        
-        
         inline void reset_edges(){
             int i,j;
             for(i=0;i<p;i++) for(j=0;j<nu[i];j++) {
@@ -241,7 +238,6 @@ class voronoicell_base_3d {
                 ed[i][j]=-1-ed[i][j];
             }
         }
-        
         inline bool search_edge(int l,int &m,int &k){
             for(m=0;m<nu[l];m++) {
                 k=ed[l][m];
@@ -279,7 +275,6 @@ class voronoicell_base_3d {
         int *ds2,*stackp2,*stacke2;
         /** This is the extra search stack. */
         int *xse,*stackp3,*stacke3;
-        unsigned int maskc;
         /** The x coordinate of the normal vector to the test plane. */
         double px;
         /** The y coordinate of the normal vector to the test plane. */
@@ -308,20 +303,16 @@ class voronoicell_base_3d {
         bool delete_connection(vc_class &vc,int j,int k,bool hand);
         inline bool search_for_outside_edge(int &up);
         inline void add_to_stack(int sc2,int lp);
-        inline void reset_mask() {
-            for(int i=0;i<current_vertices;i++) mask[i]=0;
-            maskc=4;
-        }
         inline bool search_downward(unsigned int &uw,int &lp,int &ls,int &us,double &l,double &u);
         bool definite_max(int &lp,int &ls,double &l,double &u,unsigned int &uw);
         inline bool search_upward(unsigned int &lw,int &lp,int &ls,int &us,double &l,double &u);
         bool definite_min(int &lp,int &us,double &l,double &u,unsigned int &lw);
         inline bool plane_intersects_track(double x,double y,double z,double rs,double l);
+        bool p_i_search(double x,double y,double z,double l,int &lp,int &ls,double &u);
         inline void normals_search(std::vector<double> &v,int i,int j,int k);
         //inline bool search_edge(int l,int &m,int &k);
         inline unsigned int m_test(int n,double &ans);
         inline unsigned int m_testx(int n,double &ans);
-        unsigned int m_calc(int n,double &ans);
         inline void flip(int tp) {ed[tp][nu[tp]<<1]=-1-ed[tp][nu[tp]<<1];}
         int check_marginal(int n,double &ans);
         friend class voronoicell_3d;

@@ -35,29 +35,35 @@ const int init_wall_size=32;
 const int init_ordering_size=4096;
 /** The initial size of the particle_list chunk index. */
 const int init_chunk_size=256;
+/** The initial size of the overflow buffer for adding particles to the
+ * container using multithreading. */
+const int init_overflow_size=32;
 
 // If the initial memory is too small, the program dynamically allocates more.
 // However, if the limits below are reached, then the program bails out.
 /** The maximum memory allocation for the number of vertices. */
-const int max_vertices=16777216;
+const int max_vertices=67108864;
 /** The maximum memory allocation for the maximum vertex order. */
 const int max_vertex_order=2048;
 /** The maximum memory allocation for the any particular order of vertex. */
-const int max_n_vertices=16777216;
+const int max_n_vertices=67108864;
 /** The maximum size for the delete stack. */
-const int max_delete_size=16777216;
+const int max_delete_size=67108864;
 /** The maximum size for the auxiliary delete stack. */
-const int max_delete2_size=16777216;
+const int max_delete2_size=67108864;
 /** The maximum size for the extra search stack. */
-const int max_xsearch_size=16777216;
+const int max_xsearch_size=67108864;
 /** The maximum amount of particle memory allocated for a single region. */
-const int max_particle_memory=16777216;
+const int max_particle_memory=67108864;
 /** The maximum size for the wall pointer array. */
 const int max_wall_size=2048;
 /** The maximum size for the ordering class. */
 const int max_ordering_size=67108864;
 /** The maximum size for the particle_list chunk index. */
 const int max_chunk_size=65536;
+/** The maximum size of the overflow buffer for adding particles to
+ * the container using multithreading. */
+const int max_overflow_size=67108864;
 
 /** The chunk size in the particle_list classes. */
 const int particle_list_chunk_size=4096;
