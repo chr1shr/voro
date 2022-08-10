@@ -622,7 +622,6 @@ void container_3d::import(FILE *fp) {
     int i,j;
     double x,y,z;
     while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&z))==4) {put(i,x,y,z);}
-    put_reconcile_overflow();                                     // XXX - why is this needed here?
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
@@ -648,7 +647,6 @@ void container_poly_3d::import(FILE *fp) {
     int i,j;
     double x,y,z,r;
     while((j=fscanf(fp,"%d %lg %lg %lg %lg",&i,&x,&y,&z,&r))==5) {put(i,x,y,z,r);}
-    put_reconcile_overflow();                                     // XXX - why is this needed here?
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 

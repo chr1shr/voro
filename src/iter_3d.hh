@@ -14,16 +14,6 @@
 
 namespace voro {
 
-// XXX CHR - for small functions (i.e. those that take one or two lines) I
-// moved them to be defined inline here. That can improve efficiency since the
-// compiler doesn't have to make a separate function call.
-//
-// Note that constructors defined in the class can be inlined (even without the
-// inline keyword).
-//
-// For functions that are declared here but not defined, I removed the
-// comments. The comments appear in the .cc file to avoid repetition.
-
 class container_base_3d::iterator : public std::iterator<std::random_access_iterator_tag,c_info,int> {
     public:
         c_info ptr;
@@ -54,10 +44,6 @@ class container_base_3d::iterator : public std::iterator<std::random_access_iter
          * \return True if they are equal, false otherwise. */
         inline bool operator==(const iterator& rhs) const {
             return ptr.ijk==rhs.ptr.ijk&&ptr.q==rhs.ptr.q;
-            // XXX CHR - I guess we don't check the co pointers are equal?
-            // That's probably fine, and is likely more efficient. I presume
-            // that for these comparisons, you can assume the iterators are
-            // declared for the same container.
         }
         /** Evaluates if this iterator is not equal to another.
          * \param[in] rhs a reference to another iterator.
@@ -163,7 +149,7 @@ class subset_info_3d {
         int ai,bi,aj,bj,ak,bk;
         int di,dj,dk,inc1,inc2;
         int ddi,ddj,ddk;
-        double aapx,aapy,aapz; // XXX CHR - shouldn't ddi, ddj, and ddk be integers?
+        double aapx,aapy,aapz;
         inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
         inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
         inline int step_int(double a) {return a<0?int(a)-1:int(a);}
@@ -185,10 +171,6 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
         bool out_of_bounds();
         bool next_block();
         bool previous_block();
-        // XXX CHR - is there any reason to initialize cl_iter here? A blank
-        // iterator is never going to be used - you'd have to later copy-assign
-        // it, or set up the variables another way. In those cases cl_iter will
-        // be initialized then.
         iterator_subset(){}
         iterator_subset(subset_info_3d* si_);
         iterator_subset(subset_info_3d* si_,c_info ptr_,int i_,int j_,int k_);
@@ -203,8 +185,6 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
          * \return True if they are equal, false otherwise. */
         inline bool operator==(const iterator_subset& rhs) const {
             return ptr.q==rhs.ptr.q&&i==rhs.i&&j==rhs.j&&k==rhs.k;
-            // XXX CHR - Is it necessary to check ijk? Also, in the >= and <=
-            // comparisons later, ijk is not checked.
         }
         /** Evaluates if this iterator is not equal to another.
          * \param[in] rhs a reference to another iterator.
@@ -288,9 +268,6 @@ class container_base_3d::iterator_order : public std::iterator<std::random_acces
         {
             if(pn_upper_bound!=0){ptr.set(cp_iter[0],cp_iter[1]);} else{ptr.set(nxyz,0);} //if empty particle_order, set to one over the end
         }
-        // XXX CHR - Do we need to pass in both a c_info and ptr_n? If we know
-        // ptr_n, then we can set c_info. I guess it depends on the situations
-        // where this function is called?
         /** Initializes the iterator, and sets it to point at a given particle.
          * \param[in] vo_ a reference to the particle_order class to follow.
          * \param[in] ptr_ the particle to point to.

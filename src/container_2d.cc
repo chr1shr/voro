@@ -345,7 +345,7 @@ void container_poly_2d::add_parallel(double *pt_list,int num,int nt_){
 }
 
 /** Adds the particles stored in the overflow buffer to the container. */
-void container_poly_2d::put_reconcile_overflow(){
+void container_poly_2d::put_reconcile_overflow() {
 
     // Compute the global maximum radius using the per-thread values
     for(int i=0;i<nt;i++) {
@@ -578,7 +578,6 @@ void container_2d::import(FILE *fp) {
     int i,j;
     double x,y;
     while((j=fscanf(fp,"%d %lg %lg",&i,&x,&y))==3) put(i,x,y);
-    put_reconcile_overflow();                                     // XXX - why is this needed here?
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 
@@ -604,7 +603,6 @@ void container_poly_2d::import(FILE *fp) {
     int i,j;
     double x,y,r;
     while((j=fscanf(fp,"%d %lg %lg %lg",&i,&x,&y,&r))==4) put(i,x,y,r);
-    put_reconcile_overflow();                                     // XXX - why is this needed here?
     if(j!=EOF) voro_fatal_error("File import error",VOROPP_FILE_ERROR);
 }
 

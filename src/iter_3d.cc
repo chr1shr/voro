@@ -10,20 +10,15 @@ namespace voro {
  * \param[in] co_ a pointer to the particle count array. */
 container_base_3d::iterator::iterator(int* co_,int _nxyz) : co(co_), nxyz(_nxyz) {
 
-    // Find the first empty block
+    // Find the first empty block. If the container is empty, then return
+    // one-past-the-end, defined as (nxyz,0).
     int ijk=0;
-    while(co[ijk]==0 && ijk<nxyz) ijk++; //if container is empty, return one-past-the-end, defined as (nxyz,0)
-    // [Y:2D, 3D] XXX CHR - what about an empty container? Do we need to check for ijk out of range?
+    while(co[ijk]==0 && ijk<nxyz) ijk++;
     ptr.set(ijk,0);
 }
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator& container_base_3d::iterator::operator++() {
-
-    // XXX CHR - I think the number of arithmetic operations in the loop below
-    // can be reduced. q_ is being set multiple times to zero, and both diff
-    // and n are recalculated.
-
     int &q_=ptr.q,&ijk_=ptr.ijk,n=1,diff=q_+n-co[ijk_];
     if(diff>=0 && ijk_<nxyz){
         n=n-co[ijk_]+q_;
@@ -34,7 +29,6 @@ container_base_3d::iterator& container_base_3d::iterator::operator++() {
     while(diff>=0 && ijk_<nxyz) {diff-=co[++ijk_];}
     if(ijk_<nxyz){q_=diff+co[ijk_];}
     else{q_=0;} //no next particle found, return one-past-the-end, defined as (nxyz,0)
-
     return *this;
 }
 
@@ -91,7 +85,6 @@ container_base_3d::iterator::difference_type container_base_3d::iterator::operat
     difference_type diff=0;
     if(ptr.ijk==rhs.ptr.ijk) {
         diff=ptr.q-rhs.ptr.q;
-         //[Y:2D, 3D] XXX CHR - simplify these six lines to just diff=pts.q-rhs.ptr.q ?
     }
     else{
         int ijk_small=rhs.ptr.ijk,q_small=rhs.ptr.q,
@@ -150,10 +143,6 @@ c_info& container_base_3d::iterator::operator[](const difference_type& incre) co
     static c_info ci;
     if(incre>=0){
         int q_=ptr.q,ijk_=ptr.ijk,n=incre,diff=q_+n-co[ijk_];
-    // XXX CHR - the following code assumes that incre is positive. For normal
-    // array lookups that it not necessary: writing something like a[-2] is
-    // fine, and means *(a-2). Do we need to take into account if incre is
-    // negative?
         if(diff>=0 && ijk_<nxyz){
             n=n-co[ijk_]+q_;
             ijk_++;
@@ -191,19 +180,7 @@ container_base_3d::iterator container_base_3d::begin() {return iterator(co,nxyz)
 container_base_3d::iterator container_base_3d::end() {
     c_info ci(nxyz,0);
     return iterator(co,ci,nxyz);
-
-    // XXX CHR - here you are scanning backward through the blocks to put
-    // "end()" after the last particle, at (ijk,q+1). But if there are n
-    // blocks, then couldn't we just put "end()" at (n,0)? That wouldn't
-    // require a scan. (Same issue for iterator_subset below.)
 }
-
-//swappable: in .hh
-// XXX CHR - the library is designed to compile with the original ANSI C++
-// standard, and the swappable property is not needed. However some people may
-// wish to compile the library with C++ 11, and the swappable property is
-// required. To ensure interoperability with C++ 11 we should check that the
-// iterators can be swapped (using swap(a,b)).
 
 /** Sets up the class constants to loop over all particles inside a sphere.
  * \param[in] (vx,vy,vz) the center of the sphere.
@@ -289,11 +266,6 @@ void subset_info_3d::setup_common() {
     aapz=step_div(bk,nz)*sz;
 }
 
-// XXX CHR - I don't think it is necessary to append "_iter" to the end of
-// function/variable names. If functions/variables in two different classes
-// represent the same thing, then it is fine (and likely preferable) for them
-// to have the same name. C++ name scoping avoids potential clashes.
-
 /** Computes whether the current point is out of bounds, relative to the
  * current loop setup.
  * \param[in] ijk_ the current block.
@@ -316,10 +288,6 @@ bool container_base_3d::iterator_subset::out_of_bounds() {
 /** Moves to the next block, updating all of the required vectors and indices.
  * \param[in,out] ijk_ the index of the block. */
 bool container_base_3d::iterator_subset::next_block() {
-    // XXX CHR - it's not clear to me that this function needs to take ijk_ as
-    // an argument. It already has access to ijk - it is ptr.ijk. You could
-    // even write "int &ijk=ptr.ijk;" at the start to make a shorthand to this
-    // variable.
     int &ijk_=ptr.ijk;
     if(i<cl_iter->bi) {
         i++;
@@ -345,11 +313,6 @@ bool container_base_3d::iterator_subset::next_block() {
 /** Moves to the next block, updating all of the required vectors and indices.
  * \param[in,out] ijk_ the index of the block. */
 bool container_base_3d::iterator_subset::previous_block() {
-    // XXX CHR - why is the previous_block_iter routine done within
-    // subset_info_3d, but the next_block_iter routine is done within the iterator
-    // itself? I think the next_block_iter approach is probably better, since
-    // it can operate on its own data (i, j, k, etc.) rather than having to pass
-    // all of them by reference to subset_info_3d.
     int &ijk_=ptr.ijk;
     if(i>cl_iter->ai) {
         i--;
@@ -389,9 +352,7 @@ container_base_3d::iterator_subset::iterator_subset(subset_info_3d* si_)
     int &q_=ptr.q,&ijk_=ptr.ijk;
     bool continue_check_ijk=true;
 
-    while(cl_iter->co[ijk_]==0 && continue_check_ijk==true) {
-        // XXX CHR - need to catch case when container is empty and ijk goes
-        // out of range? (Same issue as for previous class.)
+    while(cl_iter->co[ijk_]==0 && continue_check_ijk) {
         continue_check_ijk=next_block();
     }
     //if(continue_check_ijk==false){ //empty subset grids, point to 1-past-the-end P, defined by (bijk,co[bijk]), here co[bijk]=0
@@ -554,9 +515,6 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
             }
         }
     }
-    // XXX CHR - What happens if "--" is applied when you are at the first
-    // element? Is the iterator meant to handle that case?
-    //ptr.set(ijk_,q_);
     return *this;
 }
 
@@ -596,9 +554,6 @@ container_base_3d::iterator_subset container_base_3d::iterator_subset::operator-
             }
         }
     }
-    // XXX CHR - What happens if "--" is applied when you are at the first
-    // element? Is the iterator meant to handle that case?
-    //ptr.set(ijk_,q_);
     return tmp;
 }
 
@@ -611,16 +566,11 @@ container_base_3d::iterator_subset::difference_type container_base_3d::iterator_
         diff=0;
     }
     else if(*this<rhs) {
-        // XXX CHR - This is a fairly expensive way to compute the difference.
-        // You make a copy of the current iterator, and then you step
-        // individually through each particle. I guess, though, that with the
-        // out_of_bounds routine, it is difficult to avoid this.
         iterator_subset tmp(*this);
         while(tmp!=rhs) {
             tmp++;
-            diff--;  // XXX CHR - change to diff--
+            diff--;
         }
-                    // XXX CHR - and delete this line
     }
     else {
         iterator_subset tmp(*this);
@@ -708,9 +658,6 @@ container_base_3d::iterator_subset& container_base_3d::iterator_subset::operator
             }
         }
     }
-    // XXX CHR - What happens if "--" is applied when you are at the first
-    // element? Is the iterator meant to handle that case?
-    //ptr.set(ijk_,q_);
     return *this;
 }
 
@@ -739,8 +686,6 @@ container_base_3d::iterator_subset container_base_3d::end(subset_info_3d& si) {
     ijk_=si.ddi+si.nx*(si.ddj+si.ny*si.ddk);
     return iterator_subset(&si,c_info(ijk_,si.co[ijk_]),i_,j_,k_);
 }
-
-//swappable: in .hh
 
 /** Increments the iterator by one element. */
 container_base_3d::iterator_order& container_base_3d::iterator_order::operator++() {
@@ -821,10 +766,8 @@ container_base_3d::iterator_order container_base_3d::begin(particle_order &vo) {
 /** Returns an iterator pointing past the last particle in the container.
  * \return The iterator. */
 container_base_3d::iterator_order container_base_3d::end(particle_order &vo) {
-    int ptr_n_=(vo.op-vo.o)/2; //1-over-the-last-particle, eg. if 0,1,2,3,4 particle, here, ptr_n=5
-    // [Y: 2D, 3D] XXX CHR - Do we need to set dummy values here? [Also, if we do need to set them, then presumably
-    // you can write ci.set(-1,-1) .]
-    return iterator_order(vo,ptr_n_,nxyz); //this will point to one-over-the-end: (nxyz,0), ptr_n=pn_upper_bound=(vo.op-vo.o)/2
+    int ptr_n_=(vo.op-vo.o)/2;
+    return iterator_order(vo,ptr_n_,nxyz);
 }
 
 //--------------------------iterator triclinic---------------------
@@ -1097,7 +1040,6 @@ c_info& container_triclinic_base::iterator::operator[](const difference_type& in
     ci.set(ijk_,q_+n);
     return ci;
 }
-//swappable??
 
 container_triclinic_base::iterator container_triclinic_base::begin() {
     return iterator(co,nx,oy,ey,wy,wz,ez); //first particle in the container
@@ -1236,8 +1178,6 @@ c_info& container_triclinic_base::iterator_order::operator[](const difference_ty
     ci.set(ijk_,q_);
     return ci;
 }
-
-//swappable??
 
 container_triclinic_base::iterator_order container_triclinic_base::begin(particle_order &vo) {
     return iterator_order(vo); //first particle in the container

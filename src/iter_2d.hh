@@ -143,7 +143,7 @@ class subset_info_2d {
         int ai,bi,aj,bj;
         int di,dj,inc1;
         int ddi,ddj;
-        double aapx,aapy; // XXX CHR - shouldn't ddi and ddj be integers?
+        double aapx,aapy;
         inline int step_mod(int a,int b) {return a>=0?a%b:b-1-(b-1-a)%b;}
         inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
         inline int step_int(double a) {return a<0?int(a)-1:int(a);}
