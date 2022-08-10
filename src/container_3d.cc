@@ -263,7 +263,7 @@ void container_3d::put_reconcile_overflow() {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
-        if(m<=mem[ijk]) add_particle_memory_parallel(ijk,m);
+        if(m>=mem[ijk]) add_particle_memory_parallel(ijk,m);
 
         // Store the particle information
         id[ijk][m]=*(idp++);
@@ -361,7 +361,7 @@ void container_poly_3d::put_reconcile_overflow() {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
-        if(m<=mem[ijk]) add_particle_memory_parallel(ijk,m);
+        if(m>=mem[ijk]) add_particle_memory_parallel(ijk,m);
 
         // Store the particle information
         id[ijk][m]=*(idp++);
@@ -573,7 +573,7 @@ bool container_poly_3d::find_voronoi_cell(double x,double y,double z,double &rx,
  * \param[in] m a minimum size for the reallocated region. */
 void container_base_3d::add_particle_memory_parallel(int i,int m) {
     int omem=mem[i];
-    do {mem[i]<<=1;} while(m<=mem[i]);
+    do {mem[i]<<=1;} while(m>=mem[i]);
 
     // Check the memory allocation size and print a status message if requested
     if(mem[i]>max_particle_memory)
