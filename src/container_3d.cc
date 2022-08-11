@@ -259,7 +259,7 @@ void container_3d::put_reconcile_overflow() {
 
     // Consider each of the particles in the buffer
     double *op=p_oflow;
-    for(int *idp=ijk_m_id_oflow;idp<=ijk_m_id_oflow+3*oflow_co;) {
+    for(int *idp=ijk_m_id_oflow;idp<ijk_m_id_oflow+3*oflow_co;) {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
@@ -357,7 +357,7 @@ void container_poly_3d::put_reconcile_overflow() {
 
     // Consider each of the particles in the buffer
     double *op=p_oflow;
-    for(int *idp=ijk_m_id_oflow;idp<=ijk_m_id_oflow+3*oflow_co;) {
+    for(int *idp=ijk_m_id_oflow;idp<ijk_m_id_oflow+3*oflow_co;) {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);

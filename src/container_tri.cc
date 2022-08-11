@@ -256,11 +256,11 @@ void container_triclinic::add_parallel(double *pt_list,int num,int nt_) {
 }
 
 /** Adds the particles stored in the overflow buffer to the container. */
-void container_triclinic::put_reconcile_overflow(){
+void container_triclinic::put_reconcile_overflow() {
 
     // Consider each of the particles in the buffer
     double *op=p_oflow;
-    for(int *idp=ijk_m_id_oflow;idp<=ijk_m_id_oflow+3*oflow_co;) {
+    for(int *idp=ijk_m_id_oflow;idp<ijk_m_id_oflow+3*oflow_co;) {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
@@ -341,7 +341,7 @@ void container_triclinic_poly::put_reconcile_overflow() {
 
     // Consider each of the particles in the buffer
     double *op=p_oflow;
-    for(int *idp=ijk_m_id_oflow;idp<=ijk_m_id_oflow+3*oflow_co;) {
+    for(int *idp=ijk_m_id_oflow;idp<ijk_m_id_oflow+3*oflow_co;) {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
