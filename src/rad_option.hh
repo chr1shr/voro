@@ -28,7 +28,7 @@ inline int max_t(int thread_number) {
     return 1;
 }
 inline int t_num() {
-    return 1;
+    return 0;
 }
 inline double wtime() {
     return 0.;
