@@ -176,7 +176,7 @@ class container_triclinic_base : public unitcell,  public voro_base_3d {
         iterator_order begin(particle_order &vo);
         iterator_order end(particle_order &vo);
     protected:
-        void add_particle_memory(int i);
+        void add_particle_memory(int i,int m);
         void add_overflow_memory();
         void put_locate_block(int &ijk,double &x,double &y,double &z);
         void put_locate_block(int &ijk,double &x,double &y,double &z,int &ai,int &aj,int &ak);

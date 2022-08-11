@@ -260,7 +260,7 @@ void container_2d::put_reconcile_overflow() {
 
         // Add particle memory if needed to store this particle
         int ij=*(idp++),m=*(idp++);
-        while(m<=mem[ij]) add_particle_memory(ij);
+        if(m>=mem[ij]) add_particle_memory(ij,m);
 
         // Store the particle information
         id[ij][m]=*(idp++);
@@ -359,7 +359,7 @@ void container_poly_2d::put_reconcile_overflow() {
 
         // Add particle memory if needed to store this particle
         int ij=*(idp++),m=*(idp++);
-        while(m<=mem[ij]) add_particle_memory(ij);
+        if(m>=mem[ij]) add_particle_memory(ij,m);
 
         // Store the particle information
         id[ij][m]=*(idp++);
@@ -415,7 +415,7 @@ void container_poly_2d::put(particle_order &vo,int n,double x,double y,double r)
  * false otherwise. */
 inline bool container_base_2d::put_locate_block(int &ij,double &x,double &y) {
     if(put_remap(ij,x,y)) {
-        if(co[ij]==mem[ij]) add_particle_memory(ij);
+        if(co[ij]==mem[ij]) add_particle_memory(ij,co[ij]);
         return true;
     }
 #if VOROPP_REPORT_OUT_OF_BOUNDS ==1
@@ -548,10 +548,13 @@ bool container_poly_2d::find_voronoi_cell(double x,double y,double &rx,double &r
     return false;
 }
 
-/** Increase memory for a particular region.
- * \param[in] i the index of the region to reallocate. */
-void container_base_2d::add_particle_memory(int i) {
-    mem[i]<<=1;
+/** Increase memory for a particular region, within the parallel insertion
+ * routines.
+ * \param[in] i the index of the region to reallocate.
+ * \param[in] m a minimum size for the reallocated region. */
+void container_base_2d::add_particle_memory(int i,int m) {
+    int omem=mem[i];
+    do {mem[i]<<=1;} while(m>=mem[i]);
 
     // Check the memory allocation size and print a status message if requested
     if(mem[i]>max_particle_memory)
@@ -562,10 +565,10 @@ void container_base_2d::add_particle_memory(int i) {
 
     // Allocate new memory and copy in the contents of the old arrays
     int *idp=new int[mem[i]];
-    memcpy(idp,id[i],sizeof(int)*co[i]);
+    memcpy(idp,id[i],sizeof(int)*omem);
     delete [] id[i];id[i]=idp;
     double *pp=new double[ps*mem[i]];
-    memcpy(pp,p[i],ps*sizeof(double)*co[i]);
+    memcpy(pp,p[i],ps*sizeof(double)*omem);
     delete [] p[i];p[i]=pp;
 }
 

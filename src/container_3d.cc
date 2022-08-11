@@ -263,7 +263,7 @@ void container_3d::put_reconcile_overflow() {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
-        if(m>=mem[ijk]) add_particle_memory_parallel(ijk,m);
+        if(m>=mem[ijk]) add_particle_memory(ijk,m);
 
         // Store the particle information
         id[ijk][m]=*(idp++);
@@ -361,7 +361,7 @@ void container_poly_3d::put_reconcile_overflow() {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
-        if(m>=mem[ijk]) add_particle_memory_parallel(ijk,m);
+        if(m>=mem[ijk]) add_particle_memory(ijk,m);
 
         // Store the particle information
         id[ijk][m]=*(idp++);
@@ -418,7 +418,7 @@ void container_poly_3d::put(particle_order &vo,int n,double x,double y,double z,
  * false otherwise. */
 bool container_base_3d::put_locate_block(int &ijk,double &x,double &y,double &z) {
     if(put_remap(ijk,x,y,z)) {
-        if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
+        if(co[ijk]==mem[ijk]) add_particle_memory(ijk,co[ijk]);
         return true;
     }
 #if VOROPP_REPORT_OUT_OF_BOUNDS ==1
@@ -567,11 +567,10 @@ bool container_poly_3d::find_voronoi_cell(double x,double y,double z,double &rx,
     return false;
 }
 
-/** Increase memory for a particular region, within the parallel insertion
- * routines.
+/** Increase memory for a particular region.
  * \param[in] i the index of the region to reallocate.
  * \param[in] m a minimum size for the reallocated region. */
-void container_base_3d::add_particle_memory_parallel(int i,int m) {
+void container_base_3d::add_particle_memory(int i,int m) {
     int omem=mem[i];
     do {mem[i]<<=1;} while(m>=mem[i]);
 
@@ -588,28 +587,6 @@ void container_base_3d::add_particle_memory_parallel(int i,int m) {
     delete [] id[i];id[i]=idp;
     double *pp=new double[ps*mem[i]];
     memcpy(pp,p[i],ps*sizeof(double)*omem);
-    delete [] p[i];p[i]=pp;
-}
-
-
-/** Increase memory for a particular region.
- * \param[in] i the index of the region to reallocate. */
-void container_base_3d::add_particle_memory(int i) {
-    mem[i]<<=1;
-
-    // Check the memory allocation size and print a status message if requested
-    if(mem[i]>max_particle_memory)
-        voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
-#if VOROPP_VERBOSE >=3
-    fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,mem[i]);
-#endif
-
-    // Allocate new memory and copy in the contents of the old arrays
-    int *idp=new int[mem[i]];
-    memcpy(idp,id[i],sizeof(int)*co[i]);
-    delete [] id[i];id[i]=idp;
-    double *pp=new double[ps*mem[i]];
-    memcpy(pp,p[i],ps*sizeof(double)*co[i]);
     delete [] p[i];p[i]=pp;
 }
 

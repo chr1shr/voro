@@ -196,7 +196,7 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
         iterator_order end(particle_order &vo);
     protected:
         void add_overflow_memory();
-        void add_particle_memory(int i);
+        void add_particle_memory(int i,int m);
         inline bool put_locate_block(int &ij,double &x,double &y);
         inline bool put_remap(int &ij,double &x,double &y);
         inline bool remap(int &ai,int &aj,int &ci,int &cj,double &x,double &y,int &ij);

@@ -264,7 +264,7 @@ void container_triclinic::put_reconcile_overflow(){
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
-        while(m<=mem[ijk]) add_particle_memory(ijk);
+        if(m>=mem[ijk]) add_particle_memory(ijk,m);
 
         // Store the particle information
         id[ijk][m]=*(idp++);
@@ -345,7 +345,7 @@ void container_triclinic_poly::put_reconcile_overflow() {
 
         // Add particle memory if needed to store this particle
         int ijk=*(idp++),m=*(idp++);
-        while(m<=mem[ijk]) add_particle_memory(ijk);
+        if(m>=mem[ijk]) add_particle_memory(ijk,m);
 
         // Store the particle information
         id[ijk][m]=*(idp++);
@@ -478,7 +478,7 @@ void container_triclinic_base::put_locate_block(int &ijk,double &x,double &y,dou
     // Compute the block index and check memory allocation
     j+=ey;k+=ez;
     ijk+=nx*(j+oy*k);
-    if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
+    if(co[ijk]==mem[ijk]) add_particle_memory(ijk,co[ijk]);
 }
 
 /** Takes a particle position vector and computes the region index into which
@@ -518,7 +518,7 @@ void container_triclinic_base::put_locate_block(int &ijk,double &x,double &y,dou
     // Compute the block index and check memory allocation
     j+=ey;k+=ez;
     ijk+=nx*(j+oy*k);
-    if(co[ijk]==mem[ijk]) add_particle_memory(ijk);
+    if(co[ijk]==mem[ijk]) add_particle_memory(ijk,co[ijk]);
 }
 
 /** Takes a position vector and remaps it into the primary domain.
@@ -625,12 +625,16 @@ bool container_triclinic_poly::find_voronoi_cell(double x,double y,double z,doub
 }
 
 /** Increase memory for a particular region.
- * \param[in] i the index of the region to reallocate. */
-void container_triclinic_base::add_particle_memory(int i) {
+ * \param[in] i the index of the region to reallocate.
+ * \param[in] m a minimum size for the reallocated region. */
+void container_triclinic_base::add_particle_memory(int i,int m) {
 
     // Handle the case when no memory has been allocated for this block
     if(mem[i]==0) {
         mem[i]=init_mem;
+        while(m>=mem[i]) mem[i]<<=1;
+        if(mem[i]>max_particle_memory)
+            voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
         id[i]=new int[init_mem];
         p[i]=new double[ps*init_mem];
         return;
@@ -639,21 +643,21 @@ void container_triclinic_base::add_particle_memory(int i) {
     // Otherwise, double the memory allocation for this block. Carry out a
     // check on the memory allocation size, and print a status message if
     // requested.
-    int l,nmem(mem[i]<<1);
-    if(nmem>max_particle_memory)
+    int omem=mem[i];
+    do {mem[i]<<=1;} while(m>=mem[i]);
+    if(mem[i]>max_particle_memory)
         voro_fatal_error("Absolute maximum memory allocation exceeded",VOROPP_MEMORY_ERROR);
 #if VOROPP_VERBOSE >=3
     fprintf(stderr,"Particle memory in region %d scaled up to %d\n",i,nmem);
 #endif
 
     // Allocate new memory and copy in the contents of the old arrays
-    int *idp=new int[nmem];
-    for(l=0;l<co[i];l++) idp[l]=id[i][l];
-    double *pp=new double[ps*nmem];
-    for(l=0;l<ps*co[i];l++) pp[l]=p[i][l];
+    int *idp=new int[mem[i]];
+    memcpy(idp,id[i],sizeof(int)*omem);
+    double *pp=new double[ps*mem[i]];
+    memcpy(pp,p[i],ps*sizeof(double)*omem);
 
     // Update pointers and delete old arrays
-    mem[i]=nmem;
     delete [] id[i];id[i]=idp;
     delete [] p[i];p[i]=pp;
 }
@@ -949,7 +953,7 @@ void container_triclinic_base::create_vertical_image(int di,int dj,int dk) {
  * \param[in] l the index of the particle entry within the primary block.
  * \param[in] (dx,dy,dz) the displacement vector to add to the particle. */
 void container_triclinic_base::put_image(int reg,int fijk,int l,double dx,double dy,double dz) {
-    if(co[reg]==mem[reg]) add_particle_memory(reg);
+    if(co[reg]==mem[reg]) add_particle_memory(reg,co[reg]);
     double *p1=p[reg]+ps*co[reg],*p2=p[fijk]+ps*l;
     *(p1++)=*(p2++)+dx;
     *(p1++)=*(p2++)+dy;

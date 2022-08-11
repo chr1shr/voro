@@ -222,8 +222,7 @@ class container_base_3d : public voro_base_3d, public wall_list_3d {
         iterator_order end(particle_order &vo);
     protected:
         void add_overflow_memory();
-        void add_particle_memory(int i);
-        void add_particle_memory_parallel(int i,int m);
+        void add_particle_memory(int i,int m);
         bool put_locate_block(int &ijk,double &x,double &y,double &z);
         inline bool put_remap(int &ijk,double &x,double &y,double &z);
         inline bool remap(int &ai,int &aj,int &ak,int &ci,int &cj,int &ck,double &x,double &y,double &z,int &ijk);
