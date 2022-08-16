@@ -86,7 +86,7 @@ class voronoicell_base_3d {
         /** A tolerance (specified as a squared length) used to identify when a
          * vertex should be treated as being exactly on a cutting plane. */
         const double tol;
-        /** A tolerance (specific as a cubed length) used to identify when a
+        /** A tolerance (specified as a cubed length) used to identify when a
          * Voronoi cell's volume is too small to reliably compute its centroid.
          */
         const double tol_cu;

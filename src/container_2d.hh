@@ -51,6 +51,9 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
         const double ay;
         /** The maximum y coordinate of the container. */
         const double by;
+        /** The maximum length squared that could be encountered in the Voronoi
+         * cell calculation. */
+        const double max_len_sq;
         /** A boolean value that determines if the x coordinate in periodic or
          * not. */
         const bool x_prd;

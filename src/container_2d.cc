@@ -29,11 +29,13 @@ namespace voro {
  *                computations. */
 container_base_2d::container_base_2d(double ax_,double bx_,double ay_,double by_,
         int nx_,int ny_,bool x_prd_,bool y_prd_,int init_mem,int ps_,int nt_)
-    : voro_base_2d(nx_,ny_,(bx_-ax_)/nx_,(by_-ay_)/ny_),
-    ax(ax_), bx(bx_), ay(ay_), by(by_), x_prd(x_prd_), y_prd(y_prd_),
-    id(new int*[nxy]), p(new double*[nxy]), co(new int[nxy]), mem(new int[nxy]),
-    ps(ps_), nt(nt_), oflow_co(0), oflow_mem(init_overflow_size),
-    ij_m_id_oflow(new int[3*oflow_mem]), p_oflow(new double[ps*oflow_mem]) {
+    : voro_base_2d(nx_,ny_,(bx_-ax_)/nx_,(by_-ay_)/ny_), ax(ax_), bx(bx_),
+    ay(ay_), by(by_),
+    max_len_sq((bx-ax)*(bx-ax)*(x_prd_?0.25:1)+(by-ay)*(by-ay)*(y_prd_?0.25:1)),
+    x_prd(x_prd_), y_prd(y_prd_), id(new int*[nxy]), p(new double*[nxy]),
+    co(new int[nxy]), mem(new int[nxy]), ps(ps_), nt(nt_), oflow_co(0),
+    oflow_mem(init_overflow_size), ij_m_id_oflow(new int[3*oflow_mem]),
+    p_oflow(new double[ps*oflow_mem]) {
     int l;
     for(l=0;l<nxy;l++) co[l]=0;
     for(l=0;l<nxy;l++) mem[l]=init_mem;
