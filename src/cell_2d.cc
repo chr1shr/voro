@@ -16,8 +16,7 @@ voronoicell_base_2d::voronoicell_base_2d(double max_len_sq) :
     current_vertices(init_vertices), current_delete_size(init_delete_size),
     tol(tolerance*max_len_sq), ed(new int[2*current_vertices]),
     pts(new double[2*current_vertices]), ds(new int[current_delete_size]),
-    stacke(ds+current_delete_size) {
-}
+    stacke(ds+current_delete_size) {}
 
 /** The voronoicell_2d destructor deallocates all of the dynamic memory. */
 voronoicell_base_2d::~voronoicell_base_2d() {
@@ -207,7 +206,7 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
     // Either adjust the existing vertex or create new one, and connect it with
     // the vertex found on the previous search in the counter-clockwise
     // direction
-    if(u3>tol) {
+    if(u3>-tol) {
         ed[2*cp+1]=up3;
         ed[2*up3]=cp;
         vc.n_set(up3,p_id);
