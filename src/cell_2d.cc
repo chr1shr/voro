@@ -240,7 +240,7 @@ bool voronoicell_base_2d::nplane_cut(vc_class &vc,double x,double y,double rsq,i
             ed[2*up+1]=ed[2*p+1];
         } else p++;
     }
-    return true;
+    return p>=3;
 }
 
 /** Returns a vector of the vertex vectors using the local coordinate system.
