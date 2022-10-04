@@ -15,6 +15,7 @@ using namespace voro;
 #include "omp.h"
 inline double wtime_() {return omp_get_wtime();}
 #else
+#include <ctime>
 inline double wtime_() {return 1./CLOCKS_PER_SEC*static_cast<double>(clock());}
 #endif
 
