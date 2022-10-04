@@ -203,7 +203,7 @@ void container_triclinic::put_parallel_internal(int i,int ijk,double x,double y,
 
         // Otherwise, store it into the overflow array to reconcile later.
         // This routine can only be accessed by one thread at a time, in
-        // case the overflow buffer needs to be extended.        #pragma omp critical
+        // case the overflow buffer needs to be extended.
 #pragma omp critical
         {
             if(oflow_co>=oflow_mem) add_overflow_memory();

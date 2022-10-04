@@ -5,7 +5,7 @@
 include ../../config.mk
 
 # List of executables
-EXECUTABLES=single_cell platonic random_points import convex_test
+EXECUTABLES=single_cell platonic random_points import mthread convex_test
 
 # Makefile rules
 all: $(EXECUTABLES)
@@ -21,6 +21,9 @@ random_points: random_points.cc
 
 import: import.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o import import.cc -lvoro++
+
+mthread: mthread.cc
+	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o mthread mthread.cc -lvoro++
 
 convex_test: convex_test.cc
 	$(CXX) $(CFLAGS) $(E_INC) $(E_LIB) -o convex_test convex_test.cc -lvoro++
