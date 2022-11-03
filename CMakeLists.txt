@@ -63,7 +63,7 @@ if (${VORO_BUILD_EXAMPLES})
 	endforeach(SOURCE)
 endif()
 
-file(GLOB_RECURSE VORO_HEADERS src/voro++.hh)
+file(GLOB_RECURSE VORO_HEADERS src/*.hh)
 install(FILES ${VORO_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/man/voro++.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 # no external deps for we can use target file as config file
