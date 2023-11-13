@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 project(voro++ VERSION 0.4.6 LANGUAGES CXX)
 set(SOVERSION "0")
 
+set(CMAKE_CXX_STANDARD 11)
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CXX_FLAGS)
   #release comes with -O3 by default
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
@@ -19,14 +21,23 @@ include(GNUInstallDirs)
 ########################################################################
 find_package(Doxygen)
 
+find_package(OpenMP)
+if (OPENMP_FOUND)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
+
 ######################################
 # Include the following subdirectory # 
 ######################################
 
 file(GLOB VORO_SOURCES src/*.cc)
-file(GLOB NOT_VORO_SOURCES src/v_base_wl.cc src/cmd_line.cc src/voro++.cc)
+file(GLOB NOT_VORO_SOURCES src/v_base_wl.cc src/cmd_line.cc src/voro++.cc src/v_base_wl_2d.cc src/v_base_wl_3d.cc)
 list(REMOVE_ITEM VORO_SOURCES ${NOT_VORO_SOURCES})
 add_library(voro++ ${VORO_SOURCES})
+# target_compile_options(voro++ PRIVATE -w)
+target_link_libraries(voro++ PRIVATE "${OpenMP_CXX_FLAGS}")
 set_target_properties(voro++ PROPERTIES 
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src"
   SOVERSION ${SOVERSION})
@@ -41,12 +52,16 @@ set_target_properties(cmd_line PROPERTIES OUTPUT_NAME voro++
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src") 
 install(TARGETS cmd_line RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-file(GLOB EXAMPLE_SOURCES examples/*/*.cc) 
+file(GLOB EXAMPLE_SOURCES examples/*/*.cc)
+file(GLOB NOT_EXAMPLE examples/no_release/*.cc)
+list(REMOVE_ITEM EXAMPLE_SOURCES ${NOT_EXAMPLE})
+
 foreach(SOURCE ${EXAMPLE_SOURCES})
   string(REGEX REPLACE "^.*/([^/]*)\\.cc$" "\\1" PROGNAME "${SOURCE}")
   if (NOT PROGNAME STREQUAL ellipsoid) #ellipsoid is broken
     string(REGEX REPLACE "^.*/(examples/.*)/${PROGNAME}\\.cc$" "\\1" DIRNAME "${SOURCE}")
     add_executable(${PROGNAME} ${SOURCE})
+    # target_compile_options(${PROGNAME} PRIVATE -w)
     target_link_libraries(${PROGNAME} PRIVATE voro++)
     set_target_properties(${PROGNAME} PROPERTIES 
       RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${DIRNAME}" )
