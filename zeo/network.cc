@@ -114,7 +114,7 @@ int main(int argc,char **argv) {
 	if(radial) {
 
 		// Create a container with the geometry given above
-		container_periodic_poly con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
+		container_triclinic_poly con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
 
 		// Read in the particles from the file
 		for(i=0;i<n;i++) {
@@ -129,7 +129,7 @@ int main(int argc,char **argv) {
 	} else {
 
 		// Create a container with the geometry given above
-		container_periodic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
+		container_triclinic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,memory);
 
 		// Read in the particles from the file
 		for(i=0;i<n;i++) {
@@ -147,25 +147,27 @@ int main(int argc,char **argv) {
 
 inline void extension(const char *ext,char *bu) {
 	char *ep((char*) ext);
-	while(*ep!=0) *(bu++)=*(ep++);*bu=*ep;
+	while(*ep!=0) *(bu++)=*(ep++);
+    *bu=*ep;
 }
 
 template<class c_class>
 void compute(c_class &con,char *buffer,int bp,double vol) {
-	char *bu(buffer+bp-2);
-	int id;
-	double vvol(0),x,y,z,r;
-	voronoicell c(con);
+	char *bu=buffer+bp-2;
+	double vvol=0;
+	voronoicell_3d c(con);
 	voronoi_network vn(con,1e-5),vn2(con,1e-5);
 
 	// Compute Voronoi cells and
-	c_loop_all_periodic vl(con);
-	if(vl.start()) do if(con.compute_cell(c,vl)) {
+    container_triclinic_base::iterator cli;
+    double **conp=con.p;int **conid=con.id;
+    for(cli=con.begin();cli<con.end();cli++) if(con.compute_cell(c,cli)) {
 		vvol+=c.volume();
-		vl.pos(id,x,y,z,r);
+        int ijk=cli->ijk,q=cli->q,id=conid[ijk][q];
+        double *pp=conp[ijk]+con.ps*q,x=*pp,y=pp[1],z=pp[2],r=con.ps==4?pp[3]:0.5;
 		vn.add_to_network(c,id,x,y,z,r);
 		vn2.add_to_network_rectangular(c,id,x,y,z,r);
-	} while(vl.inc());
+	}
 
 	// Carry out the volume check
 	printf("Volume check:\n  Total domain volume  = %f\n"

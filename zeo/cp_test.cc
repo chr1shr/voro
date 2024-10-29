@@ -1,6 +1,6 @@
 // Parallelepiped calculation example code
 //
-// Author   : Chris H. Rycroft (LBL / UC Berkeley)
+// Author   : Chris H. Rycroft (UW-Madison / LBL)
 // Email    : chr@alum.mit.edu
 // Date     : August 30th 2011
 
@@ -26,7 +26,7 @@ int main() {
 	double x,y,z;
 
 	// Create a parallelepiped with  
-	container_periodic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,8);
+	container_triclinic con(bx,bxy,by,bxz,byz,bz,nx,ny,nz,8);
 
 	// Randomly add particles into the container
 	for(i=0;i<particles;i++) {

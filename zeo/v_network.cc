@@ -529,9 +529,9 @@ inline int voronoi_network::step_div(int a,int b) {
 }
 
 // Explicit instantiation
-template voronoi_network::voronoi_network(container_periodic&, double);
-template voronoi_network::voronoi_network(container_periodic_poly&, double);
-template void voronoi_network::add_to_network<voronoicell>(voronoicell&, int, double, double, double, double);
-template void voronoi_network::add_to_network<voronoicell_neighbor>(voronoicell_neighbor&, int, double, double, double, double);
-template void voronoi_network::add_to_network_rectangular<voronoicell>(voronoicell&, int, double, double, double, double);
-template void voronoi_network::add_to_network_rectangular<voronoicell_neighbor>(voronoicell_neighbor&, int, double, double, double, double);
+template voronoi_network::voronoi_network(container_triclinic&, double);
+template voronoi_network::voronoi_network(container_triclinic_poly&, double);
+template void voronoi_network::add_to_network<voronoicell_3d>(voronoicell_3d&, int, double, double, double, double);
+template void voronoi_network::add_to_network<voronoicell_neighbor_3d>(voronoicell_neighbor_3d&, int, double, double, double, double);
+template void voronoi_network::add_to_network_rectangular<voronoicell_3d>(voronoicell_3d&, int, double, double, double, double);
+template void voronoi_network::add_to_network_rectangular<voronoicell_neighbor_3d>(voronoicell_neighbor_3d&, int, double, double, double, double);
