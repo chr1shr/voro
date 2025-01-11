@@ -1,6 +1,5 @@
-Voro++, a 3D cell-based Voronoi library (http://math.lbl.gov/voro++/)
-By Chris H. Rycroft and the Rycroft Group
-================================================================
+# Voro++, a 3D cell-based Voronoi library (http://math.lbl.gov/voro++/)
+## By Chris H. Rycroft and the Rycroft Group
 Voro++ is a software library for performing computations of the Voronoi
 tessellation in two and three dimensions. A distinguishing feature of the
 Voro++ library is that it performs cell-based calculations, computing the
@@ -16,84 +15,82 @@ files of particle configurations and use most of the features of the code.
 Numerous examples are provided to demonstrate the library's features and all of
 these are discussed in detail on the library website.
 
-
-Compilation - Linux / Mac OS / Windows with Cygwin
-==================================================
+## Compilation - Linux / Mac OS / Windows with Cygwin
+=====================================================
 The code is written in ANSI C++, and compiles on many system architectures. The
 package contains the C++ source code, example files, miscellaneous utilities
-and documentation. On Linux, Mac OS, and Windows (using Cygwin), the
-compilation and installed can be carried out using GNU Make.
+and documentation. On Linux, Mac OS, and Windows (using the
+[WSL](https://learn.microsoft.com/en-us/windows/wsl/install)), the compilation
+and installed can be carried out using GNU Make.
 
-To begin, the user should review the file "config.mk" in the top level
-directory, to make sure that the compilation and installation settings are
-appropriate for their system. Typing "make" will then compile the static
-library, command-line utility, and examples. The command-line utility and
-library will appear within the "src" directory.
+To begin, the user should make a local copy of the configuration file using
+the following terminal command from within the top-level directory:
+```
+cp config.mk.template config.mk
+```
+The user should then check this file to make sure that the compilation and
+installation settings are appropriate for their system. In particular
+the `-fopenmp` flag can be switched on or off to enable or disable multithreading
+support via the OpenMP library.
+
+After this, typing `make` will then compile the static library, command-line
+utility, and examples. The command-line utility and library will appear within
+the **src** directory.
 
 Following successful compilation, the library, command-line utility, and
-documentation can be installed by typing "sudo make install". By default, the
-program files are installed into /usr/local, and it may be necessary to modify
-your environment variables in order to access the installed files:
+documentation can be installed by typing `sudo make install`. By default, the
+program files are installed into **/usr/local**, and it may be necessary to
+modify your environment variables in order to access the installed files:
 
-- to use the command-line utility, the variable PATH should contain
-  /usr/local/bin.
-- to access the Voro++ man page, the variable MANPATH should contain
-  /usr/local/man.
+- to use the command-line utility, the variable `PATH` should contain
+  **/usr/local/bin**.
+- to access the Voro++ man page, the variable `MANPATH` should contain
+  **/usr/local/man**.
 - to access the Voro++ header files, code compilation should include
-  the flag '-I/usr/local/include/voro++'.
+  the flag `-I/usr/local/include/voro++`.
 - to link to the static library, code compilation should include the
-  flags '-L/usr/local/lib' to tell the linker where to look, and then
-  '-lvoro++' to link to the library.
+  flags `-L/usr/local/lib` to tell the linker where to look, and then
+  `-lvoro++` to link to the library.
 
 The library website contains additional notes on setting environment variables,
 and many guides are available on the Internet.
 
-The code can later be uninstalled with "sudo make uninstall". It is also
+The code can later be uninstalled with `sudo make uninstall`. It is also
 possible to use the library and command-line utility without installation by
 calling the files directly once they have been compiled. On systems where the
-user does not have root privileges to install into /usr/local, the "config.mk"
-file can be modified to install into the user's home directory by setting
-PREFIX=$(HOME). Voro++ supports parallel compilation by using the "make -j <n>"
-command where n is the number of threads.
+user does not have root privileges to install into **/usr/local**, the
+**config.mk** file can be modified to install into the user's home directory by
+setting `PREFIX=$(HOME)`. Voro++ supports parallel compilation by using the
+`make -j <n>` command where `n` is the number of threads.
 
-
-Compilation - Windows without Cygwin
-====================================
-On a Windows machine without a terminal environment like Cygwin, it is possible
-to import and compile the library in many standard C++ development
+## Compilation - Windows without WSL
+On a Windows machine without a terminal environment like the WSL, it is
+possible to import and compile the library in many standard C++ development
 environments. Users have reported success in building the library with
 Microsoft Visual C++ Express and Code::Blocks.
 
-
-Related programs
-================
+## Related programs
 No external dependencies are required to compile and run the code, but several
 programs may be useful for analyzing the output:
 
-- The freeware plotting program Gnuplot (available at www.gnuplot.info) can be
+- The freeware plotting program [Gnuplot](http://gnuplot.info) can be
   used for rapid 2D and 3D visualization of the program output.
-
-- The freeware raytracer POV-Ray (available at www.povray.org) can be used for
+- The freeware raytracer [POV-Ray](https://www.povray.org) can be used for
   high-quality renderings of the program output.
-
 - The reference manual is generated from comments in the source code using
-  Doxygen (available at www.doxygen.org). This package is only required if the
+  [Doxygen](https://www.doxygen.nl). This package is only required if the
   library files are being developed and the reference manuals need to be
-  regenerated. The complete reference manual to the current code is available
-  online at http://math.lbl.gov/voro++/doc/refman/
+  regenerated. The complete reference manual to the current code is
+  [available online](https://math.lbl.gov/voro++/doc/refman/)
 
+## Contents
+- **examples** - many documented examples making use of the library
+- **html** - an HTML-based reference manual (generated by Doxygen)
+- **man** - contains the man page that is installed with the program
+- **scripts** - miscellaneous helper scripts
+- **src** - source code files
 
-Contents
-========
-examples - many documented examples making use of the library
-html - an HTML-based reference manual (generated by Doxygen)
-man - contains the man page that is installed with the program
-scripts - miscellaneous helper scripts
-src - source code files
-
-
-Usage
-=====
+## Usage
 Voro++ is released as free software through the Lawrence Berkeley National
 Laboratory - a detailed copyright notice is provided below, and the complete
 terms of the license can be found in the LICENSE file.
@@ -103,28 +100,30 @@ useful, please email me at chr@alum.mit.edu. Also, if you plan to publish an
 academic paper using this software, please consider citing one of the following
 publications:
 
-- Chris H. Rycroft, "Voro++: A three-dimensional Voronoi cell library in C++",
-  Chaos 19, 041111 (2009).
-
-- Chris H. Rycroft, Gary S. Grest, James W. Landry, and Martin Z. Bazant,
-  "Analysis of Granular Flow in a Pebble-Bed Nuclear Reactor",
-  Phys. Rev. E 74, 021306 (2006).
-
-- Chris H. Rycroft, "Multiscale Modeling in Granular Flow", PhD thesis
-  submitted to the Massachusetts Institute of Technology, September 2007.
-  (http://seas.harvard.edu/~chr/publish/phd.html)
+1. Chris H. Rycroft, *Voro++: A three-dimensional Voronoi cell library in C++*,
+   Chaos **19**, 041111 (2009).
+   [doi:10.1063/1.3215722](https://doi.org/10.1063/1.3215722)
+2. Chris H. Rycroft, Gary S. Grest, James W. Landry, and Martin Z. Bazant,
+   *Analysis of Granular Flow in a Pebble-Bed Nuclear Reactor*,
+   Phys. Rev. E **74**, 021306 (2006).
+   [doi:10.1103/PhysRevE.74.021306](https://doi.org/10.1103/PhysRevE.74.021306)
+3. Jiayin Lu, Emanuel Lazar, and Chris H. Rycroft, *An extension to Voro++ for
+   multithreaded computation of Voronoi cells*, Comput. Phys. Commun. **291**,
+   108832 (2023).
+   [doi:10.1016/j.cpc.2023.108832](https://doi.org/10.1016/j.cpc.2023.108832)
+3. Chris H. Rycroft, *Multiscale Modeling in Granular Flow*, PhD thesis
+   submitted to the Massachusetts Institute of Technology, September 2007.
+   [[complete text]](https://people.math.wisc.edu/~chr/publish/phd.html)
 
 The first reference contains a one-page overview of the library. The second
 reference contains some of the initial images that were made using an early
 version of this code, to track small changes in packing fraction in a large
-particle simulation. The third reference discusses the use of 3D Voronoi
-cells, and describes the algorithms that were employed in the early version of
-this code. Since the publication of the above references, the algorithms in
-Voro++ have been significantly improved.
+particle simulation. The third reference contains detailed information about
+the multithreaded extension to the library. The fourth reference discusses the
+use of 3D Voronoi cells, and describes the algorithms that were employed in the
+early version of this code.
 
-
-Copyright Notice
-================
+## Copyright Notice
 Voro++ Copyright (c) 2008, The Regents of the University of California, through
 Lawrence Berkeley National Laboratory (subject to receipt of any required
 approvals from the U.S. Dept. of Energy). All rights reserved.
@@ -144,9 +143,7 @@ irrevocable, worldwide license in the Software to reproduce, prepare derivative
 works, distribute copies to the public, perform publicly and display publicly,
 and to permit others to do so.
 
-
-Acknowledgments
-===============
+## Acknowledgments
 This research was supported by a grant from the United States--Israel
 Binational Science Foundation (BSF), Jerusalem, Israel through grant number
 2018/170. C. H. Rycroft was supported by the Applied Mathematics Program of
