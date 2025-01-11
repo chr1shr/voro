@@ -37,6 +37,7 @@ class voronoicell_base_2d {
          * the vertices. */
         double *pts;
         voronoicell_base_2d(double max_len_sq);
+        voronoicell_base_2d(voronoicell_base_2d *cp);
         ~voronoicell_base_2d();
         void init_base(double xmin,double xmax,double ymin,double ymax);
         void draw_gnuplot(double x,double y,FILE *fp=stdout);
@@ -126,6 +127,8 @@ class voronoicell_2d : public voronoicell_base_2d {
         using voronoicell_base_2d::nplane;
         voronoicell_2d() : voronoicell_base_2d(default_length*default_length) {}
         voronoicell_2d(double max_len_sq_) : voronoicell_base_2d(max_len_sq_) {}
+        voronoicell_2d(voronoicell_2d &c_) :
+            voronoicell_base_2d((voronoicell_base_2d*) &c_) {}
         template<class c_class>
         voronoicell_2d(c_class &con) : voronoicell_base_2d(con.max_len_sq) {}
         inline bool nplane(double x,double y,double rs,int p_id) {
@@ -161,10 +164,10 @@ class voronoicell_neighbor_2d : public voronoicell_base_2d {
         voronoicell_neighbor_2d(double max_len_sq_) :
             voronoicell_base_2d(max_len_sq_),
             ne(new int[init_vertices]) {}
+        voronoicell_neighbor_2d(voronoicell_neighbor_2d &c_);
         template<class c_class>
         voronoicell_neighbor_2d(c_class &con) :
-            voronoicell_base_2d(con.max_len_sq),
-            ne(new int[init_vertices]) {}
+            voronoicell_base_2d(con.max_len_sq), ne(new int[init_vertices]) {}
         int *ne;
         ~voronoicell_neighbor_2d() {delete [] ne;}
         inline bool nplane(double x,double y,double rs,int p_id) {

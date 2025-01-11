@@ -7,8 +7,8 @@
 # C++ compiler
 CXX=g++
 
-# Flags for the C++ compiler
-CFLAGS+=-Wall -ansi -pedantic -O3
+# Flags for the C++ compiler. The "-fopenmp" flag enables OpenMP support.
+CFLAGS+=-Wall -ansi -pedantic -O3 -fopenmp
 
 # Relative include and library paths for compilation of the examples
 E_INC=-I../../src

@@ -5,30 +5,30 @@ using namespace voro;
 double rnd() {return double(rand())/RAND_MAX;}
 
 int main() {
-	int i;double x,y;
+    int i;double x,y;
 
-	// Initialize the container class to be the unit square, with
-	// non-periodic boundary conditions. Divide it into a 10 by 10 grid,
-	// with an initial memory allocation of 16 particles per grid square.
-	container_2d con(0.1,1.3,0.05,0.8,10,10,false,false,16);
-	srand(423);
-    con.import("par");
-	// Add 1000 random points to the container
-/*	for(i=0;i<8;i++) {
-		x=0.15+1.2*rnd();
-		y=0.15+0.7*rnd();
-		con.put(i,x,y);
-	}*/
+    // Initialize the container class to be the unit square, with
+    // non-periodic boundary conditions. Divide it into a 10 by 10 grid,
+    // with an initial memory allocation of 16 particles per grid square.
+    container_2d con(0,1,0,1,10,10,false,false,16);
 
-	// Output the particle positions to a file
-	con.draw_particles("random_points_2d.par");
 
-	// Output the Voronoi cells to a file, in the gnuplot format
-	con.draw_cells_gnuplot("random_points_2d.gnu");
-	
-	// Sum the Voronoi cell areas and compare to the container area
-	double carea=1,varea=con.sum_cell_areas();
-	printf("Total container area    : %g\n"
-	       "Total Voronoi cell area : %g\n"
-	       "Difference              : %g\n",carea,varea,varea-carea);
+    // Add 1000 random points to the container
+    for(i=0;i<80;i++) {
+        x=0.15+1.2*rnd();
+        y=0.15+0.7*rnd();
+        con.put(i,x,y);
+    }
+
+    // Output the particle positions to a file
+    con.draw_particles("random_points_2d.par");
+
+    // Output the Voronoi cells to a file, in the gnuplot format
+    con.draw_cells_gnuplot("random_points_2d.gnu");
+
+    // Sum the Voronoi cell areas and compare to the container area
+    double carea=1,varea=con.sum_cell_areas();
+    printf("Total container area    : %g\n"
+           "Total Voronoi cell area : %g\n"
+           "Difference              : %g\n",carea,varea,varea-carea);
 }

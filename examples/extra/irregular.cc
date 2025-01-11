@@ -5,9 +5,9 @@
 using namespace voro;
 
 // Set up constants for the container geometry
-const double x_min=-6,x_max=6;
-const double y_min=-6,y_max=6;
-const double z_min=-3,z_max=9;
+const double x_min=-4,x_max=4;
+const double y_min=-4,y_max=4;
+const double z_min=-3,z_max=5;
 
 // Golden ratio constants
 const double Phi=0.5*(1+sqrt(5.0));
@@ -54,14 +54,17 @@ int main() {
     container_3d con(x_min,x_max,y_min,y_max,z_min,z_max,n_x,n_y,n_z,
                      false,false,false,8);
 
-    // Create the "initial shape" wall class and add it to the container
-    wall_initial_shape wis;
-    con.add_wall(wis);
-
     // Import the irregular particle packing
     con.import("pack_irregular");
 
     // Save the particles and Voronoi cells in POV-Ray format
     con.draw_particles_pov("irregular_p.pov");
-    con.draw_cells_pov("irregular_v.pov");
+    con.draw_cells_pov("irregular_v1.pov");
+    con.print_custom("%i %q %n","irregular1.nei");
+
+    // Create the "initial shape" wall class and add it to the container
+    wall_initial_shape wis;
+    con.add_wall(wis);
+    con.draw_cells_pov("irregular_v2.pov");
+    con.print_custom("%i %q %n","irregular2.nei");
 }

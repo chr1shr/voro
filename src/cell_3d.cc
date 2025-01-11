@@ -13,7 +13,9 @@
 
 namespace voro {
 
-/** Constructs a Voronoi cell and sets up the initial memory. */
+/** Constructs a 3D Voronoi cell and sets up the initial memory.
+ * \param[in] max_len_sq a maximum square length scale to set the internal
+ *                   tolerance for floating point vertex calculations. */
 voronoicell_base_3d::voronoicell_base_3d(double max_len_sq) :
     current_vertices(init_vertices), current_vertex_order(init_vertex_order),
     current_delete_size(init_delete_size), current_delete2_size(init_delete2_size),

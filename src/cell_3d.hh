@@ -93,7 +93,7 @@ class voronoicell_base_3d {
         /** A tolerance (specified as a squared length) used to determine when
          * the cell cannot possibly intersect a cutting plane. */
         const double big_tol;
-        voronoicell_base_3d(double max_len_sq);
+        voronoicell_base_3d(double len_sq);
         ~voronoicell_base_3d();
         void init_base(double xmin,double xmax,double ymin,double ymax,double zmin,double zmax);
         void init_octahedron_base(double l);
@@ -142,10 +142,10 @@ class voronoicell_base_3d {
         void output_vertex_orders(FILE *fp=stdout);
         void vertices(std::vector<double> &v);
         void output_vertices(FILE *fp=stdout);
-        void output_vertices(int pr,FILE *fp=stdout) {}; //*****************
+        void output_vertices(int pr,FILE *fp=stdout) {};
         void vertices(double x,double y,double z,std::vector<double> &v);
         void output_vertices(double x,double y,double z,FILE *fp=stdout);
-        void output_vertices(int pr,double x,double y,double z,FILE *fp=stdout) {}; //**********
+        void output_vertices(int pr,double x,double y,double z,FILE *fp=stdout) {};
         void face_areas(std::vector<double> &v);
         /** Outputs the areas of the faces.
          * \param[in] fp the file handle to write to. */

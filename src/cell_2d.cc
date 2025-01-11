@@ -11,12 +11,27 @@
 
 namespace voro {
 
-/** Constructs a 2D Voronoi cell and sets up the initial memory. */
+/** Constructs a 2D Voronoi cell and sets up the initial memory.
+ * \param[in] max_len_sq a maximum square length scale to set the internal
+ *                   tolerance for floating point vertex calculations. */
 voronoicell_base_2d::voronoicell_base_2d(double max_len_sq) :
     current_vertices(init_vertices), current_delete_size(init_delete_size),
     tol(tolerance*max_len_sq), ed(new int[2*current_vertices]),
     pts(new double[2*current_vertices]), ds(new int[current_delete_size]),
     stacke(ds+current_delete_size) {}
+
+/** Constructs a 2D Voronoi cell by copying the constants from another.
+ * \param[in] c a pointer to the Voronoi cell information to copy. */
+voronoicell_base_2d::voronoicell_base_2d(voronoicell_base_2d *cp) :
+    current_vertices(cp->current_vertices),
+    current_delete_size(init_delete_size), p(cp->p), tol(cp->tol),
+    ed(new int[2*current_vertices]), pts(new double[2*current_vertices]),
+    ds(new int[current_delete_size]), stacke(ds+current_delete_size) {
+
+    // Copy the vertex information across
+    memcpy(ed,cp->ed,2*sizeof(int)*p);
+    memcpy(pts,cp->pts,2*sizeof(double)*p);
+}
 
 /** The voronoicell_2d destructor deallocates all of the dynamic memory. */
 voronoicell_base_2d::~voronoicell_base_2d() {
@@ -544,6 +559,13 @@ void voronoicell_base_2d::add_memory_vertices(vc_class &vc) {
 
     // Double the neighbor information if necessary
     vc.n_add_memory_vertices(ocv);
+}
+
+/** Constructs the 2D Voronoi cell by copying the information from an existing one.
+ * \param[in] c_ a reference to the class to copy from. */
+voronoicell_neighbor_2d::voronoicell_neighbor_2d(voronoicell_neighbor_2d &c_) :
+	voronoicell_base_2d((voronoicell_base_2d*) &c_), ne(new int[current_vertices]) {
+    memcpy(ne,c_.ne,sizeof(int)*p);
 }
 
 inline void voronoicell_neighbor_2d::n_add_memory_vertices(int ocv) {
