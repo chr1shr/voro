@@ -412,7 +412,7 @@ void voronoicell_base_2d::centroid(double &cx,double &cy) {
         dx1=dx2;dy1=dy2;
         k=ed[2*k];
     }
-    if(tarea>tol) {
+    if(fabs(tarea)>tol) {
         tarea=third/tarea;
         cx=0.5*(x+cx*tarea);
         cy=0.5*(y+cy*tarea);
