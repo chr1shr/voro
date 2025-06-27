@@ -102,6 +102,7 @@ class voronoicell_base_2d {
         void normals(std::vector<double> &vd);
         void centroid(double &cx,double &cy);
         virtual void neighbors(std::vector<int> &v) {v.clear();}
+        virtual void neighbors_sorted(std::vector<int> &v) {v.clear();}
     protected:
         /** Computes the distance of a Voronoi cell vertex to a plane.
          * \param[in] (x,y) the normal vector to the plane.
@@ -186,6 +187,7 @@ class voronoicell_neighbor_2d : public voronoicell_base_2d {
         }
         void init(double xmin,double xmax,double ymin,double ymax);
         virtual void neighbors(std::vector<int> &v);
+        virtual void neighbors_sorted(std::vector<int> &v);
     private:
         inline void n_add_memory_vertices(int ocv);
         inline void n_copy(int a,int b) {ne[a]=ne[b];}

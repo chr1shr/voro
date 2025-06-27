@@ -579,6 +579,16 @@ void voronoicell_neighbor_2d::neighbors(std::vector<int> &v) {
     for(int i=0;i<p;i++) v[i]=ne[i];
 }
 
+void voronoicell_neighbor_2d::neighbors_sorted(std::vector<int> &v) {
+    v.resize(p);
+    if(p==0) return;
+    int k=0,i=0;
+    do {
+        v[i++]=ne[k];
+        k=ed[2*k];
+    } while (k!=0);
+}
+
 void voronoicell_neighbor_2d::init(double xmin,double xmax,double ymin,double ymax) {
     init_base(xmin,xmax,ymin,ymax);
     *ne=-3;ne[1]=-2;ne[2]=-4;ne[3]=-1;
