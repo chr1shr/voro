@@ -200,7 +200,7 @@ class container_base_3d : public voro_base_3d, public wall_list_3d {
             double *pp=p[cli->ijk]+ps*cli->q;
             x=*pp;y=pp[1];z=pp[2];
         }
-        /** Returns the IDrof the particle currently pointed at by an
+        /** Returns the ID of the particle currently pointed at by an
          * iterator.
          * \param[in] c_iter_3d cli a reference to the iterator class.
          * \return The particle ID. */

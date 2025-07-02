@@ -185,6 +185,22 @@ class container_base_2d : public voro_base_2d, public wall_list_2d {
             for(int *cop=co+1;cop<co+nxy;cop++) tp+=*cop;
             return tp;
         }
+        /** Gets the position of the particle currently pointed at by an
+         * iterator.
+         * \param[in] c_iter_2d cli a reference to the iterator class.
+         * \param[out] (x,y) the particle position vector. */
+        template<class c_iter_2d>
+        inline void pos(c_iter_2d &cli,double &x,double &y) {
+            double *pp=p[cli->ijk]+ps*cli->q;
+            x=*pp;y=pp[1];
+        }
+        /** Returns the ID of the particle currently pointed at by an iterator.
+         * \param[in] c_iter_2d cli a reference to the iterator class.
+         * \return The particle ID. */
+        template<class c_iter_2d>
+        inline int pid(c_iter_2d &cli) {
+            return id[cli->ijk][cli->q];
+        }
         friend class iterator;
         class iterator;
         iterator begin();
