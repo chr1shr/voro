@@ -106,7 +106,7 @@ void container_poly::put(int n,double x,double y,double z,double r) {
 		id[ijk][co[ijk]]=n;
 		double *pp=p[ijk]+4*co[ijk]++;
 		*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-		if(max_radius<r) max_radius=r;
+		if(max_radius<r) max_radius=nextafter(r,std::numeric_limits<double>::infinity());
 	}
 }
 
@@ -138,7 +138,7 @@ void container_poly::put(particle_order &vo,int n,double x,double y,double z,dou
 		vo.add(ijk,co[ijk]);
 		double *pp=p[ijk]+4*co[ijk]++;
 		*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-		if(max_radius<r) max_radius=r;
+		if(max_radius<r) max_radius=nextafter(r,std::numeric_limits<double>::infinity());
 	}
 }
 

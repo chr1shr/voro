@@ -637,7 +637,7 @@ class container_periodic_poly : public container_periodic_base, public radius_po
 			put_locate_block(ijk,x,y,z);
 			double *pp=p[ijk]+4*co[ijk]++,tm=max_radius;
 			*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-			if(r>max_radius) max_radius=r;
+			if(r>max_radius) max_radius=nextafter(r,std::numeric_limits<double>::infinity());
 			bool q=compute_cell(c,ijk,co[ijk]-1);
 			co[ijk]--;max_radius=tm;
 			return q;

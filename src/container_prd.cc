@@ -111,7 +111,7 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r) {
 	id[ijk][co[ijk]]=n;
 	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-	if(max_radius<r) max_radius=r;
+	if(max_radius<r) max_radius=nextafter(r,std::numeric_limits<double>::infinity());
 }
 
 /** Put a particle into the correct region of the container.
@@ -144,7 +144,7 @@ void container_periodic_poly::put(int n,double x,double y,double z,double r,int 
 	id[ijk][co[ijk]]=n;
 	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-	if(max_radius<r) max_radius=r;
+	if(max_radius<r) max_radius=nextafter(r,std::numeric_limits<double>::infinity());
 }
 
 /** Put a particle into the correct region of the container, also recording
@@ -174,7 +174,7 @@ void container_periodic_poly::put(particle_order &vo,int n,double x,double y,dou
 	vo.add(ijk,co[ijk]);
 	double *pp=p[ijk]+4*co[ijk]++;
 	*(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-	if(max_radius<r) max_radius=r;
+	if(max_radius<r) max_radius=nextafter(r,std::numeric_limits<double>::infinity());
 }
 
 /** Takes a particle position vector and computes the region index into which
