@@ -286,7 +286,9 @@ void container_poly_3d::put(int n,double x,double y,double z,double r) {
         id[ijk][co[ijk]]=n;
         double *pp=p[ijk]+4*co[ijk]++;
         *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-        if(max_radius<r) max_radius=r;
+        // Store a slightly inflated maximum radius to avoid borderline
+        // floating-point pruning decisions in radical (power diagram) mode.
+        if(r>=max_radius) max_radius=nextafter(r,HUGE_VAL);
     }
 }
 
@@ -351,7 +353,8 @@ void container_poly_3d::put_reconcile_overflow() {
 
     // Compute the global maximum radius using the per-thread values
     for(int i=0;i<nt;i++) {
-        if(max_radius<max_r[i]) max_radius=max_r[i];
+        // Merge per-thread maxima and keep max_radius slightly inflated (see comment above).
+        if(max_r[i]>=max_radius) max_radius=nextafter(max_r[i],HUGE_VAL);
         max_r[i]=0.;
     }
 
@@ -403,7 +406,9 @@ void container_poly_3d::put(particle_order &vo,int n,double x,double y,double z,
         vo.add(ijk,co[ijk]);
         double *pp=p[ijk]+4*co[ijk]++;
         *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-        if(max_radius<r) max_radius=r;
+        // Store a slightly inflated maximum radius to avoid borderline
+        // floating-point pruning decisions in radical (power diagram) mode.
+        if(r>=max_radius) max_radius=nextafter(r,HUGE_VAL);
     }
 }
 

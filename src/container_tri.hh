@@ -532,7 +532,9 @@ class container_triclinic_poly : public container_triclinic_base, public radius_
             put_locate_block(ijk,x,y,z);
             double *pp=p[ijk]+4*co[ijk]++,tm=max_radius;
             *(pp++)=x;*(pp++)=y;*(pp++)=z;*pp=r;
-            if(r>max_radius) max_radius=r;
+            // Store a slightly inflated maximum radius to avoid borderline
+            // floating-point pruning decisions in radical (power diagram) mode.
+            if(r>=max_radius) max_radius=nextafter(r,HUGE_VAL);
             bool q=compute_cell(c,ijk,co[ijk]-1);
             co[ijk]--;max_radius=tm;
             return q;
