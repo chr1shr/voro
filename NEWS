@@ -16,6 +16,9 @@ Version 0.5 (...)
 * Fixed typo and length scale issue in torus.cc example. Thanks to Eric Lluch
   for pointing this out.
 * Incorporated Roger Wesson's fix to cmd_line.cc and the man page
+* Fixed bug identified by Ivan Chernyshov in the radical Voronoi tesselation,
+  due to numerical roundoff errors causing r_mul in rad_option.cc to be
+  positive, which caused subsequent bounds checks to give wrong results.
 * Cleaned up comments
 * Updated Doxyfile to 1.8.9.1
 
