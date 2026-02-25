@@ -107,7 +107,7 @@ void voro_compute_3d<c_class>::find_voronoi_cell(double x,double y,double z,int 
     } else mzs=fz;
 
     // Do a quick test to account for the case when the minimum radius is small
-    // enought that no other blocks need to be considered
+    // enough that no other blocks need to be considered
     rs=con.r_max_add(mrs);
     if(mxs*mxs>rs&&mys*mys>rs&&mzs*mzs>rs) return;
 
