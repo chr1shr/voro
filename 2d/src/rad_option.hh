@@ -94,8 +94,9 @@ class radius_poly {
 		 * \param[in] ijk the block that the particle is within.
 		 * \param[in] s the index of the particle within the block. */
 		inline void r_init(int ijk,int s) {
-			r_rad=ppr[ijk][3*s+2]*ppr[ijk][3*s+2];
-			r_mul=r_rad-max_radius*max_radius;
+			double &r=ppr[ijk][3*s+2];
+			r_rad=r*r;
+			r_mul=(r-max_radius)*(r+max_radius);
 		}
 		/** Sets a required constant to be used when carrying out a
 		 * plane bounds check. */
@@ -106,7 +107,10 @@ class radius_poly {
 		 *                vertex multiplied by two.
 		 * \return True if particles at this radius could not possibly
 		 * cut the cell, false otherwise. */
-		inline bool r_ctest(double crs,double mrs) {return crs+r_mul>sqrt(mrs*crs);}
+		inline bool r_ctest(double crs,double mrs) {
+			double cc=crs+r_mul;
+			return cc>0&&cc*cc>mrs*crs;
+		}
 		/** Scales a plane displacement during a plane bounds check.
 		 * \param[in] lrs the plane displacement.
 		 * \return The scaled value. */
@@ -146,8 +150,8 @@ class radius_poly {
 		inline bool r_scale_check(double &rs,double mrs,int ijk,int q) {
 			double trs=rs;
 			rs+=r_rad-ppr[ijk][3*q+2]*ppr[ijk][3*q+2];
-			return rs<sqrt(mrs*trs);
-		}
+			return rs<=0||rs*rs<mrs*trs;
+        }
 	private:
 		double r_rad,r_mul,r_val;
 };
