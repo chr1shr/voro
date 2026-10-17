@@ -33,6 +33,10 @@ Version 1.0 (...)
 * Fixed bug identified by Ivan Chernyshov in the radical Voronoi tesselation,
   due to numerical roundoff errors causing r_mul in rad_option.cc to be
   positive, which caused subsequent bounds checks to give wrong results.
+* Particles placed exactly on the upper wall of a non-periodic container (for
+  example x = b_x) are now accepted and placed in the last block, so that the
+  container is the closed interval [a,b]. Previously they were silently
+  dropped.
 * Cleaned up comments
 * Updated Doxyfile to 1.9.3
 
