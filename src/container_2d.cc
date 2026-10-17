@@ -443,13 +443,13 @@ inline bool container_base_2d::put_remap(int &ij,double &x,double &y) {
     // block past the last one, by rounding, so it is put in the last block.
     ij=step_int((x-ax)*xsp);
     if(x_prd) {l=step_mod(ij,nx);x+=boxx*(l-ij);ij=l;}
-    else if(ij>=nx&&x<=bx) ij=nx-1;
-    else if(ij<0||ij>=nx) return false;
+    else if(ij<0) return false;
+    else if(ij>=nx) {if(x<=bx) ij=nx-1;else return false;}
 
     int j=step_int((y-ay)*ysp);
     if(y_prd) {l=step_mod(j,ny);y+=boxy*(l-j);j=l;}
-    else if(j>=ny&&y<=by) j=ny-1;
-    else if(j<0||j>=ny) return false;
+    else if(j<0) return false;
+    else if(j>=ny) {if(y<=by) j=ny-1;else return false;}
 
     ij+=nx*j;
     return true;
