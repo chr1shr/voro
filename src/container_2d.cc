@@ -438,12 +438,17 @@ inline bool container_base_2d::put_locate_block(int &ij,double &x,double &y) {
 inline bool container_base_2d::put_remap(int &ij,double &x,double &y) {
     int l;
 
+    // On a non-periodic axis, the container is the closed interval [a,b]. A
+    // particle on the upper wall, or just below it, can be mapped to the
+    // block past the last one, by rounding, so it is put in the last block.
     ij=step_int((x-ax)*xsp);
     if(x_prd) {l=step_mod(ij,nx);x+=boxx*(l-ij);ij=l;}
+    else if(ij>=nx&&x<=bx) ij=nx-1;
     else if(ij<0||ij>=nx) return false;
 
     int j=step_int((y-ay)*ysp);
     if(y_prd) {l=step_mod(j,ny);y+=boxy*(l-j);j=l;}
+    else if(j>=ny&&y<=by) j=ny-1;
     else if(j<0||j>=ny) return false;
 
     ij+=nx*j;
