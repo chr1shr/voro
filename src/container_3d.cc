@@ -439,16 +439,21 @@ bool container_base_3d::put_locate_block(int &ijk,double &x,double &y,double &z)
 inline bool container_base_3d::put_remap(int &ijk,double &x,double &y,double &z) {
     int l;
 
+    // On a non-periodic axis, the container is the closed interval [a,b], so
+    // a particle exactly on the upper wall is placed in the last block.
     ijk=step_int((x-ax)*xsp);
     if(x_prd) {l=step_mod(ijk,nx);x+=boxx*(l-ijk);ijk=l;}
+    else if(ijk>=nx&&x==bx) ijk=nx-1;
     else if(ijk<0||ijk>=nx) return false;
 
     int j=step_int((y-ay)*ysp);
     if(y_prd) {l=step_mod(j,ny);y+=boxy*(l-j);j=l;}
+    else if(j>=ny&&y==by) j=ny-1;
     else if(j<0||j>=ny) return false;
 
     int k=step_int((z-az)*zsp);
     if(z_prd) {l=step_mod(k,nz);z+=boxz*(l-k);k=l;}
+    else if(k>=nz&&z==bz) k=nz-1;
     else if(k<0||k>=nz) return false;
 
     ijk+=nx*j+nxy*k;

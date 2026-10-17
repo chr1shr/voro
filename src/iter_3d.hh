@@ -19,9 +19,9 @@ class container_base_3d::iterator : public std::iterator<std::random_access_iter
         c_info ptr;
         int* co;
         int nxyz;
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
         iterator() {}
         iterator(int* _co,int _nxyz);
         /** Initializes the iterator.
@@ -158,9 +158,9 @@ class subset_info_3d {
 
 class container_base_3d::iterator_subset : public std::iterator<std::random_access_iterator_tag,c_info,int> {
     public:
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
         c_info ptr;
         subset_info_3d* cl_iter;
         int i,j,k,ci,cj,ck;
@@ -251,9 +251,9 @@ class container_base_3d::iterator_subset : public std::iterator<std::random_acce
 
 class container_base_3d::iterator_order : public std::iterator<std::random_access_iterator_tag,c_info,int> {
     public:
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
-        typedef typename std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::pointer pointer;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::reference reference;
+        typedef std::iterator<std::random_access_iterator_tag,c_info,int>::difference_type difference_type;
         c_info ptr;
         int* cp_iter;
         int* op_iter;
@@ -375,9 +375,9 @@ class container_triclinic_base::iterator : public std::iterator<std::random_acce
         int inc2;
 
         friend class container_triclinic_base;
-        typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::pointer pointer;
-        typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::reference reference;
-        typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::difference_type difference_type;
+        typedef std::iterator<std::random_access_iterator_tag, c_info, int>::pointer pointer;
+        typedef std::iterator<std::random_access_iterator_tag, c_info, int>::reference reference;
+        typedef std::iterator<std::random_access_iterator_tag, c_info, int>::difference_type difference_type;
 
         //default-constructible
         iterator(){};
@@ -455,9 +455,9 @@ public:
     int ptr_n;
 
     friend class container_triclinic_base;
-    typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::pointer pointer;
-    typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::reference reference;
-    typedef typename std::iterator<std::random_access_iterator_tag, c_info, int>::difference_type difference_type;
+    typedef std::iterator<std::random_access_iterator_tag, c_info, int>::pointer pointer;
+    typedef std::iterator<std::random_access_iterator_tag, c_info, int>::reference reference;
+    typedef std::iterator<std::random_access_iterator_tag, c_info, int>::difference_type difference_type;
 
     //default-constructible??
     iterator_order(){};
