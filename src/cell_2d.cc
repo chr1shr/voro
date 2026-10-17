@@ -419,6 +419,49 @@ void voronoicell_base_2d::centroid(double &cx,double &cy) {
     } else cx=cy=0;
 }
 
+/** Computes the second moment of the Voronoi cell about the particle position,
+ * which is the integral of |x-p|^2 over the cell, where p is the particle
+ * position. For a centroidal Voronoi tessellation, this is the energy of the
+ * cell. The cell is divided into triangles that share the particle position as
+ * a vertex, using signed areas, so the result is also correct when the
+ * particle lies outside its cell, which can happen in a radical tessellation.
+ * \return The second moment. */
+double voronoicell_base_2d::second_moment() {
+    double m[3];
+    second_moment(m);
+    return m[0]+m[2];
+}
+
+/** Computes the second moment tensor of the Voronoi cell about the particle
+ * position, which is the integral of (x-p)(x-p)^T over the cell, where p is
+ * the particle position. The method is the same as in second_moment().
+ * \param[out] m an array of three entries, in which the independent
+ *               components are stored in the order xx, xy, yy. */
+void voronoicell_base_2d::second_moment(double *m) {
+    m[0]=m[1]=m[2]=0;
+    if(p==0) return;
+    int k=0;
+    double ax,ay,bx,by,d,sx,sy;
+    do {
+        ax=pts[2*k];ay=pts[2*k+1];
+        k=ed[2*k];
+        bx=pts[2*k];by=pts[2*k+1];
+
+        // Twice the signed area of the triangle with vertices at the particle
+        // and at a and b. The integral of x x^T over the triangle is d/24
+        // times a a^T + b b^T + s s^T, where s=a+b
+        d=ax*by-ay*bx;
+        sx=ax+bx;sy=ay+by;
+        m[0]+=d*(ax*ax+bx*bx+sx*sx);
+        m[1]+=d*(ax*ay+bx*by+sx*sy);
+        m[2]+=d*(ay*ay+by*by+sy*sy);
+    } while(k!=0);
+
+    // The vertex positions are stored at twice their true values, so the
+    // integrals are scaled by 1/16
+    m[0]*=1/384.0;m[1]*=1/384.0;m[2]*=1/384.0;
+}
+
 /** Computes the Voronoi cells for all particles in the container, and for each
  * cell, outputs a line containing custom information about the cell structure.
  * The output format is specified using an input string with control sequences

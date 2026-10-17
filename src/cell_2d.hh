@@ -101,6 +101,8 @@ class voronoicell_base_2d {
         void edge_lengths(std::vector<double> &vd);
         void normals(std::vector<double> &vd);
         void centroid(double &cx,double &cy);
+        double second_moment();
+        void second_moment(double *m);
         virtual void neighbors(std::vector<int> &v) {v.clear();}
         virtual void neighbors_sorted(std::vector<int> &v) {v.clear();}
     protected:

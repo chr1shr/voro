@@ -1661,6 +1661,71 @@ void voronoicell_base_3d::centroid(double &cx,double &cy,double &cz) {
     } else cx=cy=cz=0;
 }
 
+/** Computes the second moment of the Voronoi cell about the particle position,
+ * which is the integral of |x-p|^2 over the cell, where p is the particle
+ * position. For a centroidal Voronoi tessellation, this is the energy of the
+ * cell. The cell is divided into tetrahedra that share the particle position
+ * as a vertex, using signed volumes, so the result is also correct when the
+ * particle lies outside its cell, which can happen in a radical tessellation.
+ * \return The second moment. */
+double voronoicell_base_3d::second_moment() {
+    double m[6];
+    second_moment(m);
+    return m[0]+m[3]+m[5];
+}
+
+/** Computes the second moment tensor of the Voronoi cell about the particle
+ * position, which is the integral of (x-p)(x-p)^T over the cell, where p is
+ * the particle position. The method is the same as in second_moment().
+ * \param[out] m an array of six entries, in which the independent components
+ *               are stored in the order xx, xy, xz, yy, yz, zz. */
+void voronoicell_base_3d::second_moment(double *m) {
+    int i,j,k,l,n,o;
+    double ax,ay,az,bx,by,bz,cx,cy,cz,d,sx,sy,sz;
+    for(i=0;i<6;i++) m[i]=0;
+    for(i=1;i<p;i++) {
+        ax=pts[3*i];ay=pts[3*i+1];az=pts[3*i+2];
+        for(j=0;j<nu[i];j++) {
+            k=ed[i][j];
+            if(k>=0) {
+
+                // Traverse the face that contains this edge, dividing it into
+                // triangles (i,k,o) that share vertex i
+                ed[i][j]=-1-k;
+                l=cycle_up(ed[i][nu[i]+j],k);
+                bx=pts[3*k];by=pts[3*k+1];bz=pts[3*k+2];
+                o=ed[k][l];ed[k][l]=-1-o;
+                while(o!=i) {
+                    n=cycle_up(ed[k][nu[k]+l],o);
+                    cx=pts[3*o];cy=pts[3*o+1];cz=pts[3*o+2];
+
+                    // Six times the signed volume of the tetrahedron with
+                    // vertices at the particle and at a, b, and c, with the
+                    // orientation used in volume()
+                    d=ax*(bz*cy-by*cz)+ay*(bx*cz-bz*cx)+az*(by*cx-bx*cy);
+
+                    // The integral of x x^T over the tetrahedron is d/120
+                    // times a a^T + b b^T + c c^T + s s^T, where s=a+b+c
+                    sx=ax+bx+cx;sy=ay+by+cy;sz=az+bz+cz;
+                    m[0]+=d*(ax*ax+bx*bx+cx*cx+sx*sx);
+                    m[1]+=d*(ax*ay+bx*by+cx*cy+sx*sy);
+                    m[2]+=d*(ax*az+bx*bz+cx*cz+sx*sz);
+                    m[3]+=d*(ay*ay+by*by+cy*cy+sy*sy);
+                    m[4]+=d*(ay*az+by*bz+cy*cz+sy*sz);
+                    m[5]+=d*(az*az+bz*bz+cz*cz+sz*sz);
+                    k=o;l=n;bx=cx;by=cy;bz=cz;
+                    o=ed[k][l];ed[k][l]=-1-o;
+                }
+            }
+        }
+    }
+    reset_edges();
+
+    // The vertex positions are stored at twice their true values, so the
+    // integrals are scaled by 1/32
+    for(i=0;i<6;i++) m[i]*=1/3840.0;
+}
+
 /** Computes the maximum radius squared of a vertex from the center of the
  * cell. It can be used to determine when enough particles have been testing an
  * all planes that could cut the cell have been considered.
